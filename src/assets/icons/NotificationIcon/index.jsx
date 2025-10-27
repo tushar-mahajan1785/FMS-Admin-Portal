@@ -1,0 +1,19 @@
+import SvgIcon from '@mui/material/SvgIcon';
+
+const NotificationIcon = (props) => {
+    const { stroke = "#101828", size = 21, ...rest } = props;
+
+    return (
+        <SvgIcon
+            {...rest}
+            viewBox="0 0 21 21"
+            fill="none"
+            style={{ fontSize: size, color: 'transparent' }}
+        >
+            <path d="M8.01117 17.2378C8.67461 17.7403 9.55073 18.0459 10.5112 18.0459C11.4716 18.0459 12.3477 17.7403 13.0112 17.2378M3.48708 14.6519C3.09181 14.6519 2.87105 14.0632 3.11015 13.7361C3.66494 12.977 4.20044 11.8638 4.20044 10.5232L4.22332 8.5807C4.22332 4.97163 7.03849 2.0459 10.5112 2.0459C14.035 2.0459 16.8916 5.01473 16.8916 8.67696L16.8688 10.5232C16.8688 11.873 17.3858 12.9923 17.918 13.7517C18.1479 14.0796 17.9265 14.6519 17.5362 14.6519H3.48708Z" stroke={stroke} strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="15.6663" cy="6.04073" r="3.33333" fill="#D92D20" />
+        </SvgIcon>
+    );
+};
+
+export default NotificationIcon
