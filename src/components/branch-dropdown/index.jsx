@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { useBranch } from '../../hooks/useBranch'
-import { Box, Button, IconButton, Menu, MenuItem, Select, Stack } from '@mui/material'
+import { Box, Button, IconButton, Menu, MenuItem, Select, Stack, useTheme } from '@mui/material'
 import TypographyComponent from '../custom-typography'
 import CustomChip from '../custom-chip'
 import { useAuth } from '../../hooks/useAuth'
 import styled from '@emotion/styled'
 import _ from 'lodash'
+import { useSnackbar } from '../../hooks/useSnackbar'
 
 // ** Styled Menu component
 const MuiMenu = styled(Menu)(({ theme }) => ({
@@ -44,6 +45,8 @@ const MuiMenuItem = styled(MenuItem)(({ theme }) => ({
 export const BranchDropdown = () => {
     const branchContext = useBranch()
     const { verifyToken } = useAuth()
+    const theme = useTheme()
+    const { showSnackbar } = useSnackbar()
     const [anchorElBranch, setAnchorElBranch] = useState(null)
     const [selectedBranch, setSelectedBranch] = useState(branchContext?.currentBranch)
 
@@ -142,7 +145,7 @@ export const BranchDropdown = () => {
                         columnGap: 2,
                         rowGap: 2,
                         userSelect: 'auto',
-                        backgroundColor: 'transparent !important',
+                        backgroundColor: theme.palette.common.white, color: theme.palette.primary[600],
                         borderTop: theme => `1px solid ${theme.palette.divider}`
                     }}
                 >
@@ -153,24 +156,16 @@ export const BranchDropdown = () => {
                         size="small"
                         fullWidth
                         variant='contained'
+                        sx={{ backgroundColor: theme.palette.primary[600], color: theme.palette.common.white }}
                         onClick={() => {
                             if (selectedBranch !== null) {
                                 branchContext.updateSelectedBranch(selectedBranch.id)
-
                                 setTimeout(() => {
-                                    // window.location.reload()
                                     verifyToken()
                                 }, 1000)
                                 setAnchorElBranch(null)
                             } else {
-                                // toast.error('Please select Branch / Academic Year', {
-                                //   duration: TOAST_DURATION,
-                                //   position: 'bottom-right',
-                                //   style: {
-                                //     backgroundColor: 'red',
-                                //     color: 'white'
-                                //   }
-                                // })
+                                showSnackbar({ message: 'Please select Branch', severity: "error" })
                             }
                         }}
                     >
