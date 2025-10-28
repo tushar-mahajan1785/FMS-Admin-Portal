@@ -1,8 +1,8 @@
 import { useTheme } from '@emotion/react';
-import { Avatar, Grid, Stack, IconButton, Box, CircularProgress, Button } from '@mui/material';
+import { Avatar, Grid, Stack, IconButton, Box, CircularProgress, Button, Divider } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import FieldBox from '../../components/field-box';
-import { decrypt, getFormData } from '../../utils';
+import { concatMultipleStrings, decrypt, getFormData } from '../../utils';
 import MailIcon from '../../assets/icons/MailIcon';
 import PhoneCallIcon from '../../assets/icons/PhoneCallIcon';
 import { useDispatch, useSelector } from 'react-redux';
@@ -16,6 +16,9 @@ import EmptyContent from '../../components/empty_content';
 import CloseIcon from '../../assets/icons/CloseIcon';
 import AlertPopup from '../../components/alert-confirm';
 import AlertCircleIcon from '../../assets/icons/AlertCircleIcon';
+import IdBadgeIcon from '../../assets/icons/IdBadgeIcon';
+import SectionHeader from '../../components/section-header';
+import AddressIcon from '../../assets/icons/AddressIcon';
 
 export const UserProfileDetails = () => {
     const theme = useTheme()
@@ -84,7 +87,7 @@ export const UserProfileDetails = () => {
             if (userProfileUpload?.result === true) {
                 setLoading(false)
                 showSnackbar({ message: userProfileUpload?.message, severity: "success" })
-                dispatch(actionGetUserProfileDetails({ uuid: user?.user_uuid }))
+                dispatch(actionGetUserProfileDetails({ id: user?.employee_id }))
                 if (userProfileUpload?.response?.image_url && userProfileUpload?.response?.image_url !== null) {
                     let userData = Object.assign({}, user)
                     userData.image_url = userProfileUpload?.response?.image_url
@@ -124,7 +127,7 @@ export const UserProfileDetails = () => {
                 setViewLoadingDelete(false)
                 showSnackbar({ message: userProfileUploadReset?.message, severity: "success" })
 
-                dispatch(actionGetUserProfileDetails({ uuid: user?.user_uuid }))
+                dispatch(actionGetUserProfileDetails({ id: user?.employee_id }))
                 let userData = Object.assign({}, user)
                 userData.image_url = null
                 setUser(userData)
@@ -168,7 +171,7 @@ export const UserProfileDetails = () => {
             >
                 {
                     userDetailData && userDetailData !== null ?
-                        <Grid container spacing={{ xs: '0px', sm: '2px' }} sx={{ borderRadius: '16px', padding: { xs: '0px', sm: '10px' }, marginBottom: 2 }}>
+                        <Grid container spacing={{ xs: '0px', sm: '2px', md: '0px' }} sx={{ borderRadius: '16px', padding: { xs: '0px', sm: '6x', backgroundColor: theme.palette.primary[25] }, marginBottom: 2 }}>
                             {/* ------------------------------------ */}
                             {/* 🖼️ PROFILE PICTURE UPLOAD & DISPLAY SECTION 🖼️ */}
                             {/* ------------------------------------ */}
@@ -248,11 +251,18 @@ export const UserProfileDetails = () => {
                                     </Button>
                                 </Stack>
 
-                                <TypographyComponent fontSize={22} sx={{ textAlign: 'center', mt: 1 }}>{userDetailData?.full_name && userDetailData?.full_name !== null ? userDetailData?.full_name : ''}</TypographyComponent>
-                                <TypographyComponent fontSize={14} sx={{ textAlign: 'center', color: theme.palette.grey[600] }}>{userDetailData?.designation && userDetailData?.designation !== null ? userDetailData?.designation : ''}</TypographyComponent>
-                                <Stack sx={{ borderBottom: `1px dashed ${theme.palette.grey[200]}`, mt: 2, mx: { xs: 3, sm: 20 } }}></Stack>
+                                <TypographyComponent fontSize={22} sx={{ textAlign: 'center', mt: 1 }}>{userDetailData?.name && userDetailData?.name !== null ? userDetailData?.name : ''}</TypographyComponent>
+                                <Stack sx={{ alignItems: 'center', justifyContent: 'center', width: '100%', my: 0, py: 0, flexDirection: 'row', columnGap: 0.1 }}><IdBadgeIcon stroke1={theme.palette.primary[600]} size={16} /><TypographyComponent fontSize={14}>{userDetailData?.employee_id}</TypographyComponent></Stack>
+                                {/* <TypographyComponent fontSize={14} sx={{ textAlign: 'center', color: theme.palette.grey[600] }}>{userDetailData?.designation && userDetailData?.designation !== null ? userDetailData?.designation : ''}</TypographyComponent> */}
+
+
+
                             </Stack>
                             {/* ------------------------------------ */}
+                            <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }} sx={{ px: 2 }}>
+                                <SectionHeader title="Basic Information" progress={100} />
+                                <Divider />
+                            </Grid>
 
                             {/* Email */}
                             <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6, xl: 6 }}>
@@ -264,32 +274,108 @@ export const UserProfileDetails = () => {
                                 <FieldBox
                                     label="User Contact"
                                     value={
-                                        userDetailData?.country_code && userDetailData?.country_code !== null &&
-                                            userDetailData?.mobile_number && userDetailData?.mobile_number !== null ?
-                                            `${userDetailData?.country_code}${decrypt(userDetailData?.mobile_number)}` : ''
+                                        userDetailData?.contact_country_code && userDetailData?.contact_country_code !== null &&
+                                            userDetailData?.contact && userDetailData?.contact !== null ?
+                                            `${userDetailData?.contact_country_code}${decrypt(userDetailData?.contact)}` : ''
                                     }
-                                    icon={<PhoneCallIcon />} />
+                                    icon={<PhoneCallIcon stroke1={theme.palette.primary[600]} />} />
                             </Grid>
 
                             {/* Gender */}
                             <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6, xl: 6 }}>
-                                <FieldBox label="Gender" value={userDetailData?.gender && userDetailData?.gender !== null ? userDetailData?.gender : ''} />
+                                <FieldBox label="Age" value={userDetailData?.age && userDetailData?.age !== null ? userDetailData?.age : ''} />
                             </Grid>
 
                             {/* Role */}
                             <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6, xl: 6 }}>
-                                <FieldBox label="Role" value={userDetailData?.role_name && userDetailData?.role_name !== null ? userDetailData?.role_name : ''} />
+                                <FieldBox label="Role" value={userDetailData?.role && userDetailData?.role !== null ? userDetailData?.role : ''} />
+                            </Grid>
+
+                            {/* Company Name */}
+                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6, xl: 6 }}>
+                                <FieldBox label="Company Name" value={userDetailData?.company_name && userDetailData?.company_name !== null ? userDetailData?.company_name : ''} />
                             </Grid>
 
                             {/* Reporting To */}
                             <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6, xl: 6 }}>
-                                <FieldBox label="Reporting To" value={userDetailData?.reporting_to_name && userDetailData?.reporting_to_name !== null ? userDetailData?.reporting_to_name : ''} />
+                                <FieldBox label="Manager" value={userDetailData?.manager_name && userDetailData?.manager_name !== null ? userDetailData?.manager_name : ''} />
                             </Grid>
 
-                            {/* Status */}
-                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6, xl: 6 }}>
-                                <FieldBox label="Status" value={userDetailData?.status && userDetailData?.status !== null ? userDetailData?.status : ''} />
+                            {/* Client Information */}
+                            <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12, pt: 3 }} sx={{ mt: 2, px: 2 }}>
+                                <SectionHeader title="Client Information" progress={100} />
+                                <Divider />
                             </Grid>
+
+                            {/* client name */}
+                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6, xl: 6 }}>
+                                <FieldBox label="Client" value={userDetailData?.client?.name && userDetailData?.client?.name !== null ? userDetailData?.client?.name : ''} />
+                            </Grid>
+
+                            {/* Company Name */}
+                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6, xl: 6 }}>
+                                <FieldBox label="Client Code" value={userDetailData?.client?.client_code && userDetailData?.client?.client_code !== null ? userDetailData?.client?.client_code : ''} icon={<IdBadgeIcon stroke1={theme.palette.primary[600]} />} />
+                            </Grid>
+
+                            {/* contact */}
+                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6, xl: 6 }}>
+                                <FieldBox
+                                    label="Contact"
+                                    value={
+                                        userDetailData?.client?.country_code && userDetailData?.client?.country_code !== null &&
+                                            userDetailData?.client?.contact_number && userDetailData?.client?.contact_number !== null ?
+                                            `${userDetailData?.client?.country_code}${decrypt(userDetailData?.client?.contact_number)}` : ''
+                                    }
+                                    icon={<PhoneCallIcon stroke1={theme.palette.primary[600]} />} />
+                            </Grid>
+
+                            {/* location */}
+                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6, xl: 6 }}>
+                                <FieldBox label="Location" value={userDetailData?.client?.location && userDetailData?.client?.location !== null ? userDetailData?.client?.location : ''} />
+                            </Grid>
+                            {/* client group name */}
+                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6, xl: 6 }}>
+                                <FieldBox label="Client Group" value={userDetailData?.client?.client_group_name && userDetailData?.client?.client_group_name !== null ? userDetailData?.client?.client_group_name : ''} />
+                            </Grid>
+
+                            {/* Branch Information */}
+                            <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12, pt: 3 }} sx={{ mt: 2, px: 2 }}>
+                                <SectionHeader title="Branch Information" progress={100} />
+                                <Divider />
+                            </Grid>
+
+                            {/* branch name */}
+                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6, xl: 6 }}>
+                                <FieldBox label="Branch Name" value={userDetailData?.branch?.name && userDetailData?.branch?.name !== null ? userDetailData?.branch?.name : ''} />
+                            </Grid>
+
+                            {/* Branch code */}
+                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6, xl: 6 }}>
+                                <FieldBox label="Branch Code" value={userDetailData?.branch?.branch_code && userDetailData?.branch?.branch_code !== null ? userDetailData?.branch?.branch_code : ''} icon={<IdBadgeIcon stroke1={theme.palette.primary[600]} />} />
+                            </Grid>
+
+                            {/* contact */}
+                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6, xl: 6 }}>
+                                <FieldBox
+                                    label="Contact"
+                                    value={
+                                        userDetailData?.branch?.country_code && userDetailData?.branch?.country_code !== null &&
+                                            userDetailData?.branch?.contact_no && userDetailData?.branch?.contact_no !== null ?
+                                            `${userDetailData?.branch?.country_code}${decrypt(userDetailData?.branch?.contact_no)}` : ''
+                                    }
+                                    icon={<PhoneCallIcon stroke1={theme.palette.primary[600]} />} />
+                            </Grid>
+
+                            {/* location */}
+                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6, xl: 6 }}>
+                                <FieldBox label="Email" value={userDetailData?.branch?.email && userDetailData?.branch?.email !== null ? decrypt(userDetailData?.branch?.email) : ''} icon={<MailIcon stroke={theme.palette.primary[600]} />} />
+                            </Grid>
+
+                            {/* Branch address */}
+                            <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
+                                <FieldBox label="Branch Address" value={userDetailData?.branch && userDetailData?.branch !== null ? concatMultipleStrings(userDetailData?.branch) : ''} icon={<AddressIcon stroke={theme.palette.primary[600]} />} />
+                            </Grid>
+
                         </Grid>
                         :
                         <React.Fragment>

@@ -10,17 +10,17 @@ export const BASE = '/api/admin'
 
 export const CRYPTO_SECRET_KEY = import.meta.env.VITE_CRYPTO_SECRET_KEY;
 
-export const API_VERIFY_EMAIL = `${BASE}/user/forgot-password`
+export const API_VERIFY_EMAIL = `${BASE}/employee/forgot-password`
 
-export const API_RESET_PASSWORD = `${BASE}/user/reset-password`
+export const API_RESET_PASSWORD = `${BASE}/employee/reset-password`
 
 export const API_GET_DASHBOARD_COUNT = `${BASE}/dashboard/details`
 
 export const API_EMPLOYEE_LOGIN = `${BASE}/employee/login`
 
-export const API_LOGOUT = `${BASE}/user/logout`
+export const API_LOGOUT = `${BASE}/employee/logout`
 
-export const API_CHANGE_PASSWORD = `${BASE}/user/change-password`
+export const API_CHANGE_PASSWORD = `${BASE}/employee/change-password`
 
 export const API_VERIFY_OTP = ``
 
@@ -189,7 +189,7 @@ export const API_ADD_THEME = `${BASE}/theme/add-or-edit`
 
 export const API_DELETE_THEME = `${BASE}/theme/remove`
 
-export const API_USER_PROFILE = `${BASE}/user/profile`
+export const API_USER_PROFILE = `${BASE}/employee/profile`
 
 export const API_USER_PROFILE_UPLOAD = `${BASE}/user/profile-image-upload`
 
