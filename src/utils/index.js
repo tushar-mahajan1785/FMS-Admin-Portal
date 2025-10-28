@@ -112,4 +112,26 @@ export const getObjectById = (arr, id) => {
   return arr.find(item => item.id === id) || null;
 }
 
+//function to concat multiple strings
+export const concatMultipleStrings = (branch) => {
+  if (!branch || typeof branch !== "object") return "";
+
+  const fields = [
+    branch.address_line_1,
+    branch.address_line_2,
+    branch.city,
+    branch.state,
+    branch.pincode,
+    branch.country,
+  ];
+
+  // Filter out null, undefined, empty string, or only whitespace
+  const validParts = fields.filter(
+    (val) => val !== null && val !== undefined && String(val).trim() !== ""
+  );
+
+  return validParts.join(", ");
+};
+
+
 

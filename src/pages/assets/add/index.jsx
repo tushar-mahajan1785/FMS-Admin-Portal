@@ -38,17 +38,18 @@ import CalendarIcon from "../../../assets/icons/CalendarIcon";
 import { actionVendorMasterList, resetVendorMasterListResponse } from "../../../store/vendor";
 import { CommonDynamicFields } from "../../../components/common-dynamic-fields";
 import AssetIcon from "../../../assets/icons/AssetIcon";
+import { useBranch } from "../../../hooks/useBranch";
 
 export default function AddAsset({ open, toggle, syncData }) {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout } = useAuth()
     const { showSnackbar } = useSnackbar()
+    const branch = useBranch()
 
     // store
     const { addAsset, assetCustodianList } = useSelector(state => state.AssetStore)
     const { vendorMasterList } = useSelector(state => state.vendorStore)
-    const { clientBranchDetails } = useSelector(state => state.branchStore)
     const { additionalFieldsDetails } = useSelector(state => state.CommonStore)
 
     const {
@@ -191,17 +192,17 @@ export default function AddAsset({ open, toggle, syncData }) {
 
     // vendor master and asset custodian master API call as per client id and branch uuid
     useEffect(() => {
-        if (clientBranchDetails?.response?.client_id && clientBranchDetails?.response?.client_id !== null && clientBranchDetails?.response?.uuid && clientBranchDetails?.response?.uuid !== null) {
+        if (branch?.currentBranch?.client_id && branch?.currentBranch?.client_id !== null && branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null) {
             dispatch(actionVendorMasterList({
-                client_id: clientBranchDetails?.response?.client_id,
-                branch_uuid: clientBranchDetails?.response?.uuid
+                client_id: branch?.currentBranch?.client_id,
+                branch_uuid: branch?.currentBranch?.uuid
             }))
             dispatch(actionAssetCustodianList({
-                client_id: clientBranchDetails?.response?.client_id,
-                branch_uuid: clientBranchDetails?.response?.uuid
+                client_id: branch?.currentBranch?.client_id,
+                branch_uuid: branch?.currentBranch?.uuid
             }))
         }
-    }, [clientBranchDetails?.response])
+    }, [branch?.currentBranch])
 
     /**
        * useEffect
@@ -307,9 +308,9 @@ export default function AddAsset({ open, toggle, syncData }) {
         if (syncData && syncData !== null) {
             data.processing_id = syncData?.id
         }
-        if (clientBranchDetails?.response && clientBranchDetails?.response !== null) {
-            data.branch_uuid = clientBranchDetails?.response?.uuid
-            data.client_id = clientBranchDetails?.response?.client_id
+        if (branch?.currentBranch && branch?.currentBranch !== null) {
+            data.branch_uuid = branch?.currentBranch?.uuid
+            data.client_id = branch?.currentBranch?.client_id
         }
         data.status = assetStatus
         data.manufacturing_date = data.manufacturing_date && data.manufacturing_date !== null ? moment(data.manufacturing_date, 'DD/MM/YYYY').format('YYYY-MM-DD') : null

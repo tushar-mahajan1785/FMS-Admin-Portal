@@ -37,16 +37,17 @@ import { decrypt } from "../../../utils";
 import EmptyContent from "../../../components/empty_content";
 import TypographyComponent from "../../../components/custom-typography";
 import VendorIcon from "../../../assets/icons/VendorIcon";
+import { useBranch } from "../../../hooks/useBranch";
 
 export default function VendorDetails({ open, objData, toggle, page }) {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout, hasPermission } = useAuth()
     const { showSnackbar } = useSnackbar()
+    const branch = useBranch()
 
     // store
     const { vendorDetails, deleteVendor } = useSelector(state => state.vendorStore)
-    const { clientBranchDetails } = useSelector(state => state.branchStore)
     const { additionalFieldsDetails } = useSelector(state => state.CommonStore)
 
     // state
@@ -119,7 +120,7 @@ export default function VendorDetails({ open, objData, toggle, page }) {
 
                 handleClose('delete')
                 dispatch(actionVendorList({
-                    branch_uuid: clientBranchDetails?.response?.uuid,
+                    branch_uuid: branch?.currentBranch?.uuid,
                     page: page,
                     limit: LIST_LIMIT
                 }))
@@ -421,7 +422,7 @@ export default function VendorDetails({ open, objData, toggle, page }) {
                             if (vendorDetailData?.uuid && vendorDetailData?.uuid !== null) {
                                 dispatch(actionVendorDetails({ uuid: vendorDetailData?.uuid }))
                                 dispatch(actionVendorList({
-                                    branch_uuid: clientBranchDetails?.response?.uuid,
+                                    branch_uuid: branch?.currentBranch?.uuid,
                                     page: page,
                                     limit: LIST_LIMIT
                                 }))

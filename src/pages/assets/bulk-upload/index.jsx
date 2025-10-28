@@ -42,21 +42,23 @@ import DataActionHeader from "../../../components/data-action-header";
 import * as XLSX from "xlsx";
 import AlertCircleIcon from "../../../assets/icons/AlertCircleIcon";
 import moment from "moment";
-import { actionBranchData } from "../../../store/branch";
 import TypographyComponent from "../../../components/custom-typography";
+import { useBranch } from "../../../hooks/useBranch";
+import { useNavigate } from "react-router-dom";
 
 export default function AssetBulkUpload() {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout } = useAuth()
     const { showSnackbar } = useSnackbar()
+    const branch = useBranch()
+    const navigate = useNavigate()
 
     // media query
     const isMDDown = useMediaQuery(theme.breakpoints.down('md'))
 
     // store
     const { assetBulkUpload, assetUploadList, assetBulkUploadCron } = useSelector(state => state.AssetStore)
-    const { clientBranchDetails, branchData } = useSelector(state => state.branchStore)
 
     const columns = [
         { field: "asset_id", headerName: "Asset Id", flex: 0.1 },
@@ -123,7 +125,7 @@ export default function AssetBulkUpload() {
     useEffect(() => {
         setLoadingRefresh(true)
         dispatch(actionAssetUploadList({
-            branch_uuid: clientBranchDetails?.response?.uuid
+            branch_uuid: branch?.currentBranch?.uuid
         }))
         return () => {
             setLoading(false)
@@ -180,7 +182,7 @@ export default function AssetBulkUpload() {
                 showSnackbar({ message: 'The upload was successful. Please wait for some time for the data to fully synchronize and appear in the system.', severity: "success" })
                 setLoadingRefresh(true)
                 dispatch(actionAssetUploadList({
-                    branch_uuid: clientBranchDetails?.response?.uuid
+                    branch_uuid: branch?.currentBranch?.uuid
                 }))
                 setErrorAssets([])
             } else {
@@ -221,7 +223,7 @@ export default function AssetBulkUpload() {
             if (assetBulkUploadCron?.result === true) {
                 setLoadingRefresh(true)
                 dispatch(actionAssetUploadList({
-                    branch_uuid: clientBranchDetails?.response?.uuid
+                    branch_uuid: branch?.currentBranch?.uuid
                 }))
             } else {
                 setLoadingRefresh(false)
@@ -358,8 +360,8 @@ export default function AssetBulkUpload() {
 
             // ✅ If valid → continue
             let input = {
-                client_id: clientBranchDetails?.response?.client_id && clientBranchDetails?.response?.client_id !== null ? clientBranchDetails?.response?.client_id : null,
-                branch_uuid: clientBranchDetails?.response?.uuid && clientBranchDetails?.response?.uuid !== null ? clientBranchDetails?.response?.uuid : null,
+                client_id: branch?.currentBranch?.client_id && branch?.currentBranch?.client_id !== null ? branch?.currentBranch?.client_id : null,
+                branch_uuid: branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null ? branch?.currentBranch?.uuid : null,
             };
             const images = [{ title: "file", data: data.file }];
             const objFormData = getFormData(input, images);
@@ -384,10 +386,7 @@ export default function AssetBulkUpload() {
                         {/* redirect asset list */}
                         <IconButton
                             onClick={() => {
-                                let branchObj = Object.assign({}, branchData)
-                                branchObj.selected_menu = "Asset"
-                                branchObj.redirect_menu = "Asset"
-                                dispatch(actionBranchData(branchObj))
+                                navigate('/assets')
                             }}
                         >
                             <KeyboardBackspaceIcon fontSize={isMDDown ? "medium" : "large"} />
@@ -572,7 +571,7 @@ export default function AssetBulkUpload() {
                                 onRefreshClick={() => {
                                     setLoadingRefresh(true)
                                     dispatch(actionAssetUploadList({
-                                        branch_uuid: clientBranchDetails?.response?.uuid
+                                        branch_uuid: branch?.currentBranch?.uuid
                                     }))
                                 }}
                             />
@@ -625,7 +624,7 @@ export default function AssetBulkUpload() {
                     toggle={(data) => {
                         if (data && data !== null && data === 'save') {
                             dispatch(actionAssetUploadList({
-                                branch_uuid: clientBranchDetails?.response?.uuid
+                                branch_uuid: branch?.currentBranch?.uuid
                             }))
                         }
                         setOpenAddAssetPopup(false)

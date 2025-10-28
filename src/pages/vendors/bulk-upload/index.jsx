@@ -41,21 +41,23 @@ import AddVendor from "../add";
 import DataActionHeader from "../../../components/data-action-header";
 import * as XLSX from "xlsx";
 import AlertCircleIcon from "../../../assets/icons/AlertCircleIcon";
-import { actionBranchData } from "../../../store/branch";
 import TypographyComponent from "../../../components/custom-typography";
+import { useBranch } from "../../../hooks/useBranch";
+import { useNavigate } from "react-router-dom";
 
 export default function VendorBulkUpload() {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout } = useAuth()
     const { showSnackbar } = useSnackbar()
+    const branch = useBranch()
+    const navigate = useNavigate()
 
     // media query
     const isMDDown = useMediaQuery(theme.breakpoints.down('md'))
 
     // store
     const { vendorBulkUpload, vendorUploadList, vendorBulkUploadCron } = useSelector(state => state.vendorStore)
-    const { clientBranchDetails, branchData } = useSelector(state => state.branchStore)
 
     const columns = [
         { field: "name", headerName: "Vendor Name", flex: 0.1 },
@@ -148,7 +150,7 @@ export default function VendorBulkUpload() {
     useEffect(() => {
         setLoadingRefresh(true)
         dispatch(actionVendorUploadList({
-            branch_uuid: clientBranchDetails?.response?.uuid
+            branch_uuid: branch?.currentBranch?.uuid
         }))
 
         return () => {
@@ -206,7 +208,7 @@ export default function VendorBulkUpload() {
                 showSnackbar({ message: 'The upload was successful. Please wait for some time for the data to fully synchronize and appear in the system.', severity: "success" })
                 setLoadingRefresh(true)
                 dispatch(actionVendorUploadList({
-                    branch_uuid: clientBranchDetails?.response?.uuid
+                    branch_uuid: branch?.currentBranch?.uuid
                 }))
                 setErrorVendors([])
             } else {
@@ -247,7 +249,7 @@ export default function VendorBulkUpload() {
             if (vendorBulkUploadCron?.result === true) {
                 setLoadingRefresh(true)
                 dispatch(actionVendorUploadList({
-                    branch_uuid: clientBranchDetails?.response?.uuid
+                    branch_uuid: branch?.currentBranch?.uuid
                 }))
             } else {
                 setLoadingRefresh(false)
@@ -422,8 +424,8 @@ export default function VendorBulkUpload() {
 
             // ✅ If valid → continue
             let input = {
-                client_id: clientBranchDetails?.response?.client_id && clientBranchDetails?.response?.client_id !== null ? clientBranchDetails?.response?.client_id : null,
-                branch_uuid: clientBranchDetails?.response?.uuid && clientBranchDetails?.response?.uuid !== null ? clientBranchDetails?.response?.uuid : null,
+                client_id: branch?.currentBranch?.client_id && branch?.currentBranch?.client_id !== null ? branch?.currentBranch?.client_id : null,
+                branch_uuid: branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null ? branch?.currentBranch?.uuid : null,
             };
             const images = [{ title: "file", data: data.file }];
             const objFormData = getFormData(input, images);
@@ -447,10 +449,7 @@ export default function VendorBulkUpload() {
                     <Stack>
                         <IconButton
                             onClick={() => {
-                                let branchObj = Object.assign({}, branchData)
-                                branchObj.selected_menu = "Vendor"
-                                branchObj.redirect_menu = "Vendor"
-                                dispatch(actionBranchData(branchObj))
+                                navigate('/vendors')
                             }}
                         >
                             <KeyboardBackspaceIcon fontSize={isMDDown ? "medium" : "large"} />
@@ -635,7 +634,7 @@ export default function VendorBulkUpload() {
                                 onRefreshClick={() => {
                                     setLoadingRefresh(true)
                                     dispatch(actionVendorUploadList({
-                                        branch_uuid: clientBranchDetails?.response?.uuid
+                                        branch_uuid: branch?.currentBranch?.uuid
                                     }))
                                 }}
                             />
@@ -688,7 +687,7 @@ export default function VendorBulkUpload() {
                     toggle={(data) => {
                         if (data && data !== null && data === 'save') {
                             dispatch(actionVendorUploadList({
-                                branch_uuid: clientBranchDetails?.response?.uuid
+                                branch_uuid: branch?.currentBranch?.uuid
                             }))
                         }
                         setOpenAddVendorPopup(false)

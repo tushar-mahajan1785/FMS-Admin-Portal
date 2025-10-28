@@ -5,8 +5,8 @@ import { useDispatch } from "react-redux";
 import RoleTypeIcon from "../../assets/icons/RoleTypeIcon";
 import TypographyComponent from "../../components/custom-typography";
 import { UserProfileDetails } from "./user-details";
-import { ProfileMyTeam } from "./my-team";
-import ClientsIcon from "../../assets/icons/ClientsIcon";
+// import { ProfileMyTeam } from "./my-team";
+// import ClientsIcon from "../../assets/icons/ClientsIcon";
 import SingleUserIcon from "../../assets/icons/SingleUserIcon";
 import { useAuth } from "../../hooks/useAuth";
 import { actionGetUserProfileDetails, resetGetUserProfileDetailsResponse } from "../../store/common";
@@ -29,7 +29,7 @@ export default function Profile() {
   const menuItems = [
     { label: "My Profile", icon: <SingleUserIcon size={18} />, can_show: 1 },
     { label: "My Permissions", icon: <RoleTypeIcon size={18} />, can_show: 1 },
-    { label: "My Team", icon: <ClientsIcon size={18} />, can_show: 1 }
+    // { label: "My Team", icon: <ClientsIcon size={18} />, can_show: 1 }
   ];
 
   /**
@@ -53,8 +53,8 @@ export default function Profile() {
         return <UserProfileDetails />;
       case "My Permissions":
         return <ProfileMyPermission />;
-      case "My Team":
-        return <ProfileMyTeam />;
+      // case "My Team":
+      //   return <ProfileMyTeam />;
       default:
         return (
           <TypographyComponent variant="h6">{selectedProfileMenu}</TypographyComponent>

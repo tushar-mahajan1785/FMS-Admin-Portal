@@ -38,17 +38,18 @@ import DatePicker from "react-datepicker";
 import AddressIcon from "../../../assets/icons/AddressIcon";
 import { CommonDynamicFields } from "../../../components/common-dynamic-fields";
 import AssetIcon from "../../../assets/icons/AssetIcon";
+import { useBranch } from "../../../hooks/useBranch";
 
 export default function EditAsset({ open, objData, toggle }) {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout } = useAuth()
     const { showSnackbar } = useSnackbar()
+    const branch = useBranch()
 
     // store
     const { updateAsset, assetCustodianList } = useSelector(state => state.AssetStore)
     const { vendorMasterList } = useSelector(state => state.vendorStore)
-    const { clientBranchDetails } = useSelector(state => state.branchStore)
     const { additionalFieldsDetails } = useSelector(state => state.CommonStore)
 
     const {
@@ -205,17 +206,17 @@ export default function EditAsset({ open, objData, toggle }) {
 
     // vendor master and asset custodian master API call as per client id and branch uuid
     useEffect(() => {
-        if (clientBranchDetails?.response?.client_id && clientBranchDetails?.response?.client_id !== null && clientBranchDetails?.response?.uuid && clientBranchDetails?.response?.uuid !== null) {
+        if (branch?.currentBranch?.client_id && branch?.currentBranch?.client_id !== null && branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null) {
             dispatch(actionVendorMasterList({
-                client_id: clientBranchDetails?.response?.client_id,
-                branch_uuid: clientBranchDetails?.response?.uuid
+                client_id: branch?.currentBranch?.client_id,
+                branch_uuid: branch?.currentBranch?.uuid
             }))
             dispatch(actionAssetCustodianList({
-                client_id: clientBranchDetails?.response?.client_id,
-                branch_uuid: clientBranchDetails?.response?.uuid
+                client_id: branch?.currentBranch?.client_id,
+                branch_uuid: branch?.currentBranch?.uuid
             }))
         }
-    }, [clientBranchDetails?.response])
+    }, [branch?.currentBranch])
 
     /**
       * useEffect
@@ -318,9 +319,9 @@ export default function EditAsset({ open, objData, toggle }) {
     // handle submit function
     const onSubmit = data => {
         setLoading(true)
-        if (clientBranchDetails?.response && clientBranchDetails?.response !== null) {
-            data.branch_uuid = clientBranchDetails?.response?.uuid
-            data.client_id = clientBranchDetails?.response?.client_id
+        if (branch?.currentBranch && branch?.currentBranch !== null) {
+            data.branch_uuid = branch?.currentBranch?.uuid
+            data.client_id = branch?.currentBranch?.client_id
         }
         data.uuid = objData?.uuid
         data.status = assetStatus

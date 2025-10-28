@@ -29,16 +29,17 @@ import FormHeader from "../../../components/form-header";
 import { actionSettingList, actionDeleteSetting, resetSettingListResponse, resetDeleteSettingResponse } from "../../../store/setting";
 import AddSetting from "../add";
 import SettingsIcon from "../../../assets/icons/SettingsIcon";
+import { useBranch } from "../../../hooks/useBranch";
 
 export default function SettingList() {
     const { showSnackbar } = useSnackbar()
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout, hasPermission } = useAuth()
+    const branch = useBranch()
 
     // store
     const { settingList, deleteSetting } = useSelector(state => state.settingStore)
-    const { clientBranchDetails } = useSelector(state => state.branchStore)
 
     // state
     const [settingOptions, setSettingOptions] = useState([])
@@ -124,14 +125,14 @@ export default function SettingList() {
      * initial render
      */
     useEffect(() => {
-        if (clientBranchDetails?.response?.uuid && clientBranchDetails?.response?.uuid !== null) {
+        if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null) {
             setLoadingList(true)
             dispatch(actionSettingList({
-                branch_uuid: clientBranchDetails?.response?.uuid,
+                branch_uuid: branch?.currentBranch?.uuid,
                 entity_type: 'branch'
             }))
         }
-    }, [clientBranchDetails?.response?.uuid])
+    }, [branch?.currentBranch?.uuid])
 
     // handle search function
     const handleSearchQueryChange = event => {
@@ -212,7 +213,7 @@ export default function SettingList() {
                 setLoadingDelete(false)
                 showSnackbar({ message: deleteSetting?.message, severity: "success" })
                 dispatch(actionSettingList({
-                    branch_uuid: clientBranchDetails?.response?.uuid
+                    branch_uuid: branch?.currentBranch?.uuid
                 }))
             } else {
                 setLoadingDelete(false)
@@ -305,7 +306,7 @@ export default function SettingList() {
                 handleClose={(data) => {
                     if (data && data !== null && data === 'save') {
                         dispatch(actionSettingList({
-                            branch_uuid: clientBranchDetails?.response?.uuid
+                            branch_uuid: branch?.currentBranch?.uuid
                         }))
                     }
                     setOpenAddSettingPopup(false)

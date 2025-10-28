@@ -42,21 +42,23 @@ import CustomChip from "../../../components/custom-chip";
 import DataActionHeader from "../../../components/data-action-header";
 import * as XLSX from "xlsx";
 import AlertCircleIcon from "../../../assets/icons/AlertCircleIcon";
-import { actionBranchData } from "../../../store/branch";
 import TypographyComponent from "../../../components/custom-typography";
+import { useBranch } from "../../../hooks/useBranch";
+import { useNavigate } from "react-router-dom";
 
 export default function EmployeeBulkUpload() {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout } = useAuth()
     const { showSnackbar } = useSnackbar()
+    const branch = useBranch()
+    const navigate = useNavigate()
 
     // media query
     const isMDDown = useMediaQuery(theme.breakpoints.down('md'))
 
     // store
     const { employeeBulkUpload, employeeBulkUploadList, employeeBulkUploadCron } = useSelector(state => state.employeeStore)
-    const { clientBranchDetails, branchData } = useSelector(state => state.branchStore)
 
     const {
         control,
@@ -136,7 +138,7 @@ export default function EmployeeBulkUpload() {
     useEffect(() => {
         setLoadingRefresh(true)
         dispatch(actionEmployeeBulkUploadList({
-            branch_uuid: clientBranchDetails?.response?.uuid
+            branch_uuid: branch?.currentBranch?.uuid
         }))
         return () => {
             setLoading(false)
@@ -158,7 +160,7 @@ export default function EmployeeBulkUpload() {
             if (employeeBulkUploadCron?.result === true) {
                 setLoadingRefresh(true)
                 dispatch(actionEmployeeBulkUploadList({
-                    branch_uuid: clientBranchDetails?.response?.uuid
+                    branch_uuid: branch?.currentBranch?.uuid
                 }))
             } else {
                 setLoadingRefresh(false)
@@ -227,7 +229,7 @@ export default function EmployeeBulkUpload() {
                 setErrorEmployees([])
                 setLoadingRefresh(true)
                 dispatch(actionEmployeeBulkUploadList({
-                    branch_uuid: clientBranchDetails?.response?.uuid
+                    branch_uuid: branch?.currentBranch?.uuid
                 }))
             } else {
                 setLoading(false)
@@ -366,8 +368,8 @@ export default function EmployeeBulkUpload() {
 
             // ✅ If valid → continue
             let input = {
-                client_id: clientBranchDetails?.response?.client_id && clientBranchDetails?.response?.client_id !== null ? clientBranchDetails?.response?.client_id : null,
-                branch_uuid: clientBranchDetails?.response?.uuid && clientBranchDetails?.response?.uuid !== null ? clientBranchDetails?.response?.uuid : null,
+                client_id: branch?.currentBranch?.client_id && branch?.currentBranch?.client_id !== null ? branch?.currentBranch?.client_id : null,
+                branch_uuid: branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null ? branch?.currentBranch?.uuid : null,
             };
             const images = [{ title: "file", data: data.file }];
             const objFormData = getFormData(input, images);
@@ -391,10 +393,7 @@ export default function EmployeeBulkUpload() {
                     <Stack >
                         <IconButton
                             onClick={() => {
-                                let branchObj = Object.assign({}, branchData)
-                                branchObj.selected_menu = "Employee"
-                                branchObj.redirect_menu = "Employee"
-                                dispatch(actionBranchData(branchObj))
+                                navigate('/employees')
                             }}
                         >
                             <KeyboardBackspaceIcon fontSize={isMDDown ? "medium" : "large"} />
@@ -579,7 +578,7 @@ export default function EmployeeBulkUpload() {
                                 onRefreshClick={() => {
                                     setLoadingRefresh(true)
                                     dispatch(actionEmployeeBulkUploadList({
-                                        branch_uuid: clientBranchDetails?.response?.uuid
+                                        branch_uuid: branch?.currentBranch?.uuid
                                     }))
                                 }}
                             />
@@ -632,7 +631,7 @@ export default function EmployeeBulkUpload() {
                     toggle={(data) => {
                         if (data && data !== null && data === 'save') {
                             dispatch(actionEmployeeBulkUploadList({
-                                branch_uuid: clientBranchDetails?.response?.uuid
+                                branch_uuid: branch?.currentBranch?.uuid
                             }))
                         }
                         setOpenAddEmployeePopup(false)

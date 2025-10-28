@@ -33,16 +33,17 @@ import FieldBox from "../../../components/field-box";
 import EmptyContent from "../../../components/empty_content";
 import TypographyComponent from "../../../components/custom-typography";
 import AssetIcon from "../../../assets/icons/AssetIcon";
+import { useBranch } from "../../../hooks/useBranch";
 
 export default function AssetDetails({ open, objData, toggle, page }) {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout, hasPermission } = useAuth()
     const { showSnackbar } = useSnackbar()
+    const branch = useBranch()
 
     // store
     const { assetDetails, deleteAsset } = useSelector(state => state.AssetStore)
-    const { clientBranchDetails } = useSelector(state => state.branchStore)
     const { additionalFieldsDetails } = useSelector(state => state.CommonStore)
 
     // state
@@ -115,7 +116,7 @@ export default function AssetDetails({ open, objData, toggle, page }) {
 
                 handleClose('delete')
                 dispatch(actionAssetList({
-                    branch_uuid: clientBranchDetails?.response?.uuid,
+                    branch_uuid: branch?.currentBranch?.uuid,
                     page: page,
                     limit: LIST_LIMIT
                 }))
@@ -397,7 +398,7 @@ export default function AssetDetails({ open, objData, toggle, page }) {
                         if (data && data !== null && data === 'save') {
                             dispatch(actionAssetDetails({ uuid: objData?.uuid }))
                             dispatch(actionAssetList({
-                                branch_uuid: clientBranchDetails?.response?.uuid,
+                                branch_uuid: branch?.currentBranch?.uuid,
                                 page: page,
                                 limit: LIST_LIMIT
                             }))

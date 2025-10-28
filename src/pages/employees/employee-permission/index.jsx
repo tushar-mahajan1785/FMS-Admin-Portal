@@ -33,16 +33,17 @@ import { useSnackbar } from '../../../hooks/useSnackbar';
 import { useAuth } from '../../../hooks/useAuth';
 import EmptyContent from '../../../components/empty_content';
 import TypographyComponent from '../../../components/custom-typography';
+import { useBranch } from '../../../hooks/useBranch';
 
 export default function EmployeeWisePermissions({ open, handleClose, detail, page }) {
     const { showSnackbar } = useSnackbar()
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout } = useAuth()
+    const branch = useBranch()
 
     // store
     const { employeeWisePermissionSave } = useSelector(state => state.employeeStore)
-    const { clientBranchDetails } = useSelector(state => state.branchStore)
 
     // media query
     const isSMDown = useMediaQuery(theme.breakpoints.down('sm'));
@@ -105,7 +106,7 @@ export default function EmployeeWisePermissions({ open, handleClose, detail, pag
                 showSnackbar({ message: 'Employee Permissions Updated Successfully', severity: "success" })
                 setLoading(false)
                 dispatch(actionEmployeeList({
-                    branch_uuid: clientBranchDetails?.response?.uuid,
+                    branch_uuid: branch?.currentBranch?.uuid,
                     page: page,
                     limit: LIST_LIMIT
                 }))

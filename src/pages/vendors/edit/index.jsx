@@ -41,18 +41,19 @@ import CountryCodeSelect from "../../../components/country-code-component";
 import { CommonDynamicFields } from "../../../components/common-dynamic-fields";
 import DatePickerWrapper from "../../../components/datapicker-wrapper";
 import VendorIcon from "../../../assets/icons/VendorIcon";
+import { useBranch } from "../../../hooks/useBranch";
 
 export default function EditVendor({ open, objData, toggle }) {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout } = useAuth()
     const { showSnackbar } = useSnackbar()
+    const branch = useBranch()
 
     const isSMDown = useMediaQuery(theme.breakpoints.down('sm'))
 
     // store
     const { editVendor, masterCountryCodeList } = useSelector(state => state.vendorStore)
-    const { clientBranchDetails } = useSelector(state => state.branchStore)
     const { additionalFieldsDetails } = useSelector(state => state.CommonStore)
 
     const emptyLevel = { name: '', designation: '', email: '', contact_no: '', country_code: '+91' };
@@ -338,9 +339,9 @@ export default function EditVendor({ open, objData, toggle }) {
             country_code: c.contact_no && c.contact_no.trim() !== '' ? c.country_code : null,
         }));
 
-        if (clientBranchDetails?.response && clientBranchDetails?.response !== null) {
-            data.branch_uuid = clientBranchDetails?.response?.uuid
-            data.client_id = clientBranchDetails?.response?.client_id
+        if (branch?.currentBranch && branch?.currentBranch !== null) {
+            data.branch_uuid = branch?.currentBranch?.uuid
+            data.client_id = branch?.currentBranch?.client_id
         }
 
         data.additional_fields = additionalFieldsArray && additionalFieldsArray !== null && additionalFieldsArray.length > 0 ? additionalFieldsArray : []

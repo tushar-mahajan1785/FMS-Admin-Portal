@@ -34,16 +34,17 @@ import { decrypt } from "../../../utils";
 import EmptyContent from "../../../components/empty_content";
 import TypographyComponent from "../../../components/custom-typography";
 import ClientsIcon from "../../../assets/icons/ClientsIcon";
+import { useBranch } from "../../../hooks/useBranch";
 
 export default function EmployeeDetails({ open, objData, toggle, page }) {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout, hasPermission } = useAuth()
     const { showSnackbar } = useSnackbar()
+    const branch = useBranch()
 
     // store
     const { employeeDetails, deleteEmployee } = useSelector(state => state.employeeStore)
-    const { clientBranchDetails } = useSelector(state => state.branchStore)
     const { additionalFieldsDetails } = useSelector(state => state.CommonStore)
 
     // state
@@ -141,7 +142,7 @@ export default function EmployeeDetails({ open, objData, toggle, page }) {
 
                 handleClose()
                 dispatch(actionEmployeeList({
-                    branch_uuid: clientBranchDetails?.response?.uuid,
+                    branch_uuid: branch?.currentBranch?.uuid,
                     page: page,
                     limit: LIST_LIMIT
                 }))
@@ -265,7 +266,7 @@ export default function EmployeeDetails({ open, objData, toggle, page }) {
                             <Grid container spacing={'2px'} sx={{ backgroundColor: theme.palette.primary[25], borderRadius: '16px', padding: '10px', marginBottom: 2 }}>
                                 {/* employee type */}
                                 {
-                                    clientBranchDetails?.response?.role_type_flag == 1 ?
+                                    branch?.currentBranch?.role_type_flag == 1 ?
                                         <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
                                             <FieldBox label="Employee Type" value={employeeDetailData?.type} />
                                         </Grid>
@@ -273,15 +274,15 @@ export default function EmployeeDetails({ open, objData, toggle, page }) {
                                         <></>
                                 }
                                 {/* employee role */}
-                                <Grid size={{ xs: 12, sm: 6, md: clientBranchDetails?.response?.role_type_flag == 1 ? 3 : 4, lg: clientBranchDetails?.response?.role_type_flag == 1 ? 3 : 4, xl: clientBranchDetails?.response?.role_type_flag == 1 ? 3 : 4 }}>
+                                <Grid size={{ xs: 12, sm: 6, md: branch?.currentBranch?.role_type_flag == 1 ? 3 : 4, lg: branch?.currentBranch?.role_type_flag == 1 ? 3 : 4, xl: branch?.currentBranch?.role_type_flag == 1 ? 3 : 4 }}>
                                     <FieldBox label="Employee Role" value={employeeDetailData?.role} />
                                 </Grid>
                                 {/* employee company */}
-                                <Grid size={{ xs: 12, sm: 6, md: clientBranchDetails?.response?.role_type_flag == 1 ? 3 : 4, lg: clientBranchDetails?.response?.role_type_flag == 1 ? 3 : 4, xl: clientBranchDetails?.response?.role_type_flag == 1 ? 3 : 4 }}>
+                                <Grid size={{ xs: 12, sm: 6, md: branch?.currentBranch?.role_type_flag == 1 ? 3 : 4, lg: branch?.currentBranch?.role_type_flag == 1 ? 3 : 4, xl: branch?.currentBranch?.role_type_flag == 1 ? 3 : 4 }}>
                                     <FieldBox label="Employee Company" value={employeeDetailData?.company_name} />
                                 </Grid>
                                 {/* manager name */}
-                                <Grid size={{ xs: 12, sm: 6, md: clientBranchDetails?.response?.role_type_flag == 1 ? 3 : 4, lg: clientBranchDetails?.response?.role_type_flag == 1 ? 3 : 4, xl: clientBranchDetails?.response?.role_type_flag == 1 ? 3 : 4 }}>
+                                <Grid size={{ xs: 12, sm: 6, md: branch?.currentBranch?.role_type_flag == 1 ? 3 : 4, lg: branch?.currentBranch?.role_type_flag == 1 ? 3 : 4, xl: branch?.currentBranch?.role_type_flag == 1 ? 3 : 4 }}>
                                     <FieldBox label="Manager Name" value={employeeDetailData?.manager_name} />
                                 </Grid>
                             </Grid>
@@ -373,7 +374,7 @@ export default function EmployeeDetails({ open, objData, toggle, page }) {
                             if (employeeDetailData?.id && employeeDetailData?.id !== null) {
                                 dispatch(actionEmployeeDetails({ id: employeeDetailData?.id }))
                                 dispatch(actionEmployeeList({
-                                    branch_uuid: clientBranchDetails?.response?.uuid,
+                                    branch_uuid: branch?.currentBranch?.uuid,
                                     page: page,
                                     limit: LIST_LIMIT
                                 }))
