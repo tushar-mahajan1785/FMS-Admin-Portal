@@ -378,7 +378,6 @@ export default function AssetList() {
             ) : assetOptions && assetOptions !== null && assetOptions.length > 0 ? (
                 <ServerSideListComponents
                     rows={assetOptions}
-                    height={520}
                     columns={columns}
                     isCheckbox={false}
                     total={total}

@@ -37,8 +37,8 @@ export default function Profile() {
    * @description : Call My Profile api on branchUuid
    */
   useEffect(() => {
-    if (user && user?.user_uuid && user?.user_uuid !== null) {
-      dispatch(actionGetUserProfileDetails({ uuid: user?.user_uuid }))
+    if (user && user?.employee_id && user?.employee_id !== null) {
+      dispatch(actionGetUserProfileDetails({ id: user?.employee_id }))
     }
 
     return () => {

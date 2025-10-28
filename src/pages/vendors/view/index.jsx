@@ -255,7 +255,7 @@ export default function VendorDetails({ open, objData, toggle, page }) {
                             <Grid container spacing={'2px'} sx={{ backgroundColor: theme.palette.primary[25], borderRadius: '16px', padding: '10px', marginBottom: 2 }}>
                                 {/* vendor id */}
                                 <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4, xl: 4 }}>
-                                    <FieldBox label="Vendor ID" value={vendorDetailData?.vendor_id} icon={<IdBadgeIcon stroke={theme.palette.primary[600]} />} />
+                                    <FieldBox label="Vendor ID" value={vendorDetailData?.vendor_id} icon={<IdBadgeIcon stroke1={theme.palette.primary[600]} />} />
                                 </Grid>
                                 {/* Vendor name */}
                                 <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4, xl: 4 }}>
@@ -277,7 +277,7 @@ export default function VendorDetails({ open, objData, toggle, page }) {
                                                 `${vendorDetailData?.contact_country_code}${decrypt(vendorDetailData?.contact)}`
                                                 : ''
                                         }
-                                        icon={<PhoneCallIcon stroke={theme.palette.primary[600]} />} />
+                                        icon={<PhoneCallIcon stroke1={theme.palette.primary[600]} />} />
                                 </Grid>
                                 {/* Address */}
                                 <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4, xl: 4 }}>
@@ -317,7 +317,7 @@ export default function VendorDetails({ open, objData, toggle, page }) {
                                                 vendorDetailData?.primary_contact_no && vendorDetailData?.primary_contact_no !== null ?
                                                 `${vendorDetailData?.primary_contact_country_code}${decrypt(vendorDetailData?.primary_contact_no)}` : ''
                                         }
-                                        icon={<PhoneCallIcon stroke={theme.palette.primary[600]} />}
+                                        icon={<PhoneCallIcon stroke1={theme.palette.primary[600]} />}
                                         isLink
                                         linkType="phone"
                                     />

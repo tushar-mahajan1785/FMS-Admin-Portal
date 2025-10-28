@@ -1,11 +1,11 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 // ** Config
-import { axiosApi } from '../../../common/api'
-import { ERROR, SERVER_ERROR } from '../../../constants'
-import authConfig from '../../../config/auth'
+import { axiosApi } from '../../../common/api';
+import { ERROR, SERVER_ERROR } from '../../../constants';
+import authConfig from '../../../config/auth';
 import { AuthContext } from "../../../hooks/useAuth";
 import toast from "react-hot-toast";
 import { useSnackbar } from "../../../hooks/useSnackbar";
@@ -41,30 +41,6 @@ export const AuthProvider = ({ children }) => {
             setPermissions(JSON.stringify(response.data.response.userData?.ability))
             setUser({ ...response.data.response.userData })
             branch.setAllBranches(response.data.response.userData.branch)
-            // branch.setAllBranches([
-            //   {
-            //     "id": 8,
-            //     "uuid": "C6EpRL6cqsBaGoCAZW3WdZwf124mBhFW",
-            //     "name": "Malkapur",
-            //     "address": "Malkapur, Buldhana",
-            //     "postal_code": 443102,
-            //     "email": null,
-            //     "phone_number": null,
-            //     "website": null,
-            //     "is_selected": true,
-            //   },
-            //   {
-            //     "id": 11,
-            //     "uuid": "C4eLfSf0wiNSujI5IbcdWXHvXn03RG23",
-            //     "name": "Buldana",
-            //     "address": "Aided High School. Buldhana",
-            //     "postal_code": 443101,
-            //     "email": null,
-            //     "phone_number": null,
-            //     "website": null,
-            //     "is_selected": false,
-            //   }
-            // ])
             if (response.data.response.userData.branch.length > 0) {
               let currentBranch;
 
@@ -74,9 +50,6 @@ export const AuthProvider = ({ children }) => {
                 currentBranch = branchArr.find(
                   objBranch => objBranch.is_selected === true
                 );
-                // currentBranch = response.data.response.userData.branch.find(
-                //   objBranch => objBranch.is_selected === true
-                // );
               }
 
               // If a valid current branch is found, set it and save to local storage
@@ -145,9 +118,7 @@ export const AuthProvider = ({ children }) => {
               currentBranch = branchArr.find(
                 objBranch => objBranch.is_selected === true
               );
-              // currentBranch = response.data.response.userData.branch.find(
-              //   objBranch => objBranch.is_selected === true
-              // );
+
             }
 
             // If a valid current branch is found, set it and save to local storage

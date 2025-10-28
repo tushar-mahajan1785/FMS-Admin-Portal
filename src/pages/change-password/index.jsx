@@ -99,7 +99,7 @@ export default function ChangePassword({ open, handleClose }) {
     const onSubmit = (data) => {
         setLoadingSubmit(true)
         let objData = {
-            user_uuid: auth?.user?.user_uuid ? auth?.user?.user_uuid : null,
+            employee_id: auth?.user?.employee_id ? auth?.user?.employee_id : null,
             new_password: encrypt(data.new_password)
         }
         dispatch(actionChangePassword(objData))

@@ -361,7 +361,6 @@ export default function VendorList() {
             ) : vendorOptions && vendorOptions !== null && vendorOptions.length > 0 ? (
                 <ServerSideListComponents
                     rows={vendorOptions}
-                    height={520}
                     columns={columns}
                     isCheckbox={false}
                     total={total}

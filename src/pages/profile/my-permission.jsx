@@ -217,7 +217,7 @@ export const ProfileMyPermission = () => {
                                                                                                         gap: 1,
                                                                                                         '.MuiTypography-root': { fontWeight: 500, fontSize: 14 },
                                                                                                     }}
-                                                                                                    control={<CircleCheckIcon color="success" size={24} />}
+                                                                                                    control={<CircleCheckIcon stroke={theme.palette.primary[600]} size={24} />}
                                                                                                     label={
                                                                                                         <Stack justifyContent={'flex-end'}>
                                                                                                             <TypographyComponent fontSize={16} fontWeight={600} >

@@ -247,7 +247,7 @@ export default function AssetDetails({ open, objData, toggle, page }) {
                             <Grid container spacing={'2px'} sx={{ backgroundColor: theme.palette.primary[25], borderRadius: '16px', padding: '10px', marginBottom: 2 }}>
                                 {/* Asset ID */}
                                 <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
-                                    <FieldBox label="Asset ID" value={assetDetailData?.asset_id && assetDetailData?.asset_id !== null ? assetDetailData?.asset_id : ''} icon={<IdBadgeIcon />} />
+                                    <FieldBox label="Asset ID" value={assetDetailData?.asset_id && assetDetailData?.asset_id !== null ? assetDetailData?.asset_id : ''} icon={<IdBadgeIcon stroke1={theme.palette.primary[600]} />} />
                                 </Grid>
                                 {/* Asset Description */}
                                 <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
@@ -285,7 +285,7 @@ export default function AssetDetails({ open, objData, toggle, page }) {
                             <Grid container spacing={'2px'} sx={{ backgroundColor: theme.palette.primary[25], borderRadius: '16px', padding: '10px', marginBottom: 2 }}>
                                 {/* vendor */}
                                 <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
-                                    <FieldBox label="Vendor" value={assetDetailData?.vendor && assetDetailData?.vendor !== null ? assetDetailData?.vendor : ''} icon={<IdBadgeIcon />} />
+                                    <FieldBox label="Vendor" value={assetDetailData?.vendor && assetDetailData?.vendor !== null ? assetDetailData?.vendor : ''} icon={<IdBadgeIcon stroke1={theme.palette.primary[600]} />} />
                                 </Grid>
                                 {/* Manufacturing Date */}
                                 <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
@@ -323,11 +323,11 @@ export default function AssetDetails({ open, objData, toggle, page }) {
                             <Grid container spacing={'2px'} sx={{ backgroundColor: theme.palette.primary[25], borderRadius: '16px', padding: '10px', marginBottom: 2 }}>
                                 {/* Asset Owner */}
                                 <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6, xl: 6 }}>
-                                    <FieldBox label="Asset Owner" value={assetDetailData?.asset_owner && assetDetailData?.asset_owner !== null ? assetDetailData?.asset_owner : ''} icon={<UserCircleIcon />} />
+                                    <FieldBox label="Asset Owner" value={assetDetailData?.asset_owner && assetDetailData?.asset_owner !== null ? assetDetailData?.asset_owner : ''} icon={<UserCircleIcon stroke={theme.palette.primary[600]} />} />
                                 </Grid>
                                 {/* Asset Custodian */}
                                 <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6, xl: 6 }}>
-                                    <FieldBox label="Asset Custodian" value={assetDetailData?.asset_custodian && assetDetailData?.asset_custodian !== null ? assetDetailData?.asset_custodian : ''} icon={<UserCircleIcon />} />
+                                    <FieldBox label="Asset Custodian" value={assetDetailData?.asset_custodian && assetDetailData?.asset_custodian !== null ? assetDetailData?.asset_custodian : ''} icon={<UserCircleIcon stroke={theme.palette.primary[600]} />} />
                                 </Grid>
                             </Grid>
                             <SectionHeader title="Lifecycle & End-of-Life" progress={100} sx={{ marginTop: 2 }} />

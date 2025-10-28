@@ -100,8 +100,8 @@ export default function UserDetails({ open, objData, toggle, screen }) {
                 dispatch(actionUsersList())
                 handleClose('delete')
                 if (screen && screen === "my-profile") {
-                    if (user && user?.user_uuid && user?.user_uuid !== null) {
-                        dispatch(actionGetUserProfileDetails({ uuid: user?.user_uuid }))
+                    if (user && user?.employee_id && user?.employee_id !== null) {
+                        dispatch(actionGetUserProfileDetails({ id: user?.employee_id }))
                     }
                 }
             } else {

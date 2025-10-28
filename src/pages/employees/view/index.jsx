@@ -250,7 +250,7 @@ export default function EmployeeDetails({ open, objData, toggle, page }) {
                             <Grid container spacing={'2px'} sx={{ backgroundColor: theme.palette.primary[25], borderRadius: '16px', padding: '10px', marginBottom: 2 }}>
                                 {/* employee id */}
                                 <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4, xl: 4 }}>
-                                    <FieldBox label="Employee ID" value={employeeDetailData?.employee_id} icon={<IdBadgeIcon />} />
+                                    <FieldBox label="Employee ID" value={employeeDetailData?.employee_id} icon={<IdBadgeIcon stroke1={theme.palette.primary[600]} />} />
                                 </Grid>
                                 {/* employee name */}
                                 <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4, xl: 4 }}>
@@ -289,7 +289,7 @@ export default function EmployeeDetails({ open, objData, toggle, page }) {
                             <Grid container spacing={'2px'} sx={{ backgroundColor: theme.palette.primary[25], borderRadius: '16px', padding: '10px', marginBottom: 2 }}>
                                 {/* employee email */}
                                 <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4, xl: 4 }}>
-                                    <FieldBox label="Employee Email" value={employeeDetailData?.email && employeeDetailData?.email !== null ? decrypt(employeeDetailData?.email) : ''} icon={<CalenderTimeIcon />} />
+                                    <FieldBox label="Employee Email" value={employeeDetailData?.email && employeeDetailData?.email !== null ? decrypt(employeeDetailData?.email) : ''} icon={<CalenderTimeIcon stroke={theme.palette.primary[600]} />} />
                                 </Grid>
                                 {/* employee contact */}
                                 <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4, xl: 4 }}>
@@ -300,7 +300,7 @@ export default function EmployeeDetails({ open, objData, toggle, page }) {
                                                 employeeDetailData?.contact && employeeDetailData?.contact !== null ?
                                                 `${employeeDetailData?.contact_country_code}${decrypt(employeeDetailData?.contact)}` : ''
                                         }
-                                        icon={<PhoneCallIcon />} />
+                                        icon={<PhoneCallIcon stroke1={theme.palette.primary[600]} />} />
                                 </Grid>
                                 {/* employee alternate contact */}
                                 <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4, xl: 4 }}>

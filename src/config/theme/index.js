@@ -1,51 +1,35 @@
+// theme.js
 import { createTheme } from "@mui/material/styles";
+import { buildTheme } from "./buildTheme";
+import { useBranch } from "../../hooks/useBranch";
 
-const mode = 'light' // "dark" for dark mode
-const whiteColor = '#FFF'
-const lightColor = '#2F2B3D'
-const darkColor = '#D0D4F1'
-const darkPaperBgColor = '#2F3349'
-const mainColor = mode === 'light' ? lightColor : darkColor
+const mode = "light";
+const whiteColor = "#FFF";
+const lightColor = "#2F2B3D";
+const darkColor = "#D0D4F1";
+const darkPaperBgColor = "#2F3349";
+const mainColor = mode === "light" ? lightColor : darkColor;
 
-
-const theme = createTheme({
+// Base theme options
+const baseThemeOptions = {
   palette: {
-    mode: mode,
+    mode,
     customColors: {
       dark: darkColor,
       main: mainColor,
       light: lightColor,
       lightPaperBg: whiteColor,
       darkPaperBg: darkPaperBgColor,
-      bodyBg: mode === 'light' ? '#F8F7FA' : '#25293C',
-      trackBg: mode === 'light' ? '#F1F0F2' : '#363B54',
-      avatarBg: mode === 'light' ? '#DBDADE' : '#4A5072',
-      tableHeaderBg: mode === 'light' ? '#F6F6F7' : '#4A5072'
+      bodyBg: mode === "light" ? "#F8F7FA" : "#25293C",
+      trackBg: mode === "light" ? "#F1F0F2" : "#363B54",
+      avatarBg: mode === "light" ? "#DBDADE" : "#4A5072",
+      tableHeaderBg: mode === "light" ? "#F6F6F7" : "#4A5072",
     },
-    secondary: {
-      light: '#B2B4B8',
-      main: '#A8AAAE',
-      dark: '#949699'
-    },
-    background: {
-      default: "#f2f2f2",
-      light: "#ffffff",
-      dark: "#121212",
-    },
-    text: {
-      primary: "#101828",
-      secondary: "#535862",
-      disabled: "#FDFDFD"
-    },
-    info: {
-      light: '#1FD5EB',
-      main: '#00CFE8',
-      dark: '#00B6CC'
-    },
-    common: {
-      black: '#000',
-      white: '#fff'
-    },
+    secondary: { light: "#B2B4B8", main: "#A8AAAE", dark: "#949699" },
+    background: { default: "#f2f2f2", light: "#ffffff", dark: "#121212" },
+    text: { primary: "#101828", secondary: "#535862", disabled: "#FDFDFD" },
+    info: { light: "#1FD5EB", main: "#00CFE8", dark: "#00B6CC" },
+    common: { black: "#000", white: "#fff" },
     grey: {
       25: "#FDFDFD",
       50: "#FAFAFA",
@@ -119,22 +103,35 @@ const theme = createTheme({
       selectedOpacity: 0.06,
       disabled: `rgba(${mainColor}, 0.26)`,
       disabledBackground: `rgba(${mainColor}, 0.12)`,
-      focus: `rgba(${mainColor}, 0.12)`
-    }
-  },
-  typography: {
-    fontFamily: [
-      "Inter",
-      "system-ui",
-      "Avenir",
-      "Helvetica",
-      "Arial",
-      "sans-serif",
-    ].join(","),
-    h6: {
-      fontWeight: 600,
+      focus: `rgba(${mainColor}, 0.12)`,
     },
   },
-});
+  typography: {
+    fontFamily: ["Inter", "system-ui", "Avenir", "Helvetica", "Arial", "sans-serif"].join(","),
+    h6: { fontWeight: 600 },
+  },
+};
 
-export default theme;
+// ✅ Hook to return dynamic theme based on branch context
+export const useTheme = () => {
+  const branch = useBranch();
+  const themeConfigFromAPI = branch?.currentBranch?.branch_theme || {};
+
+  let dynamicPrimary = baseThemeOptions.palette.primary;
+
+  if (
+    themeConfigFromAPI.primaryColor &&
+    themeConfigFromAPI.primaryColor.toLowerCase() !== "#7f56d9"
+  ) {
+    const dynamicTheme = buildTheme(themeConfigFromAPI);
+    dynamicPrimary = dynamicTheme.palette.primary;
+  }
+
+  return createTheme({
+    ...baseThemeOptions,
+    palette: {
+      ...baseThemeOptions.palette,
+      primary: dynamicPrimary,
+    },
+  });
+};
