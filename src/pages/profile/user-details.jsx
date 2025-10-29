@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useTheme } from '@emotion/react';
 import { Avatar, Grid, Stack, IconButton, Box, CircularProgress, Button, Divider } from '@mui/material';
 import React, { useEffect, useState } from 'react';
@@ -43,7 +44,8 @@ export const UserProfileDetails = () => {
             reader.onloadend = () => {
                 // TODO: Add your API call here to upload 'file' to the backend
                 let objData = {
-                    user_uuid: user?.user_uuid
+                    employee_id: user?.employee_id,
+                    client_uuid: user?.client?.uuid
                 }
                 var images = []
                 if (file !== undefined && file !== null && file !== '') {
@@ -403,9 +405,9 @@ export const UserProfileDetails = () => {
                         ,
                         <Button key="delete" variant="contained" sx={{ width: '100%', textTransform: 'capitalize', background: theme.palette.error[600], color: theme.palette.common.white }} disabled={viewLoadingDelete} onClick={() => {
                             setViewLoadingDelete(true)
-                            if (userDetailData?.uuid && userDetailData?.uuid !== null) {
+                            if (userDetailData?.id && userDetailData?.id !== null) {
                                 dispatch(actionUserProfileUploadReset({
-                                    uuid: userDetailData?.uuid
+                                    employee_id: userDetailData?.id
                                 }))
                             }
                         }}>
