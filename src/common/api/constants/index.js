@@ -108,6 +108,8 @@ export const API_ASSET_UPLOAD_LIST = `${BASE}/asset/non-sync-list`
 
 export const API_ASSET_BULK_UPLOAD_CRON = `${BASE}/asset/bulk-upload-cron`
 
+export const API_MASTER_ASSET_TYPE = `${BASE}/asset-type/master-list`
+
 // clients
 export const API_CLIENTS_LIST = `${BASE}/client/list`
 
@@ -191,6 +193,6 @@ export const API_DELETE_THEME = `${BASE}/theme/remove`
 
 export const API_USER_PROFILE = `${BASE}/employee/profile`
 
-export const API_USER_PROFILE_UPLOAD = `${BASE}/user/profile-image-upload`
+export const API_USER_PROFILE_UPLOAD = `${BASE}/employee/profile-image-upload`
 
-export const API_USER_PROFILE_UPLOAD_REMOVE = `${BASE}/user/profile-image-remove`
+export const API_USER_PROFILE_UPLOAD_REMOVE = `${BASE}/employee/profile-image-remove`

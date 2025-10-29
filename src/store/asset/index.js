@@ -1,7 +1,18 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 import { axiosApi, MULTIPART_HEADER } from "../../common/api"
 import { getErrorResponse } from "../../utils";
-import { API_ADD_ASSET, API_ASSET_DETAILS, API_ASSET_LIST, API_DELETE_ASSET, API_UPDATE_ASSET, API_ASSET_CUSTODIAN_LIST, API_ASSET_BULK_UPLOAD, API_ASSET_UPLOAD_LIST, API_ASSET_BULK_UPLOAD_CRON } from "../../common/api/constants";
+import {
+    API_ADD_ASSET,
+    API_ASSET_DETAILS,
+    API_ASSET_LIST,
+    API_DELETE_ASSET,
+    API_UPDATE_ASSET,
+    API_ASSET_CUSTODIAN_LIST,
+    API_ASSET_BULK_UPLOAD,
+    API_ASSET_UPLOAD_LIST,
+    API_ASSET_BULK_UPLOAD_CRON,
+    API_MASTER_ASSET_TYPE
+} from "../../common/api/constants";
 
 export const actionAssetList = createAsyncThunk('asset/actionAssetList', async (params) => {
     try {
@@ -89,6 +100,15 @@ export const actionAssetBulkUploadCron = createAsyncThunk('asset/actionAssetBulk
         return error
     }
 })
+export const actionMasterAssetType = createAsyncThunk('assetType/actionMasterAssetType', async (params) => {
+    try {
+        const response = await axiosApi.post(API_MASTER_ASSET_TYPE, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
 
 export const AssetStore = createSlice({
     name: 'asset',
@@ -101,7 +121,8 @@ export const AssetStore = createSlice({
         assetCustodianList: null,
         assetBulkUpload: null,
         assetUploadList: null,
-        assetBulkUploadCron: null
+        assetBulkUploadCron: null,
+        masterAssetType: null
     },
 
     reducers: {
@@ -131,6 +152,9 @@ export const AssetStore = createSlice({
         },
         resetAssetBulkUploadCronResponse: (state) => {
             state.assetBulkUploadCron = null
+        },
+        resetMasterAssetTypeResponse: (state) => {
+            state.masterAssetType = null
         },
     },
     extraReducers: builder => {
@@ -162,6 +186,9 @@ export const AssetStore = createSlice({
             .addCase(actionAssetBulkUploadCron.fulfilled, (state, action) => {
                 state.assetBulkUploadCron = action.payload
             })
+            .addCase(actionMasterAssetType.fulfilled, (state, action) => {
+                state.masterAssetType = action.payload
+            })
     }
 })
 
@@ -174,7 +201,8 @@ export const {
     resetAssetCustodianListResponse,
     resetAssetBulkUploadResponse,
     resetAssetUploadListResponse,
-    resetAssetBulkUploadCronResponse
+    resetAssetBulkUploadCronResponse,
+    resetMasterAssetTypeResponse
 } =
     AssetStore.actions
 

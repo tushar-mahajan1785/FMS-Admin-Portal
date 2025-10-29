@@ -29,7 +29,7 @@ import { useSnackbar } from "../../../hooks/useSnackbar";
 import { useAuth } from "../../../hooks/useAuth";
 import StatusSwitch from "../../../components/status-switch";
 import CloseIcon from "../../../assets/icons/CloseIcon";
-import { actionAssetCustodianList, actionUpdateAsset, resetAssetCustodianListResponse, resetUpdateAssetResponse } from "../../../store/asset";
+import { actionAssetCustodianList, actionUpdateAsset, resetAssetCustodianListResponse, resetUpdateAssetResponse, actionMasterAssetType, resetMasterAssetTypeResponse } from "../../../store/asset";
 import { actionVendorMasterList, resetVendorMasterListResponse } from "../../../store/vendor";
 import moment from "moment";
 import CalendarIcon from "../../../assets/icons/CalendarIcon";
@@ -48,7 +48,7 @@ export default function EditAsset({ open, objData, toggle }) {
     const branch = useBranch()
 
     // store
-    const { updateAsset, assetCustodianList } = useSelector(state => state.AssetStore)
+    const { updateAsset, assetCustodianList, masterAssetType } = useSelector(state => state.AssetStore)
     const { vendorMasterList } = useSelector(state => state.vendorStore)
     const { additionalFieldsDetails } = useSelector(state => state.CommonStore)
 
@@ -98,6 +98,7 @@ export default function EditAsset({ open, objData, toggle }) {
     const [vendorMaster, setVendorMaster] = useState([]);
     const [assetCustodianMaster, setAssetCustodianMaster] = useState([]);
     const [additionalFieldsArray, setAdditionalFieldsArray] = useState([])
+    const [masterAssetTypeOptions, setMasterAssetTypeOptions] = useState([])
 
     /**
      * 
@@ -215,6 +216,9 @@ export default function EditAsset({ open, objData, toggle }) {
                 client_id: branch?.currentBranch?.client_id,
                 branch_uuid: branch?.currentBranch?.uuid
             }))
+            dispatch(actionMasterAssetType({
+                client_uuid: branch?.currentBranch?.client_uuid
+            }))
         }
     }, [branch?.currentBranch])
 
@@ -248,6 +252,37 @@ export default function EditAsset({ open, objData, toggle }) {
             }
         }
     }, [vendorMasterList])
+
+    /**
+       * useEffect
+       * @dependency : masterAssetType
+       * @type : HANDLE API RESULT
+       * @description : Handle the result of master Asset Type List API
+       */
+    useEffect(() => {
+        if (masterAssetType && masterAssetType !== null) {
+            dispatch(resetMasterAssetTypeResponse())
+            if (masterAssetType?.result === true) {
+                setMasterAssetTypeOptions(masterAssetType?.response)
+            } else {
+                setMasterAssetTypeOptions([])
+                switch (masterAssetType?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetMasterAssetTypeResponse())
+                        break
+                    case SERVER_ERROR:
+                        toast.dismiss()
+                        showSnackbar({ message: masterAssetType?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [masterAssetType])
 
     /**
       * useEffect
@@ -362,7 +397,7 @@ export default function EditAsset({ open, objData, toggle }) {
                     icon={<AssetIcon stroke={theme.palette.primary[600]} size={20} />}
                     title="Edit Asset"
                     subtitle="Fill below form to update asset"
-                    message="Please setup the employee and vendor before updating asset."
+                    message="Please setup the employee, vendor and asset type before updating asset."
                     actions={[
                         <IconButton
                             onClick={handleClose}
@@ -451,23 +486,54 @@ export default function EditAsset({ open, objData, toggle }) {
                                         name='type'
                                         control={control}
                                         rules={{
-                                            required: 'Asset Type is required',
-                                            maxLength: {
-                                                value: 100,
-                                                message: 'Maximum length is 100 characters'
-                                            },
+                                            required: 'Please select Asset Type'
                                         }}
                                         render={({ field }) => (
                                             <CustomTextField
+                                                select
                                                 fullWidth
-                                                placeholder={'Asset Type'}
-                                                value={field?.value}
+                                                value={field?.value ?? ''}
                                                 label={<FormLabel label='Asset Type' required={true} />}
-                                                onChange={field.onChange}
-                                                inputProps={{ maxLength: 100 }}
+                                                onChange={field?.onChange}
+                                                SelectProps={{
+                                                    displayEmpty: true,
+                                                    IconComponent: ChevronDownIcon,
+                                                    MenuProps: {
+                                                        PaperProps: {
+                                                            style: {
+                                                                maxHeight: 220, // Set your desired max height
+                                                                scrollbarWidth: 'thin'
+                                                            }
+                                                        }
+                                                    }
+                                                }}
+
                                                 error={Boolean(errors.type)}
                                                 {...(errors.type && { helperText: errors.type.message })}
-                                            />
+                                            >
+                                                <MenuItem value='' disabled>
+                                                    <em>Select Asset Type</em>
+                                                </MenuItem>
+                                                {masterAssetTypeOptions &&
+                                                    masterAssetTypeOptions.map(option => (
+                                                        <MenuItem
+                                                            key={option?.id}
+                                                            value={option?.name}
+                                                            sx={{
+                                                                whiteSpace: 'normal',        // allow wrapping
+                                                                wordBreak: 'break-word',     // break long words if needed
+                                                                maxWidth: 250,               // control dropdown width
+                                                                display: '-webkit-box',
+                                                                WebkitLineClamp: 2,          // limit to 2 lines
+                                                                WebkitBoxOrient: 'vertical',
+                                                                overflow: 'hidden',
+                                                                textOverflow: 'ellipsis'
+                                                            }}
+                                                        >
+                                                            {option?.name}
+                                                        </MenuItem>
+                                                    ))}
+                                            </CustomTextField>
                                         )}
                                     />
                                 </Grid>

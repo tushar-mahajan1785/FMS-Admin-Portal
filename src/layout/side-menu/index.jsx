@@ -7,7 +7,7 @@ import VendorIcon from "../../assets/icons/VendorIcon";
 export const sideMenuItems = [
     { title: "Dashboard", path: "/", icon: DashboardIcon, permission: 'DASHBOARD' },
     { title: "Employee", path: "/employees", icon: ClientsIcon, permission: 'EMPLOYEE' },
-    { title: "Asset", path: "/assets", icon: AssetIcon, permission: 'ASSET' },
     { title: "Vendor", path: "/vendors", icon: VendorIcon, permission: 'VENDOR' },
+    { title: "Asset", path: "/assets", icon: AssetIcon, permission: 'ASSET' },
     { title: "Settings", path: "/admin-setting", icon: SettingsIcon, permission: 'SETTING' },
 ];
