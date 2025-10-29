@@ -427,7 +427,7 @@ export default function EditEmployee({ open, objData, toggle }) {
           icon={<ClientsIcon stroke={theme.palette.primary[600]} size={18} />}
           title="Edit Employee"
           subtitle="Fill below form to update employee"
-          message="Please setup the role and permissions before updating employee."
+          message=""
           actions={[
             <IconButton
               onClick={handleClose}

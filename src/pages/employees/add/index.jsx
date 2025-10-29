@@ -450,7 +450,7 @@ export default function AddEmployee({ open, syncData, toggle }) {
           icon={<ClientsIcon stroke={theme.palette.primary[600]} size={18} />}
           title="Add New Employee"
           subtitle="Fill below form to add new employee"
-          message="Please setup the role and permissions before adding a new employee."
+          message=""
           actions={[
             <IconButton
               onClick={handleClose}
