@@ -200,7 +200,7 @@ export default function ForgetPassword() {
      * function to handle Resend Click
      */
     const handleResendClick = () => {
-        dispatch(actionVerifyEmail({ email: enteredUsername }))
+        dispatch(actionVerifyEmail({ email: encrypt(enteredUsername) }))
     };
 
     // Callback function to be called by the Timer component
