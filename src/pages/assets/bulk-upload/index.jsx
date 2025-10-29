@@ -428,18 +428,21 @@ export default function AssetBulkUpload() {
             {loading ? (
                 <FullScreenLoader open={true} />
             ) :
-                <Box sx={{ height: '720px', background: theme.palette.common.white }}>
+                <Box sx={{
+                    height: '720px',
+                    background: theme.palette.common.white,
+                    overflowY: 'auto',
+                    '&::-webkit-scrollbar': {
+                        width: '2px'
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                        backgroundColor: '#ccc',
+                        borderRadius: '2px'
+                    }
+                }}>
                     < Stack
                         sx={{
-                            flexGrow: 1,
-                            overflowY: 'auto',
-                            '&::-webkit-scrollbar': {
-                                width: '2px'
-                            },
-                            '&::-webkit-scrollbar-thumb': {
-                                backgroundColor: '#ccc',
-                                borderRadius: '2px'
-                            }
+                            flexGrow: 1
                         }}
                     >
                         <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>

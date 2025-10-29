@@ -491,18 +491,22 @@ export default function VendorBulkUpload() {
             {loading ? (
                 <FullScreenLoader open={true} />
             ) :
-                <Box sx={{ borderRadius: '12px', height: '720px', background: theme.palette.common.white }}>
+                <Box sx={{
+                    borderRadius: '12px',
+                    height: '720px',
+                    background: theme.palette.common.white,
+                    overflowY: 'auto',
+                    '&::-webkit-scrollbar': {
+                        width: '2px'
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                        backgroundColor: '#ccc',
+                        borderRadius: '2px'
+                    }
+                }}>
                     < Stack
                         sx={{
-                            flexGrow: 1,
-                            overflowY: 'auto',
-                            '&::-webkit-scrollbar': {
-                                width: '2px'
-                            },
-                            '&::-webkit-scrollbar-thumb': {
-                                backgroundColor: '#ccc',
-                                borderRadius: '2px'
-                            }
+                            flexGrow: 1
                         }}
                     >
                         <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
