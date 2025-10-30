@@ -11,6 +11,7 @@ import branchStore from '../store/branch';
 import settingStore from '../store/setting';
 import CommonStore from '../store/common';
 import branchThemeStore from '../store/branch-theme';
+import rosterStore from '../store/roster';
 
 const rootReducer = {
     loginStore,
@@ -25,7 +26,8 @@ const rootReducer = {
     branchStore,
     settingStore,
     CommonStore,
-    branchThemeStore
+    branchThemeStore,
+    rosterStore
 };
 
 export default rootReducer;

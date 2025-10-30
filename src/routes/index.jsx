@@ -11,6 +11,7 @@ import EmployeeBulkUpload from "../pages/employees/bulk-upload";
 import VendorBulkUpload from "../pages/vendors/bulk-upload";
 import Settings from "../pages/setting";
 import AdminSetting from "../pages/admin-setting";
+import ConfigureShiftList from "../pages/configure-shift";
 
 const routes = [
     {
@@ -81,6 +82,12 @@ const routes = [
         path: "/admin-setting/*",
         element: <AdminSetting />,
         permission: 'SETTING',
+        protected: true,
+    },
+    {
+        path: "/configuration-shift",
+        element: <ConfigureShiftList />,
+        permission: 'CONFIGURATION_SHIFT',
         protected: true,
     },
 ];

@@ -191,8 +191,12 @@ export const API_ADD_THEME = `${BASE}/theme/add-or-edit`
 
 export const API_DELETE_THEME = `${BASE}/theme/remove`
 
+// profile
 export const API_USER_PROFILE = `${BASE}/employee/profile`
 
 export const API_USER_PROFILE_UPLOAD = `${BASE}/employee/profile-image-upload`
 
 export const API_USER_PROFILE_UPLOAD_REMOVE = `${BASE}/employee/profile-image-remove`
+
+// configure shift
+export const API_CONFIGURE_SHIFT = `${BASE}/configure-shift/save`
