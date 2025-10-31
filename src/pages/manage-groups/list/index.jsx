@@ -1,5 +1,18 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Box, Button, Card, CardContent, Chip, Divider, FormLabel, Grid, InputAdornment, MenuItem, Pagination, Stack, useTheme } from '@mui/material'
+import {
+    Box,
+    Button,
+    Card,
+    CardContent,
+    Chip,
+    Divider,
+    FormLabel,
+    Grid,
+    InputAdornment,
+    MenuItem,
+    Stack,
+    useTheme,
+} from '@mui/material';
 import React, { useEffect, useState } from 'react'
 import MyBreadcrumbs from '../../../components/breadcrumb'
 import AddIcon from '@mui/icons-material/Add';
@@ -19,286 +32,47 @@ import ChevronDownIcon from "../../../assets/icons/ChevronDown"
 import CustomTextField from "../../../components/text-field"
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { actionMasterAssetType, resetMasterAssetTypeResponse } from '../../../store/asset';
+import { useBranch } from '../../../hooks/useBranch';
+import * as XLSX from "xlsx";
+import AddManageGroups from '../add';
 
 export default function ManageGroupsList() {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout, hasPermission } = useAuth()
     const { showSnackbar } = useSnackbar()
+    const branch = useBranch()
 
     // state
     const [searchQuery, setSearchQuery] = useState('')
-    const [manageGroupsOriginalData, setManageGroupsOriginalData] = useState([
-        {
-            name: "HVAC - Technicians Floor 1",
-            type: "HVAC",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "DG - Technicians Floor 1",
-            type: "DG SET",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "UPS - Technicians Floor 1",
-            type: "UPS",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "HVAC - Technicians Floor 2",
-            type: "HVAC",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "DG - Technicians Floor 2",
-            type: "DG SET",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "UPS - Technicians Floor 2",
-            type: "UPS",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "HVAC - Technicians Floor 3",
-            type: "HVAC",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "UPS - Technicians Floor 3",
-            type: "UPS",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "HVAC - Technicians Floor 4",
-            type: "HVAC",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "DG - Technicians Floor 4",
-            type: "DG SET",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "UPS - Technicians Floor 4",
-            type: "UPS",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "HVAC - Technicians Floor 5",
-            type: "HVAC",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "DG - Technicians Floor 5",
-            type: "DG SET",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "UPS - Technicians Floor 5",
-            type: "UPS",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "UPS - Technicians Floor 3",
-            type: "UPS",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "HVAC - Technicians Floor 4",
-            type: "HVAC",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "DG - Technicians Floor 4",
-            type: "DG SET",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "UPS - Technicians Floor 4",
-            type: "UPS",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "HVAC - Technicians Floor 5",
-            type: "HVAC",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "DG - Technicians Floor 5",
-            type: "DG SET",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "UPS - Technicians Floor 5",
-            type: "UPS",
-            manager: 1,
-            technicians: 6,
-        },
-    ])
-    const [manageGroupsOptions, setManageGroupsOptions] = useState([
-        {
-            name: "HVAC - Technicians Floor 1",
-            type: "HVAC",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "DG - Technicians Floor 1",
-            type: "DG SET",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "UPS - Technicians Floor 1",
-            type: "UPS",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "HVAC - Technicians Floor 2",
-            type: "HVAC",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "DG - Technicians Floor 2",
-            type: "DG SET",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "UPS - Technicians Floor 2",
-            type: "UPS",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "HVAC - Technicians Floor 3",
-            type: "HVAC",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "UPS - Technicians Floor 3",
-            type: "UPS",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "HVAC - Technicians Floor 4",
-            type: "HVAC",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "DG - Technicians Floor 4",
-            type: "DG SET",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "UPS - Technicians Floor 4",
-            type: "UPS",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "HVAC - Technicians Floor 5",
-            type: "HVAC",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "DG - Technicians Floor 5",
-            type: "DG SET",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "UPS - Technicians Floor 5",
-            type: "UPS",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "UPS - Technicians Floor 3",
-            type: "UPS",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "HVAC - Technicians Floor 4",
-            type: "HVAC",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "DG - Technicians Floor 4",
-            type: "DG SET",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "UPS - Technicians Floor 4",
-            type: "UPS",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "HVAC - Technicians Floor 5",
-            type: "HVAC",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "DG - Technicians Floor 5",
-            type: "DG SET",
-            manager: 1,
-            technicians: 6,
-        },
-        {
-            name: "UPS - Technicians Floor 5",
-            type: "UPS",
-            manager: 1,
-            technicians: 6,
-        },
-    ])
+    const [manageGroupsOriginalData, setManageGroupsOriginalData] = useState([])
+    const [manageGroupsOptions, setManageGroupsOptions] = useState([])
     const [loadingList, setLoadingList] = useState(false)
     const [total, setTotal] = useState(0)
-    const [assetType, setAssetType] = useState(null)
-    const assetTypeMaster = []
+    const [assetType, setAssetType] = useState('')
+    const [page, setPage] = useState(1);
+    const [assetTypeMasterOption, setAssetMasterOption] = useState([])
+    const [openAddManageGroupsPopup, setOpenAddManageGroupsPopup] = useState(false)
 
     // store
     const { manageGroupsList } = useSelector(state => state.rosterStore)
+    const { masterAssetType } = useSelector(state => state.AssetStore)
 
     /**
        * initial render
        */
     useEffect(() => {
-        // setLoadingList(true)
-        // dispatch(actionManageGroupsList())
-    }, [])
+        setLoadingList(true)
+        if (branch?.currentBranch?.client_uuid && branch?.currentBranch?.client_uuid !== null) {
+            dispatch(actionMasterAssetType({
+                client_uuid: branch?.currentBranch?.client_uuid
+            }))
+            dispatch(actionManageGroupsList({
+                client_uuid: branch?.currentBranch?.client_uuid
+            }))
+        }
+    }, [branch?.currentBranch])
 
     // handle search function
     const handleSearchQueryChange = event => {
@@ -328,6 +102,37 @@ export default function ManageGroupsList() {
             setManageGroupsOptions(manageGroupsOriginalData)
         }
     }, [searchQuery])
+
+    /**
+     * useEffect
+     * @dependency : masterAssetType
+     * @type : HANDLE API RESULT
+     * @description : Handle the result of master Asset Type API
+     */
+    useEffect(() => {
+        if (masterAssetType && masterAssetType !== null) {
+            dispatch(resetMasterAssetTypeResponse())
+            if (masterAssetType?.result === true) {
+                setAssetMasterOption(masterAssetType?.response)
+            } else {
+                setAssetMasterOption([])
+                switch (masterAssetType?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetMasterAssetTypeResponse())
+                        break
+                    case SERVER_ERROR:
+                        toast.dismiss()
+                        showSnackbar({ message: masterAssetType?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [masterAssetType])
 
     /**
      * useEffect
@@ -364,8 +169,6 @@ export default function ManageGroupsList() {
             }
         }
     }, [manageGroupsList])
-
-    const [page, setPage] = useState(1);
 
     const totalPages = Math.ceil(total / LIST_LIMIT);
 
@@ -407,7 +210,7 @@ export default function ManageGroupsList() {
                     <Button
                         size="small" sx={{
                             textTransform: 'capitalize',
-                            color: "#fff",
+                            color: theme.palette.common.white,
                             px: 1.5,
                             py: 1,
                             alignItems: 'center',
@@ -420,6 +223,7 @@ export default function ManageGroupsList() {
                         }}
                         variant='contained'
                         onClick={() => {
+                            setOpenAddManageGroupsPopup(true)
                         }}
                     >
                         <AddIcon sx={{ color: 'white', fontSize: { xs: '16x', sm: '16px' } }} />
@@ -440,7 +244,7 @@ export default function ManageGroupsList() {
                     width: '2px'
                 },
                 '&::-webkit-scrollbar-thumb': {
-                    backgroundColor: '#ccc',
+                    backgroundColor: theme.palette.grey[100],
                     borderRadius: '2px'
                 }
             }}>
@@ -456,7 +260,7 @@ export default function ManageGroupsList() {
                         <Chip
                             label={`${total} Groups`}
                             size="small"
-                            sx={{ bgcolor: "#ede7f6", color: theme.palette.primary[600], fontWeight: 500 }}
+                            sx={{ bgcolor: theme.palette.primary[50], color: theme.palette.primary[600], fontWeight: 500 }}
                         />
                     </Stack>
                     <Stack sx={{ flexDirection: 'row', columnGap: 1, alignItems: 'center' }}>
@@ -497,11 +301,11 @@ export default function ManageGroupsList() {
                                 }
                             }}
                         >
-                            <MenuItem value='' disabled>
-                                <em>Select Asset Types</em>
+                            <MenuItem value=''>
+                                <em>All Asset Types</em>
                             </MenuItem>
-                            {assetTypeMaster &&
-                                assetTypeMaster.map(option => (
+                            {assetTypeMasterOption &&
+                                assetTypeMasterOption.map(option => (
                                     <MenuItem
                                         key={option?.id}
                                         value={option?.id}
@@ -520,19 +324,30 @@ export default function ManageGroupsList() {
                                     </MenuItem>
                                 ))}
                         </CustomTextField>
-                        <Button
-                            variant="outlined"
-                            color={theme.palette.common.white}  // text color
-                            sx={{
-                                border: `1px solid ${theme.palette.grey[300]}`,
-                                paddingX: 4,
-                            }}
-                            startIcon={<DownloadIcon />}
-                            onClick={() => {
-                            }}
-                        >
-                            Export
-                        </Button>
+                        {
+                            manageGroupsOptions && manageGroupsOptions !== null && manageGroupsOptions.length > 0 &&
+                            <Button
+                                variant="outlined"
+                                color={theme.palette.common.white}  // text color
+                                sx={{
+                                    border: `1px solid ${theme.palette.grey[300]}`,
+                                    paddingX: 4,
+                                }}
+                                startIcon={<DownloadIcon />}
+                                onClick={() => {
+                                    const worksheet = XLSX.utils.json_to_sheet(manageGroupsOptions, {
+                                        header: ["Name", "Type", "Manager", "Technicians"]
+                                    });
+
+                                    const workbook = XLSX.utils.book_new();
+                                    XLSX.utils.book_append_sheet(workbook, worksheet, "Manage Groups");
+
+                                    XLSX.writeFile(workbook, "Manage Groups.xlsx");
+                                }}
+                            >
+                                Export
+                            </Button>
+                        }
                     </Stack>
                 </Stack>
                 {loadingList ? (
@@ -546,6 +361,7 @@ export default function ManageGroupsList() {
                                 display: "grid",
                                 gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
                                 gap: 2,
+                                marginTop: 1
                             }}
                         >
                             {manageGroupsOptions.map((group, idx) => (
@@ -553,43 +369,29 @@ export default function ManageGroupsList() {
                                     key={idx}
                                     sx={{
                                         borderRadius: "10px",
-                                        border: "1px solid #e0e0e0",
+                                        border: `1px solid ${theme.palette.grey[300]}`,
                                         boxShadow: "none",
                                         transition: "0.3s",
                                         height: "160px",
                                         display: "flex",
                                         justifyContent: "center",
                                         alignItems: "center",
-                                        flexDirection: "column",
-                                        "&:hover": {
-                                            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                                            transform: "translateY(-3px)",
-                                        },
+                                        cursor: 'pointer'
                                     }}
                                 >
                                     <CardContent sx={{ textAlign: "center", p: 2 }}>
                                         <TypographyComponent
-                                            variant="subtitle1"
-                                            fontWeight={600}
-                                            sx={{ mb: 1, color: "#333" }}
+                                            fontSize={'18px'}
+                                            fontWeight={500}
+                                            sx={{ mb: 1, color: theme.palette.grey.primary }}
                                         >
                                             {group.name}
                                         </TypographyComponent>
-                                        <Chip
-                                            label={group.type}
-                                            size="small"
-                                            sx={{
-                                                bgcolor: "#f3e8ff",
-                                                color: "#7e57c2",
-                                                fontWeight: 500,
-                                                mb: 1.5,
-                                            }}
-                                        />
-                                        <TypographyComponent variant="body2" sx={{ color: "#666" }}>
-                                            {`${group.manager} Manager`}
+                                        <TypographyComponent fontSize={'16px'} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>
+                                            {group.manager && group.manager !== null ? `${String(group.manager).padStart(2, '0')} Manager` : ''}
                                         </TypographyComponent>
-                                        <TypographyComponent variant="body2" sx={{ color: "#666" }}>
-                                            {`${group.technicians} Technicians`}
+                                        <TypographyComponent fontSize={'16px'} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>
+                                            {group.technicians && group.technicians !== null ? `${String(group.technicians).padStart(2, '0')} Technicians` : ''}
                                         </TypographyComponent>
                                     </CardContent>
                                 </Card>
@@ -660,6 +462,12 @@ export default function ManageGroupsList() {
                     </Button>
                 </Box>
             </Box>
+            <AddManageGroups
+                open={openAddManageGroupsPopup}
+                handleClose={() => {
+                    setOpenAddManageGroupsPopup(false)
+                }}
+            />
         </React.Fragment>
     )
 }
