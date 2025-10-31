@@ -13,6 +13,7 @@ import Settings from "../pages/setting";
 import AdminSetting from "../pages/admin-setting";
 import ConfigureShiftList from "../pages/configure-shift";
 import ManageGroups from "../pages/manage-groups";
+import { Tickets } from "../pages/tickets";
 
 const routes = [
     {
@@ -95,6 +96,12 @@ const routes = [
         path: "/manage-groups",
         element: <ManageGroups />,
         permission: 'MANAGE_GROUPS',
+        protected: true,
+    },
+    {
+        path: "/tickets",
+        element: <Tickets />,
+        permission: 'EMPLOYEE',
         protected: true,
     },
 ];

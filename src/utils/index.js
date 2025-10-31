@@ -133,5 +133,6 @@ export const concatMultipleStrings = (branch) => {
   return validParts.join(", ");
 };
 
+export const valueFormatter = (item) => `${item.value}%`;
 
 

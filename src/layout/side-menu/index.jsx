@@ -8,6 +8,7 @@ import CircleIcon from "../../assets/icons/CircleIcon"
 
 export const sideMenuItems = [
     { title: "Dashboard", path: "/", icon: DashboardIcon, permission: 'DASHBOARD' },
+    { title: "Tickets", path: "/tickets", icon: ClientsIcon, permission: 'EMPLOYEE' },
     { title: "Employee", path: "/employees", icon: ClientsIcon, permission: 'EMPLOYEE' },
     { title: "Vendor", path: "/vendors", icon: VendorIcon, permission: 'VENDOR' },
     { title: "Asset", path: "/assets", icon: AssetIcon, permission: 'ASSET' },
