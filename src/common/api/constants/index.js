@@ -200,3 +200,13 @@ export const API_USER_PROFILE_UPLOAD_REMOVE = `${BASE}/employee/profile-image-re
 
 // configure shift
 export const API_CONFIGURE_SHIFT = `${BASE}/configure-shift/save`
+
+export const API_MANAGE_GROUPS_LIST = `${BASE}/manage-groups/list`
+
+export const API_ADD_MANAGE_GROUPS = `${BASE}/manage-groups/add`
+
+export const API_EDIT_MANAGE_GROUPS = `${BASE}/manage-groups/edit`
+
+export const API_DELETE_MANAGE_GROUPS = `${BASE}/manage-groups/delete`
+
+export const API_MANAGE_GROUPS_DETAILS = `${BASE}/manage-groups/details`

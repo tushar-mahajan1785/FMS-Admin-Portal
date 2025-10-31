@@ -248,7 +248,7 @@ export default function VendorList() {
             } else {
                 setLoadingList(false)
                 setVendorOptions([])
-                setVendorOriginalData[[]]
+                setVendorOriginalData([])
                 switch (vendorList?.status) {
                     case UNAUTHORIZED:
                         logout()

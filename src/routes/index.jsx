@@ -12,6 +12,7 @@ import VendorBulkUpload from "../pages/vendors/bulk-upload";
 import Settings from "../pages/setting";
 import AdminSetting from "../pages/admin-setting";
 import ConfigureShiftList from "../pages/configure-shift";
+import ManageGroups from "../pages/manage-groups";
 
 const routes = [
     {
@@ -88,6 +89,12 @@ const routes = [
         path: "/configuration-shift",
         element: <ConfigureShiftList />,
         permission: 'CONFIGURATION_SHIFT',
+        protected: true,
+    },
+    {
+        path: "/manage-groups",
+        element: <ManageGroups />,
+        permission: 'MANAGE_GROUPS',
         protected: true,
     },
 ];
