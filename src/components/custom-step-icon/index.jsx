@@ -2,34 +2,33 @@ import { Box, Typography, useTheme } from '@mui/material';
 import CircleCheckOutlineIcon from '../../assets/icons/CircleCheckOutline';
 
 export default function CustomStepIcon({ active, completed, icon }) {
-    const theme = useTheme()
+    const theme = useTheme();
+    const primary = theme.palette.primary[600];
+    const success = theme.palette.success[600];
+    const grey = theme.palette.grey[400];
 
-    // Custom colors based on your design
-    const primary = theme.palette.primary[600]; // For active step outline
-    const success = theme.palette.success[600]; // For completed step fill and checkmark
-
-    let background, color, content;
+    let background, borderColor, content;
 
     if (completed) {
-        // Completed state: Green fill, white checkmark
+        // ✅ Completed step: solid green with white checkmark
         background = success;
-        color = 'white';
+        borderColor = success;
         content = <CircleCheckOutlineIcon stroke={success} />;
     } else if (active) {
-        // Active state: Purple outline, transparent fill, purple number
+        // ✅ Active step: purple outline and number inside
         background = 'transparent';
-        color = primary;
+        borderColor = primary;
         content = (
-            <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
+            <Typography variant="caption" sx={{ fontWeight: 600, color: primary }}>
                 {icon}
             </Typography>
         );
     } else {
-        // Pending state: Gray outline, transparent fill, gray number
+        // ✅ Pending step: gray outline with gray number
         background = 'transparent';
-        color = 'text.disabled';
+        borderColor = grey;
         content = (
-            <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
+            <Typography variant="caption" sx={{ fontWeight: 600, color: grey }}>
                 {icon}
             </Typography>
         );
@@ -40,17 +39,16 @@ export default function CustomStepIcon({ active, completed, icon }) {
             sx={{
                 width: 41,
                 height: 41,
+                borderRadius: '8px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderRadius: '8px',
                 backgroundColor: background,
-                color: color,
-                border: `2px solid ${completed ? success : active ? primary : 'lightgrey'}`,
-                gap: '6px'
+                border: `2px solid ${borderColor}`,
+                transition: 'all 0.3s ease',
             }}
         >
             {content}
         </Box>
     );
-};
+}

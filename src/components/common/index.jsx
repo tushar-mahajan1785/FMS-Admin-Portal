@@ -254,18 +254,29 @@ export const Step = styled(MuiStep)(({ theme }) => ({
 }))
 
 export const CustomStepConnector = styled(StepConnector)(({ theme }) => ({
-    '& .MuiStepConnector-line': {
-        // Default (Pending) styling: dashed gray line
-        borderColor: theme.palette.grey[400],
-        borderWidth: 1,
-        borderStyle: 'dashed',
-        transition: theme.transitions.create('border-color'),
-    },
-    '&.Mui-completed .MuiStepConnector-line': {
-        // Completed styling: solid green line
-        borderColor: theme.palette.success[600], // Green from the design
-        borderStyle: 'solid',
-    },
-    // The active class is usually applied to the step itself, but the connector does not use an 'active' class directly unless specified.
-    // We rely on the completed state for styling the connector line behind the completed step.
+  top: 22,
+  left: 'calc(-50% + 20px)',
+  right: 'calc(50% + 20px)',
+  position: 'absolute',
+
+  '& .MuiStepConnector-line': {
+    borderColor: theme.palette.grey[400],
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    transition: theme.transitions.create(['border-color', 'border-style'], {
+      duration: theme.transitions.duration.short,
+    }),
+  },
+
+  // ✅ Make connector solid green if the previous step is completed
+  '&.Mui-completed .MuiStepConnector-line': {
+    borderColor: theme.palette.success[600],
+    borderStyle: 'solid',
+  },
+
+  // ✅ When the *next* step becomes active, also turn the connector solid green
+  '&.Mui-active .MuiStepConnector-line': {
+    borderColor: theme.palette.success[600],
+    borderStyle: 'solid',
+  },
 }));

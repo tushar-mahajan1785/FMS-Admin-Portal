@@ -18,7 +18,7 @@ import MyBreadcrumbs from '../../../components/breadcrumb'
 import AddIcon from '@mui/icons-material/Add';
 import TypographyComponent from '../../../components/custom-typography';
 import DownloadIcon from '../../../assets/icons/DownloadIcon';
-import { actionManageGroupsList, resetManageGroupsListResponse } from '../../../store/roster';
+import { actionManageGroupsList, resetManageGroupsListResponse, resetRosterDataResponse } from '../../../store/roster';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { ERROR, IMAGES_SCREEN_NO_DATA, LIST_LIMIT, SERVER_ERROR, UNAUTHORIZED } from '../../../constants';
@@ -52,7 +52,7 @@ export default function ManageGroupsList() {
     const [total, setTotal] = useState(0)
     const [assetType, setAssetType] = useState('')
     const [page, setPage] = useState(1);
-    const [assetTypeMasterOption, setAssetMasterOption] = useState([])
+    const [assetTypeMasterOption, setAssetTypeMasterOption] = useState([])
     const [openAddManageGroupsPopup, setOpenAddManageGroupsPopup] = useState(false)
 
     // store
@@ -64,11 +64,17 @@ export default function ManageGroupsList() {
        */
     useEffect(() => {
         setLoadingList(true)
+        if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null) {
+            dispatch(actionManageGroupsList({
+                branch_uuid: branch?.currentBranch?.uuid,
+                search: searchQuery,
+                asset_type: assetType,
+                page: page,
+                limit: LIST_LIMIT
+            }))
+        }
         if (branch?.currentBranch?.client_uuid && branch?.currentBranch?.client_uuid !== null) {
             dispatch(actionMasterAssetType({
-                client_uuid: branch?.currentBranch?.client_uuid
-            }))
-            dispatch(actionManageGroupsList({
                 client_uuid: branch?.currentBranch?.client_uuid
             }))
         }
@@ -113,9 +119,9 @@ export default function ManageGroupsList() {
         if (masterAssetType && masterAssetType !== null) {
             dispatch(resetMasterAssetTypeResponse())
             if (masterAssetType?.result === true) {
-                setAssetMasterOption(masterAssetType?.response)
+                setAssetTypeMasterOption(masterAssetType?.response)
             } else {
-                setAssetMasterOption([])
+                setAssetTypeMasterOption([])
                 switch (masterAssetType?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -464,7 +470,17 @@ export default function ManageGroupsList() {
             </Box>
             <AddManageGroups
                 open={openAddManageGroupsPopup}
-                handleClose={() => {
+                handleClose={(data) => {
+                    dispatch(resetRosterDataResponse())
+                    if (data && data !== null && data === 'save') {
+                        dispatch(actionManageGroupsList({
+                            branch_uuid: branch?.currentBranch?.uuid,
+                            search: searchQuery,
+                            asset_type: assetType,
+                            page: page,
+                            limit: LIST_LIMIT
+                        }))
+                    }
                     setOpenAddManageGroupsPopup(false)
                 }}
             />

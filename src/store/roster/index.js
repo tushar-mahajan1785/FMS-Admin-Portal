@@ -8,7 +8,8 @@ import {
     API_EDIT_MANAGE_GROUPS,
     API_DELETE_MANAGE_GROUPS,
     API_MANAGE_GROUPS_DETAILS,
-    API_ASSET_TYPE_WISE_LIST
+    API_ASSET_TYPE_WISE_LIST,
+    API_EMPLOYEE_TYPE_WISE_LIST
 } from "../../common/api/constants";
 
 export const defaultRosterData = {
@@ -90,6 +91,16 @@ export const actionAssetTypeWiseList = createAsyncThunk('roster/actionAssetTypeW
     }
 })
 
+export const actionEmployeeTypeWiseList = createAsyncThunk('roster/actionEmployeeTypeWiseList', async (params) => {
+    try {
+        const response = await axiosApi.post(API_EMPLOYEE_TYPE_WISE_LIST, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+
 export const rosterStore = createSlice({
     name: 'roster',
     initialState: {
@@ -100,7 +111,8 @@ export const rosterStore = createSlice({
         deleteManageGroups: null,
         manageGroupsDetails: null,
         rosterData: null,
-        assetTypeWiseList: null
+        assetTypeWiseList: null,
+        employeeTypeWiseList: null
     },
 
     reducers: {
@@ -127,6 +139,9 @@ export const rosterStore = createSlice({
         },
         resetAssetTypeWiseListResponse: (state) => {
             state.assetTypeWiseList = null
+        },
+        resetEmployeeTypeWiseListResponse: (state) => {
+            state.employeeTypeWiseList = null
         },
     },
     extraReducers: builder => {
@@ -155,6 +170,9 @@ export const rosterStore = createSlice({
             .addCase(actionAssetTypeWiseList.fulfilled, (state, action) => {
                 state.assetTypeWiseList = action.payload
             })
+            .addCase(actionEmployeeTypeWiseList.fulfilled, (state, action) => {
+                state.employeeTypeWiseList = action.payload
+            })
     }
 })
 
@@ -166,7 +184,8 @@ export const {
     resetDeleteManageGroupsResponse,
     resetManageGroupsDetailsResponse,
     resetRosterDataResponse,
-    resetAssetTypeWiseListResponse
+    resetAssetTypeWiseListResponse,
+    resetEmployeeTypeWiseListResponse
 } =
     rosterStore.actions
 
