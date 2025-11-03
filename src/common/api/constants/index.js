@@ -222,3 +222,23 @@ export const API_EMPLOYEE_TYPE_WISE_LIST = `${BASE}/roster-group/type-wise-emplo
 export const API_ROSTER_GROUP_MASTER_LIST = `${BASE}/roster-group/master-list`
 
 export const API_ROSTER_GROUP_EMPLOYEE_LIST = `${BASE}/roster-group/employee-list`
+
+//tickets
+
+export const API_GET_TICKET_COUNTS = `${BASE}/tickets/get-count`
+
+export const API_TICKETS_LIST = `${BASE}/tickets/list`
+
+export const API_GET_TICKETS_BY_STATUS = `${BASE}/tickets/get-tickets-by-status`
+
+export const API_LAST_SIX_MONTH_TICKETS = `${BASE}/tickets/last-six-month`
+
+export const API_GET_TICKETS_BY_ASSET_TYPES = `${BASE}/tickets/get-tickets-by-asset-types`
+
+export const API_GET_ASSET_DETAILS_BY_NAME = `${BASE}/tickets/get-asset-details`
+
+export const API_TICKET_ADD = `${BASE}/tickets/add`
+
+export const API_TICKET_DETAIL = `${BASE}/tickets/detail`
+
+export const API_GET_MASTER_ASSET_NAME = `${BASE}/master/asset-name`

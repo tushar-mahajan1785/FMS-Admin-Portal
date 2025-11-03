@@ -113,3 +113,18 @@ export const genderArray = [
         name: 'Female'
     }
 ]
+export const getPriorityArray = [
+    {
+        id: 'Low',
+        name: 'Low'
+    },
+    {
+        id: 'Medium',
+        name: 'Medium'
+    },
+    {
+        id: 'High',
+        name: 'High'
+    },
+
+]

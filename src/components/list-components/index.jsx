@@ -5,7 +5,7 @@ import { Box, Button, useTheme } from "@mui/material";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
-export default function ListComponents({ columns, rows, isCheckbox, onChange, height = 580 }) {
+export default function ListComponents({ columns, rows, isCheckbox, onChange, height = 580, hasPagination = true }) {
     const theme = useTheme()
     const [page, setPage] = useState(1);
     const pageSize = 10;
@@ -94,64 +94,69 @@ export default function ListComponents({ columns, rows, isCheckbox, onChange, he
                 />
             </Box>
             {/* Custom Pagination */}
-            <Box
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                mt={2}
-                px={2}
-            >
-                <Button
-                    sx={{ borderColor: theme.palette.grey[300], color: theme.palette.grey[700], fontWeight: 600, fontSize: '14px', textTransform: "capitalize" }}
-                    variant="outlined"
-                    startIcon={<ArrowBackIcon fontSize="small" />}
-                    onClick={handlePrevious}
-                    disabled={page === 1}
-                >
-                    Previous
-                </Button>
+            {
+                hasPagination === true ?
+                    <Box
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        mt={2}
+                        px={2}
+                    >
+                        <Button
+                            sx={{ borderColor: theme.palette.grey[300], color: theme.palette.grey[700], fontWeight: 600, fontSize: '14px', textTransform: "capitalize" }}
+                            variant="outlined"
+                            startIcon={<ArrowBackIcon fontSize="small" />}
+                            onClick={handlePrevious}
+                            disabled={page === 1}
+                        >
+                            Previous
+                        </Button>
 
-                {/* Page numbers with ellipsis */}
-                <Box>
-                    {getPaginationRange().map((p, index) =>
-                        p === "…" ? (
-                            <Button key={`ellipsis-${index}`} disabled sx={{ mx: 0.5 }}>
-                                …
-                            </Button>
-                        ) : (
-                            <Button
-                                key={p}
+                        {/* Page numbers with ellipsis */}
+                        <Box>
+                            {getPaginationRange().map((p, index) =>
+                                p === "…" ? (
+                                    <Button key={`ellipsis-${index}`} disabled sx={{ mx: 0.5 }}>
+                                        …
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        key={p}
 
-                                variant={"text"}
-                                // size="small"
-                                onClick={() => setPage(Number(p))}
-                                // sx={{ mx: 0.5 }}
+                                        variant={"text"}
+                                        // size="small"
+                                        onClick={() => setPage(Number(p))}
+                                        // sx={{ mx: 0.5 }}
 
-                                sx={(theme) => ({
-                                    height: 40,
-                                    minWidth: 40,
-                                    aspectRatio: 1,
-                                    color: theme.palette.grey[600],
-                                    mx: 0.5,
-                                    backgroundColor: p === page ? theme.palette.primary[100] : "transparent",
-                                })}
-                            >
-                                {p}
-                            </Button>
-                        )
-                    )}
-                </Box>
+                                        sx={(theme) => ({
+                                            height: 40,
+                                            minWidth: 40,
+                                            aspectRatio: 1,
+                                            color: theme.palette.grey[600],
+                                            mx: 0.5,
+                                            backgroundColor: p === page ? theme.palette.primary[100] : "transparent",
+                                        })}
+                                    >
+                                        {p}
+                                    </Button>
+                                )
+                            )}
+                        </Box>
 
-                <Button
-                    sx={{ borderColor: theme.palette.grey[300], color: theme.palette.grey[700], fontWeight: 600, fontSize: '14px', textTransform: "capitalize" }}
-                    variant="outlined"
-                    endIcon={<ArrowForwardIcon fontSize="small" />}
-                    onClick={handleNext}
-                    disabled={page === totalPages}
-                >
-                    Next
-                </Button>
-            </Box>
+                        <Button
+                            sx={{ borderColor: theme.palette.grey[300], color: theme.palette.grey[700], fontWeight: 600, fontSize: '14px', textTransform: "capitalize" }}
+                            variant="outlined"
+                            endIcon={<ArrowForwardIcon fontSize="small" />}
+                            onClick={handleNext}
+                            disabled={page === totalPages}
+                        >
+                            Next
+                        </Button>
+                    </Box>
+                    :
+                    <></>
+            }
         </Box>
     );
 }

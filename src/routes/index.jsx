@@ -14,6 +14,7 @@ import AdminSetting from "../pages/admin-setting";
 import ConfigureShiftList from "../pages/configure-shift";
 import ManageGroups from "../pages/manage-groups";
 import { Tickets } from "../pages/tickets";
+import { TicketList } from "../pages/tickets/list";
 
 const routes = [
     {
@@ -101,6 +102,12 @@ const routes = [
     {
         path: "/tickets",
         element: <Tickets />,
+        permission: 'EMPLOYEE',
+        protected: true,
+    },
+    {
+        path: "/list",
+        element: <TicketList />,
         permission: 'EMPLOYEE',
         protected: true,
     },

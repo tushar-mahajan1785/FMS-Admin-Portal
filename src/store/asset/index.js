@@ -11,7 +11,9 @@ import {
     API_ASSET_BULK_UPLOAD,
     API_ASSET_UPLOAD_LIST,
     API_ASSET_BULK_UPLOAD_CRON,
-    API_MASTER_ASSET_TYPE
+    API_MASTER_ASSET_TYPE,
+    API_GET_MASTER_ASSET_NAME,
+    API_GET_ASSET_DETAILS_BY_NAME
 } from "../../common/api/constants";
 
 export const actionAssetList = createAsyncThunk('asset/actionAssetList', async (params) => {
@@ -100,7 +102,7 @@ export const actionAssetBulkUploadCron = createAsyncThunk('asset/actionAssetBulk
         return error
     }
 })
-export const actionMasterAssetType = createAsyncThunk('assetType/actionMasterAssetType', async (params) => {
+export const actionMasterAssetType = createAsyncThunk('asset/actionMasterAssetType', async (params) => {
     try {
         const response = await axiosApi.post(API_MASTER_ASSET_TYPE, params)
 
@@ -109,7 +111,24 @@ export const actionMasterAssetType = createAsyncThunk('assetType/actionMasterAss
         return error
     }
 })
+export const actionGetAssetDetailsByName = createAsyncThunk('asset/actionGetAssetDetailsByName', async (params) => {
+    try {
+        const response = await axiosApi.post(API_GET_ASSET_DETAILS_BY_NAME, params)
 
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+export const actionGetMasterAssetName = createAsyncThunk('asset/actionGetMasterAssetName', async (params) => {
+    try {
+        const response = await axiosApi.post(API_GET_MASTER_ASSET_NAME, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
 export const AssetStore = createSlice({
     name: 'asset',
     initialState: {
@@ -122,7 +141,9 @@ export const AssetStore = createSlice({
         assetBulkUpload: null,
         assetUploadList: null,
         assetBulkUploadCron: null,
-        masterAssetType: null
+        masterAssetType: null,
+        getAssetDetailsByName: null,
+        getMasterAssetName: null
     },
 
     reducers: {
@@ -155,6 +176,12 @@ export const AssetStore = createSlice({
         },
         resetMasterAssetTypeResponse: (state) => {
             state.masterAssetType = null
+        },
+        resetGetAssetDetailsByNameResponse: (state) => {
+            state.getAssetDetailsByName = null
+        },
+        resetGetMasterAssetNameResponse: (state) => {
+            state.getMasterAssetName = null
         },
     },
     extraReducers: builder => {
@@ -189,6 +216,12 @@ export const AssetStore = createSlice({
             .addCase(actionMasterAssetType.fulfilled, (state, action) => {
                 state.masterAssetType = action.payload
             })
+            .addCase(actionGetAssetDetailsByName.fulfilled, (state, action) => {
+                state.getAssetDetailsByName = action.payload
+            })
+            .addCase(actionGetMasterAssetName.fulfilled, (state, action) => {
+                state.getMasterAssetName = action.payload
+            })
     }
 })
 
@@ -202,7 +235,9 @@ export const {
     resetAssetBulkUploadResponse,
     resetAssetUploadListResponse,
     resetAssetBulkUploadCronResponse,
-    resetMasterAssetTypeResponse
+    resetMasterAssetTypeResponse,
+    resetGetAssetDetailsByNameResponse,
+    resetGetMasterAssetNameResponse
 } =
     AssetStore.actions
 

@@ -13,6 +13,14 @@ export const TicketsByStatusChart = () => {
     const [filterOptions] = useState([{
         label: 'This Week',
         value: 'This Week'
+    },
+    {
+        label: 'This Month',
+        value: 'This Month'
+    },
+    {
+        label: 'Last 6 Months',
+        value: 'Last 6 Months'
     }])
     const [ticketsByStatusData] = useState([
         { label: 'Active', value: 16, color: theme.palette.primary[600] },
