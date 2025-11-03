@@ -198,15 +198,27 @@ export const API_USER_PROFILE_UPLOAD = `${BASE}/employee/profile-image-upload`
 
 export const API_USER_PROFILE_UPLOAD_REMOVE = `${BASE}/employee/profile-image-remove`
 
-// configure shift
-export const API_CONFIGURE_SHIFT = `${BASE}/configure-shift/save`
+// roster
+export const API_CONFIGURE_SHIFT = `${BASE}/roster-shift/add-or-edit`
 
-export const API_MANAGE_GROUPS_LIST = `${BASE}/manage-groups/list`
+export const API_CONFIGURE_SHIFT_LIST = `${BASE}/roster-shift/list`
 
-export const API_ADD_MANAGE_GROUPS = `${BASE}/manage-groups/add`
+export const API_CONFIGURE_SHIFT_REMOVE = `${BASE}/roster-shift/remove`
 
-export const API_EDIT_MANAGE_GROUPS = `${BASE}/manage-groups/edit`
+export const API_MANAGE_GROUPS_LIST = `${BASE}/roster-group/list`
 
-export const API_DELETE_MANAGE_GROUPS = `${BASE}/manage-groups/delete`
+export const API_ADD_MANAGE_GROUPS = `${BASE}/roster-group/add`
 
-export const API_MANAGE_GROUPS_DETAILS = `${BASE}/manage-groups/details`
+export const API_EDIT_MANAGE_GROUPS = `${BASE}/roster-group/edit`
+
+export const API_DELETE_MANAGE_GROUPS = `${BASE}/roster-group/remove`
+
+export const API_MANAGE_GROUPS_DETAILS = `${BASE}/roster-group/details`
+
+export const API_ASSET_TYPE_WISE_LIST = `${BASE}/roster-group/type-wise-asset-list`
+
+export const API_EMPLOYEE_TYPE_WISE_LIST = `${BASE}/roster-group/type-wise-employee-list`
+
+export const API_ROSTER_GROUP_MASTER_LIST = `${BASE}/roster-group/master-list`
+
+export const API_ROSTER_GROUP_EMPLOYEE_LIST = `${BASE}/roster-group/employee-list`

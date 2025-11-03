@@ -13,6 +13,8 @@ export default function FormHeader({
   actions = [],
   size = 40,
   message,
+  centerSection,
+  rightSection
 }) {
   const theme = useTheme();
 
@@ -63,9 +65,14 @@ export default function FormHeader({
           )}
         </Box>
       </Stack>
-
+      {centerSection && centerSection !== null ? centerSection : <></>}
       {/* Right side actions */}
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" alignItems="center" spacing={2}>
+         {rightSection && rightSection !== null ?
+          rightSection
+          :
+          <></>
+        }
         {excelIcon}
         {actions.map((action, index) => (
           <Box key={index} display="flex" alignItems="center">

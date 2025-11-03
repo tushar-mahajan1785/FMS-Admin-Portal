@@ -1,14 +1,24 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 import { axiosApi } from "../../common/api";
 import { getErrorResponse } from "../../utils";
-import { 
+import {
     API_CONFIGURE_SHIFT,
     API_MANAGE_GROUPS_LIST,
     API_ADD_MANAGE_GROUPS,
     API_EDIT_MANAGE_GROUPS,
     API_DELETE_MANAGE_GROUPS,
-    API_MANAGE_GROUPS_DETAILS
- } from "../../common/api/constants";
+    API_MANAGE_GROUPS_DETAILS,
+    API_ASSET_TYPE_WISE_LIST
+} from "../../common/api/constants";
+
+export const defaultRosterData = {
+    asset_type: '',
+    role_type_id: ''
+}
+
+export const actionRosterData = createAsyncThunk('roster/actionRosterData', async (params) => {
+    return params
+})
 
 export const actionConfigureShift = createAsyncThunk('roster/actionConfigureShift', async (params) => {
     try {
@@ -70,6 +80,16 @@ export const actionManageGroupsDetails = createAsyncThunk('roster/actionManageGr
     }
 })
 
+export const actionAssetTypeWiseList = createAsyncThunk('roster/actionAssetTypeWiseList', async (params) => {
+    try {
+        const response = await axiosApi.post(API_ASSET_TYPE_WISE_LIST, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+
 export const rosterStore = createSlice({
     name: 'roster',
     initialState: {
@@ -78,7 +98,9 @@ export const rosterStore = createSlice({
         addManageGroups: null,
         editManageGroups: null,
         deleteManageGroups: null,
-        manageGroupsDetails: null
+        manageGroupsDetails: null,
+        rosterData: null,
+        assetTypeWiseList: null
     },
 
     reducers: {
@@ -99,6 +121,12 @@ export const rosterStore = createSlice({
         },
         resetManageGroupsDetailsResponse: (state) => {
             state.manageGroupsDetails = null
+        },
+        resetRosterDataResponse: (state) => {
+            state.rosterData = null
+        },
+        resetAssetTypeWiseListResponse: (state) => {
+            state.assetTypeWiseList = null
         },
     },
     extraReducers: builder => {
@@ -121,6 +149,12 @@ export const rosterStore = createSlice({
             .addCase(actionManageGroupsDetails.fulfilled, (state, action) => {
                 state.manageGroupsDetails = action.payload
             })
+            .addCase(actionRosterData.fulfilled, (state, action) => {
+                state.rosterData = action.payload
+            })
+            .addCase(actionAssetTypeWiseList.fulfilled, (state, action) => {
+                state.assetTypeWiseList = action.payload
+            })
     }
 })
 
@@ -130,7 +164,9 @@ export const {
     resetAddManageGroupsResponse,
     resetEditManageGroupsResponse,
     resetDeleteManageGroupsResponse,
-    resetManageGroupsDetailsResponse
+    resetManageGroupsDetailsResponse,
+    resetRosterDataResponse,
+    resetAssetTypeWiseListResponse
 } =
     rosterStore.actions
 
