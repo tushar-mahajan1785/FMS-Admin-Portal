@@ -1,5 +1,6 @@
 import CryptoJS from "crypto-js";
 import { CRYPTO_SECRET_KEY } from "../common/api/constants";
+import imageCompression from 'browser-image-compression';
 
 /**
  *Function  Handle Server Error
@@ -134,5 +135,32 @@ export const concatMultipleStrings = (branch) => {
 };
 
 export const valueFormatter = (item) => `${item.value}%`;
+
+
+
+
+
+/**
+ * Function to compress the images files while upload
+ * @param {*} file 
+ * @returns 
+ */
+export const compressFile = (file) => {
+  // Only compress image files
+  const isImage = ['image/jpeg', 'image/png', 'image/jpg'].includes(file.type);
+  if (isImage) {
+    // Compress to max 1MB and max width/height 1920px (adjust as needed)
+    const options = {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+    };
+
+
+    return imageCompression(file, options);
+  }
+  // For non-images, return file as-is
+  return file;
+};
 
 

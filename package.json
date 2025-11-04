@@ -19,6 +19,7 @@
     "@reduxjs/toolkit": "^2.8.2",
     "apexcharts": "^5.3.6",
     "axios": "^1.11.0",
+    "browser-image-compression": "^2.0.2",
     "crypto-js": "^4.2.0",
     "html-react-parser": "^5.2.6",
     "lodash": "^4.17.21",

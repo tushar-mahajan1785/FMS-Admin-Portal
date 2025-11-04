@@ -36,9 +36,10 @@ import FieldBox from "../../../components/field-box";
 import { AntSwitch } from "../../../components/common";
 import DeleteIcon from "../../../assets/icons/DeleteIcon";
 import FileIcon from "../../../assets/icons/FileIcon";
-import { actionGetAssetDetailsByName, actionGetMasterAssetName, actionMasterAssetType, resetGetAssetDetailsByNameResponse, resetGetMasterAssetNameResponse, resetMasterAssetTypeResponse } from "../../../store/asset";
+import { actionAssetCustodianList, actionGetAssetDetailsByName, actionGetMasterAssetName, actionMasterAssetType, resetAssetCustodianListResponse, resetGetAssetDetailsByNameResponse, resetGetMasterAssetNameResponse, resetMasterAssetTypeResponse } from "../../../store/asset";
 import { useBranch } from "../../../hooks/useBranch";
 import { actionAddTicket, resetAddTicketResponse } from "../../../store/tickets";
+import { compressFile, getFormData } from "../../../utils";
 
 export default function AddTicket({ open, handleClose }) {
     const theme = useTheme()
@@ -48,13 +49,16 @@ export default function AddTicket({ open, handleClose }) {
     const branch = useBranch()
     const inputRef = useRef();
 
+    const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'xlsx', 'csv', 'pdf', 'docx'];
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
+
     // Trigger file dialog
     const handleTriggerInput = () => {
         inputRef.current.click();
     };
 
     //Stores
-    const { masterAssetType, getMasterAssetName, getAssetDetailsByName } = useSelector(state => state.AssetStore)
+    const { masterAssetType, getMasterAssetName, getAssetDetailsByName, assetCustodianList } = useSelector(state => state.AssetStore)
     const { addTicket } = useSelector(state => state.ticketsStore)
 
     const {
@@ -90,12 +94,17 @@ export default function AddTicket({ open, handleClose }) {
     const [vendorEscalationDetailsData, setVendorEscalationDetailsData] = useState([])
     const [arrUploadedFiles, setArrUploadedFiles] = useState([])
 
-    // console.log('-----arrUploadedFiles----', arrUploadedFiles)
+    console.log('-----arrUploadedFiles----', arrUploadedFiles)
 
+    //Initial Render
     useEffect(() => {
         if (open === true) {
             dispatch(actionMasterAssetType({
                 client_uuid: branch?.currentBranch?.client_uuid
+            }))
+            dispatch(actionAssetCustodianList({
+                client_id: branch?.currentBranch?.client_id,
+                branch_uuid: branch?.currentBranch?.uuid
             }))
         }
 
@@ -106,6 +115,7 @@ export default function AddTicket({ open, handleClose }) {
             setSupervisorMasterOptions([])
             setAssetDetailData([])
             setVendorEscalationDetailsData([])
+            setArrUploadedFiles([])
         }
 
     }, [open])
@@ -134,25 +144,68 @@ export default function AddTicket({ open, handleClose }) {
         }
     }, [watchAssetName])
 
+    //handle delete function
     const handleDelete = (index) => {
         const newFiles = [...arrUploadedFiles];
         newFiles.splice(index, 1);
         setArrUploadedFiles(newFiles);
     };
 
-    // Handle file selection
-    const handleFileChange = (event) => {
-        const selectedFiles = Array.from(event.target.files);
-        setArrUploadedFiles((prev) => [...prev, ...selectedFiles]);
+    /**
+     * Check if the selected files extension is valid or not
+     * @param {*} fileName 
+     * @returns 
+     */
+    const isValidExtension = (fileName) => {
+        const ext = fileName.split('.').pop().toLowerCase();
+        return ALLOWED_EXTENSIONS.includes(ext);
     };
 
+    //handle file change function
+    const handleFileChange = (event) => {
+        const selectedFiles = Array.from(event.target.files);
+        let filesToAdd = [];
+        for (let file of selectedFiles) {
+            if (!isValidExtension(file.name)) {
+                showSnackbar({ message: `File "${file.name}" has an invalid file type.`, severity: "error" });
+                continue;
+            }
+            if (file.size > MAX_FILE_SIZE) {
+                showSnackbar({ message: `File "${file.name}" exceeds the 50MB size limit.`, severity: "error" });
+                continue;
+            }
+            // Add is_new anf file name key here
+            filesToAdd.push({ file, is_new: 1, name: file?.name });
+        }
+        if (filesToAdd.length > 0) {
+            setArrUploadedFiles((prev) => [...prev, ...filesToAdd]);
+        }
+        event.target.value = null;
+    };
+
+    //handle drag drop function
     const handleDrop = (event) => {
         event.preventDefault();
         event.stopPropagation();
         const droppedFiles = Array.from(event.dataTransfer.files);
-        setArrUploadedFiles((prev) => [...prev, ...droppedFiles]);
+        let filesToAdd = [];
+        for (let file of droppedFiles) {
+            if (!isValidExtension(file.name)) {
+                showSnackbar({ message: `File "${file.name}" has an invalid file type.`, severity: "error" });
+                continue;
+            }
+            if (file.size > MAX_FILE_SIZE) {
+                showSnackbar({ message: `File "${file.name}" exceeds the 50MB size limit.`, severity: "error" });
+                continue;
+            }
+            filesToAdd.push({ file, is_new: 1 });
+        }
+        if (filesToAdd.length > 0) {
+            setArrUploadedFiles((prev) => [...prev, ...filesToAdd]);
+        }
     };
 
+    //handle drag over
     const handleDragOver = (event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -308,6 +361,37 @@ export default function AddTicket({ open, handleClose }) {
     }, [getAssetDetailsByName])
 
     /**
+      * useEffect
+      * @dependency : assetCustodianList
+      * @type : HANDLE API RESULT
+      * @description : Handle the result of asset Custodian List API
+      */
+    useEffect(() => {
+        if (assetCustodianList && assetCustodianList !== null) {
+            dispatch(resetAssetCustodianListResponse())
+            if (assetCustodianList?.result === true) {
+                setSupervisorMasterOptions(assetCustodianList?.response)
+            } else {
+                setSupervisorMasterOptions([])
+                switch (assetCustodianList?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetAssetCustodianListResponse())
+                        break
+                    case SERVER_ERROR:
+                        toast.dismiss()
+                        showSnackbar({ message: assetCustodianList?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [assetCustodianList])
+
+    /**
      * useEffect
      * @dependency : addTicket
      * @type : HANDLE API RESULT
@@ -343,13 +427,46 @@ export default function AddTicket({ open, handleClose }) {
         }
     }, [addTicket])
 
-    //handle submit function
+    /**
+     * handle Submit function
+     * @param {*} data 
+     */
     const onSubmit = data => {
-        // data.status = clientGroupStatus
-        data.name = data.name && data.name !== null ? data.name : null
-        data.description = data.description && data.description !== null ? data.description : null
+        console.log('-------data-----', data)
+        let selectedVendors = vendorEscalationDetailsData && vendorEscalationDetailsData !== null && vendorEscalationDetailsData.length > 0 ?
+            vendorEscalationDetailsData?.filter(obj => obj?.is_selected === 1)?.map(obj => obj?.id)?.join(',')
+            : [];
+
+        let objData = {
+            asset_type_id: data.type,
+            asset_id: data.asset_name,
+            title: data.title && data.title !== null ? data.title : null,
+            supervisor: data.supervisor && data.supervisor !== null ? data.supervisor : null,
+            priority: data.priority && data.priority !== null ? data.priority : null,
+            description: data.description && data.description !== null ? data.description : null,
+            assigned_vendors: selectedVendors
+        }
+
+        const files = [];
+        let hasNewFiles = arrUploadedFiles.filter(obj => obj?.is_new === 1)
+        if (hasNewFiles && hasNewFiles.length > 0 && arrUploadedFiles && arrUploadedFiles.length > 0) {
+            arrUploadedFiles.map((objFile, index) => {
+                if (objFile?.is_new === 1) {
+
+                    //Compress the files with type image
+                    const compressedFile = compressFile(objFile.file);
+
+                    files.push({
+                        title: `ticket_upload_${index + 1}`,
+                        data: compressedFile
+                    });
+                }
+
+            })
+        }
         setLoading(true)
-        dispatch(actionAddTicket(data))
+        const formData = getFormData(objData, files);
+        dispatch(actionAddTicket(formData))
     };
 
     return (
@@ -403,8 +520,7 @@ export default function AddTicket({ open, handleClose }) {
                     }}
                 >
                     <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
-                        <Grid container spacing={'24px'}
-                        >
+                        <Grid container spacing={'24px'}>
                             <Grid size={{ xs: 12, sm: 12, md: 12, lg: 9, xl: 9 }}>
                                 <Stack>
                                     <SectionHeader title="Create Ticket For" show_progress={0} />
@@ -440,7 +556,7 @@ export default function AddTicket({ open, handleClose }) {
                                                             error={Boolean(errors.type)}
                                                             {...(errors.type && { helperText: errors.type.message })}
                                                         >
-                                                            <MenuItem value='' disabled>
+                                                            <MenuItem value=''>
                                                                 <em>Select Asset Type</em>
                                                             </MenuItem>
                                                             {masterAssetTypeOptions && masterAssetTypeOptions !== null && masterAssetTypeOptions.length > 0 &&
@@ -451,7 +567,7 @@ export default function AddTicket({ open, handleClose }) {
                                                                         sx={{
                                                                             whiteSpace: 'normal',        // allow wrapping
                                                                             wordBreak: 'break-word',     // break long words if needed
-                                                                            maxWidth: 250,               // control dropdown width
+                                                                            maxWidth: 300,               // control dropdown width
                                                                             display: '-webkit-box',
                                                                             WebkitLineClamp: 2,          // limit to 2 lines
                                                                             WebkitBoxOrient: 'vertical',
@@ -496,7 +612,7 @@ export default function AddTicket({ open, handleClose }) {
                                                             error={Boolean(errors.asset_name)}
                                                             {...(errors.asset_name && { helperText: errors.asset_name.message })}
                                                         >
-                                                            <MenuItem value='' disabled>
+                                                            <MenuItem value=''>
                                                                 <em>Select Asset Name</em>
                                                             </MenuItem>
                                                             {masterAssetNameOptions && masterAssetNameOptions !== null && masterAssetNameOptions.length > 0 &&
@@ -507,7 +623,7 @@ export default function AddTicket({ open, handleClose }) {
                                                                         sx={{
                                                                             whiteSpace: 'normal',        // allow wrapping
                                                                             wordBreak: 'break-word',     // break long words if needed
-                                                                            maxWidth: 250,               // control dropdown width
+                                                                            maxWidth: 300,               // control dropdown width
                                                                             display: '-webkit-box',
                                                                             WebkitLineClamp: 2,          // limit to 2 lines
                                                                             WebkitBoxOrient: 'vertical',
@@ -555,27 +671,27 @@ export default function AddTicket({ open, handleClose }) {
                                         <Grid container >
                                             {/* Asset ID */}
                                             <Grid size={{ xs: 12, sm: 6, md: 2, lg: 2, xl: 2 }}>
-                                                <FieldBox label="Asset ID" value={assetDetailData?.asset_id && assetDetailData?.asset_id !== null ? assetDetailData?.asset_id : ''} />
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Asset ID" value={assetDetailData?.asset_id && assetDetailData?.asset_id !== null ? assetDetailData?.asset_id : ''} />
                                             </Grid>
                                             {/* Asset Name */}
                                             <Grid size={{ xs: 12, sm: 6, md: 2, lg: 2, xl: 2 }}>
-                                                <FieldBox label="Asset Name" value={assetDetailData?.asset_name && assetDetailData?.asset_name !== null ? assetDetailData?.asset_name : ''} />
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Asset Name" value={assetDetailData?.asset_name && assetDetailData?.asset_name !== null ? assetDetailData?.asset_name : ''} />
                                             </Grid>
                                             {/* Asset Make */}
                                             <Grid size={{ xs: 12, sm: 6, md: 2, lg: 2, xl: 2 }}>
-                                                <FieldBox label="Make" value={assetDetailData?.make && assetDetailData?.make !== null ? assetDetailData?.make : ''} />
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Make" value={assetDetailData?.make && assetDetailData?.make !== null ? assetDetailData?.make : ''} />
                                             </Grid>
                                             {/* Asset Model */}
                                             <Grid size={{ xs: 12, sm: 6, md: 2, lg: 2, xl: 2 }}>
-                                                <FieldBox label="Model" value={assetDetailData?.model && assetDetailData?.model !== null ? assetDetailData?.model : ''} />
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Model" value={assetDetailData?.model && assetDetailData?.model !== null ? assetDetailData?.model : ''} />
                                             </Grid>
                                             {/* Asset sr. Number */}
                                             <Grid size={{ xs: 12, sm: 6, md: 2, lg: 2, xl: 2 }}>
-                                                <FieldBox label="Serial Number" value={assetDetailData?.serial_no && assetDetailData?.serial_no !== null ? assetDetailData?.serial_no : ''} />
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Serial Number" value={assetDetailData?.serial_no && assetDetailData?.serial_no !== null ? assetDetailData?.serial_no : ''} />
                                             </Grid>
                                             {/* Asset type */}
                                             <Grid size={{ xs: 12, sm: 6, md: 2, lg: 2, xl: 2 }}>
-                                                <FieldBox label="Type" value={assetDetailData?.type && assetDetailData?.type !== null ? assetDetailData?.type : ''} />
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Type" value={assetDetailData?.type && assetDetailData?.type !== null ? assetDetailData?.type : ''} />
                                             </Grid>
                                             <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }} >
                                                 <Stack sx={{ borderBottom: `1px solid ${theme.palette.grey[300]}`, mx: 2 }}>
@@ -584,27 +700,27 @@ export default function AddTicket({ open, handleClose }) {
                                             </Grid>
                                             {/* Asset Rating */}
                                             <Grid size={{ xs: 12, sm: 6, md: 2, lg: 2, xl: 2 }}>
-                                                <FieldBox label="Rating" value={assetDetailData?.rating_capacity && assetDetailData?.rating_capacity !== null ? assetDetailData?.rating_capacity : ''} />
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Rating" value={assetDetailData?.rating_capacity && assetDetailData?.rating_capacity !== null ? assetDetailData?.rating_capacity : ''} />
                                             </Grid>
                                             {/* customer */}
                                             <Grid size={{ xs: 12, sm: 6, md: 2, lg: 2, xl: 2 }}>
-                                                <FieldBox label="Customer" value={assetDetailData?.client_name && assetDetailData?.client_name !== null ? assetDetailData?.client_name : ''} />
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Customer" value={assetDetailData?.client_name && assetDetailData?.client_name !== null ? assetDetailData?.client_name : ''} />
                                             </Grid>
                                             {/* Asset Owner */}
                                             <Grid size={{ xs: 12, sm: 6, md: 2, lg: 2, xl: 2 }}>
-                                                <FieldBox label="Owner" value={assetDetailData?.asset_owner && assetDetailData?.asset_owner !== null ? assetDetailData?.asset_owner : ''} />
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Owner" value={assetDetailData?.asset_owner && assetDetailData?.asset_owner !== null ? assetDetailData?.asset_owner : ''} />
                                             </Grid>
                                             {/* Asset Custodian */}
                                             <Grid size={{ xs: 12, sm: 6, md: 2, lg: 2, xl: 2 }}>
-                                                <FieldBox label="Custodian" value={assetDetailData?.asset_custodian && assetDetailData?.asset_custodian !== null ? assetDetailData?.asset_custodian : ''} />
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Custodian" value={assetDetailData?.asset_custodian && assetDetailData?.asset_custodian !== null ? assetDetailData?.asset_custodian : ''} />
                                             </Grid>
                                             {/* Status */}
                                             <Grid size={{ xs: 12, sm: 6, md: 2, lg: 2, xl: 2 }}>
-                                                <FieldBox label="Status" value={assetDetailData?.status && assetDetailData?.status !== null ? assetDetailData?.status : ''} />
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Status" value={assetDetailData?.status && assetDetailData?.status !== null ? assetDetailData?.status : ''} />
                                             </Grid>
                                             {/* Location */}
                                             <Grid size={{ xs: 12, sm: 6, md: 2, lg: 2, xl: 2 }}>
-                                                <FieldBox label="Location" value={assetDetailData?.location && assetDetailData?.location !== null ? assetDetailData?.location : ''} />
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Location" value={assetDetailData?.location && assetDetailData?.location !== null ? assetDetailData?.location : ''} />
                                             </Grid>
                                         </Grid>
                                     </Stack>
@@ -616,7 +732,7 @@ export default function AddTicket({ open, handleClose }) {
                                                     name='title'
                                                     control={control}
                                                     rules={{
-                                                        // required: 'Location is required',
+                                                        required: 'Location is required',
                                                         maxLength: {
                                                             value: 255,
                                                             message: 'Maximum length is 255 characters'
@@ -627,7 +743,7 @@ export default function AddTicket({ open, handleClose }) {
                                                             fullWidth
                                                             placeholder={'Title'}
                                                             value={field?.value}
-                                                            label={<FormLabel label='Title' required={false} />}
+                                                            label={<FormLabel label='Title' required={true} />}
                                                             onChange={field.onChange}
                                                             inputProps={{ maxLength: 255 }}
                                                             error={Boolean(errors.title)}
@@ -648,7 +764,7 @@ export default function AddTicket({ open, handleClose }) {
                                                             select
                                                             fullWidth
                                                             value={field?.value ?? ''}
-                                                            label={<FormLabel label='Supervisor' required={false} />}
+                                                            label={<FormLabel label='Supervisor' required={true} />}
                                                             onChange={field?.onChange}
                                                             SelectProps={{
                                                                 displayEmpty: true,
@@ -666,7 +782,7 @@ export default function AddTicket({ open, handleClose }) {
                                                             error={Boolean(errors.supervisor)}
                                                             {...(errors.supervisor && { helperText: errors.supervisor.message })}
                                                         >
-                                                            <MenuItem value='' disabled>
+                                                            <MenuItem value=''>
                                                                 <em>Select Supervisor</em>
                                                             </MenuItem>
                                                             {supervisorMasterOptions && supervisorMasterOptions !== null && supervisorMasterOptions.length > 0 &&
@@ -677,7 +793,7 @@ export default function AddTicket({ open, handleClose }) {
                                                                         sx={{
                                                                             whiteSpace: 'normal',        // allow wrapping
                                                                             wordBreak: 'break-word',     // break long words if needed
-                                                                            maxWidth: 250,               // control dropdown width
+                                                                            maxWidth: 300,               // control dropdown width
                                                                             display: '-webkit-box',
                                                                             WebkitLineClamp: 2,          // limit to 2 lines
                                                                             WebkitBoxOrient: 'vertical',
@@ -704,7 +820,7 @@ export default function AddTicket({ open, handleClose }) {
                                                             select
                                                             fullWidth
                                                             value={field?.value ?? ''}
-                                                            label={<FormLabel label='Priority' required={false} />}
+                                                            label={<FormLabel label='Priority' required={true} />}
                                                             onChange={field?.onChange}
                                                             SelectProps={{
                                                                 displayEmpty: true,
@@ -722,7 +838,7 @@ export default function AddTicket({ open, handleClose }) {
                                                             error={Boolean(errors.priority)}
                                                             {...(errors.priority && { helperText: errors.priority.message })}
                                                         >
-                                                            <MenuItem value='' disabled>
+                                                            <MenuItem value=''>
                                                                 <em>Select Priority</em>
                                                             </MenuItem>
                                                             {getPriorityArray && getPriorityArray !== null && getPriorityArray.length > 0 &&
@@ -784,7 +900,6 @@ export default function AddTicket({ open, handleClose }) {
                                 <Stack>
                                     <SectionHeader title="Vendor Details" show_progress={0} />
                                     <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}`, p: 2, marginTop: '-4px' }}>
-
                                         {
                                             vendorEscalationDetailsData && vendorEscalationDetailsData !== null && vendorEscalationDetailsData.length > 0 ?
                                                 <>
@@ -848,18 +963,16 @@ export default function AddTicket({ open, handleClose }) {
                                                     <TypographyComponent fontSize={16} fontWeight={500} sx={{ mt: 3, textAlign: 'center' }}>Select Asset to get vendor details</TypographyComponent>
                                                 </Stack>
                                         }
-
                                     </Stack>
                                     <SectionHeader title="Upload Files" show_progress={0} sx={{ marginTop: 2 }} />
                                     <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}`, p: 2, marginTop: '-4px' }}>
-
                                         <Box sx={{ mb: 0 }}>
                                             <Stack onClick={handleTriggerInput} onDrop={handleDrop}
                                                 onDragOver={handleDragOver}
                                                 sx={{ cursor: 'pointer', border: `1px dashed ${theme.palette.primary[600]}`, borderRadius: '8px', background: theme.palette.primary[100], p: '16px', flexDirection: 'row', justifyContent: 'center' }}>
                                                 <input
                                                     hidden
-                                                    accept="image/*"
+                                                    accept=".jpg,.jpeg,.png,.xlsx,.csv,.pdf,.docx"
                                                     type="file"
                                                     multiple
                                                     ref={inputRef}
@@ -890,12 +1003,11 @@ export default function AddTicket({ open, handleClose }) {
                                                                 <ListItemText
                                                                     primary={
                                                                         <TypographyComponent fontSize={14} fontWeight={500} sx={{ textDecoration: 'underline' }}>
-                                                                            {file.name}
+                                                                            {file?.name}
                                                                         </TypographyComponent>
                                                                     }
                                                                 />
                                                             </ListItem>
-
                                                         </React.Fragment>
                                                     ))
                                                     :
@@ -933,7 +1045,7 @@ export default function AddTicket({ open, handleClose }) {
                         {loading ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'Confirm'}
                     </Button>
                 </Stack>
-            </Stack >
-        </Drawer >
+            </Stack>
+        </Drawer>
     );
 }
