@@ -20,7 +20,7 @@ import CustomStepIcon from '../../../components/custom-step-icon';
 import { CustomStepConnector } from '../../../components/common';
 import SelectAssetStep from './components/asset-step';
 import SelectEmployeesStep from './components/employee-step';
-import { actionAddManageGroups, resetAddManageGroupsResponse } from '../../../store/roster';
+import { actionEditManageGroups, resetEditManageGroupsResponse } from '../../../store/roster';
 import toast from 'react-hot-toast';
 import { ERROR, SERVER_ERROR, UNAUTHORIZED } from '../../../constants';
 import { useDispatch, useSelector } from 'react-redux';
@@ -28,7 +28,7 @@ import { useAuth } from '../../../hooks/useAuth';
 import { useSnackbar } from '../../../hooks/useSnackbar';
 import { useBranch } from '../../../hooks/useBranch';
 
-export default function AddManageGroups({ open, handleClose }) {
+export default function EditManageGroups({ open, objData, handleClose }) {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout } = useAuth()
@@ -40,14 +40,14 @@ export default function AddManageGroups({ open, handleClose }) {
     const steps = ['Select Asset', 'Select Employees & Confirm'];
 
     // store
-    const { rosterData, addManageGroups } = useSelector(state => state.rosterStore)
+    const { rosterData, editManageGroups } = useSelector(state => state.rosterStore)
 
     const getStepContent = (step) => {
         switch (step) {
             case 0:
-                return <SelectAssetStep />;
+                return <SelectAssetStep assetData={objData} />;
             case 1:
-                return <SelectEmployeesStep />;
+                return <SelectEmployeesStep employeeData={objData} />;
             default:
                 return <Typography>Unknown step</Typography>;
         }
@@ -57,11 +57,13 @@ export default function AddManageGroups({ open, handleClose }) {
         if (!isLastStep) {
             setActiveStep((prevActiveStep) => prevActiveStep + 1);
         } else {
-            dispatch(actionAddManageGroups({
+            dispatch(actionEditManageGroups({
                 branch_uuid: branch?.currentBranch?.uuid,
                 assets: rosterData?.assets,
                 employees: rosterData?.employees,
-                roster_group_name: rosterData?.roster_group_name
+                roster_group_name: rosterData?.roster_group_name,
+                roster_group_uuid: objData?.uuid,
+
             }))
         }
     };
@@ -78,42 +80,42 @@ export default function AddManageGroups({ open, handleClose }) {
 
     /**
           * useEffect
-          * @dependency : addManageGroups
+          * @dependency : edit Manage Groups
           * @type : HANDLE API RESULT
           * @description : Handle the result of add Manage Groups API
           */
     useEffect(() => {
-        if (addManageGroups && addManageGroups !== null) {
-            dispatch(resetAddManageGroupsResponse())
-            if (addManageGroups?.result === true) {
+        if (editManageGroups && editManageGroups !== null) {
+            dispatch(resetEditManageGroupsResponse())
+            if (editManageGroups?.result === true) {
                 handleClose('save')
                 setActiveStep(0);
                 toast.dismiss()
-                showSnackbar({ message: addManageGroups?.message, severity: "success" })
+                showSnackbar({ message: editManageGroups?.message, severity: "success" })
                 setLoading(false)
             } else {
                 handleClose()
                 setActiveStep(0);
                 setLoading(false)
-                switch (addManageGroups?.status) {
+                switch (editManageGroups?.status) {
                     case UNAUTHORIZED:
                         logout()
                         break
                     case ERROR:
-                        dispatch(resetAddManageGroupsResponse())
+                        dispatch(resetEditManageGroupsResponse())
                         toast.dismiss()
-                        showSnackbar({ message: addManageGroups?.message, severity: "error" })
+                        showSnackbar({ message: editManageGroups?.message, severity: "error" })
                         break
                     case SERVER_ERROR:
                         toast.dismiss()
-                        showSnackbar({ message: addManageGroups?.message, severity: "error" })
+                        showSnackbar({ message: editManageGroups?.message, severity: "error" })
                         break
                     default:
                         break
                 }
             }
         }
-    }, [addManageGroups])
+    }, [editManageGroups])
 
     return (
         <Drawer
@@ -129,8 +131,8 @@ export default function AddManageGroups({ open, handleClose }) {
                     color={theme.palette.primary[600]}
                     size={48}
                     icon={<UserIcon stroke={theme.palette.primary[600]} size={18} />}
-                    title="Create New Group"
-                    subtitle="Fill below form to create new group"
+                    title="Edit Group Details"
+                    subtitle="Fill below form to edit group details"
                     centerSection={
                         <Box sx={{ p: 2, flexGrow: 1 }}>
                             <Stepper
@@ -225,7 +227,7 @@ export default function AddManageGroups({ open, handleClose }) {
                         variant="contained"
                         disabled={loading}
                     >
-                        {isLastStep ? 'Create Group' : loading ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'Next'}
+                        {isLastStep ? 'Save Changes' : loading ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'Next'}
                     </Button>
                 </Stack>
             </Stack>

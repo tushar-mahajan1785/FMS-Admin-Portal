@@ -1,7 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import {
     Box,
-    Button,
     Card,
     CardContent,
     Divider,
@@ -17,22 +16,23 @@ import React, { useEffect, useState } from "react";
 import SearchIcon from "../../../../../assets/icons/SearchIcon";
 import TypographyComponent from "../../../../../components/custom-typography";
 import { AntSwitch, SearchInput } from "../../../../../components/common";
-import { actionMasterAssetType, resetMasterAssetTypeResponse } from "../../../../../store/asset";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../../../../../hooks/useAuth";
 import { useBranch } from "../../../../../hooks/useBranch";
 import { ERROR, IMAGES_SCREEN_NO_DATA, SERVER_ERROR, UNAUTHORIZED } from "../../../../../constants";
 import toast from "react-hot-toast";
 import { useSnackbar } from "../../../../../hooks/useSnackbar";
-import { actionRosterData, actionAssetTypeWiseList, resetAssetTypeWiseListResponse } from "../../../../../store/roster";
+import { actionRosterData, actionEmployeeTypeWiseList, resetEmployeeTypeWiseListResponse } from "../../../../../store/roster";
+import EmptyContent from "../../../../../components/empty_content";
+import { actionGetRoleTypeList, resetGetRoleTypeListResponse } from "../../../../../store/master/role-type"
 import { Controller, useForm } from "react-hook-form";
+import ChevronDownIcon from "../../../../../assets/icons/ChevronDown";
 import CustomTextField from "../../../../../components/text-field";
 import FormLabel from "../../../../../components/form-label";
-import EmptyContent from "../../../../../components/empty_content";
-import ChevronDownIcon from "../../../../../assets/icons/ChevronDown";
-import { getObjectById } from "../../../../../utils";
+import { decrypt, getObjectById } from "../../../../../utils";
+import ListComponents from "../../../../../components/list-components";
 
-export default function SelectAssetStep() {
+export default function SelectEmployeesStep({ employeeData }) {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout } = useAuth()
@@ -45,130 +45,136 @@ export default function SelectAssetStep() {
         formState: { errors }
     } = useForm({
         defaultValues: {
-            roster_group_name: ''
+            role_type_id: ''
         }
     });
 
     // state
     const [searchQuery, setSearchQuery] = useState('')
-    const [assetTypeMasterOption, setAssetTypeMasterOption] = useState([])
-    const [assetTypeWiseListOptions, setAssetTypeWiseListOptions] = useState([])
-    const [assetTypeWiseListOriginalData, setAssetTypeWiseListOriginalData] = useState([])
+    const [employeeRoleTypeOptions, setEmployeeRoleTypeOptions] = useState([])
+    const [employeeTypeWiseListOptions, setEmployeeTypeWiseListOptions] = useState([])
+    const [employeeTypeWiseListOriginalData, setEmployeeTypeWiseListOriginalData] = useState([])
 
     // store
-    const { masterAssetType } = useSelector(state => state.AssetStore)
-    const { rosterData, assetTypeWiseList } = useSelector(state => state.rosterStore)
+    const { getRoleTypeList } = useSelector(state => state.masterRoleTypeStore)
+    const { rosterData, employeeTypeWiseList } = useSelector(state => state.rosterStore)
 
     /**
     * initial render
     */
     useEffect(() => {
-        if (branch?.currentBranch?.client_uuid && branch?.currentBranch?.client_uuid !== null) {
-            dispatch(actionMasterAssetType({
+        if (branch?.currentBranch?.role_type_flag == 1 && branch?.currentBranch?.client_uuid && branch?.currentBranch?.client_uuid !== null) {
+            dispatch(actionGetRoleTypeList({
                 client_uuid: branch?.currentBranch?.client_uuid
             }))
         }
     }, [branch?.currentBranch])
 
     useEffect(() => {
-        if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && rosterData?.asset_type && rosterData?.asset_type !== null) {
-            dispatch(actionAssetTypeWiseList({
+        if (employeeData && employeeData !== null) {
+            setValue('role_type_id', employeeData?.employees[0]?.role_type_id)
+            let objData = Object.assign({}, rosterData)
+            objData.employees = employeeData?.employees
+            objData.role_type_id = employeeData?.employees[0]?.role_type_id
+            dispatch(actionRosterData(objData))
+            setEmployeeTypeWiseListOptions(employeeData?.employees)
+        }
+    }, [employeeData])
+
+    useEffect(() => {
+        if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && rosterData?.role_type_id && rosterData?.role_type_id !== null) {
+            dispatch(actionEmployeeTypeWiseList({
                 branch_uuid: branch?.currentBranch?.uuid,
-                asset_type: rosterData?.asset_type
+                role_type_id: rosterData?.role_type_id
             }))
         }
-    }, [branch?.currentBranch, rosterData?.asset_type])
+    }, [branch?.currentBranch, rosterData?.role_type_id])
 
     /**
-    * Filter the asset type wise list
+    * Filter the employee type wise list
     */
     useEffect(() => {
         if (searchQuery && searchQuery.trim().length > 0) {
-            if (assetTypeWiseListOriginalData && assetTypeWiseListOriginalData !== null && assetTypeWiseListOriginalData.length > 0) {
-                var filteredData = assetTypeWiseListOriginalData.filter(
+            if (employeeTypeWiseListOriginalData && employeeTypeWiseListOriginalData !== null && employeeTypeWiseListOriginalData.length > 0) {
+                var filteredData = employeeTypeWiseListOriginalData.filter(
                     item =>
-                        (item?.asset_description && item?.asset_description.toLowerCase().includes(searchQuery.trim().toLowerCase())) ||
-                        (item?.type && item?.type.toLowerCase().includes(searchQuery.trim().toLowerCase()))
+                        (item?.name && item?.name.toLowerCase().includes(searchQuery.trim().toLowerCase()))
                 )
 
                 if (filteredData && filteredData.length > 0) {
-                    setAssetTypeWiseListOptions(filteredData)
+                    setEmployeeTypeWiseListOptions(filteredData)
                 } else {
-                    setAssetTypeWiseListOptions([])
+                    setEmployeeTypeWiseListOptions([])
                 }
             }
         } else {
-            setAssetTypeWiseListOptions(assetTypeWiseListOriginalData)
+            setEmployeeTypeWiseListOptions(employeeTypeWiseListOriginalData)
         }
     }, [searchQuery])
 
     /**
-     * useEffect
-     * @dependency : masterAssetType
-     * @type : HANDLE API RESULT
-     * @description : Handle the result of master Asset Type API
-     */
+ * useEffect
+ * @dependency : getRoleTypeList
+ * @type : HANDLE API RESULT
+ * @description : Handle the result of get Role Type List API
+ */
     useEffect(() => {
-        if (masterAssetType && masterAssetType !== null) {
-            dispatch(resetMasterAssetTypeResponse())
-            if (masterAssetType?.result === true) {
-                setAssetTypeMasterOption(masterAssetType?.response)
-                setValue('asset_type', masterAssetType?.response[0]?.id)
-                let objData = Object.assign({}, rosterData)
-                objData.asset_type = masterAssetType?.response[0]?.name
-                dispatch(actionRosterData(objData))
+        if (getRoleTypeList && getRoleTypeList !== null) {
+            dispatch(resetGetRoleTypeListResponse())
+            if (getRoleTypeList?.result === true) {
+                setEmployeeRoleTypeOptions(getRoleTypeList?.response)
             } else {
-                setAssetTypeMasterOption([])
-                switch (masterAssetType?.status) {
+                setEmployeeRoleTypeOptions([])
+                switch (getRoleTypeList?.status) {
                     case UNAUTHORIZED:
                         logout()
                         break
                     case ERROR:
-                        dispatch(resetMasterAssetTypeResponse())
+                        dispatch(resetGetRoleTypeListResponse())
                         break
                     case SERVER_ERROR:
                         toast.dismiss()
-                        showSnackbar({ message: masterAssetType?.message, severity: "error" })
+                        showSnackbar({ message: getRoleTypeList?.message, severity: "error" })
                         break
                     default:
                         break
                 }
             }
         }
-    }, [masterAssetType])
+    }, [getRoleTypeList])
 
     /**
      * useEffect
-     * @dependency : assetTypeWiseList
+     * @dependency : employeeTypeWiseList
      * @type : HANDLE API RESULT
-     * @description : Handle the result of asset Type Wise List API
+     * @description : Handle the result of employee Type Wise List API
      */
     useEffect(() => {
-        if (assetTypeWiseList && assetTypeWiseList !== null) {
-            dispatch(resetAssetTypeWiseListResponse())
-            if (assetTypeWiseList?.result === true) {
-                setAssetTypeWiseListOptions(assetTypeWiseList?.response)
-                setAssetTypeWiseListOriginalData(assetTypeWiseList?.response)
+        if (employeeTypeWiseList && employeeTypeWiseList !== null) {
+            dispatch(resetEmployeeTypeWiseListResponse())
+            if (employeeTypeWiseList?.result === true) {
+                setEmployeeTypeWiseListOptions(employeeTypeWiseList?.response)
+                setEmployeeTypeWiseListOriginalData(employeeTypeWiseList?.response)
             } else {
-                setAssetTypeWiseListOptions([])
-                setAssetTypeWiseListOriginalData([])
-                switch (assetTypeWiseList?.status) {
+                setEmployeeTypeWiseListOptions([])
+                setEmployeeTypeWiseListOriginalData([])
+                switch (employeeTypeWiseList?.status) {
                     case UNAUTHORIZED:
                         logout()
                         break
                     case ERROR:
-                        dispatch(resetAssetTypeWiseListResponse())
+                        dispatch(resetEmployeeTypeWiseListResponse())
                         break
                     case SERVER_ERROR:
                         toast.dismiss()
-                        showSnackbar({ message: assetTypeWiseList?.message, severity: "error" })
+                        showSnackbar({ message: employeeTypeWiseList?.message, severity: "error" })
                         break
                     default:
                         break
                 }
             }
         }
-    }, [assetTypeWiseList])
+    }, [employeeTypeWiseList])
 
     // handle search function
     const handleSearchQueryChange = event => {
@@ -176,31 +182,85 @@ export default function SelectAssetStep() {
         setSearchQuery(value)
     }
 
+    // list columns
+    const columns = [
+        {
+            flex: 0.1,
+            field: 'name',
+            headerName: 'Employee Name'
+        },
+        {
+            flex: 0.1,
+            field: 'employee_id',
+            headerName: 'Employee ID'
+        },
+        {
+            flex: 0.1,
+            field: 'employee_type',
+            headerName: 'Employee Type'
+        },
+        {
+            flex: 0.1,
+            field: "contact_number",
+            headerName: "Contact Number",
+            renderCell: (params) => {
+                return (
+                    <Stack sx={{ height: '100%', justifyContent: 'center' }}>
+                        {
+                            params.row.contact_number && params.row.contact_number !== null ?
+                                <TypographyComponent color={theme.palette.grey.primary} fontSize={14} fontWeight={400} sx={{ py: '10px' }}>
+                                    {`${params.row.contact_country_code && params.row.contact_country_code !== null ? params.row.contact_country_code : ''}${decrypt(params.row.contact_number)}`}
+                                </TypographyComponent>
+                                :
+                                <></>
+                        }
+
+                    </Stack>
+                )
+            }
+        }
+    ];
+
     return (
         <Grid container spacing={4} sx={{ mt: 1 }}>
-            {/* Left Panel: Select Asset */}
+            {/* Left Panel: Select Employees */}
             <Grid size={{ xs: 12, sm: 12, md: 4, lg: 4, xl: 4 }}>
                 <TypographyComponent fontSize={16} fontWeight={600}>
-                    Select Asset
+                    Select Employees
                 </TypographyComponent>
                 <Card sx={{ borderRadius: '16px', padding: '24px', gap: '32px', border: `1px solid ${theme.palette.grey[300]}`, mt: 2 }}>
-                    <CardContent sx={{ p: 0, }}>
+                    <CardContent sx={{ p: 0 }}>
                         <Stack>
                             <Controller
-                                name='asset_type'
+                                name='role_type_id'
                                 control={control}
                                 render={({ field }) => (
                                     <CustomTextField
                                         select
                                         fullWidth
                                         value={field?.value ?? ''}
-                                        label={<FormLabel label='Asset Type' required={false} />}
+                                        label={<FormLabel label='Employee Type' required={false} />}
                                         onChange={(event) => {
-                                            field.onChange(event)
-                                            let objData = Object.assign({}, rosterData)
-                                            let objCurrent = getObjectById(assetTypeMasterOption, event.target.value)
-                                            objData.asset_type = objCurrent.name
-                                            dispatch(actionRosterData(objData))
+                                            field.onChange(event);
+
+                                            // Copy current roster data safely
+                                            let objData = Object.assign({}, rosterData);
+
+                                            // 🔹 Preserve previously selected employees
+                                            let existingEmployees = Array.isArray(objData.employees) ? [...objData.employees] : [];
+
+                                            // 🔹 Update current role type info
+                                            const selectedId = event.target.value;
+                                            const objCurrent = getObjectById(employeeRoleTypeOptions, selectedId);
+
+                                            objData.role_type_id = selectedId;
+                                            objData.role_type_name = objCurrent?.type || '';
+
+                                            // Keep previous employees
+                                            objData.employees = existingEmployees;
+
+                                            // 🔹 Dispatch updated data
+                                            dispatch(actionRosterData(objData));
                                         }}
                                         SelectProps={{
                                             displayEmpty: true,
@@ -208,21 +268,21 @@ export default function SelectAssetStep() {
                                             MenuProps: {
                                                 PaperProps: {
                                                     style: {
-                                                        maxHeight: 220, // Set your desired max height
+                                                        maxHeight: 550, // Set your desired max height
                                                         scrollbarWidth: 'thin'
                                                     }
                                                 }
                                             }
                                         }}
 
-                                        error={Boolean(errors.asset_type)}
-                                        {...(errors.asset_type && { helperText: errors.asset_type.message })}
+                                        error={Boolean(errors.role_type_id)}
+                                        {...(errors.role_type_id && { helperText: errors.role_type_id.message })}
                                     >
                                         <MenuItem value='' disabled>
-                                            <em>Select Asset Type</em>
+                                            <em>Select Employee Type</em>
                                         </MenuItem>
-                                        {assetTypeMasterOption &&
-                                            assetTypeMasterOption.map(option => (
+                                        {employeeRoleTypeOptions &&
+                                            employeeRoleTypeOptions.map(option => (
                                                 <MenuItem
                                                     key={option?.id}
                                                     value={option?.id}
@@ -237,20 +297,21 @@ export default function SelectAssetStep() {
                                                         textOverflow: 'ellipsis'
                                                     }}
                                                 >
-                                                    {option?.name}
+                                                    {option?.type}
                                                 </MenuItem>
                                             ))}
                                     </CustomTextField>
                                 )}
                             />
                         </Stack>
-                        <Stack sx={{ my: 2  }}>
+                        <Stack sx={{ my: 2 }}>
                             <SearchInput
-                                id="search-assets"
+                                id="search-employees"
                                 placeholder="Search"
                                 variant="outlined"
                                 size="small"
                                 fullWidth
+                                width='100%'
                                 value={searchQuery}
                                 onChange={handleSearchQueryChange}
                                 InputProps={{
@@ -262,16 +323,17 @@ export default function SelectAssetStep() {
                                 }}
                             />
                         </Stack>
+
                         <List dense sx={{ p: 0 }}>
-                            {assetTypeWiseListOptions?.length > 0 ? (
-                                assetTypeWiseListOptions.map((asset) => {
-                                    const isChecked = rosterData?.assets?.some(
-                                        item => item.asset_id === asset.id && item.asset_type === asset.type
+                            {employeeTypeWiseListOptions?.length > 0 ? (
+                                employeeTypeWiseListOptions.map((employee) => {
+                                    const isChecked = rosterData?.employees?.some(
+                                        item => item.employee_id === employee.employee_id && item.role_type_id === employee.role_type_id
                                     );
 
                                     return (
                                         <ListItem
-                                            key={asset.id}
+                                            key={employee.id}
                                             disablePadding
                                             sx={{
                                                 display: 'flex',
@@ -288,14 +350,14 @@ export default function SelectAssetStep() {
                                                     fontWeight={400}
                                                     sx={{ color: theme.palette.grey[900] }}
                                                 >
-                                                    {asset.asset_description}
+                                                    {employee?.name}
                                                 </TypographyComponent>
                                                 <TypographyComponent
                                                     fontSize={14}
                                                     fontWeight={400}
                                                     sx={{ color: theme.palette.grey[600] }}
                                                 >
-                                                    {asset.type}
+                                                    {employee?.role_name}
                                                 </TypographyComponent>
                                             </Box>
 
@@ -303,31 +365,37 @@ export default function SelectAssetStep() {
                                                 checked={isChecked}
                                                 onChange={(event) => {
                                                     let objData = Object.assign({}, rosterData);
-                                                    let updatedAssets = Object.assign([], objData?.assets);
+                                                    let updatedEmployees = Array.isArray(objData?.employees) ? [...objData.employees] : [];
+
                                                     if (event.target.checked) {
-                                                        if (
-                                                            !updatedAssets.some(
-                                                                item =>
-                                                                    item.asset_id === asset.id &&
-                                                                    item.asset_type === asset.type
-                                                            )
-                                                        ) {
-                                                            updatedAssets.push({
-                                                                asset_id: asset.id,
-                                                                asset_type: asset.type,
-                                                                asset_description: asset.asset_description
+                                                        // Check if already exists
+                                                        const alreadyAdded = updatedEmployees.some(
+                                                            item =>
+                                                                item.employee_id === employee.employee_id &&
+                                                                item.role_type_id === employee.role_type_id
+                                                        );
+
+                                                        if (!alreadyAdded) {
+                                                            updatedEmployees.push({
+                                                                id: employee.id,
+                                                                employee_id: employee.employee_id,
+                                                                roster_group_employee_id: employee.id,
+                                                                is_manager: objData.role_type_name === 'Manager' ? 1 : 0,
+                                                                name: employee.name,
+                                                                contact_country_code: employee.contact_country_code,
+                                                                contact: employee.contact,
+                                                                role_type_id: employee.role_type_id,
+                                                                role_type: employee.role_type,
                                                             });
                                                         }
                                                     } else {
-                                                        updatedAssets = updatedAssets.filter(
+                                                        updatedEmployees = updatedEmployees.filter(
                                                             item =>
-                                                                !(
-                                                                    item.asset_id === asset.id &&
-                                                                    item.asset_type === asset.type
-                                                                )
+                                                                !(item.employee_id === employee.employee_id && item.role_type_id === employee.role_type_id)
                                                         );
                                                     }
-                                                    objData.assets = updatedAssets;
+
+                                                    objData.employees = updatedEmployees;
                                                     dispatch(actionRosterData(objData));
                                                 }}
                                             />
@@ -337,7 +405,7 @@ export default function SelectAssetStep() {
                             ) : (
                                 <EmptyContent
                                     imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND}
-                                    title="No Asset Found"
+                                    title="No Employee Found"
                                     subTitle=""
                                 />
                             )}
@@ -345,11 +413,11 @@ export default function SelectAssetStep() {
                     </CardContent>
                 </Card>
             </Grid>
-            {/* Right Panel: Selected Asset Details & Group Details */}
+            {/* Right Panel: Group Details */}
             <Grid size={{ xs: 12, sm: 12, md: 8, lg: 8, xl: 8 }}>
                 <Box>
                     <TypographyComponent fontSize={16} fontWeight={600}>
-                        Selected Asset Details
+                        Group Details
                     </TypographyComponent>
                     <Card
                         sx={{
@@ -361,7 +429,7 @@ export default function SelectAssetStep() {
                         }}
                     >
                         <CardContent sx={{ p: 2 }}>
-                            {rosterData?.assets && rosterData.assets.length > 0 ? (
+                            {rosterData?.assets && rosterData?.assets.length > 0 ? (
                                 rosterData.assets.map((asset, index) => (
                                     <React.Fragment key={asset.asset_id || index}>
                                         <Grid container spacing={2} alignItems="center" sx={{ py: 1 }}>
@@ -373,11 +441,14 @@ export default function SelectAssetStep() {
                                                     Asset Name
                                                 </TypographyComponent>
                                                 <TypographyComponent fontSize={18} fontWeight={600}>
-                                                    {asset?.asset_description ?? 'N/A'}
+                                                    {asset?.asset_name ?? 'N/A'}
                                                 </TypographyComponent>
                                             </Grid>
 
-                                            <Grid size={{ xs: 9, sm: 9, md: 9, lg: 9, xl: 9 }}>
+                                            <Grid
+                                                size={{ xs: 3, sm: 3, md: 3, lg: 3, xl: 3 }}
+                                                sx={{ borderRight: `1px solid ${theme.palette.grey[300]}` }}
+                                            >
                                                 <TypographyComponent fontSize={16} fontWeight={400}>
                                                     Asset Type
                                                 </TypographyComponent>
@@ -385,10 +456,18 @@ export default function SelectAssetStep() {
                                                     {asset?.asset_type ?? 'N/A'}
                                                 </TypographyComponent>
                                             </Grid>
+                                            <Grid size={{ xs: 6, sm: 6, md: 6, lg: 6, xl: 6 }}>
+                                                <TypographyComponent fontSize={16} fontWeight={400}>
+                                                    Group Name
+                                                </TypographyComponent>
+                                                <TypographyComponent fontSize={18} fontWeight={600}>
+                                                    {asset?.roster_group_name ?? 'N/A'}
+                                                </TypographyComponent>
+                                            </Grid>
                                         </Grid>
 
                                         {/* Divider only between items */}
-                                        {index < rosterData.assets.length - 1 && (
+                                        {index < rosterData?.assets.length - 1 && (
                                             <Divider sx={{ my: 1.5, borderColor: theme.palette.grey[300] }} />
                                         )}
                                     </React.Fragment>
@@ -399,65 +478,30 @@ export default function SelectAssetStep() {
                                     fontWeight={400}
                                     sx={{ textAlign: 'center', py: 2 }}
                                 >
-                                    No Assets Selected
+                                    No Employees Selected
                                 </TypographyComponent>
                             )}
                         </CardContent>
                     </Card>
 
                     <TypographyComponent fontSize={16} fontWeight={600} sx={{ mb: 2 }}>
-                        Group Details
+                        Selected Employees
                     </TypographyComponent>
                     <Card sx={{ borderRadius: '16px', padding: '12px', gap: '16px', border: `1px solid ${theme.palette.grey[300]}`, my: 2 }}>
                         <CardContent sx={{ p: 2 }}>
-                            <Grid container>
-                                <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
-                                    <Controller
-                                        name='roster_group_name'
-                                        control={control}
-                                        rules={{
-                                            required: 'Group Name is required',
-                                            maxLength: {
-                                                value: 255,
-                                                message: 'Maximum length is 255 characters'
-                                            },
-                                        }}
-                                        render={({ field }) => (
-                                            <CustomTextField
-                                                fullWidth
-                                                value={field?.value}
-                                                label={<FormLabel label='Group Name' required={true} />}
-                                                onChange={(e) => {
-                                                    field.onChange(e); // ✅ update form state
-                                                    const newValue = e.target.value;
-
-                                                    // ✅ clone the entire object
-                                                    const updatedData = Object.assign({}, rosterData);
-
-                                                    // ✅ set root-level group name
-                                                    updatedData.roster_group_name = newValue;
-
-                                                    // ✅ clone assets and add roster_group_name to each
-                                                    const updatedAssets = [];
-                                                    (rosterData?.assets || []).forEach((asset) => {
-                                                        const newAsset = Object.assign({}, asset, { roster_group_name: newValue });
-                                                        updatedAssets.push(newAsset);
-                                                    });
-
-                                                    updatedData.assets = updatedAssets;
-
-                                                    // ✅ dispatch final data
-                                                    dispatch(actionRosterData(updatedData));
-                                                }}
-                                                placeholder="Write group name"
-                                                inputProps={{ maxLength: 255 }}
-                                                error={Boolean(errors.roster_group_name)}
-                                                {...(errors.roster_group_name && { helperText: errors.roster_group_name.message })}
-                                            />
-                                        )}
-                                    />
-                                </Grid>
-                            </Grid>
+                            {rosterData?.employees && rosterData?.employees !== null && rosterData?.employees.length > 0 ? (
+                                <ListComponents
+                                    rows={rosterData?.employees}
+                                    columns={columns}
+                                    isCheckbox={false}
+                                    height={200}
+                                    onChange={(selectedIds) => {
+                                        console.log("Selected row IDs in UsersList:", selectedIds);
+                                    }}
+                                />
+                            ) : (
+                                <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Employee Found'} subTitle={''} />
+                            )}
                         </CardContent>
                     </Card>
                 </Box>

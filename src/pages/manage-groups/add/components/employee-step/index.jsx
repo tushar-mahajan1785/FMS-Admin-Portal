@@ -1,7 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import {
     Box,
-    Button,
     Card,
     CardContent,
     Divider,
@@ -185,20 +184,20 @@ export default function SelectEmployeesStep() {
         },
         {
             flex: 0.1,
-            field: 'employee_type',
+            field: 'role_type',
             headerName: 'Employee Type'
         },
         {
             flex: 0.1,
-            field: "mobile_number",
+            field: "contact",
             headerName: "Contact Number",
             renderCell: (params) => {
                 return (
                     <Stack sx={{ height: '100%', justifyContent: 'center' }}>
                         {
-                            params.row.mobile_number && params.row.mobile_number !== null ?
+                            params.row.contact && params.row.contact !== null ?
                                 <TypographyComponent color={theme.palette.grey.primary} fontSize={14} fontWeight={400} sx={{ py: '10px' }}>
-                                    {`${params.row.country_code && params.row.country_code !== null ? params.row.country_code : ''}${decrypt(params.row.mobile_number)}`}
+                                    {`${params.row.contact_country_code && params.row.contact_country_code !== null ? params.row.contact_country_code : ''}${decrypt(params.row.contact)}`}
                                 </TypographyComponent>
                                 :
                                 <></>
@@ -219,24 +218,7 @@ export default function SelectEmployeesStep() {
                 </TypographyComponent>
                 <Card sx={{ borderRadius: '16px', padding: '24px', gap: '32px', border: `1px solid ${theme.palette.grey[300]}`, mt: 2 }}>
                     <CardContent sx={{ p: 0 }}>
-                        <SearchInput
-                            id="search-employees"
-                            placeholder="Search"
-                            variant="outlined"
-                            size="small"
-                            fullWidth
-                            width='100%'
-                            value={searchQuery}
-                            onChange={handleSearchQueryChange}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start" sx={{ mr: 1 }}>
-                                        <SearchIcon stroke={theme.palette.grey[500]} />
-                                    </InputAdornment>
-                                ),
-                            }}
-                        />
-                        <Stack sx={{ my: 2 }}>
+                        <Stack>
                             <Controller
                                 name='role_type_id'
                                 control={control}
@@ -247,12 +229,26 @@ export default function SelectEmployeesStep() {
                                         value={field?.value ?? ''}
                                         label={<FormLabel label='Employee Type' required={false} />}
                                         onChange={(event) => {
-                                            field.onChange(event)
-                                            let objData = Object.assign({}, rosterData)
-                                            objData.role_type_id = event.target.value
-                                            let objCurrent = getObjectById(employeeRoleTypeOptions, event.target.value)
-                                            objData.role_type_name = objCurrent.type
-                                            dispatch(actionRosterData(objData))
+                                            field.onChange(event);
+
+                                            // Copy current roster data safely
+                                            let objData = Object.assign({}, rosterData);
+
+                                            // 🔹 Preserve previously selected employees
+                                            let existingEmployees = Array.isArray(objData.employees) ? [...objData.employees] : [];
+
+                                            // 🔹 Update current role type info
+                                            const selectedId = event.target.value;
+                                            const objCurrent = getObjectById(employeeRoleTypeOptions, selectedId);
+
+                                            objData.role_type_id = selectedId;
+                                            objData.role_type_name = objCurrent?.type || '';
+
+                                            // Keep previous employees
+                                            objData.employees = existingEmployees;
+
+                                            // 🔹 Dispatch updated data
+                                            dispatch(actionRosterData(objData));
                                         }}
                                         SelectProps={{
                                             displayEmpty: true,
@@ -281,7 +277,7 @@ export default function SelectEmployeesStep() {
                                                     sx={{
                                                         whiteSpace: 'normal',        // allow wrapping
                                                         wordBreak: 'break-word',     // break long words if needed
-                                                        maxWidth: 350,               // control dropdown width
+                                                        maxWidth: 550,               // control dropdown width
                                                         display: '-webkit-box',
                                                         WebkitLineClamp: 2,          // limit to 2 lines
                                                         WebkitBoxOrient: 'vertical',
@@ -296,11 +292,30 @@ export default function SelectEmployeesStep() {
                                 )}
                             />
                         </Stack>
+                        <Stack sx={{ my: 2 }}>
+                            <SearchInput
+                                id="search-employees"
+                                placeholder="Search"
+                                variant="outlined"
+                                size="small"
+                                fullWidth
+                                width='100%'
+                                value={searchQuery}
+                                onChange={handleSearchQueryChange}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start" sx={{ mr: 1 }}>
+                                            <SearchIcon stroke={theme.palette.grey[500]} />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
+                        </Stack>
                         <List dense sx={{ p: 0 }}>
                             {employeeTypeWiseListOptions?.length > 0 ? (
                                 employeeTypeWiseListOptions.map((employee) => {
                                     const isChecked = rosterData?.employees?.some(
-                                        item => item.employee_id === employee.id && item.is_manager === employee.is_manager
+                                        item => item.employee_id === employee.employee_id && item.role_type_id === employee.role_type_id
                                     );
 
                                     return (
@@ -322,14 +337,14 @@ export default function SelectEmployeesStep() {
                                                     fontWeight={400}
                                                     sx={{ color: theme.palette.grey[900] }}
                                                 >
-                                                    {employee.name}
+                                                    {employee?.name}
                                                 </TypographyComponent>
                                                 <TypographyComponent
                                                     fontSize={14}
                                                     fontWeight={400}
                                                     sx={{ color: theme.palette.grey[600] }}
                                                 >
-
+                                                    {employee?.role_name}
                                                 </TypographyComponent>
                                             </Box>
 
@@ -337,33 +352,36 @@ export default function SelectEmployeesStep() {
                                                 checked={isChecked}
                                                 onChange={(event) => {
                                                     let objData = Object.assign({}, rosterData);
-                                                    let updatedEmployees = Object.assign([], objData?.employees);
+                                                    let updatedEmployees = Array.isArray(objData?.employees) ? [...objData.employees] : [];
+
                                                     if (event.target.checked) {
-                                                        if (
-                                                            !updatedEmployees.some(
-                                                                item =>
-                                                                    item.employee_id === employee.id &&
-                                                                    item.is_manager === employee.is_manager &&
-                                                                    item.full_name === employee.name
-                                                            )
-                                                        ) {
+                                                        // Check if already exists
+                                                        const alreadyAdded = updatedEmployees.some(
+                                                            item =>
+                                                                item.employee_id === employee.employee_id &&
+                                                                item.role_type_id === employee.role_type_id
+                                                        );
+
+                                                        if (!alreadyAdded) {
                                                             updatedEmployees.push({
                                                                 id: employee.id,
-                                                                employee_id: employee.id,
+                                                                employee_id: employee.employee_id,
+                                                                roster_group_employee_id: employee.id,
                                                                 is_manager: objData.role_type_name === 'Manager' ? 1 : 0,
-                                                                full_name: employee.name
+                                                                full_name: employee.name,
+                                                                contact_country_code: employee.contact_country_code,
+                                                                contact: employee.contact,
+                                                                role_type_id: employee.role_type_id,
+                                                                role_type: employee.role_type,
                                                             });
                                                         }
                                                     } else {
                                                         updatedEmployees = updatedEmployees.filter(
                                                             item =>
-                                                                !(
-                                                                    item.employee_id === employee.id &&
-                                                                    item.is_manager === employee.is_manager &&
-                                                                    item.full_name === employee.name
-                                                                )
+                                                                !(item.employee_id === employee.employee_id && item.role_type_id === employee.role_type_id)
                                                         );
                                                     }
+
                                                     objData.employees = updatedEmployees;
                                                     dispatch(actionRosterData(objData));
                                                 }}
@@ -398,7 +416,7 @@ export default function SelectEmployeesStep() {
                         }}
                     >
                         <CardContent sx={{ p: 2 }}>
-                            {rosterData?.assets && rosterData.assets.length > 0 ? (
+                            {rosterData?.assets && rosterData?.assets.length > 0 ? (
                                 rosterData.assets.map((asset, index) => (
                                     <React.Fragment key={asset.asset_id || index}>
                                         <Grid container spacing={2} alignItems="center" sx={{ py: 1 }}>
@@ -436,7 +454,7 @@ export default function SelectEmployeesStep() {
                                         </Grid>
 
                                         {/* Divider only between items */}
-                                        {index < rosterData.assets.length - 1 && (
+                                        {index < rosterData?.assets.length - 1 && (
                                             <Divider sx={{ my: 1.5, borderColor: theme.palette.grey[300] }} />
                                         )}
                                     </React.Fragment>
@@ -458,9 +476,9 @@ export default function SelectEmployeesStep() {
                     </TypographyComponent>
                     <Card sx={{ borderRadius: '16px', padding: '12px', gap: '16px', border: `1px solid ${theme.palette.grey[300]}`, my: 2 }}>
                         <CardContent sx={{ p: 2 }}>
-                            { rosterData.employees && rosterData.employees !== null && rosterData.employees.length > 0 ? (
+                            {rosterData?.employees && rosterData?.employees !== null && rosterData?.employees.length > 0 ? (
                                 <ListComponents
-                                    rows={rosterData.employees}
+                                    rows={rosterData?.employees}
                                     columns={columns}
                                     isCheckbox={false}
                                     height={200}

@@ -32,7 +32,7 @@ import EmptyContent from "../../../../../components/empty_content";
 import ChevronDownIcon from "../../../../../assets/icons/ChevronDown";
 import { getObjectById } from "../../../../../utils";
 
-export default function SelectAssetStep() {
+export default function SelectAssetStep({ assetData }) {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout } = useAuth()
@@ -101,6 +101,19 @@ export default function SelectAssetStep() {
             setAssetTypeWiseListOptions(assetTypeWiseListOriginalData)
         }
     }, [searchQuery])
+
+    useEffect(() => {
+        if (assetData && assetData !== null) {
+            setValue('roster_group_name', assetData?.roster_group_name)
+            let objCurrent = getObjectById(assetTypeMasterOption, assetData?.assets[0]?.asset_type)
+            setValue('asset_type', objCurrent?.id)
+            let objData = Object.assign({}, rosterData)
+            objData.assets = assetData?.assets
+            objData.roster_group_name = assetData?.roster_group_name
+            dispatch(actionRosterData(objData))
+            setAssetTypeWiseListOptions(assetData?.assets)
+        }
+    }, [assetData])
 
     /**
      * useEffect
@@ -184,7 +197,7 @@ export default function SelectAssetStep() {
                     Select Asset
                 </TypographyComponent>
                 <Card sx={{ borderRadius: '16px', padding: '24px', gap: '32px', border: `1px solid ${theme.palette.grey[300]}`, mt: 2 }}>
-                    <CardContent sx={{ p: 0, }}>
+                    <CardContent sx={{ p: 0 }}>
                         <Stack>
                             <Controller
                                 name='asset_type'
@@ -244,13 +257,14 @@ export default function SelectAssetStep() {
                                 )}
                             />
                         </Stack>
-                        <Stack sx={{ my: 2  }}>
+                        <Stack sx={{ my: 2 }}>
                             <SearchInput
                                 id="search-assets"
                                 placeholder="Search"
                                 variant="outlined"
                                 size="small"
                                 fullWidth
+                                width='100%'
                                 value={searchQuery}
                                 onChange={handleSearchQueryChange}
                                 InputProps={{
@@ -315,7 +329,7 @@ export default function SelectAssetStep() {
                                                             updatedAssets.push({
                                                                 asset_id: asset.id,
                                                                 asset_type: asset.type,
-                                                                asset_description: asset.asset_description
+                                                                asset_name: asset.asset_description
                                                             });
                                                         }
                                                     } else {
@@ -373,7 +387,7 @@ export default function SelectAssetStep() {
                                                     Asset Name
                                                 </TypographyComponent>
                                                 <TypographyComponent fontSize={18} fontWeight={600}>
-                                                    {asset?.asset_description ?? 'N/A'}
+                                                    {asset?.asset_name ?? 'N/A'}
                                                 </TypographyComponent>
                                             </Grid>
 

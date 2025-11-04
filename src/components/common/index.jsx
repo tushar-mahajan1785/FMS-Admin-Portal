@@ -44,7 +44,7 @@ export const ListHeaderCountBadge = styled.div`
 `;
 
 export const SearchInput = styled(TextField)`
-  width: 400px;
+  width: '100%';
   border: 1px solid ${({ theme }) => theme.palette.grey[300]};
   border-radius: 8px;
   
@@ -254,11 +254,6 @@ export const Step = styled(MuiStep)(({ theme }) => ({
 }))
 
 export const CustomStepConnector = styled(StepConnector)(({ theme }) => ({
-  top: 22,
-  left: 'calc(-50% + 20px)',
-  right: 'calc(50% + 20px)',
-  position: 'absolute',
-
   '& .MuiStepConnector-line': {
     borderColor: theme.palette.grey[400],
     borderWidth: 1,

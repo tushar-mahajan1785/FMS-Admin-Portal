@@ -36,6 +36,7 @@ import { actionMasterAssetType, resetMasterAssetTypeResponse } from '../../../st
 import { useBranch } from '../../../hooks/useBranch';
 import * as XLSX from "xlsx";
 import AddManageGroups from '../add';
+import ManageGroupsDetails from '../view';
 
 export default function ManageGroupsList() {
     const theme = useTheme()
@@ -54,6 +55,8 @@ export default function ManageGroupsList() {
     const [page, setPage] = useState(1);
     const [assetTypeMasterOption, setAssetTypeMasterOption] = useState([])
     const [openAddManageGroupsPopup, setOpenAddManageGroupsPopup] = useState(false)
+    const [openManageGroupsDetailsPopup, setOpenManageGroupsDetailsPopup] = useState(false)
+    const [manageGroupData, setManageGroupData] = useState(null)
 
     // store
     const { manageGroupsList } = useSelector(state => state.rosterStore)
@@ -150,8 +153,8 @@ export default function ManageGroupsList() {
         if (manageGroupsList && manageGroupsList !== null) {
             dispatch(resetManageGroupsListResponse())
             if (manageGroupsList?.result === true) {
-                setManageGroupsOptions(manageGroupsList?.response?.group)
-                setManageGroupsOriginalData(manageGroupsList?.response?.group)
+                setManageGroupsOptions(manageGroupsList?.response?.data)
+                setManageGroupsOriginalData(manageGroupsList?.response?.data)
                 setLoadingList(false)
                 setTotal(manageGroupsList?.response?.total)
             } else {
@@ -270,21 +273,23 @@ export default function ManageGroupsList() {
                         />
                     </Stack>
                     <Stack sx={{ flexDirection: 'row', columnGap: 1, alignItems: 'center' }}>
-                        <SearchInput
-                            id="search-assets"
-                            placeholder="Search"
-                            variant="outlined"
-                            size="small"
-                            value={searchQuery}
-                            onChange={handleSearchQueryChange}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start" sx={{ mr: 1 }}>
-                                        <SearchIcon stroke={theme.palette.grey[500]} />
-                                    </InputAdornment>
-                                ),
-                            }}
-                        />
+                        <Stack sx={{ width: '100%' }}>
+                            <SearchInput
+                                id="search-assets"
+                                placeholder="Search"
+                                variant="outlined"
+                                size="small"
+                                value={searchQuery}
+                                onChange={handleSearchQueryChange}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start" sx={{ mr: 1 }}>
+                                            <SearchIcon stroke={theme.palette.grey[500]} />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
+                        </Stack>
                         <CustomTextField
                             select
                             fullWidth
@@ -331,35 +336,42 @@ export default function ManageGroupsList() {
                                 ))}
                         </CustomTextField>
                         {
-                            manageGroupsOptions && manageGroupsOptions !== null && manageGroupsOptions.length > 0 &&
-                            <Button
-                                variant="outlined"
-                                color={theme.palette.common.white}  // text color
-                                sx={{
-                                    border: `1px solid ${theme.palette.grey[300]}`,
-                                    paddingX: 4,
-                                }}
-                                startIcon={<DownloadIcon />}
-                                onClick={() => {
-                                    const worksheet = XLSX.utils.json_to_sheet(manageGroupsOptions, {
-                                        header: ["Name", "Type", "Manager", "Technicians"]
-                                    });
+                            manageGroupsOptions && manageGroupsOptions.length > 0 && (
+                                <Button
+                                    variant="outlined"
+                                    color={theme.palette.common.white} // text color
+                                    sx={{
+                                        border: `1px solid ${theme.palette.grey[300]}`,
+                                        px: 4,
+                                    }}
+                                    startIcon={<DownloadIcon />}
+                                    onClick={() => {
+                                        // 🔹 Prepare simplified data for export
+                                        const exportData = manageGroupsOptions.map(group => ({
+                                            "Group Name": group.group_name,
+                                            "No of Manager": group.manager_count,
+                                            "No of Technicians": group.technician_count,
+                                        }));
 
-                                    const workbook = XLSX.utils.book_new();
-                                    XLSX.utils.book_append_sheet(workbook, worksheet, "Manage Groups");
+                                        // 🔹 Create worksheet and workbook
+                                        const worksheet = XLSX.utils.json_to_sheet(exportData);
+                                        const workbook = XLSX.utils.book_new();
+                                        XLSX.utils.book_append_sheet(workbook, worksheet, "Manage Groups");
 
-                                    XLSX.writeFile(workbook, "Manage Groups.xlsx");
-                                }}
-                            >
-                                Export
-                            </Button>
+                                        // 🔹 Trigger download
+                                        XLSX.writeFile(workbook, "Manage Groups.xlsx");
+                                    }}
+                                >
+                                    Export
+                                </Button>
+                            )
                         }
                     </Stack>
                 </Stack>
                 {loadingList ? (
                     <FullScreenLoader open={true} />
                 ) : manageGroupsOptions && manageGroupsOptions !== null && manageGroupsOptions.length > 0 ? (
-                    <Box sx={{ flex: 1, overflowY: "auto", margin: 2 }}>
+                    <Box sx={{ flex: 1, overflowY: "auto", margin: 2, height: 520 }}>
                         <Grid
                             container
                             spacing={2}
@@ -384,6 +396,10 @@ export default function ManageGroupsList() {
                                         alignItems: "center",
                                         cursor: 'pointer'
                                     }}
+                                    onClick={() => {
+                                        setOpenManageGroupsDetailsPopup(true)
+                                        setManageGroupData(group)
+                                    }}
                                 >
                                     <CardContent sx={{ textAlign: "center", p: 2 }}>
                                         <TypographyComponent
@@ -391,13 +407,13 @@ export default function ManageGroupsList() {
                                             fontWeight={500}
                                             sx={{ mb: 1, color: theme.palette.grey.primary }}
                                         >
-                                            {group.name}
+                                            {group.group_name}
                                         </TypographyComponent>
                                         <TypographyComponent fontSize={'16px'} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>
-                                            {group.manager && group.manager !== null ? `${String(group.manager).padStart(2, '0')} Manager` : ''}
+                                            {group.manager_count && group.manager_count !== null ? `${String(group.manager_count).padStart(2, '0')} Manager` : '0 Manager'}
                                         </TypographyComponent>
                                         <TypographyComponent fontSize={'16px'} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>
-                                            {group.technicians && group.technicians !== null ? `${String(group.technicians).padStart(2, '0')} Technicians` : ''}
+                                            {group.technician_count && group.technician_count !== null ? `${String(group.technician_count).padStart(2, '0')} Technicians` : '0 Technicians'}
                                         </TypographyComponent>
                                     </CardContent>
                                 </Card>
@@ -482,6 +498,14 @@ export default function ManageGroupsList() {
                         }))
                     }
                     setOpenAddManageGroupsPopup(false)
+                }}
+            />
+            <ManageGroupsDetails
+                open={openManageGroupsDetailsPopup}
+                page={page}
+                objData={manageGroupData}
+                handleClose={() => {
+                    setOpenManageGroupsDetailsPopup(false)
                 }}
             />
         </React.Fragment>
