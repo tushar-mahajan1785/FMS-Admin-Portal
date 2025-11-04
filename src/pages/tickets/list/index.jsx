@@ -26,6 +26,7 @@ import SearchIcon from '../../../assets/icons/SearchIcon';
 import CustomTextField from '../../../components/text-field';
 import { actionMasterAssetType, resetMasterAssetTypeResponse } from '../../../store/asset';
 import { useBranch } from '../../../hooks/useBranch';
+import { ViewTicket } from '../view';
 
 export const TicketList = () => {
     const theme = useTheme()
@@ -46,6 +47,7 @@ export const TicketList = () => {
     const [recentTicketsData, setRecentTicketsData] = useState([])
     const [originalRecentTicketsData, setOriginalRecentTicketsData] = useState([])
     const [openAddTicket, setOpenAddTicket] = useState(false)
+    const [openViewTicket, setOpenViewTicket] = useState(false)
     const [loadingList, setLoadingList] = useState(false)
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
@@ -64,7 +66,16 @@ export const TicketList = () => {
         {
             flex: 0.1,
             field: 'ticket_no',
-            headerName: 'Ticket No.'
+            headerName: 'Ticket No.',
+            renderCell: (params) => {
+                return (
+                    <Stack sx={{ cursor: 'pointer', justifyContent: 'center', height: '100%' }} onClick={() => {
+                        setOpenViewTicket(true)
+                    }}>
+                        <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.primary[600], textDecoration: 'underline' }}>{params?.row?.ticket_no}</TypographyComponent>
+                    </Stack>
+                )
+            }
         },
         {
             flex: 0.1,
@@ -816,6 +827,12 @@ export const TicketList = () => {
                 open={openAddTicket}
                 handleClose={() => {
                     setOpenAddTicket(false)
+                }}
+            />
+            <ViewTicket
+                open={openViewTicket}
+                handleClose={() => {
+                    setOpenViewTicket(false)
                 }}
             />
         </React.Fragment>

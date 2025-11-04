@@ -24,7 +24,8 @@ export default function FieldBox({
   isLink = false,
   linkType = "url", // "url" | "phone" | "email"
   type,
-  length
+  length,
+  textColor
 }) {
   const theme = useTheme();
   const href = isLink ? buildHref(value, linkType) : value;
@@ -110,7 +111,7 @@ export default function FieldBox({
                 whiteSpace: 'normal', // allow wrapping
                 wordBreak: 'break-word',
                 maxWidth: '100%',
-                color: theme.palette.grey[600],
+                color: textColor && textColor !== null ? textColor : theme.palette.grey[600],
               }}
             >
               {value && value !== null && value !== 'null' ? value : '-'}
