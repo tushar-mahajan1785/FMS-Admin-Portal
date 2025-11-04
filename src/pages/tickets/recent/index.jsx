@@ -8,9 +8,8 @@ import OpenTicketIcon from '../../../assets/icons/OpenTicketIcon';
 import OnHoldTicketIcon from '../../../assets/icons/OnHoldTicketIcon';
 import OverDueIcon from '../../../assets/OverdueIcon';
 import CircleCloseIcon from '../../../assets/icons/CircleCloseIcon';
-import { ERROR, IMAGES_SCREEN_NO_DATA, SERVER_ERROR, UNAUTHORIZED } from '../../../constants';
+import { ERROR, IMAGES_SCREEN_NO_DATA, LIST_LIMIT, SERVER_ERROR, UNAUTHORIZED } from '../../../constants';
 import EmptyContent from '../../../components/empty_content';
-import ListComponents from '../../../components/list-components';
 import FullScreenLoader from '../../../components/fullscreen-loader';
 import TypographyComponent from '../../../components/custom-typography';
 import CustomChip from "../../../components/custom-chip";
@@ -23,6 +22,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { actionTicketsList, resetTicketsListResponse } from '../../../store/tickets';
 import { useSnackbar } from '../../../hooks/useSnackbar';
 import { useNavigate } from 'react-router-dom';
+import { TicketsByAssetTypesChart } from './components/tickets-by-asset-types';
+import ServerSideListComponents from '../../../components/server-side-list-component';
 
 export const RecentTicket = () => {
   const theme = useTheme()
@@ -31,9 +32,10 @@ export const RecentTicket = () => {
   const navigate = useNavigate()
   const { showSnackbar } = useSnackbar()
 
-  // store
+  //Stores
   const { ticketsList } = useSelector(state => state.ticketsStore)
 
+  //States
   const [recentTicketsData, setRecentTicketsData] = useState([])
   const [openAddTicket, setOpenAddTicket] = useState(false)
   const [loadingList, setLoadingList] = useState(false)
@@ -135,6 +137,8 @@ export const RecentTicket = () => {
     { labelTop: "Overdue", labelBottom: "Tickets", key: 'overdue_tickets', value: 0, icon: <OverDueIcon size={'24'} stroke={theme.palette.primary[600]} />, color: theme.palette.primary[50] },
     { labelTop: "Closed", labelBottom: "Tickets", key: 'closed_tickets', value: 0, icon: <CircleCloseIcon size={'24'} stroke={theme.palette.primary[600]} />, color: theme.palette.primary[50] },
   ]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   /**
   * useEffect
@@ -156,6 +160,7 @@ export const RecentTicket = () => {
         );
 
         setLoadingList(false)
+        setTotal(ticketsList?.response?.counts?.total_tickets)
       } else {
         setLoadingList(false)
         setRecentTicketsData([{
@@ -214,6 +219,7 @@ export const RecentTicket = () => {
           status: 'On Hold'
         },
         ])
+
         // setGetArrTicketCounts(null)
         let objData = {
           total_tickets: 0,
@@ -228,6 +234,7 @@ export const RecentTicket = () => {
             value: objData[item.key] !== undefined ? objData[item.key] : 0
           }))
         );
+        setTotal(100)
         switch (ticketsList?.status) {
           case UNAUTHORIZED:
             logout()
@@ -245,11 +252,19 @@ export const RecentTicket = () => {
     }
   }, [ticketsList])
 
+  /**
+   * Ticket list API Call on change of Page
+   */
   useEffect(() => {
-    dispatch(actionTicketsList({
-      type: 'recent'
-    }))
-  }, [])
+    if (page !== null) {
+      dispatch(actionTicketsList({
+        type: 'recent',
+        page: page,
+        limit: LIST_LIMIT
+      }))
+    }
+
+  }, [page])
 
   return (
     <React.Fragment>
@@ -351,7 +366,7 @@ export const RecentTicket = () => {
             </Card>
           ))}
         </Box>
-        <Grid container columnGap={2} sx={{ mt: 1, mb: 3 }}>
+        <Grid container spacing={2} sx={{ mt: 1, mb: 3 }}>
           <Grid size={{ xs: 12, sm: 6, md: 6, lg: 3, xl: 3 }}>
             <TicketsByStatusChart />
           </Grid>
@@ -359,7 +374,7 @@ export const RecentTicket = () => {
             <SixMonthsTotalTicketChart />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4.5, xl: 4.5 }}>
-
+            <TicketsByAssetTypesChart />
           </Grid>
         </Grid>
 
@@ -384,14 +399,17 @@ export const RecentTicket = () => {
           {loadingList ? (
             <FullScreenLoader open={true} />
           ) : recentTicketsData && recentTicketsData !== null && recentTicketsData.length > 0 ? (
-            <ListComponents
-              height={320}
-              hasPagination={false}
+            <ServerSideListComponents
+              height={480}
               rows={recentTicketsData}
               columns={columns}
               isCheckbox={false}
+              total={total}
+              page={page}
+              onPageChange={setPage}
+              pageSize={LIST_LIMIT}
               onChange={(selectedIds) => {
-                console.log("Selected row IDs in UsersList:", selectedIds);
+                console.log("Selected row IDs in EmployeeList:", selectedIds);
               }}
             />
           ) : (

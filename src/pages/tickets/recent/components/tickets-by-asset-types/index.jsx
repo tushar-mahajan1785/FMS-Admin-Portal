@@ -1,31 +1,45 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import Chart from "react-apexcharts";
-import { Box, Stack, Divider, useTheme } from "@mui/material";
+import { Box, Stack, Divider, MenuItem, useTheme } from "@mui/material";
+import CustomTextField from "../../../../../components/text-field";
 import TypographyComponent from "../../../../../components/custom-typography";
 import { useDispatch, useSelector } from "react-redux";
-import { actionGetLastSixMonthsTickets, resetGetLastSixMonthsTicketsResponse } from "../../../../../store/tickets";
+import { actionGetTicketsByAssetTypes, resetGetTicketsByAssetTypesResponse } from "../../../../../store/tickets";
 import { ERROR, SERVER_ERROR, UNAUTHORIZED } from "../../../../../constants";
 import { useAuth } from "../../../../../hooks/useAuth";
 import { useSnackbar } from "../../../../../hooks/useSnackbar";
 
-export const SixMonthsTotalTicketChart = () => {
+export const TicketsByAssetTypesChart = () => {
     const theme = useTheme();
     const dispatch = useDispatch()
     const { logout } = useAuth()
     const { showSnackbar } = useSnackbar()
 
     //Stores
-    const { getLastSixMonthsTickets } = useSelector(state => state.ticketsStore)
+    const { getTicketsByAssetTypes } = useSelector(state => state.ticketsStore)
 
     //States
-    const [sixMonthsTotalTicketData, setSixMonthsTotalTicketData] = useState([
-        { month: "January", tickets: 1090 },
-        { month: "February", tickets: 1735 },
-        { month: "March", tickets: 2287 },
-        { month: "April", tickets: 827 },
-        { month: "May", tickets: 1142 },
-        { month: "June", tickets: 1142 }
+    const [filterValue, setFilterValue] = useState('This Week')
+    const [filterOptions] = useState([{
+        label: 'This Week',
+        value: 'This Week'
+    },
+    {
+        label: 'This Month',
+        value: 'This Month'
+    },
+    {
+        label: 'Last 6 Months',
+        value: 'Last 6 Months'
+    }])
+
+    const [arrTicketsByAssetTypes, setArrTicketsByAssetTypes] = useState([
+        { month: "Electrical", tickets: 1090 },
+        { month: "Cooling", tickets: 1735 },
+        { month: "BMS", tickets: 2287 },
+        { month: "IBMS", tickets: 827 },
+        { month: "Other", tickets: 1142 }
     ]);
 
     const options = {
@@ -55,7 +69,7 @@ export const SixMonthsTotalTicketChart = () => {
             formatter: (val) => val.toLocaleString(),
         },
         xaxis: {
-            categories: sixMonthsTotalTicketData?.map((d) => d.month),
+            categories: arrTicketsByAssetTypes?.map((d) => d.month),
             labels: {
                 style: {
                     colors: theme.palette.text.secondary,
@@ -109,48 +123,50 @@ export const SixMonthsTotalTicketChart = () => {
 
     const series = [
         {
-            name: "Last 6 Months Tickets",
-            data: sixMonthsTotalTicketData && sixMonthsTotalTicketData !== null && sixMonthsTotalTicketData.length > 0 ? sixMonthsTotalTicketData?.map((d) => d?.tickets) : [],
+            name: "Total Tickets",
+            data: arrTicketsByAssetTypes && arrTicketsByAssetTypes !== null && arrTicketsByAssetTypes.length > 0 ? arrTicketsByAssetTypes?.map((d) => d?.tickets) : [],
         },
     ];
 
     /**
      * Initial Render
-     * Get last 6 month tickets API Call
+     * Get Tickets By Asset Types API Call
      */
     useEffect(() => {
-        dispatch(actionGetLastSixMonthsTickets())
-    }, [])
+        if (filterValue && filterValue !== null) {
+            dispatch(actionGetTicketsByAssetTypes({ type: filterValue }))
+        }
+    }, [filterValue])
 
     /**
    * useEffect
-   * @dependency : getLastSixMonthsTickets
+   * @dependency : getTicketsByAssetTypes
    * @type : HANDLE API RESULT
-   * @description : Handle the result of last 6 months tickets API
+   * @description : Handle the result of tickets by asset types API
    */
     useEffect(() => {
-        if (getLastSixMonthsTickets && getLastSixMonthsTickets !== null) {
-            dispatch(resetGetLastSixMonthsTicketsResponse())
-            if (getLastSixMonthsTickets?.result === true) {
-                setSixMonthsTotalTicketData(getLastSixMonthsTickets?.response)
+        if (getTicketsByAssetTypes && getTicketsByAssetTypes !== null) {
+            dispatch(resetGetTicketsByAssetTypesResponse())
+            if (getTicketsByAssetTypes?.result === true) {
+                setArrTicketsByAssetTypes(getTicketsByAssetTypes?.response)
             } else {
-                // setSixMonthsTotalTicketData([])
-                switch (getLastSixMonthsTickets?.status) {
+                // setArrTicketsByAssetTypes([])
+                switch (getTicketsByAssetTypes?.status) {
                     case UNAUTHORIZED:
                         logout()
                         break
                     case ERROR:
-                        dispatch(resetGetLastSixMonthsTicketsResponse())
+                        dispatch(resetGetTicketsByAssetTypesResponse())
                         break
                     case SERVER_ERROR:
-                        showSnackbar({ message: getLastSixMonthsTickets?.message, severity: "error" })
+                        showSnackbar({ message: getTicketsByAssetTypes?.message, severity: "error" })
                         break
                     default:
                         break
                 }
             }
         }
-    }, [getLastSixMonthsTickets])
+    }, [getTicketsByAssetTypes])
 
     return (
         <Box
@@ -173,9 +189,53 @@ export const SixMonthsTotalTicketChart = () => {
                     fontWeight={600}
                     sx={{ color: theme.palette.common.black }}
                 >
-                    6 Months Total Tickets
+                    Tickets By Asset Types
                 </TypographyComponent>
+                <CustomTextField
+                    select
+                    fullWidth
+                    sx={{ width: 170 }}
+                    value={filterValue}
+                    onChange={(event) => {
+                        setFilterValue(event.target.value)
+                    }}
+                    SelectProps={{
+                        displayEmpty: true,
+                        MenuProps: {
+                            PaperProps: {
+                                style: {
+                                    maxHeight: 220,
+                                    scrollbarWidth: 'thin'
+                                }
+                            }
+                        }
+                    }}
+                >
+                    <MenuItem value=''>
+                        <em>Select Filter</em>
+                    </MenuItem>
+                    {filterOptions &&
+                        filterOptions.map(option => (
+                            <MenuItem
+                                key={option?.value}
+                                value={option?.value}
+                                sx={{
+                                    whiteSpace: 'normal',
+                                    wordBreak: 'break-word',
+                                    maxWidth: 300,
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis'
+                                }}
+                            >
+                                {option?.label}
+                            </MenuItem>
+                        ))}
+                </CustomTextField>
             </Stack>
+
             <Divider sx={{ mb: 2 }} />
             {
                 series && series !== null && series.length > 0 ?
@@ -188,6 +248,7 @@ export const SixMonthsTotalTicketChart = () => {
                     :
                     <></>
             }
+
         </Box>
     );
 };

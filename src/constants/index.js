@@ -128,3 +128,19 @@ export const getPriorityArray = [
     },
 
 ]
+export const getMasterTicketStatus = [{
+    id: 'Open',
+    name: 'Open'
+},
+{
+    id: 'Closed',
+    name: 'Closed'
+},
+{
+    id: 'On Hold',
+    name: 'On Hold'
+},
+{
+    id: 'Rejected',
+    name: 'Rejected'
+}]

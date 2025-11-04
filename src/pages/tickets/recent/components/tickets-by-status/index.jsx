@@ -1,14 +1,26 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { PieChart } from '@mui/x-charts/PieChart';
 import { Box, Divider, MenuItem, Stack, useTheme } from '@mui/material';
 import TypographyComponent from '../../../../../components/custom-typography';
 import { valueFormatter } from '../../../../../utils';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import CustomTextField from '../../../../../components/text-field';
-import FormLabel from '../../../../../components/form-label';
+import { useDispatch, useSelector } from 'react-redux';
+import { actionGetTicketsByStatus, resetGetTicketsByStatusResponse } from '../../../../../store/tickets';
+import { useAuth } from '../../../../../hooks/useAuth';
+import { useSnackbar } from '../../../../../hooks/useSnackbar';
+import { ERROR, SERVER_ERROR, UNAUTHORIZED } from '../../../../../constants';
 
 export const TicketsByStatusChart = () => {
     const theme = useTheme();
+    const dispatch = useDispatch()
+    const { logout } = useAuth()
+    const { showSnackbar } = useSnackbar()
 
+    //Stores
+    const { getTicketsByStatus } = useSelector(state => state.ticketsStore)
+
+    //States
     const [filterValue, setFilterValue] = useState('This Week')
     const [filterOptions] = useState([{
         label: 'This Week',
@@ -22,11 +34,51 @@ export const TicketsByStatusChart = () => {
         label: 'Last 6 Months',
         value: 'Last 6 Months'
     }])
-    const [ticketsByStatusData] = useState([
+    const [ticketsByStatusData, setTicketsByStatusData] = useState([
         { label: 'Active', value: 16, color: theme.palette.primary[600] },
         { label: 'In Progress', value: 7, color: theme.palette.info.main },
         { label: 'Closed', value: 4, color: theme.palette.error[600] },
     ])
+
+    /**
+     * Initial Render
+     * Get Tickets By Status API Call
+     */
+    useEffect(() => {
+        if (filterValue && filterValue !== null) {
+            dispatch(actionGetTicketsByStatus({ type: filterValue }))
+        }
+    }, [filterValue])
+
+    /**
+   * useEffect
+   * @dependency : getTicketsByStatus
+   * @type : HANDLE API RESULT
+   * @description : Handle the result of tickets by status API
+   */
+    useEffect(() => {
+        if (getTicketsByStatus && getTicketsByStatus !== null) {
+            dispatch(resetGetTicketsByStatusResponse())
+            if (getTicketsByStatus?.result === true) {
+                setTicketsByStatusData(getTicketsByStatus?.response)
+            } else {
+                // setTicketsByStatusData([])
+                switch (getTicketsByStatus?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetGetTicketsByStatusResponse())
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: getTicketsByStatus?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [getTicketsByStatus])
 
     return (
         <Box
@@ -35,6 +87,7 @@ export const TicketsByStatusChart = () => {
                 border: `1px solid ${theme.palette.grey[200]}`,
                 padding: '24px',
                 borderRadius: '8px',
+                height: '100%'
             }}
         >
             {/* Header */}
@@ -94,7 +147,7 @@ export const TicketsByStatusChart = () => {
             <Divider sx={{ my: 1.5 }} />
 
             {/* Donut + Legends container */}
-            <Stack direction="row" alignItems="center" justifyContent="center" spacing={2}>
+            <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
                 {/* Chart container */}
                 <Box sx={{ position: 'relative', width: 250, height: 250 }}>
                     <PieChart
@@ -148,14 +201,13 @@ export const TicketsByStatusChart = () => {
 
                 {/* Custom legends on right side */}
                 <Box>
-                    <Stack spacing={1.5}>
+                    <Stack spacing={2} sx={{ textAlign: 'left' }}>
                         {ticketsByStatusData.map((item) => (
-                            <Stack key={item.label} alignItems="center" spacing={1.2}>
-                                <TypographyComponent fontSize={14} fontWeight={500}>
+                            <Stack key={item.label} alignItems="flex-start" spacing={0.4}>
+                                <TypographyComponent fontSize={14} fontWeight={400}>
                                     {item.label}
                                 </TypographyComponent>
-                                <Stack sx={{ flexDirection: 'row', alignItems: 'center', columnGap: 1 }}>
-
+                                <Stack sx={{ flexDirection: 'row', alignItems: 'center', columnGap: 1, marginTop: '-29px' }}>
                                     <Box
                                         sx={{
                                             width: 12,
@@ -167,7 +219,7 @@ export const TicketsByStatusChart = () => {
                                     <TypographyComponent
                                         fontSize={14}
                                         fontWeight={600}
-                                        sx={{ color: theme.palette.text.primary }}
+                                        sx={{ color: theme.palette.text.primary, lineHeight: '20px', }}
                                     >
                                         {item.value}
                                     </TypographyComponent>
@@ -176,7 +228,7 @@ export const TicketsByStatusChart = () => {
                         ))}
                     </Stack>
                 </Box>
-            </Stack>
-        </Box>
+            </Stack >
+        </Box >
     );
 };

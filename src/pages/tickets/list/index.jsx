@@ -1,15 +1,14 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Card, Chip, IconButton, Stack, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Button, Card, Chip, IconButton, InputAdornment, MenuItem, Stack, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import TicketIcon from '../../../assets/icons/TicketIcon';
 import OpenTicketIcon from '../../../assets/icons/OpenTicketIcon';
 import OnHoldTicketIcon from '../../../assets/icons/OnHoldTicketIcon';
 import OverDueIcon from '../../../assets/OverdueIcon';
 import CircleCloseIcon from '../../../assets/icons/CircleCloseIcon';
-import { ERROR, IMAGES_SCREEN_NO_DATA, LIST_LIMIT, SERVER_ERROR, UNAUTHORIZED } from '../../../constants';
+import { ERROR, getMasterTicketStatus, getPriorityArray, IMAGES_SCREEN_NO_DATA, LIST_LIMIT, SERVER_ERROR, UNAUTHORIZED } from '../../../constants';
 import EmptyContent from '../../../components/empty_content';
-import ListComponents from '../../../components/list-components';
 import FullScreenLoader from '../../../components/fullscreen-loader';
 import TypographyComponent from '../../../components/custom-typography';
 import CustomChip from "../../../components/custom-chip";
@@ -22,12 +21,18 @@ import { useSnackbar } from '../../../hooks/useSnackbar';
 import { useNavigate } from 'react-router-dom';
 import KeyboardBackspaceIcon from '@mui/icons-material/KeyboardBackspace';
 import ServerSideListComponents from '../../../components/server-side-list-component';
+import { SearchInput } from '../../../components/common';
+import SearchIcon from '../../../assets/icons/SearchIcon';
+import CustomTextField from '../../../components/text-field';
+import { actionMasterAssetType, resetMasterAssetTypeResponse } from '../../../store/asset';
+import { useBranch } from '../../../hooks/useBranch';
 
 export const TicketList = () => {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout } = useAuth()
     const navigate = useNavigate()
+    const branch = useBranch()
     const { showSnackbar } = useSnackbar()
 
     // media query
@@ -35,12 +40,20 @@ export const TicketList = () => {
 
     // store
     const { ticketsList } = useSelector(state => state.ticketsStore)
+    const { masterAssetType } = useSelector(state => state.AssetStore)
 
+    const [searchQuery, setSearchQuery] = useState('')
     const [recentTicketsData, setRecentTicketsData] = useState([])
+    const [originalRecentTicketsData, setOriginalRecentTicketsData] = useState([])
     const [openAddTicket, setOpenAddTicket] = useState(false)
     const [loadingList, setLoadingList] = useState(false)
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
+    const [selectedPriority, setSelectedPriority] = useState('')
+    const [selectedStatus, setSelectedStatus] = useState('')
+    const [selectedAssetTypes, setSelectedAssetTypes] = useState('')
+    const [masterAssetTypeOptions, setMasterAssetTypeOptions] = useState([])
+    const [masterTicketStatusOptions] = useState(getMasterTicketStatus)
 
     const columns = [
         {
@@ -141,6 +154,36 @@ export const TicketList = () => {
     ]);
 
     /**
+        * useEffect
+        * @dependency : masterAssetType
+        * @type : HANDLE API RESULT
+        * @description : Handle the result of master Asset Type List API
+        */
+    useEffect(() => {
+        if (masterAssetType && masterAssetType !== null) {
+            dispatch(resetMasterAssetTypeResponse())
+            if (masterAssetType?.result === true) {
+                setMasterAssetTypeOptions(masterAssetType?.response)
+            } else {
+                setMasterAssetTypeOptions([])
+                switch (masterAssetType?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetMasterAssetTypeResponse())
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: masterAssetType?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [masterAssetType])
+
+    /**
     * useEffect
     * @dependency : ticketsList
     * @type : HANDLE API RESULT
@@ -151,6 +194,7 @@ export const TicketList = () => {
             dispatch(resetTicketsListResponse())
             if (ticketsList?.result === true) {
                 setRecentTicketsData(ticketsList?.response?.data)
+                setOriginalRecentTicketsData(ticketsList?.response?.data)
                 let objData = ticketsList?.response?.counts
                 setGetArrTicketCounts(prevArr =>
                     prevArr.map(item => ({
@@ -175,7 +219,7 @@ export const TicketList = () => {
                 },
                 {
                     id: 2,
-                    ticket_no: 'VF-2025-0001621',
+                    ticket_no: 'VF-2025-987',
                     sr_no: '0005',
                     asset_name: 'SERVICE-LIFT',
                     location: 'Centre Core Service Lift',
@@ -273,7 +317,118 @@ export const TicketList = () => {
                     status: 'On Hold'
                 },
                 ])
-                setTotal(10)
+                setOriginalRecentTicketsData([{
+                    id: 1,
+                    ticket_no: 'VF-2025-0001674',
+                    sr_no: '0005',
+                    asset_name: 'SERVICE-LIFT',
+                    location: 'Centre Core Service Lift',
+                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
+                    created_on: '23/09/1867',
+                    total_time: '03:00 Hrs',
+                    status: 'Open'
+                },
+                {
+                    id: 2,
+                    ticket_no: 'VF-2025-987',
+                    sr_no: '0005',
+                    asset_name: 'SERVICE-LIFT',
+                    location: 'Centre Core Service Lift',
+                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
+                    created_on: '23/09/1867',
+                    total_time: '03:00 Hrs',
+                    status: 'Closed'
+                },
+                {
+                    id: 3,
+                    ticket_no: 'VF-2025-0001625',
+                    sr_no: '0005',
+                    asset_name: 'SERVICE-LIFT',
+                    location: 'Centre Core Service Lift',
+                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
+                    created_on: '23/09/1867',
+                    total_time: '03:00 Hrs',
+                    status: 'On Hold'
+                },
+                {
+                    id: 4,
+                    ticket_no: 'VF-2025-0001621',
+                    sr_no: '0005',
+                    asset_name: 'SERVICE-LIFT',
+                    location: 'Centre Core Service Lift',
+                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
+                    created_on: '23/09/1867',
+                    total_time: '03:00 Hrs',
+                    status: 'Closed'
+                },
+                {
+                    id: 5,
+                    ticket_no: 'VF-2025-0001625',
+                    sr_no: '0005',
+                    asset_name: 'SERVICE-LIFT',
+                    location: 'Centre Core Service Lift',
+                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
+                    created_on: '23/09/1867',
+                    total_time: '03:00 Hrs',
+                    status: 'On Hold'
+                },
+                {
+                    id: 6,
+                    ticket_no: 'VF-2025-0001621',
+                    sr_no: '0005',
+                    asset_name: 'SERVICE-LIFT',
+                    location: 'Centre Core Service Lift',
+                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
+                    created_on: '23/09/1867',
+                    total_time: '03:00 Hrs',
+                    status: 'Closed'
+                },
+                {
+                    id: 7,
+                    ticket_no: 'VF-2025-0001625',
+                    sr_no: '0005',
+                    asset_name: 'SERVICE-LIFT',
+                    location: 'Centre Core Service Lift',
+                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
+                    created_on: '23/09/1867',
+                    total_time: '03:00 Hrs',
+                    status: 'On Hold'
+                },
+                {
+                    id: 8,
+                    ticket_no: 'VF-2025-0001621',
+                    sr_no: '0005',
+                    asset_name: 'SERVICE-LIFT',
+                    location: 'Centre Core Service Lift',
+                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
+                    created_on: '23/09/1867',
+                    total_time: '03:00 Hrs',
+                    status: 'Closed'
+                },
+                {
+                    id: 9,
+                    ticket_no: 'VF-2025-0001625',
+                    sr_no: '0005',
+                    asset_name: 'SERVICE-LIFT',
+                    location: 'Centre Core Service Lift',
+                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
+                    created_on: '23/09/1867',
+                    total_time: '03:00 Hrs',
+                    status: 'On Hold'
+                },
+                {
+                    id: 10,
+                    ticket_no: 'VF-2025-0001625',
+                    sr_no: '0005',
+                    asset_name: 'SERVICE-LIFT',
+                    location: 'Centre Core Service Lift',
+                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
+                    created_on: '23/09/1867',
+                    total_time: '03:00 Hrs',
+                    status: 'On Hold'
+                },
+                ])
+                setTotal(100)
                 // setGetArrTicketCounts(null)
                 let objData = {
                     total_tickets: 0,
@@ -306,10 +461,62 @@ export const TicketList = () => {
     }, [ticketsList])
 
     useEffect(() => {
-        dispatch(actionTicketsList({
+        if (branch?.currentBranch?.client_uuid && branch?.currentBranch?.client_uuid !== null) {
+            dispatch(actionMasterAssetType({
+                client_uuid: branch?.currentBranch?.client_uuid
+            }))
+        }
 
-        }))
-    }, [])
+    }, [branch?.currentBranch?.client_uuid])
+
+    /**
+     * Ticket list API Call on change of Page
+     */
+    useEffect(() => {
+        if (page !== null) {
+            dispatch(actionTicketsList({
+                page: page,
+                limit: LIST_LIMIT,
+                priority: selectedPriority,
+                status: selectedStatus,
+                asset_type: selectedAssetTypes
+            }))
+        }
+
+    }, [page, selectedPriority, selectedStatus, selectedAssetTypes])
+
+
+    //handle search query
+    const handleSearchQueryChange = event => {
+        const value = event.target.value
+        setSearchQuery(value)
+    }
+
+    /**
+     * Filter the Client list
+     */
+    useEffect(() => {
+        if (searchQuery && searchQuery.trim().length > 0) {
+            if (originalRecentTicketsData && originalRecentTicketsData !== null && originalRecentTicketsData.length > 0) {
+                var filteredData = originalRecentTicketsData.filter(
+                    item =>
+                        (item?.sr_no && item?.sr_no.toLowerCase().includes(searchQuery.trim().toLowerCase())) ||
+                        (item?.ticket_no && item?.ticket_no.toLowerCase().includes(searchQuery.trim().toLowerCase())) ||
+                        (item?.asset_name && item?.asset_name.toLowerCase().includes(searchQuery.trim().toLowerCase())) ||
+                        (item?.location && item?.location.toLowerCase().includes(searchQuery.trim().toLowerCase())) ||
+                        (item?.problem && item?.problem.toLowerCase().includes(searchQuery.trim().toLowerCase()))
+                )
+
+                if (filteredData && filteredData.length > 0) {
+                    setRecentTicketsData(filteredData)
+                } else {
+                    setRecentTicketsData([])
+                }
+            }
+        } else {
+            setRecentTicketsData(originalRecentTicketsData)
+        }
+    }, [searchQuery])
 
     return (
         <React.Fragment>
@@ -427,7 +634,7 @@ export const TicketList = () => {
                     ))}
                 </Box>
                 <Stack sx={{ border: `1px solid ${theme.palette.grey[200]}`, borderRadius: '8px' }}>
-                    <Stack sx={{ flexDirection: 'row', background: theme.palette.common.white, width: '100%', justifyContent: 'space-between', alignItems: 'center', borderRadius: '8px' }}>
+                    <Stack sx={{ flexDirection: 'row', background: theme.palette.common.white, width: '100%', justifyContent: 'space-between', alignItems: 'center', borderRadius: '8px', py: 1 }}>
                         <Stack sx={{ flexDirection: 'row', columnGap: 1, height: '100%', padding: '15px' }}>
                             <Stack>
                                 <TypographyComponent fontSize={18} fontWeight={500} sx={{ color: theme.palette.grey[700] }}>Tickets List</TypographyComponent>
@@ -438,14 +645,156 @@ export const TicketList = () => {
                                 sx={{ bgcolor: theme.palette.primary[50], color: theme.palette.primary[600], fontSize: 14, fontWeight: 500 }}
                             />
                         </Stack>
-                        <Stack sx={{ paddingRight: '15px' }}>
-                            <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.common.black }}>View All</TypographyComponent>
+                        <Stack sx={{ paddingRight: '15px', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                            <SearchInput
+                                id="search-tickets"
+                                placeholder="Search Tickets"
+                                variant="outlined"
+                                size="small"
+                                onChange={handleSearchQueryChange}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start" sx={{ mr: 1 }}>
+                                            <SearchIcon stroke={theme.palette.grey[500]} />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
+                            <CustomTextField
+                                select
+                                fullWidth
+                                sx={{ width: 150 }}
+                                value={selectedStatus}
+                                onChange={(event) => {
+                                    setSelectedStatus(event.target.value)
+                                }}
+                                SelectProps={{
+                                    displayEmpty: true,
+                                    MenuProps: {
+                                        PaperProps: {
+                                            style: {
+                                                maxHeight: 220,
+                                                scrollbarWidth: 'thin'
+                                            }
+                                        }
+                                    }
+                                }}
+                            >
+                                <MenuItem value=''>
+                                    <em>All Status</em>
+                                </MenuItem>
+                                {masterTicketStatusOptions &&
+                                    masterTicketStatusOptions.map(option => (
+                                        <MenuItem
+                                            key={option?.name}
+                                            value={option?.name}
+                                            sx={{
+                                                whiteSpace: 'normal',
+                                                wordBreak: 'break-word',
+                                                maxWidth: 300,
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 2,
+                                                WebkitBoxOrient: 'vertical',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis'
+                                            }}
+                                        >
+                                            {option?.name}
+                                        </MenuItem>
+                                    ))}
+                            </CustomTextField>
+                            <CustomTextField
+                                select
+                                fullWidth
+                                sx={{ width: 150 }}
+                                value={selectedPriority}
+                                onChange={(event) => {
+                                    setSelectedPriority(event.target.value)
+                                }}
+                                SelectProps={{
+                                    displayEmpty: true,
+                                    MenuProps: {
+                                        PaperProps: {
+                                            style: {
+                                                maxHeight: 220,
+                                                scrollbarWidth: 'thin'
+                                            }
+                                        }
+                                    }
+                                }}
+                            >
+                                <MenuItem value=''>
+                                    <em>All Priorities</em>
+                                </MenuItem>
+                                {getPriorityArray &&
+                                    getPriorityArray.map(option => (
+                                        <MenuItem
+                                            key={option?.name}
+                                            value={option?.name}
+                                            sx={{
+                                                whiteSpace: 'normal',
+                                                wordBreak: 'break-word',
+                                                maxWidth: 300,
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 2,
+                                                WebkitBoxOrient: 'vertical',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis'
+                                            }}
+                                        >
+                                            {option?.name}
+                                        </MenuItem>
+                                    ))}
+                            </CustomTextField>
+                            <CustomTextField
+                                select
+                                fullWidth
+                                sx={{ width: 160 }}
+                                value={selectedAssetTypes}
+                                onChange={(event) => {
+                                    setSelectedAssetTypes(event.target.value)
+                                }}
+                                SelectProps={{
+                                    displayEmpty: true,
+                                    MenuProps: {
+                                        PaperProps: {
+                                            style: {
+                                                maxHeight: 220,
+                                                scrollbarWidth: 'thin'
+                                            }
+                                        }
+                                    }
+                                }}
+                            >
+                                <MenuItem value=''>
+                                    <em>All Asset Types</em>
+                                </MenuItem>
+                                {masterAssetTypeOptions &&
+                                    masterAssetTypeOptions.map(option => (
+                                        <MenuItem
+                                            key={option?.name}
+                                            value={option?.name}
+                                            sx={{
+                                                whiteSpace: 'normal',
+                                                wordBreak: 'break-word',
+                                                maxWidth: 300,
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 2,
+                                                WebkitBoxOrient: 'vertical',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis'
+                                            }}
+                                        >
+                                            {option?.name}
+                                        </MenuItem>
+                                    ))}
+                            </CustomTextField>
+
                         </Stack>
                     </Stack>
                     {loadingList ? (
                         <FullScreenLoader open={true} />
                     ) : recentTicketsData && recentTicketsData !== null && recentTicketsData.length > 0 ? (
-
                         <ServerSideListComponents
                             rows={recentTicketsData}
                             columns={columns}
