@@ -13,28 +13,31 @@ import moment from "moment";
 import DatePicker from "react-datepicker";
 import DatePickerWrapper from "../../components/datapicker-wrapper";
 import ClockIcon from "../../assets/icons/ClockIcon";
-import { actionConfigureShift, resetConfigureShiftResponse } from "../../store/roster";
+import { actionConfigureShift, resetConfigureShiftResponse, actionConfigureShiftList, resetConfigureShiftListResponse, actionDeleteConfigureShift, resetDeleteConfigureShiftResponse } from "../../store/roster";
 import { useDispatch, useSelector } from "react-redux";
 import { ERROR, SERVER_ERROR, UNAUTHORIZED } from "../../constants";
 import toast from "react-hot-toast";
 import { useAuth } from "../../hooks/useAuth";
 import { useSnackbar } from "../../hooks/useSnackbar";
+import { useBranch } from "../../hooks/useBranch";
 
 export default function ConfigureShiftList() {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout } = useAuth()
     const { showSnackbar } = useSnackbar()
+    const branch = useBranch()
 
     const isSMDown = useMediaQuery(theme.breakpoints.down('sm'))
 
-    const emptyShift = { shift_description: '', short_name: '', start_time: '', end_time: '', status: true };
+    const emptyShift = { shift_name: '', short_name: '', start_time: '', end_time: '', is_active: true };
 
     const {
         control,
         handleSubmit,
         reset,
         watch,
+        setValue,
         formState: { errors, isDirty }
     } = useForm({
         defaultValues: {
@@ -42,7 +45,7 @@ export default function ConfigureShiftList() {
         }
     });
 
-    const { configureShift } = useSelector(state => state.rosterStore)
+    const { configureShift, configureShiftList, deleteConfigureShift } = useSelector(state => state.rosterStore)
 
     // use field array
     const { fields, append, remove } = useFieldArray({
@@ -52,14 +55,44 @@ export default function ConfigureShiftList() {
 
     const [loading, setLoading] = useState(false)
 
-    // useEffect(() => {
-    //     // Convert 'Active'/'Inactive' to boolean for switch control
-    //     const mappedData = existingShiftData.map((shift) => ({
-    //         ...shift,
-    //         status: shift.status === "Active"
-    //     }));
-    //     reset({ shift_configure: mappedData });
-    // }, [reset]);
+    // initial render
+    useEffect(() => {
+        if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null) {
+            dispatch(actionConfigureShiftList({
+                branch_uuid: branch?.currentBranch?.uuid
+            }))
+        }
+    }, [branch?.currentBranch])
+
+    /**
+       * useEffect
+       * @dependency : configureShiftList
+       * @type : HANDLE API RESULT
+       * @description : Handle the result of add Asset API
+       */
+    useEffect(() => {
+        if (configureShiftList && configureShiftList !== null) {
+            dispatch(resetConfigureShiftListResponse())
+            if (configureShiftList?.result === true) {
+                setValue('shift_configure', configureShiftList?.response)
+            } else {
+                switch (configureShiftList?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetConfigureShiftListResponse())
+                        break
+                    case SERVER_ERROR:
+                        toast.dismiss()
+                        showSnackbar({ message: configureShiftList?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [configureShiftList])
 
     /**
        * useEffect
@@ -74,6 +107,9 @@ export default function ConfigureShiftList() {
                 reset()
                 setLoading(false)
                 showSnackbar({ message: configureShift?.message, severity: "success" })
+                dispatch(actionConfigureShiftList({
+                    branch_uuid: branch?.currentBranch?.uuid
+                }))
             } else {
                 setLoading(false)
                 switch (configureShift?.status) {
@@ -96,12 +132,51 @@ export default function ConfigureShiftList() {
         }
     }, [configureShift])
 
+    /**
+       * useEffect
+       * @dependency : deleteConfigureShift
+       * @type : HANDLE API RESULT
+       * @description : Handle the result of add Asset API
+       */
+    useEffect(() => {
+        if (deleteConfigureShift && deleteConfigureShift !== null) {
+            dispatch(resetDeleteConfigureShiftResponse())
+            if (deleteConfigureShift?.result === true) {
+                showSnackbar({ message: deleteConfigureShift?.message, severity: "success" })
+                dispatch(actionConfigureShiftList({
+                    branch_uuid: branch?.currentBranch?.uuid
+                }))
+            } else {
+                switch (deleteConfigureShift?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetDeleteConfigureShiftResponse())
+                        toast.dismiss()
+                        showSnackbar({ message: deleteConfigureShift?.message, severity: "error" })
+                        break
+                    case SERVER_ERROR:
+                        toast.dismiss()
+                        showSnackbar({ message: deleteConfigureShift?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [deleteConfigureShift])
+
     const onSubmit = (data) => {
         const formattedData = data.shift_configure.map((shift) => ({
             ...shift,
-            status: shift.status ? 'Active' : 'Inactive'
+            is_active: shift.is_active ? 1 : 0
         }));
-        dispatch(actionConfigureShift(formattedData))
+        let input = {
+            branch_uuid: branch?.currentBranch?.uuid,
+            shifts: formattedData
+        }
+        dispatch(actionConfigureShift(input))
     }
 
     return (
@@ -128,7 +203,7 @@ export default function ConfigureShiftList() {
                     }}
                     variant='contained'
                     onClick={() => {
-                        append({ shift_description: '', short_name: '', start_time: '', end_time: '', status: true })
+                        append({ shift_name: '', short_name: '', start_time: '', end_time: '', is_active: true })
                     }}
                 >
                     <AddIcon sx={{ color: 'white', fontSize: { xs: '16x', sm: '16px' } }} />
@@ -190,7 +265,7 @@ export default function ConfigureShiftList() {
                                             size={{ xs: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
                                             sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', my: 4, marginBottom: 1, paddingRight: 1 }}
                                         >
-                                            <TypographyComponent fontSize={18} fontWeight={watch(`shift_configure.${index}.status`) ? 600 : 400} sx={{ color: watch(`shift_configure.${index}.status`) ? theme.palette.grey[700] : theme.palette.grey[400] }}>
+                                            <TypographyComponent fontSize={18} fontWeight={watch(`shift_configure.${index}.is_active`) ? 600 : 400} sx={{ color: watch(`shift_configure.${index}.is_active`) ? theme.palette.grey[700] : theme.palette.grey[400] }}>
                                                 {`Shift # ${index + 1}`}
                                             </TypographyComponent>
                                         </Grid>
@@ -199,10 +274,10 @@ export default function ConfigureShiftList() {
                                                 {/* shift description */}
                                                 <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
                                                     <Controller
-                                                        name={`shift_configure.${index}.shift_description`}
+                                                        name={`shift_configure.${index}.shift_name`}
                                                         control={control}
                                                         rules={{
-                                                            required: watch(`shift_configure.${index}.status`) ? 'Shift Description is required' : false,
+                                                            required: watch(`shift_configure.${index}.is_active`) ? 'Shift Description is required' : false,
                                                             maxLength: {
                                                                 value: 255,
                                                                 message: 'Maximum length is 255 characters'
@@ -213,10 +288,10 @@ export default function ConfigureShiftList() {
                                                                 {...field}
                                                                 fullWidth
                                                                 label={<FormLabel label={`Shift Description`} required={true} />}
-                                                                error={!!errors.shift_configure?.[index]?.shift_description}
+                                                                error={!!errors.shift_configure?.[index]?.shift_name}
                                                                 inputProps={{ maxLength: 255 }}
-                                                                disabled={!watch(`shift_configure.${index}.status`)}
-                                                                helperText={errors.shift_configure?.[index]?.shift_description?.message}
+                                                                disabled={!watch(`shift_configure.${index}.is_active`)}
+                                                                helperText={errors.shift_configure?.[index]?.shift_name?.message}
                                                             />
                                                         )}
                                                     />
@@ -227,7 +302,7 @@ export default function ConfigureShiftList() {
                                                         name={`shift_configure.${index}.short_name`}
                                                         control={control}
                                                         rules={{
-                                                            required: watch(`shift_configure.${index}.status`) ? 'Short Name is required' : false,
+                                                            required: watch(`shift_configure.${index}.is_active`) ? 'Short Name is required' : false,
                                                             maxLength: {
                                                                 value: 255,
                                                                 message: 'Maximum length is 255 characters'
@@ -240,7 +315,7 @@ export default function ConfigureShiftList() {
                                                                 label={<FormLabel label={`Short Name`} required={true} />}
                                                                 error={!!errors.shift_configure?.[index]?.short_name}
                                                                 inputProps={{ maxLength: 255 }}
-                                                                disabled={!watch(`shift_configure.${index}.status`)}
+                                                                disabled={!watch(`shift_configure.${index}.is_active`)}
                                                                 helperText={errors.shift_configure?.[index]?.short_name?.message}
                                                             />
                                                         )}
@@ -252,7 +327,7 @@ export default function ConfigureShiftList() {
                                                         name={`shift_configure.${index}.start_time`}
                                                         control={control}
                                                         rules={{
-                                                            required: watch(`shift_configure.${index}.status`) ? "Please select Start Time" : false
+                                                            required: watch(`shift_configure.${index}.is_active`) ? "Please select Start Time" : false
                                                         }}
                                                         render={({ field }) => (
                                                             <DatePicker
@@ -268,7 +343,7 @@ export default function ConfigureShiftList() {
                                                                     const formattedTime = moment(date).format('HH:mm');
                                                                     field.onChange(formattedTime);
                                                                 }}
-                                                                disabled={!watch(`shift_configure.${index}.status`)}
+                                                                disabled={!watch(`shift_configure.${index}.is_active`)}
                                                                 customInput={
                                                                     <CustomTextField
                                                                         size="small"
@@ -300,7 +375,7 @@ export default function ConfigureShiftList() {
                                                         name={`shift_configure.${index}.end_time`}
                                                         control={control}
                                                         rules={{
-                                                            required: watch(`shift_configure.${index}.status`) ? "Please select End Time" : false
+                                                            required: watch(`shift_configure.${index}.is_active`) ? "Please select End Time" : false
                                                         }}
                                                         render={({ field }) => (
                                                             <DatePicker
@@ -316,7 +391,7 @@ export default function ConfigureShiftList() {
                                                                     const formattedTime = moment(date).format('HH:mm');
                                                                     field.onChange(formattedTime);
                                                                 }}
-                                                                disabled={!watch(`shift_configure.${index}.status`)}
+                                                                disabled={!watch(`shift_configure.${index}.is_active`)}
                                                                 customInput={
                                                                     <CustomTextField
                                                                         size="small"
@@ -349,7 +424,7 @@ export default function ConfigureShiftList() {
                                         >
                                             <Stack direction="row">
                                                 <Controller
-                                                    name={`shift_configure.${index}.status`}
+                                                    name={`shift_configure.${index}.is_active`}
                                                     control={control}
                                                     render={({ field: { value, onChange } }) => (
                                                         <FormControlLabel
@@ -372,6 +447,9 @@ export default function ConfigureShiftList() {
                                                     <IconButton
                                                         onClick={() => {
                                                             remove(index)
+                                                            if (item?.uuid && item?.uuid !== null) {
+                                                                dispatch(actionDeleteConfigureShift({ uuid: item?.uuid }))
+                                                            }
                                                         }}
                                                         color="error">
                                                         <DeleteIcon fontSize="medium" />

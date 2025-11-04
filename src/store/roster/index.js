@@ -9,7 +9,9 @@ import {
     API_DELETE_MANAGE_GROUPS,
     API_MANAGE_GROUPS_DETAILS,
     API_ASSET_TYPE_WISE_LIST,
-    API_EMPLOYEE_TYPE_WISE_LIST
+    API_EMPLOYEE_TYPE_WISE_LIST,
+    API_CONFIGURE_SHIFT_LIST,
+    API_CONFIGURE_SHIFT_REMOVE
 } from "../../common/api/constants";
 
 export const defaultRosterData = {
@@ -101,6 +103,26 @@ export const actionEmployeeTypeWiseList = createAsyncThunk('roster/actionEmploye
     }
 })
 
+export const actionConfigureShiftList = createAsyncThunk('roster/actionConfigureShiftList', async (params) => {
+    try {
+        const response = await axiosApi.post(API_CONFIGURE_SHIFT_LIST, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+
+export const actionDeleteConfigureShift = createAsyncThunk('roster/actionDeleteConfigureShift', async (params) => {
+    try {
+        const response = await axiosApi.post(API_CONFIGURE_SHIFT_REMOVE, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+
 export const rosterStore = createSlice({
     name: 'roster',
     initialState: {
@@ -112,7 +134,9 @@ export const rosterStore = createSlice({
         manageGroupsDetails: null,
         rosterData: null,
         assetTypeWiseList: null,
-        employeeTypeWiseList: null
+        employeeTypeWiseList: null,
+        configureShiftList: null,
+        deleteConfigureShift: null
     },
 
     reducers: {
@@ -142,6 +166,12 @@ export const rosterStore = createSlice({
         },
         resetEmployeeTypeWiseListResponse: (state) => {
             state.employeeTypeWiseList = null
+        },
+        resetConfigureShiftListResponse: (state) => {
+            state.configureShiftList = null
+        },
+        resetDeleteConfigureShiftResponse: (state) => {
+            state.deleteConfigureShift = null
         },
     },
     extraReducers: builder => {
@@ -173,6 +203,12 @@ export const rosterStore = createSlice({
             .addCase(actionEmployeeTypeWiseList.fulfilled, (state, action) => {
                 state.employeeTypeWiseList = action.payload
             })
+            .addCase(actionConfigureShiftList.fulfilled, (state, action) => {
+                state.configureShiftList = action.payload
+            })
+            .addCase(actionDeleteConfigureShift.fulfilled, (state, action) => {
+                state.deleteConfigureShift = action.payload
+            })
     }
 })
 
@@ -185,7 +221,9 @@ export const {
     resetManageGroupsDetailsResponse,
     resetRosterDataResponse,
     resetAssetTypeWiseListResponse,
-    resetEmployeeTypeWiseListResponse
+    resetEmployeeTypeWiseListResponse,
+    resetConfigureShiftListResponse,
+    resetDeleteConfigureShiftResponse
 } =
     rosterStore.actions
 
