@@ -223,6 +223,14 @@ export const API_ROSTER_GROUP_MASTER_LIST = `${BASE}/roster-group/master-list`
 
 export const API_ROSTER_GROUP_EMPLOYEE_LIST = `${BASE}/roster-group/employee-list`
 
+export const API_EMPLOYEE_SHIFT_SCHEDULE_LIST = `${BASE}/employee-shift-schedule/list`
+
+export const API_ADD_EMPLOYEE_SHIFT_SCHEDULE = `${BASE}/employee-shift-schedule/add-or-edit`
+
+export const API_DELETE_EMPLOYEE_SHIFT_SCHEDULE = `${BASE}/employee-shift-schedule/remove`
+
+export const API_EMPLOYEE_SHIFT_SCHEDULE_MASTER_LIST = `${BASE}/employee-shift-schedule/employee-shift-master-list`
+
 //tickets
 
 export const API_GET_TICKET_COUNTS = `${BASE}/tickets/get-count`

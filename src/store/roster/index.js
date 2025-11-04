@@ -11,7 +11,11 @@ import {
     API_ASSET_TYPE_WISE_LIST,
     API_EMPLOYEE_TYPE_WISE_LIST,
     API_CONFIGURE_SHIFT_LIST,
-    API_CONFIGURE_SHIFT_REMOVE
+    API_CONFIGURE_SHIFT_REMOVE,
+    API_EMPLOYEE_SHIFT_SCHEDULE_LIST,
+    API_ADD_EMPLOYEE_SHIFT_SCHEDULE,
+    API_DELETE_EMPLOYEE_SHIFT_SCHEDULE,
+    API_EMPLOYEE_SHIFT_SCHEDULE_MASTER_LIST
 } from "../../common/api/constants";
 
 export const defaultRosterData = {
@@ -123,6 +127,46 @@ export const actionDeleteConfigureShift = createAsyncThunk('roster/actionDeleteC
     }
 })
 
+export const actionEmployeeShiftScheduleList = createAsyncThunk('roster/actionEmployeeShiftScheduleList', async (params) => {
+    try {
+        const response = await axiosApi.post(API_EMPLOYEE_SHIFT_SCHEDULE_LIST, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+
+export const actionAddEmployeeShiftSchedule = createAsyncThunk('roster/actionAddEmployeeShiftSchedule', async (params) => {
+    try {
+        const response = await axiosApi.post(API_ADD_EMPLOYEE_SHIFT_SCHEDULE, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+
+export const actionDeleteEmployeeShiftSchedule = createAsyncThunk('roster/actionDeleteEmployeeShiftSchedule', async (params) => {
+    try {
+        const response = await axiosApi.post(API_DELETE_EMPLOYEE_SHIFT_SCHEDULE, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+
+export const actionEmployeeShiftScheduleMasterList = createAsyncThunk('roster/actionEmployeeShiftScheduleMasterList', async (params) => {
+    try {
+        const response = await axiosApi.post(API_EMPLOYEE_SHIFT_SCHEDULE_MASTER_LIST, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+
 export const rosterStore = createSlice({
     name: 'roster',
     initialState: {
@@ -136,7 +180,11 @@ export const rosterStore = createSlice({
         assetTypeWiseList: null,
         employeeTypeWiseList: null,
         configureShiftList: null,
-        deleteConfigureShift: null
+        deleteConfigureShift: null,
+        employeeShiftScheduleList: null,
+        addEmployeeShiftSchedule: null,
+        deleteEmployeeShiftSchedule: null,
+        employeeShiftScheduleMasterList: null,
     },
 
     reducers: {
@@ -172,6 +220,18 @@ export const rosterStore = createSlice({
         },
         resetDeleteConfigureShiftResponse: (state) => {
             state.deleteConfigureShift = null
+        },
+        resetEmployeeShiftScheduleListResponse: (state) => {
+            state.employeeShiftScheduleList = null
+        },
+        resetAddEmployeeShiftScheduleResponse: (state) => {
+            state.addEmployeeShiftSchedule = null
+        },
+        resetDeleteEmployeeShiftScheduleResponse: (state) => {
+            state.deleteEmployeeShiftSchedule = null
+        },
+        resetEmployeeShiftScheduleMasterListResponse: (state) => {
+            state.employeeShiftScheduleMasterList = null
         },
     },
     extraReducers: builder => {
@@ -209,6 +269,18 @@ export const rosterStore = createSlice({
             .addCase(actionDeleteConfigureShift.fulfilled, (state, action) => {
                 state.deleteConfigureShift = action.payload
             })
+            .addCase(actionEmployeeShiftScheduleList.fulfilled, (state, action) => {
+                state.employeeShiftScheduleList = action.payload
+            })
+            .addCase(actionAddEmployeeShiftSchedule.fulfilled, (state, action) => {
+                state.addEmployeeShiftSchedule = action.payload
+            })
+            .addCase(actionDeleteEmployeeShiftSchedule.fulfilled, (state, action) => {
+                state.deleteEmployeeShiftSchedule = action.payload
+            })
+            .addCase(actionEmployeeShiftScheduleMasterList.fulfilled, (state, action) => {
+                state.employeeShiftScheduleMasterList = action.payload
+            })
     }
 })
 
@@ -223,7 +295,11 @@ export const {
     resetAssetTypeWiseListResponse,
     resetEmployeeTypeWiseListResponse,
     resetConfigureShiftListResponse,
-    resetDeleteConfigureShiftResponse
+    resetDeleteConfigureShiftResponse,
+    resetEmployeeShiftScheduleListResponse,
+    resetAddEmployeeShiftScheduleResponse,
+    resetDeleteEmployeeShiftScheduleResponse,
+    resetEmployeeShiftScheduleMasterListResponse
 } =
     rosterStore.actions
 
