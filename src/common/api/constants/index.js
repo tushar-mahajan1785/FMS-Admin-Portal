@@ -250,3 +250,7 @@ export const API_TICKET_ADD = `${BASE}/tickets/add`
 export const API_TICKET_DETAIL = `${BASE}/tickets/detail`
 
 export const API_GET_MASTER_ASSET_NAME = `${BASE}/master/asset-name`
+
+export const API_CHANGE_TICKET_STATUS = `${BASE}/tickets/change-status`
+
+export const API_TICKET_DELETE = `${BASE}/tickets/remove`
