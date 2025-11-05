@@ -40,6 +40,7 @@ import { actionAssetCustodianList, actionGetAssetDetailsByName, actionGetMasterA
 import { useBranch } from "../../../hooks/useBranch";
 import { actionAddTicket, resetAddTicketResponse } from "../../../store/tickets";
 import { compressFile, getFormData } from "../../../utils";
+import moment from "moment";
 
 export default function AddTicket({ open, handleClose }) {
     const theme = useTheme()
@@ -94,7 +95,7 @@ export default function AddTicket({ open, handleClose }) {
     const [vendorEscalationDetailsData, setVendorEscalationDetailsData] = useState([])
     const [arrUploadedFiles, setArrUploadedFiles] = useState([])
 
-    console.log('-----arrUploadedFiles----', arrUploadedFiles)
+    // console.log('-----arrUploadedFiles----', arrUploadedFiles)
 
     //Initial Render
     useEffect(() => {
@@ -275,6 +276,7 @@ export default function AddTicket({ open, handleClose }) {
             }
         }
     }, [getMasterAssetName])
+
     /**
        * useEffect
        * @dependency : getAssetDetailsByName
@@ -432,16 +434,16 @@ export default function AddTicket({ open, handleClose }) {
      * @param {*} data 
      */
     const onSubmit = data => {
-        console.log('-------data-----', data)
+        // console.log('-------data-----', data)
         let selectedVendors = vendorEscalationDetailsData && vendorEscalationDetailsData !== null && vendorEscalationDetailsData.length > 0 ?
-            vendorEscalationDetailsData?.filter(obj => obj?.is_selected === 1)?.map(obj => obj?.id)?.join(',')
+            vendorEscalationDetailsData?.filter(obj => obj?.is_selected === 1)
             : [];
 
         let objData = {
-            asset_type_id: data.type,
+            asset_type: data.type,
             asset_id: data.asset_name,
             title: data.title && data.title !== null ? data.title : null,
-            supervisor: data.supervisor && data.supervisor !== null ? data.supervisor : null,
+            supervisor_id: data.supervisor && data.supervisor !== null ? data.supervisor : null,
             priority: data.priority && data.priority !== null ? data.priority : null,
             description: data.description && data.description !== null ? data.description : null,
             assigned_vendors: selectedVendors
@@ -495,12 +497,12 @@ export default function AddTicket({ open, handleClose }) {
                     rightSection={<Stack flexDirection={'row'} gap={3} sx={{ mx: 3 }}>
                         <Stack>
                             <TypographyComponent fontSize={14} fontWeight={400}>Date</TypographyComponent>
-                            <TypographyComponent fontSize={18} fontWeight={600}>10 Oct 2025</TypographyComponent>
+                            <TypographyComponent fontSize={18} fontWeight={600}>{moment().format('DD MMM YYYY')}</TypographyComponent>
                         </Stack>
                         <Stack sx={{ borderRight: `1px solid ${theme.palette.common.black}` }} />
                         <Stack>
                             <TypographyComponent fontSize={14} fontWeight={400}>Time</TypographyComponent>
-                            <TypographyComponent fontSize={18} fontWeight={600}>11:35 AM</TypographyComponent>
+                            <TypographyComponent fontSize={18} fontWeight={600}>{moment().format('hh:mm A')}</TypographyComponent>
                         </Stack>
                     </Stack>}
                 />
@@ -619,7 +621,7 @@ export default function AddTicket({ open, handleClose }) {
                                                                 masterAssetNameOptions.map(option => (
                                                                     <MenuItem
                                                                         key={option?.id}
-                                                                        value={option?.name}
+                                                                        value={option?.id}
                                                                         sx={{
                                                                             whiteSpace: 'normal',        // allow wrapping
                                                                             wordBreak: 'break-word',     // break long words if needed
@@ -732,7 +734,7 @@ export default function AddTicket({ open, handleClose }) {
                                                     name='title'
                                                     control={control}
                                                     rules={{
-                                                        required: 'Location is required',
+                                                        required: 'Title is required',
                                                         maxLength: {
                                                             value: 255,
                                                             message: 'Maximum length is 255 characters'
@@ -789,7 +791,7 @@ export default function AddTicket({ open, handleClose }) {
                                                                 supervisorMasterOptions.map(option => (
                                                                     <MenuItem
                                                                         key={option?.id}
-                                                                        value={option?.name}
+                                                                        value={option?.id}
                                                                         sx={{
                                                                             whiteSpace: 'normal',        // allow wrapping
                                                                             wordBreak: 'break-word',     // break long words if needed
