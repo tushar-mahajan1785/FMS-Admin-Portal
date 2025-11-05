@@ -831,8 +831,17 @@ export const TicketList = () => {
             />
             <ViewTicket
                 open={openViewTicket}
-                handleClose={() => {
+                handleClose={(data) => {
                     setOpenViewTicket(false)
+                    if (data === 'delete') {
+                        dispatch(actionTicketsList({
+                            page: page,
+                            limit: LIST_LIMIT,
+                            priority: selectedPriority,
+                            status: selectedStatus,
+                            asset_type: selectedAssetTypes
+                        }))
+                    }
                 }}
             />
         </React.Fragment>

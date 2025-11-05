@@ -6,7 +6,8 @@ import {
     Divider, IconButton, useTheme,
     Grid,
     Box, Avatar,
-    Tooltip
+    Tooltip,
+    CircularProgress
 } from "@mui/material";
 import FormHeader from "../../../components/form-header";
 import CloseIcon from "../../../assets/icons/CloseIcon";
@@ -18,11 +19,13 @@ import FieldBox from "../../../components/field-box";
 import { ShowHistoryComponent } from "../../../components/show-list-component";
 import ChangeTicketStatus from "../change-status";
 import { useDispatch, useSelector } from "react-redux";
-import { actionGetTicketDetails, resetGetTicketDetailsResponse } from "../../../store/tickets";
+import { actionGetTicketDetails, actionTicketDelete, resetGetTicketDetailsResponse, resetTicketDeleteResponse } from "../../../store/tickets";
 import { ERROR, SERVER_ERROR, UNAUTHORIZED } from "../../../constants";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import { useAuth } from "../../../hooks/useAuth";
 import DeleteIcon from "../../../assets/icons/DeleteIcon";
+import AlertPopup from "../../../components/alert-confirm";
+import AlertCircleIcon from "../../../assets/icons/AlertCircleIcon";
 
 export const ViewTicket = ({ open, handleClose, detail }) => {
     const dispatch = useDispatch()
@@ -30,7 +33,7 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
     const { showSnackbar } = useSnackbar()
     const { logout } = useAuth()
 
-    const { getTicketDetails } = useSelector(state => state.ticketsStore)
+    const { getTicketDetails, ticketDelete } = useSelector(state => state.ticketsStore)
     const [ticketDetailsData, setTicketDetailsData] = useState({
         "ticket_id": '2',
         "ticket_no": "VF-2025-0001677",
@@ -201,6 +204,9 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
         },
     ])
     const [openChangeTicketStatusPopup, setOpenChangeTicketStatusPopup] = useState(false)
+    const [openViewDeleteTicketPopup, setOpenViewDeleteTicketPopup] = useState(false)
+    const [viewLoadingDelete, setViewLoadingDelete] = useState(false)
+    const [viewTicketData, setViewTicketData] = useState(null)
 
     useEffect(() => {
         if (open === true) {
@@ -243,6 +249,41 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
         }
     }, [getTicketDetails])
 
+    /**
+     * useEffect
+     * @dependency : ticketDelete
+     * @type : HANDLE API RESULT
+     * @description : Handle the result of delete ticket API
+     */
+    useEffect(() => {
+        if (ticketDelete && ticketDelete !== null) {
+            dispatch(resetTicketDeleteResponse())
+            if (ticketDelete?.result === true) {
+                setOpenViewDeleteTicketPopup(false)
+                setViewLoadingDelete(false)
+                setViewTicketData(null)
+                showSnackbar({ message: ticketDelete?.message, severity: "success" })
+                handleClose('delete')
+            } else {
+                setViewLoadingDelete(false)
+                switch (ticketDelete?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetTicketDeleteResponse())
+                        showSnackbar({ message: ticketDelete?.message, severity: "error" })
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: ticketDelete?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [ticketDelete])
+
     return (
         <Drawer
             open={open}
@@ -271,13 +312,13 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                             {/* open setting delete popup */}
                             <IconButton
                                 onClick={() => {
-                                    //    let objData = {
-                                    //        id: params?.row?.id,
-                                    //        title: `Delete Setting`,
-                                    //        text: `Are you sure you want to delete this setting? This action cannot be undone.`
-                                    //    }
-                                    //    setSettingData(objData)
-                                    //    setOpenDeleteSettingPopup(true)
+                                    let objData = {
+                                        id: ticketDetailsData?.ticket_id,
+                                        title: `Delete Ticket`,
+                                        text: `Are you sure you want to delete this ticket? This action cannot be undone.`
+                                    }
+                                    setViewTicketData(objData)
+                                    setOpenViewDeleteTicketPopup(true)
                                 }}
                             >
                                 <DeleteIcon />
@@ -619,6 +660,34 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                     setOpenChangeTicketStatusPopup(false)
                 }}
             />
+            {
+                openViewDeleteTicketPopup &&
+                <AlertPopup
+                    open={openViewDeleteTicketPopup}
+                    icon={<AlertCircleIcon sx={{ color: theme.palette.error[600] }} fontSize="inherit" />}
+                    color={theme.palette.error[600]}
+                    objData={viewTicketData}
+                    actionButtons={[
+                        <Button key="cancel" color="secondary" variant="outlined" sx={{ width: '100%', color: theme.palette.grey[800], textTransform: 'capitalize' }} onClick={() => {
+                            setOpenViewDeleteTicketPopup(false)
+                        }}>
+                            Cancel
+                        </Button >
+                        ,
+                        <Button key="delete" variant="contained" sx={{ width: '100%', textTransform: 'capitalize', background: theme.palette.error[600], color: theme.palette.common.white }} disabled={viewLoadingDelete} onClick={() => {
+                            setViewLoadingDelete(true)
+                            if (viewTicketData?.id && viewTicketData?.id !== null) {
+                                dispatch(actionTicketDelete({
+                                    id: viewTicketData?.id
+                                }))
+                            }
+                        }}>
+                            {viewLoadingDelete ? <CircularProgress size={20} color="white" /> : 'Delete'}
+                        </Button>
+                    ]
+                    }
+                />
+            }
         </Drawer >
     )
 }
