@@ -5,7 +5,7 @@ import MyBreadcrumbs from '../../../components/breadcrumb'
 import AddIcon from '@mui/icons-material/Add';
 import TypographyComponent from '../../../components/custom-typography';
 import DownloadIcon from '../../../assets/icons/DownloadIcon';
-import { actionEmployeeShiftScheduleList, resetEmployeeShiftScheduleListResponse } from '../../../store/roster';
+import { actionEmployeeShiftScheduleList, resetEmployeeShiftScheduleListResponse, resetRosterDataResponse } from '../../../store/roster';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { ERROR, IMAGES_SCREEN_NO_DATA, LIST_LIMIT, SERVER_ERROR, UNAUTHORIZED } from '../../../constants';
@@ -385,6 +385,7 @@ export default function ManageShiftList() {
             <AddManageShift
                 open={openAddManageShiftPopup}
                 handleClose={(data) => {
+                    dispatch(resetRosterDataResponse())
                     if (data && data !== null && data === 'save') {
                         dispatch(actionEmployeeShiftScheduleList({
                             branch_uuid: branch?.currentBranch?.uuid,

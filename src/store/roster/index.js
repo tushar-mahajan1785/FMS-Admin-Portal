@@ -15,7 +15,8 @@ import {
     API_EMPLOYEE_SHIFT_SCHEDULE_LIST,
     API_ADD_EMPLOYEE_SHIFT_SCHEDULE,
     API_DELETE_EMPLOYEE_SHIFT_SCHEDULE,
-    API_EMPLOYEE_SHIFT_SCHEDULE_MASTER_LIST
+    API_EMPLOYEE_SHIFT_SCHEDULE_MASTER_LIST,
+    API_ROSTER_GROUP_MASTER_LIST
 } from "../../common/api/constants";
 
 export const defaultRosterData = {
@@ -167,6 +168,16 @@ export const actionEmployeeShiftScheduleMasterList = createAsyncThunk('roster/ac
     }
 })
 
+export const actionRosterGroupMasterList = createAsyncThunk('roster/actionRosterGroupMasterList', async (params) => {
+    try {
+        const response = await axiosApi.post(API_ROSTER_GROUP_MASTER_LIST, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+
 export const rosterStore = createSlice({
     name: 'roster',
     initialState: {
@@ -185,6 +196,7 @@ export const rosterStore = createSlice({
         addEmployeeShiftSchedule: null,
         deleteEmployeeShiftSchedule: null,
         employeeShiftScheduleMasterList: null,
+        rosterGroupMasterList: null
     },
 
     reducers: {
@@ -232,6 +244,9 @@ export const rosterStore = createSlice({
         },
         resetEmployeeShiftScheduleMasterListResponse: (state) => {
             state.employeeShiftScheduleMasterList = null
+        },
+        resetRosterGroupMasterListResponse: (state) => {
+            state.rosterGroupMasterList = null
         },
     },
     extraReducers: builder => {
@@ -281,6 +296,9 @@ export const rosterStore = createSlice({
             .addCase(actionEmployeeShiftScheduleMasterList.fulfilled, (state, action) => {
                 state.employeeShiftScheduleMasterList = action.payload
             })
+            .addCase(actionRosterGroupMasterList.fulfilled, (state, action) => {
+                state.rosterGroupMasterList = action.payload
+            })
     }
 })
 
@@ -299,7 +317,8 @@ export const {
     resetEmployeeShiftScheduleListResponse,
     resetAddEmployeeShiftScheduleResponse,
     resetDeleteEmployeeShiftScheduleResponse,
-    resetEmployeeShiftScheduleMasterListResponse
+    resetEmployeeShiftScheduleMasterListResponse,
+    resetRosterGroupMasterListResponse
 } =
     rosterStore.actions
 
