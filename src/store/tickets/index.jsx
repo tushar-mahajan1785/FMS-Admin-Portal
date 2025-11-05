@@ -8,7 +8,9 @@ import {
     API_LAST_SIX_MONTH_TICKETS,
     API_GET_TICKETS_BY_ASSET_TYPES,
     API_TICKET_ADD,
-    API_TICKET_DETAIL
+    API_TICKET_DETAIL,
+    API_CHANGE_TICKET_STATUS,
+    API_TICKET_DELETE
 } from "../../common/api/constants";
 
 export const actionGetTicketCounts = createAsyncThunk('tickets/actionGetTicketCounts', async (params) => {
@@ -78,6 +80,24 @@ export const actionGetTicketDetails = createAsyncThunk('tickets/actionGetTicketD
         return error
     }
 })
+export const actionChangeTicketStatus = createAsyncThunk('tickets/actionChangeTicketStatus', async (params) => {
+    try {
+        const response = await axiosApi.post(API_CHANGE_TICKET_STATUS, params, MULTIPART_HEADER)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+export const actionTicketDelete = createAsyncThunk('tickets/actionTicketDelete', async (params) => {
+    try {
+        const response = await axiosApi.post(API_TICKET_DELETE, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
 
 export const ticketsStore = createSlice({
     name: 'tickets',
@@ -88,7 +108,9 @@ export const ticketsStore = createSlice({
         getLastSixMonthsTickets: null,
         getTicketsByAssetTypes: null,
         addTicket: null,
-        getTicketDetails: null
+        getTicketDetails: null,
+        changeTicketStatus: null,
+        ticketDelete: null
     },
 
     reducers: {
@@ -112,6 +134,12 @@ export const ticketsStore = createSlice({
         },
         resetGetTicketDetailsResponse: (state) => {
             state.getTicketDetails = null
+        },
+        resetChangeTicketStatusResponse: (state) => {
+            state.changeTicketStatus = null
+        },
+        resetTicketDeleteResponse: (state) => {
+            state.ticketDelete = null
         },
     },
     extraReducers: builder => {
@@ -137,6 +165,12 @@ export const ticketsStore = createSlice({
             .addCase(actionGetTicketDetails.fulfilled, (state, action) => {
                 state.getTicketDetails = action.payload
             })
+            .addCase(actionChangeTicketStatus.fulfilled, (state, action) => {
+                state.changeTicketStatus = action.payload
+            })
+            .addCase(actionTicketDelete.fulfilled, (state, action) => {
+                state.ticketDelete = action.payload
+            })
     }
 })
 
@@ -147,7 +181,9 @@ export const {
     resetGetLastSixMonthsTicketsResponse,
     resetGetTicketsByAssetTypesResponse,
     resetAddTicketResponse,
-    resetGetTicketDetailsResponse
+    resetGetTicketDetailsResponse,
+    resetChangeTicketStatusResponse,
+    resetTicketDeleteResponse
 } =
     ticketsStore.actions
 
