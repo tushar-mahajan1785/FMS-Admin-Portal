@@ -16,6 +16,7 @@ const TextFieldStyled = styled(TextField)(({ theme }) => ({
     color: `${theme.palette.text.primary} !important`,
     '&.Mui-focused': {
       color: `${theme.palette.primary[600]} !important`,
+      backgroundColor: 'transparent'
     },
   },
 

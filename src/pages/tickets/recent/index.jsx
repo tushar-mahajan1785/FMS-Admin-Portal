@@ -24,12 +24,16 @@ import { useSnackbar } from '../../../hooks/useSnackbar';
 import { useNavigate } from 'react-router-dom';
 import { TicketsByAssetTypesChart } from './components/tickets-by-asset-types';
 import ServerSideListComponents from '../../../components/server-side-list-component';
+import { useBranch } from '../../../hooks/useBranch';
+import { ViewTicket } from '../view';
+import moment from 'moment';
 
 export const RecentTicket = () => {
   const theme = useTheme()
   const dispatch = useDispatch()
   const { logout } = useAuth()
   const navigate = useNavigate()
+  const branch = useBranch()
   const { showSnackbar } = useSnackbar()
 
   //Stores
@@ -39,11 +43,13 @@ export const RecentTicket = () => {
   const [recentTicketsData, setRecentTicketsData] = useState([])
   const [openAddTicket, setOpenAddTicket] = useState(false)
   const [loadingList, setLoadingList] = useState(false)
+  const [openViewTicket, setOpenViewTicket] = useState(false)
+  const [currentTicketDetails, setCurrentTicketDetails] = useState(null)
 
   const columns = [
     {
       flex: 0.07,
-      field: 'sr_no',
+      field: 'id',
       headerName: 'Sr. No.'
     },
     {
@@ -69,7 +75,22 @@ export const RecentTicket = () => {
     {
       flex: 0.1,
       field: 'created_on',
-      headerName: 'Created On'
+      headerName: 'Created On',
+      renderCell: (params) => {
+        return (
+          <Stack sx={{ height: '100%', justifyContent: 'center' }}>
+            {
+              params.row.created_on && params.row.created_on !== null ?
+                <TypographyComponent color={theme.palette.grey.primary} fontSize={14} fontWeight={400} sx={{ py: '10px' }}>
+                  {params.row.created_on && params.row.created_on !== null ? moment(params.row.created_on, 'YYYY-MM-DD').format('DD MMM YYYY') : ''}
+                </TypographyComponent>
+                :
+                <></>
+            }
+
+          </Stack>
+        )
+      }
     },
     {
       flex: 0.1,
@@ -108,16 +129,16 @@ export const RecentTicket = () => {
       sortable: false,
       field: "",
       headerName: 'Action',
-      renderCell: () => {
+      renderCell: (params) => {
         return (
           <React.Fragment>
             <Box sx={{ display: "flex", alignItems: "center" }}>
               <Tooltip title="Details" followCursor placement="top">
-                {/* open employee details */}
+                {/* open ticket details */}
                 <IconButton
                   onClick={() => {
-                    // setEmployeeData(params.row)
-                    // setOpenEmployeeDetailsPopup(true)
+                    setCurrentTicketDetails(params?.row)
+                    setOpenViewTicket(true)
                   }}
                 >
                   <EyeIcon stroke={'#181D27'} />
@@ -163,78 +184,9 @@ export const RecentTicket = () => {
         setTotal(ticketsList?.response?.counts?.total_tickets)
       } else {
         setLoadingList(false)
-        setRecentTicketsData([{
-          id: 1,
-          ticket_no: 'VF-2025-0001674',
-          sr_no: '0005',
-          asset_name: 'SERVICE-LIFT',
-          location: 'Centre Core Service Lift',
-          problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-          created_on: '23/09/1867',
-          total_time: '03:00 Hrs',
-          status: 'Open'
-        },
-        {
-          id: 2,
-          ticket_no: 'VF-2025-0001621',
-          sr_no: '0005',
-          asset_name: 'SERVICE-LIFT',
-          location: 'Centre Core Service Lift',
-          problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-          created_on: '23/09/1867',
-          total_time: '03:00 Hrs',
-          status: 'Closed'
-        },
-        {
-          id: 3,
-          ticket_no: 'VF-2025-0001625',
-          sr_no: '0005',
-          asset_name: 'SERVICE-LIFT',
-          location: 'Centre Core Service Lift',
-          problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-          created_on: '23/09/1867',
-          total_time: '03:00 Hrs',
-          status: 'On Hold'
-        },
-        {
-          id: 4,
-          ticket_no: 'VF-2025-0001621',
-          sr_no: '0005',
-          asset_name: 'SERVICE-LIFT',
-          location: 'Centre Core Service Lift',
-          problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-          created_on: '23/09/1867',
-          total_time: '03:00 Hrs',
-          status: 'Closed'
-        },
-        {
-          id: 5,
-          ticket_no: 'VF-2025-0001625',
-          sr_no: '0005',
-          asset_name: 'SERVICE-LIFT',
-          location: 'Centre Core Service Lift',
-          problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-          created_on: '23/09/1867',
-          total_time: '03:00 Hrs',
-          status: 'On Hold'
-        },
-        ])
-
-        // setGetArrTicketCounts(null)
-        let objData = {
-          total_tickets: 0,
-          open_tickets: 0,
-          overdue_tickets: 0,
-          on_hold_tickets: 0,
-          closed_tickets: 0
-        }
-        setGetArrTicketCounts(prevArr =>
-          prevArr.map(item => ({
-            ...item,
-            value: objData[item.key] !== undefined ? objData[item.key] : 0
-          }))
-        );
-        setTotal(100)
+        setRecentTicketsData([])
+        setGetArrTicketCounts(null);
+        setTotal(0)
         switch (ticketsList?.status) {
           case UNAUTHORIZED:
             logout()
@@ -259,6 +211,7 @@ export const RecentTicket = () => {
     if (page !== null) {
       dispatch(actionTicketsList({
         type: 'recent',
+        branch_uuid: branch?.currentBranch?.uuid,
         page: page,
         limit: LIST_LIMIT
       }))
@@ -378,14 +331,14 @@ export const RecentTicket = () => {
           </Grid>
         </Grid>
 
-        <Stack sx={{ border: `1px solid ${theme.palette.grey[200]}`, borderRadius: '8px' }}>
+        <Stack sx={{ border: `1px solid ${theme.palette.grey[200]}`, borderRadius: '8px', background: theme.palette.common.white, pb: 1 }}>
           <Stack sx={{ flexDirection: 'row', background: theme.palette.common.white, width: '100%', justifyContent: 'space-between', alignItems: 'center', borderRadius: '8px' }}>
             <Stack sx={{ flexDirection: 'row', columnGap: 1, height: '100%', padding: '15px' }}>
               <Stack>
                 <TypographyComponent fontSize={18} fontWeight={500} sx={{ color: theme.palette.grey[700] }}>Recent Tickets</TypographyComponent>
               </Stack>
               <Chip
-                label={`100 Tickets`}
+                label={`${total.toString().padStart(2, "0")} Tickets`}
                 size="small"
                 sx={{ bgcolor: theme.palette.primary[50], color: theme.palette.primary[600], fontSize: 14, fontWeight: 500 }}
               />
@@ -419,8 +372,32 @@ export const RecentTicket = () => {
       </Stack>
       <AddTicket
         open={openAddTicket}
-        handleClose={() => {
+        handleClose={(data) => {
           setOpenAddTicket(false)
+          if (data == 'save') {
+            dispatch(actionTicketsList({
+              type: 'recent',
+              branch_uuid: branch?.currentBranch?.uuid,
+              page: page,
+              limit: LIST_LIMIT
+            }))
+          }
+        }}
+      />
+      <ViewTicket
+        open={openViewTicket}
+        detail={currentTicketDetails}
+        handleClose={(data) => {
+          setOpenViewTicket(false)
+          setCurrentTicketDetails(null)
+          if (data === 'delete') {
+            dispatch(actionTicketsList({
+              type: 'recent',
+              branch_uuid: branch?.currentBranch?.uuid,
+              page: page,
+              limit: LIST_LIMIT
+            }))
+          }
         }}
       />
     </React.Fragment>

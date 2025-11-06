@@ -5,9 +5,8 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import IconButton from '@mui/material/IconButton';
-import CloseIcon from '@mui/icons-material/Close';
 import { useTheme } from "@emotion/react";
-import { Box, Grid, List, ListItem, ListItemText, MenuItem, Stack, useMediaQuery } from "@mui/material";
+import { Grid, List, ListItem, ListItemText, MenuItem, Stack, useMediaQuery } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
 import { CircularProgress } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,7 +14,6 @@ import { useSnackbar } from "../../../hooks/useSnackbar";
 import { useAuth } from "../../../hooks/useAuth";
 import { BootstrapDialog } from '../../../components/common';
 import TypographyComponent from '../../../components/custom-typography';
-import FieldBox from '../../../components/field-box';
 import SectionHeader from '../../../components/section-header';
 import { Controller, useForm } from 'react-hook-form';
 import CustomTextField from '../../../components/text-field';
@@ -23,13 +21,16 @@ import FormLabel from '../../../components/form-label';
 import ChevronDownIcon from '../../../assets/icons/ChevronDown';
 import FileIcon from '../../../assets/icons/FileIcon';
 import DeleteIcon from '../../../assets/icons/DeleteIcon';
-import { actionChangeTicketStatus, actionGetTicketDetails, resetChangeTicketStatusResponse } from '../../../store/tickets';
+import { actionGetTicketDetails, actionTicketAddUpdate, actionTicketUpdateFileDelete, resetTicketAddUpdateResponse, resetTicketUpdateFileDeleteResponse } from '../../../store/tickets';
 import { ERROR, SERVER_ERROR, UNAUTHORIZED } from '../../../constants';
 import { actionAssetCustodianList, resetAssetCustodianListResponse } from '../../../store/asset';
 import { useBranch } from '../../../hooks/useBranch';
 import { compressFile, getFormData } from '../../../utils';
+import CircleCheckIcon from '../../../assets/icons/CircleCheck';
+import AlertPopup from '../../../components/alert-confirm';
+import AlertCircleIcon from '../../../assets/icons/AlertCircleIcon';
 
-export default function ChangeTicketStatus({ open, handleClose, details }) {
+export default function AddUpdateTicket({ open, handleClose, entryDetails, type, ticketDetails }) {
     const dispatch = useDispatch()
     const theme = useTheme()
     const { showSnackbar } = useSnackbar()
@@ -51,21 +52,24 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
 
     //Stores
     const { assetCustodianList } = useSelector(state => state.AssetStore)
-    const { changeTicketStatus } = useSelector(state => state.ticketsStore)
+    const { ticketAddUpdate, ticketUpdateFileDelete } = useSelector(state => state.ticketsStore)
 
     //States
     const [loading, setLoading] = useState(false)
-    const [ticketDetailsData, setTicketDetailsData] = useState(null)
-    const [selectedStatus, setSelectedStatus] = useState(null)
-    const [statusOptions, setStatusOptions] = useState([])
+    const [selectedEntryDetailsData, setSelectedEntryDetailsData] = useState(null)
     const [supervisorMasterOptions, setSupervisorMasterOptions] = useState([])
     const [arrUploadedFiles, setArrUploadedFiles] = useState([])
-    const [statusError, setStatusError] = useState(null)
+    const [openTicketUpdateFileDeletePopup, setOpenTicketUpdateFileDeletePopup] = useState(false)
+    const [viewLoadingFileDelete, setViewLoadingFileDelete] = useState(false)
+    const [viewTicketData, setViewTicketData] = useState(null)
+
+    console.log('---------arrUploadedFiles-------', arrUploadedFiles)
 
     const {
         control,
         handleSubmit,
         reset,
+        setValue,
         formState: { errors }
     } = useForm({
         defaultValues: {
@@ -76,124 +80,59 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
     });
 
     /**
-     * Function to get valid Ticket Status
-     * @param {*} current 
-     */
-    const getValidStatusOptions = (current) => {
-
-        switch (current) {
-            case 'Open':
-            case 'Re Open':
-                setStatusOptions([{
-                    label: 'On Hold',
-                    value: 'On Hold'
-                },
-                {
-                    label: 'Closed',
-                    value: 'Closed'
-                },
-                {
-                    label: 'Rejected',
-                    value: 'Rejected'
-                }])
-                break;
-            case 'On Hold':
-                setStatusOptions([{
-                    label: 'Open',
-                    value: 'Open'
-                },
-                {
-                    label: 'Closed',
-                    value: 'Closed'
-                },
-                {
-                    label: 'Rejected',
-                    value: 'Rejected'
-                }])
-                break;
-            case 'Closed':
-                setStatusOptions([{
-                    label: 'Re Open',
-                    value: 'Re Open'
-                }])
-                break;
-
-            default:
-                setStatusOptions([{
-                    label: 'On Hold',
-                    value: 'On Hold'
-                },
-                {
-                    label: 'Closed',
-                    value: 'Closed'
-                },
-                {
-                    label: 'Rejected',
-                    value: 'Rejected'
-                }])
-                break;
-        }
-    }
-
-    /**
-     * get Current Status Field
-     * @param {*} status 
-     * @returns 
-     */
-    const getFieldTitleObject = (status) => {
-
-        switch (status) {
-            case 'On Hold':
-                return {
-                    title: 'Holding',
-                    placeholder: 'holding'
-                }
-            case 'Rejected':
-                return {
-                    title: 'Rejecting',
-                    placeholder: 'rejecting'
-                }
-            case 'Re Open':
-                return {
-                    title: 'Reopening',
-                    placeholder: 'reopening'
-                }
-            case 'Closed':
-                return {
-                    title: 'Closing',
-                    placeholder: 'closing'
-                }
-
-            default:
-                return ''
-        }
-    }
-
-    /**
        * Initial Render and Set permissions array
        */
     useEffect(() => {
         if (open === true) {
-            setTicketDetailsData(details)
-            getValidStatusOptions(details?.status)
+            setSelectedEntryDetailsData(entryDetails)
             dispatch(actionAssetCustodianList({
                 client_id: branch?.currentBranch?.client_id,
                 branch_uuid: branch?.currentBranch?.uuid
             }))
+
         }
         return () => {
             reset()
             setArrUploadedFiles([])
-            setSelectedStatus(null)
-            setStatusError(null)
+            setSelectedEntryDetailsData(null)
         }
-    }, [open, details])
+    }, [open, entryDetails])
+    console.log('--------selectedEntryDetailsData--------', selectedEntryDetailsData)
+    useEffect(() => {
+        if (selectedEntryDetailsData && selectedEntryDetailsData !== null) {
+            if (type == 'Edit') {
+                setValue('title', selectedEntryDetailsData?.title)
+                setValue('description', selectedEntryDetailsData?.description)
+                setValue('supervisor', selectedEntryDetailsData?.user_id)
+                console.log('--------selectedEntryDetailsData?.files--------', selectedEntryDetailsData?.files)
+                if (selectedEntryDetailsData?.files && selectedEntryDetailsData?.files !== null && selectedEntryDetailsData?.files.length > 0) {
+                    setArrUploadedFiles(selectedEntryDetailsData?.files)
+                } else {
+                    setArrUploadedFiles([])
+                }
+
+            }
+        }
+
+    }, [selectedEntryDetailsData])
 
     //handle delete function
-    const handleDelete = (index) => {
-        const newFiles = [...arrUploadedFiles];
-        newFiles.splice(index, 1);
-        setArrUploadedFiles(newFiles);
+    const handleDelete = (index, file) => {
+        if (file?.is_new === 1) {
+            const newFiles = [...arrUploadedFiles];
+            newFiles.splice(index, 1);
+            setArrUploadedFiles(newFiles);
+        } else {
+            console.log('----file-----', file)
+            let objData = {
+                id: file?.id,
+                title: `Delete File`,
+                text: `Are you sure you want to delete this file? This action cannot be undone.`
+            }
+            setViewTicketData(objData)
+            setOpenTicketUpdateFileDeletePopup(true)
+        }
+
     };
 
     /**
@@ -288,76 +227,109 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
 
     /**
      * useEffect
-     * @dependency : changeTicketStatus
+     * @dependency : ticketAddUpdate
      * @type : HANDLE API RESULT
-     * @description : Handle the result of change status API
+     * @description : Handle the result of ticket add update API
      */
     useEffect(() => {
-        if (changeTicketStatus && changeTicketStatus !== null) {
-            dispatch(resetChangeTicketStatusResponse())
-            if (changeTicketStatus?.result === true) {
+        if (ticketAddUpdate && ticketAddUpdate !== null) {
+            dispatch(resetTicketAddUpdateResponse())
+            if (ticketAddUpdate?.result === true) {
                 setLoading(false)
-                showSnackbar({ message: 'Status Updated Successfully', severity: "success" })
+                showSnackbar({ message: `Ticket ${type == 'Add' ? 'Update Added' : 'Updated'} Successfully`, severity: "success" })
                 reset()
                 setArrUploadedFiles([])
                 dispatch(actionGetTicketDetails({
-                    uuid: ticketDetailsData?.uuid
+                    uuid: selectedEntryDetailsData?.uuid
                 }))
                 handleClose()
             } else {
                 setLoading(false)
-                switch (changeTicketStatus?.status) {
+                switch (ticketAddUpdate?.status) {
                     case UNAUTHORIZED:
                         logout()
                         break
                     case ERROR:
-                        showSnackbar({ message: changeTicketStatus.message, severity: "error" })
-                        dispatch(resetChangeTicketStatusResponse())
+                        showSnackbar({ message: ticketAddUpdate.message, severity: "error" })
+                        dispatch(resetTicketAddUpdateResponse())
                         break
                     case SERVER_ERROR:
-                        showSnackbar({ message: changeTicketStatus.message, severity: "error" })
+                        showSnackbar({ message: ticketAddUpdate.message, severity: "error" })
                         break
                     default:
                         break
                 }
             }
         }
-    }, [changeTicketStatus])
+    }, [ticketAddUpdate])
 
-    const onSubmit = async data => {
-        if (selectedStatus && selectedStatus !== null) {
-            setStatusError(null)
-            let objData = {
-                ticket_id: ticketDetailsData?.ticket_id,
-                client_uuid: branch?.currentBranch?.client_uuid,
-                branch_uuid: branch?.currentBranch?.uuid,
-                changed_status: selectedStatus,
-                title: data?.title,
-                description: data?.description,
-                supervisor_id: data?.supervisor
-            }
-            const files = [];
-            let hasNewFiles = arrUploadedFiles.filter(obj => obj?.is_new === 1)
-            if (hasNewFiles && hasNewFiles.length > 0 && arrUploadedFiles && arrUploadedFiles.length > 0) {
-                for (const objFile of arrUploadedFiles) {
-                    if (objFile?.is_new === 1) {
-
-                        //Compress the files with type image
-                        const compressedFile = await compressFile(objFile.file);
-
-                        files.push({
-                            title: `ticket_upload`,
-                            data: compressedFile
-                        });
-                    }
+    /**
+     * useEffect
+     * @dependency : ticketUpdateFileDelete
+     * @type : HANDLE API RESULT
+     * @description : Handle the result of delete ticket API
+     */
+    useEffect(() => {
+        if (ticketUpdateFileDelete && ticketUpdateFileDelete !== null) {
+            dispatch(resetTicketUpdateFileDeleteResponse())
+            if (ticketUpdateFileDelete?.result === true) {
+                setOpenTicketUpdateFileDeletePopup(false)
+                setViewLoadingFileDelete(false)
+                setViewTicketData(null)
+                showSnackbar({ message: ticketUpdateFileDelete?.message, severity: "success" })
+                handleClose('delete')
+            } else {
+                setViewLoadingFileDelete(false)
+                switch (ticketUpdateFileDelete?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetTicketUpdateFileDeleteResponse())
+                        showSnackbar({ message: ticketUpdateFileDelete?.message, severity: "error" })
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: ticketUpdateFileDelete?.message, severity: "error" })
+                        break
+                    default:
+                        break
                 }
             }
-            setLoading(true)
-            const formData = getFormData(objData, files);
-            dispatch(actionChangeTicketStatus(formData))
-        } else {
-            setStatusError('Please select Status')
         }
+    }, [ticketUpdateFileDelete])
+
+    const onSubmit = async data => {
+        let objData = {
+            ticket_id: selectedEntryDetailsData?.ticket_id,
+            client_uuid: branch?.currentBranch?.client_uuid,
+            branch_uuid: branch?.currentBranch?.uuid,
+            current_status: ticketDetails?.status,
+            title: data?.title,
+            description: data?.description,
+            supervisor_id: data?.supervisor
+        }
+        if (type == 'Edit') {
+            objData.update_id = selectedEntryDetailsData?.id
+        }
+        const files = [];
+        let hasNewFiles = arrUploadedFiles?.filter(obj => obj?.is_new === 1)
+        if (hasNewFiles && hasNewFiles.length > 0 && arrUploadedFiles && arrUploadedFiles !== null && arrUploadedFiles.length > 0) {
+            for (const objFile of arrUploadedFiles) {
+                if (objFile?.is_new === 1) {
+
+                    //Compress the files with type image
+                    const compressedFile = await compressFile(objFile.file);
+
+                    files.push({
+                        title: `ticket_upload`,
+                        data: compressedFile
+                    });
+                }
+            }
+        }
+        setLoading(true)
+        const formData = getFormData(objData, files);
+        dispatch(actionTicketAddUpdate(formData))
     }
 
     return (
@@ -377,19 +349,15 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
                     justifyContent="space-between"
                     sx={{ width: '100%' }}
                 >
-                    <Stack flexDirection="row" alignItems="center" gap={1}>
+                    <Stack flexDirection="row" alignItems="center">
                         <Stack columnGap={1}>
                             <TypographyComponent fontSize={16} fontWeight={600}>
-                                Change Ticket Status
-                            </TypographyComponent>
-                            <TypographyComponent fontSize={14} fontWeight={400}>
-                                Update the current status of this ticket and notify relevant stakeholders.
+                                {`${type && type !== null && type == 'Add' ? 'Add New' : 'Edit'} Update`}
                             </TypographyComponent>
                         </Stack>
                     </Stack>
                 </Stack>
             </DialogTitle>
-
             <DialogContent sx={{
                 borderRadius: 2,
                 scrollbarWidth: 'thin',
@@ -400,68 +368,6 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
                 marginTop: isSMDown ? 2 : ''
             }}>
                 <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}` }}>
-                    <Grid container>
-                        {/* Row 1: Ticket No, Asset Type, Asset Name, Location */}
-                        <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
-                            <FieldBox
-                                textColor={theme.palette.grey[900]}
-                                label="Ticket No"
-                                value={ticketDetailsData?.ticket_no && ticketDetailsData?.ticket_no !== null ? ticketDetailsData?.ticket_no : '--'}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
-                            <FieldBox
-                                textColor={theme.palette.grey[900]}
-                                label="Asset Type"
-                                value={ticketDetailsData?.asset_type && ticketDetailsData?.asset_type !== null ? ticketDetailsData?.asset_type : '--'}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
-                            <FieldBox
-                                textColor={theme.palette.grey[900]}
-                                label="Asset Name"
-                                value={ticketDetailsData?.asset_name && ticketDetailsData?.asset_name !== null ? ticketDetailsData?.asset_name : '--'}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
-                            <FieldBox
-                                textColor={theme.palette.grey[900]}
-                                label="Location"
-                                value={ticketDetailsData?.location && ticketDetailsData?.location !== null ? ticketDetailsData?.location : '--'}
-                            />
-                        </Grid>
-
-                    </Grid>
-                </Stack>
-
-                <SectionHeader title="Select Status to Change" show_progress={0} sx={{ marginTop: 2.5 }} />
-                <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}` }}>
-                    <Stack sx={{ flexDirection: 'row', columnGap: 2, paddingY: statusError && statusError !== null ? '10px' : '24px', paddingX: statusError && statusError !== null ? '10px' : '20px', border: statusError && statusError !== null ? `1px solid ${theme.palette.error[600]}` : 'none', borderRadius: statusError && statusError !== null ? '5px' : '', m: statusError && statusError !== null ? '10px' : '' }}>
-                        {
-                            statusOptions && statusOptions !== null && statusOptions.length > 0 ?
-                                statusOptions.map((objStatus) => {
-                                    return (<Stack
-                                        sx={{ width: '100%', paddingX: '24px', justifyContent: 'center', textAlign: 'center', py: '8px', borderRadius: '8px', border: selectedStatus === objStatus?.label ? `1px solid ${theme.palette.primary[300]}` : `1px solid ${theme.palette.grey[300]}`, background: selectedStatus === objStatus?.label ? theme.palette.primary[600] : theme.palette.common.white, color: selectedStatus === objStatus?.label ? theme.palette.common.white : '' }}
-                                        onClick={() => {
-                                            setStatusError(null)
-                                            setSelectedStatus(objStatus?.label)
-                                        }}>
-                                        <TypographyComponent>{objStatus?.label}</TypographyComponent>
-                                    </Stack>)
-                                })
-                                :
-                                <></>
-                        }
-                    </Stack>
-                    {
-                        statusError && statusError !== null ?
-                            <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.error[600], paddingX: '10px' }}>
-                                {statusError}
-                            </TypographyComponent>
-                            :
-                            <></>
-                    }
-
                     <Stack sx={{ paddingY: '24px', paddingX: '20px' }}>
                         <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
                             <Grid container spacing={'24px'}>
@@ -470,7 +376,7 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
                                         name='title'
                                         control={control}
                                         rules={{
-                                            required: `${selectedStatus && selectedStatus !== null ? getFieldTitleObject(selectedStatus)?.title : ''} Title is required`,
+                                            required: `Title is required`,
                                             maxLength: {
                                                 value: 255,
                                                 message: 'Maximum length is 255 characters'
@@ -479,9 +385,9 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
                                         render={({ field }) => (
                                             <CustomTextField
                                                 fullWidth
-                                                placeholder={`Enter ${selectedStatus && selectedStatus !== null ? `${getFieldTitleObject(selectedStatus)?.placeholder} ` : ''}title`}
+                                                placeholder={`Enter title`}
                                                 value={field?.value}
-                                                label={<FormLabel label={`${selectedStatus && selectedStatus !== null ? getFieldTitleObject(selectedStatus)?.title : ''} Title`} required={true} />}
+                                                label={<FormLabel label={`Title`} required={true} />}
                                                 onChange={field.onChange}
                                                 inputProps={{ maxLength: 255 }}
                                                 error={Boolean(errors.title)}
@@ -552,7 +458,7 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
                                         name='description'
                                         control={control}
                                         rules={{
-                                            required: `${selectedStatus && selectedStatus !== null ? getFieldTitleObject(selectedStatus)?.title : ''} Description is required`,
+                                            required: `Description is required`,
                                             maxLength: {
                                                 value: 255,
                                                 message: 'Maximum length is 255 characters'
@@ -566,7 +472,7 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
                                                 minRows={3}
                                                 placeholder={'Detailed description of the issue, symptoms and any relevant information'}
                                                 value={field?.value}
-                                                label={<FormLabel label={`${selectedStatus && selectedStatus !== null ? getFieldTitleObject(selectedStatus)?.title : ''} Description`} required={true} />}
+                                                label={<FormLabel label={`Description`} required={true} />}
                                                 onChange={field.onChange}
                                                 error={Boolean(errors.description)}
                                                 {...(errors.description && { helperText: errors.description.message })}
@@ -597,26 +503,38 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
                     <List>
                         {arrUploadedFiles && arrUploadedFiles !== null && arrUploadedFiles.length > 0 ?
                             arrUploadedFiles.map((file, idx) => (
-                                <React.Fragment key={file.name}>
+                                <React.Fragment key={file.file_name}>
                                     <ListItem
                                         sx={{ mb: '-8px' }}
                                         secondaryAction={
-                                            <>
+                                            <Stack sx={{ flexDirection: 'row', columnGap: 1 }}>
+                                                {
+                                                    file?.is_new == 1 ?
+                                                        <></>
+                                                        :
+                                                        <IconButton
+                                                            edge="end"
+                                                            aria-label="check"
+                                                        >
+                                                            <CircleCheckIcon size={20} stroke={theme.palette.success[600]} />
+                                                        </IconButton>
+                                                }
+
                                                 <IconButton
                                                     edge="end"
                                                     aria-label="delete"
-                                                    onClick={() => handleDelete(idx)}
+                                                    onClick={() => handleDelete(idx, file)}
                                                 >
                                                     <DeleteIcon />
                                                 </IconButton>
-                                            </>
+                                            </Stack>
                                         }
                                     >
                                         <FileIcon sx={{ mr: 1 }} />
                                         <ListItemText
                                             primary={
                                                 <TypographyComponent fontSize={14} fontWeight={500} sx={{ textDecoration: 'underline' }}>
-                                                    {file?.name}
+                                                    {file?.is_new == 1 ? file?.file?.name : file?.file_name}
                                                 </TypographyComponent>
                                             }
                                         />
@@ -628,9 +546,10 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
                         }
                     </List>
                 </Stack>
+
             </DialogContent>
             <DialogActions sx={{ mx: 1, mb: 1 }}>
-                <Button color="secondary" variant="outlined" sx={{ color: theme.palette.grey[800], textTransform: 'capitalize', px: 4 }} onClick={handleClose}>
+                <Button color="secondary" variant="outlined" sx={{ color: theme.palette.grey[800], textTransform: 'capitalize', px: 2 }} onClick={handleClose}>
                     Close
                 </Button>
                 <Button
@@ -644,6 +563,34 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
                     {loading ? <CircularProgress size={20} color="inherit" sx={{ color: 'white' }} /> : 'Submit'}
                 </Button>
             </DialogActions>
+            {
+                openTicketUpdateFileDeletePopup &&
+                <AlertPopup
+                    open={openTicketUpdateFileDeletePopup}
+                    icon={<AlertCircleIcon sx={{ color: theme.palette.error[600] }} fontSize="inherit" />}
+                    color={theme.palette.error[600]}
+                    objData={viewTicketData}
+                    actionButtons={[
+                        <Button key="cancel" color="secondary" variant="outlined" sx={{ width: '100%', color: theme.palette.grey[800], textTransform: 'capitalize' }} onClick={() => {
+                            setOpenTicketUpdateFileDeletePopup(false)
+                        }}>
+                            Cancel
+                        </Button >
+                        ,
+                        <Button key="delete" variant="contained" sx={{ width: '100%', textTransform: 'capitalize', background: theme.palette.error[600], color: theme.palette.common.white }} disabled={viewLoadingFileDelete} onClick={() => {
+                            setViewLoadingFileDelete(true)
+                            if (viewTicketData?.id && viewTicketData?.id !== null) {
+                                dispatch(actionTicketUpdateFileDelete({
+                                    id: viewTicketData?.id
+                                }))
+                            }
+                        }}>
+                            {viewLoadingFileDelete ? <CircularProgress size={20} color="white" /> : 'Delete'}
+                        </Button>
+                    ]
+                    }
+                />
+            }
         </BootstrapDialog>
     )
 }

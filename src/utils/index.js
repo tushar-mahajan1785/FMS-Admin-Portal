@@ -112,6 +112,10 @@ export const convertCount = (value) => {
 export const getObjectById = (arr, id) => {
   return arr.find(item => item.id === id) || null;
 }
+// get object by id function
+export const getObjectByUuid = (arr, uuid) => {
+  return arr.find(item => item.uuid === uuid) || null;
+}
 
 //function to concat multiple strings
 export const concatMultipleStrings = (branch) => {
@@ -145,22 +149,28 @@ export const valueFormatter = (item) => `${item.value}%`;
  * @param {*} file 
  * @returns 
  */
-export const compressFile = (file) => {
-  // Only compress image files
-  const isImage = ['image/jpeg', 'image/png', 'image/jpg'].includes(file.type);
+export const compressFile = async (file) => {
+  const isImage = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(file.type);
+
   if (isImage) {
-    // Compress to max 1MB and max width/height 1920px (adjust as needed)
+    // Light compression options — keep quality high
     const options = {
-      maxSizeMB: 1,
-      maxWidthOrHeight: 1920,
+      maxSizeMB: 1.5,             // allow up to ~1.5MB
+      maxWidthOrHeight: 1920,     // scale down large dimensions
       useWebWorker: true,
+      initialQuality: 0.9,        // 0.9 keeps almost same visual quality
+      alwaysKeepResolution: true, // prevents aggressive resizing
     };
 
-
-    return imageCompression(file, options);
+    try {
+      const compressedFile = await imageCompression(file, options);
+      return compressedFile;
+    } catch (error) {
+      console.error('Image compression failed:', error);
+      return file; // fallback to original if compression fails
+    }
   }
-  // For non-images, return file as-is
-  return file;
-};
 
+  return file; // skip non-images
+};
 

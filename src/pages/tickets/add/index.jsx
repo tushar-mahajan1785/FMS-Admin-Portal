@@ -39,7 +39,7 @@ import FileIcon from "../../../assets/icons/FileIcon";
 import { actionAssetCustodianList, actionGetAssetDetailsByName, actionGetMasterAssetName, actionMasterAssetType, resetAssetCustodianListResponse, resetGetAssetDetailsByNameResponse, resetGetMasterAssetNameResponse, resetMasterAssetTypeResponse } from "../../../store/asset";
 import { useBranch } from "../../../hooks/useBranch";
 import { actionAddTicket, resetAddTicketResponse } from "../../../store/tickets";
-import { compressFile, getFormData } from "../../../utils";
+import { compressFile, getFormData, getObjectByUuid } from "../../../utils";
 import moment from "moment";
 
 export default function AddTicket({ open, handleClose }) {
@@ -95,8 +95,6 @@ export default function AddTicket({ open, handleClose }) {
     const [vendorEscalationDetailsData, setVendorEscalationDetailsData] = useState([])
     const [arrUploadedFiles, setArrUploadedFiles] = useState([])
 
-    // console.log('-----arrUploadedFiles----', arrUploadedFiles)
-
     //Initial Render
     useEffect(() => {
         if (open === true) {
@@ -127,11 +125,16 @@ export default function AddTicket({ open, handleClose }) {
     useEffect(() => {
         if (watchAssetType && watchAssetType !== null) {
             dispatch(actionGetMasterAssetName({
-                client_uuid: branch?.currentBranch?.client_uuid,
-                type: watchAssetType
+                branch_uuid: branch?.currentBranch?.uuid,
+                asset_type: watchAssetType
             }))
+        } else {
+            setMasterAssetNameOptions([])
+            setVendorEscalationDetailsData([])
+            setAssetDetailData(null)
         }
     }, [watchAssetType])
+
 
     /**
      * actionGetAssetDetailsByName on selection of Asset Name
@@ -139,9 +142,12 @@ export default function AddTicket({ open, handleClose }) {
     useEffect(() => {
         if (watchAssetName && watchAssetName !== null) {
             dispatch(actionGetAssetDetailsByName({
-                client_uuid: branch?.currentBranch?.client_uuid,
-                asset_name: watchAssetName
+                uuid: watchAssetName
             }))
+        } else {
+            setMasterAssetNameOptions([])
+            setAssetDetailData(null)
+            setVendorEscalationDetailsData([])
         }
     }, [watchAssetName])
 
@@ -255,10 +261,7 @@ export default function AddTicket({ open, handleClose }) {
             if (getMasterAssetName?.result === true) {
                 setMasterAssetNameOptions(getMasterAssetName?.response)
             } else {
-                setMasterAssetNameOptions([{
-                    id: 1,
-                    name: 'ELectrical Invertor'
-                }])
+                setMasterAssetNameOptions([])
                 switch (getMasterAssetName?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -288,7 +291,8 @@ export default function AddTicket({ open, handleClose }) {
             dispatch(resetGetAssetDetailsByNameResponse())
             if (getAssetDetailsByName?.result === true) {
                 setAssetDetailData(getAssetDetailsByName?.response)
-                setVendorEscalationDetailsData(getAssetDetailsByName?.response?.vendor_escalations)
+                setValue('location', getAssetDetailsByName?.response?.location)
+                setVendorEscalationDetailsData(getAssetDetailsByName?.response?.vendor_escalation)
             } else {
                 let objData = {
                     "id": 1,
@@ -433,15 +437,15 @@ export default function AddTicket({ open, handleClose }) {
      * handle Submit function
      * @param {*} data 
      */
-    const onSubmit = data => {
-        // console.log('-------data-----', data)
+    const onSubmit = async data => {
         let selectedVendors = vendorEscalationDetailsData && vendorEscalationDetailsData !== null && vendorEscalationDetailsData.length > 0 ?
             vendorEscalationDetailsData?.filter(obj => obj?.is_selected === 1)
             : [];
 
         let objData = {
+            branch_uuid: branch?.currentBranch?.uuid,
             asset_type: data.type,
-            asset_id: data.asset_name,
+            asset_uuid: data.asset_name,
             title: data.title && data.title !== null ? data.title : null,
             supervisor_id: data.supervisor && data.supervisor !== null ? data.supervisor : null,
             priority: data.priority && data.priority !== null ? data.priority : null,
@@ -452,19 +456,18 @@ export default function AddTicket({ open, handleClose }) {
         const files = [];
         let hasNewFiles = arrUploadedFiles.filter(obj => obj?.is_new === 1)
         if (hasNewFiles && hasNewFiles.length > 0 && arrUploadedFiles && arrUploadedFiles.length > 0) {
-            arrUploadedFiles.map((objFile, index) => {
+            for (const objFile of arrUploadedFiles) {
                 if (objFile?.is_new === 1) {
 
                     //Compress the files with type image
-                    const compressedFile = compressFile(objFile.file);
+                    const compressedFile = await compressFile(objFile.file);
 
                     files.push({
-                        title: `ticket_upload_${index + 1}`,
+                        title: `ticket_upload`,
                         data: compressedFile
                     });
                 }
-
-            })
+            }
         }
         setLoading(true)
         const formData = getFormData(objData, files);
@@ -620,8 +623,8 @@ export default function AddTicket({ open, handleClose }) {
                                                             {masterAssetNameOptions && masterAssetNameOptions !== null && masterAssetNameOptions.length > 0 &&
                                                                 masterAssetNameOptions.map(option => (
                                                                     <MenuItem
-                                                                        key={option?.id}
-                                                                        value={option?.id}
+                                                                        key={option?.uuid}
+                                                                        value={option?.uuid}
                                                                         sx={{
                                                                             whiteSpace: 'normal',        // allow wrapping
                                                                             wordBreak: 'break-word',     // break long words if needed
@@ -633,7 +636,7 @@ export default function AddTicket({ open, handleClose }) {
                                                                             textOverflow: 'ellipsis'
                                                                         }}
                                                                     >
-                                                                        {option?.name}
+                                                                        {option?.asset_description}
                                                                     </MenuItem>
                                                                 ))}
                                                         </CustomTextField>
@@ -677,7 +680,7 @@ export default function AddTicket({ open, handleClose }) {
                                             </Grid>
                                             {/* Asset Name */}
                                             <Grid size={{ xs: 12, sm: 6, md: 2, lg: 2, xl: 2 }}>
-                                                <FieldBox textColor={theme.palette.grey[900]} label="Asset Name" value={assetDetailData?.asset_name && assetDetailData?.asset_name !== null ? assetDetailData?.asset_name : ''} />
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Asset Name" value={assetDetailData?.asset_name && assetDetailData?.asset_name !== null ? assetDetailData?.asset_name : (watchAssetName && watchAssetName !== null ? getObjectByUuid(masterAssetNameOptions, watchAssetName)?.asset_description : '')} />
                                             </Grid>
                                             {/* Asset Make */}
                                             <Grid size={{ xs: 12, sm: 6, md: 2, lg: 2, xl: 2 }}>
@@ -906,8 +909,8 @@ export default function AddTicket({ open, handleClose }) {
                                             vendorEscalationDetailsData && vendorEscalationDetailsData !== null && vendorEscalationDetailsData.length > 0 ?
                                                 <>
                                                     <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                                        <TypographyComponent fontSize={16} fontWeight={500}>STULZ</TypographyComponent>
-                                                        <TypographyComponent fontSize={14} fontWeight={400}>VF-2025-0001672</TypographyComponent>
+                                                        <TypographyComponent fontSize={16} fontWeight={500}>{assetDetailData?.vendor && assetDetailData?.vendor !== null ? assetDetailData?.vendor : ''}</TypographyComponent>
+                                                        <TypographyComponent fontSize={14} fontWeight={400}>{assetDetailData?.vendor_id && assetDetailData?.vendor_id !== null ? assetDetailData?.vendor_id : ''}</TypographyComponent>
                                                     </Stack>
                                                     <Stack sx={{
                                                         marginTop: 2,
@@ -967,56 +970,54 @@ export default function AddTicket({ open, handleClose }) {
                                         }
                                     </Stack>
                                     <SectionHeader title="Upload Files" show_progress={0} sx={{ marginTop: 2 }} />
-                                    <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}`, p: 2, marginTop: '-4px' }}>
-                                        <Box sx={{ mb: 0 }}>
-                                            <Stack onClick={handleTriggerInput} onDrop={handleDrop}
-                                                onDragOver={handleDragOver}
-                                                sx={{ cursor: 'pointer', border: `1px dashed ${theme.palette.primary[600]}`, borderRadius: '8px', background: theme.palette.primary[100], p: '16px', flexDirection: 'row', justifyContent: 'center' }}>
-                                                <input
-                                                    hidden
-                                                    accept=".jpg,.jpeg,.png,.xlsx,.csv,.pdf,.docx"
-                                                    type="file"
-                                                    multiple
-                                                    ref={inputRef}
-                                                    onChange={handleFileChange}
-                                                />
-                                                <TypographyComponent fontSize={14} fontWeight={400} sx={{ mr: 1 }}>Drag & Drop file(s) to upload or </TypographyComponent>
-                                                <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.primary[600], textDecoration: 'underline' }}>Browse</TypographyComponent>
-                                            </Stack>
-                                            <List>
-                                                {arrUploadedFiles && arrUploadedFiles !== null && arrUploadedFiles.length > 0 ?
-                                                    arrUploadedFiles.map((file, idx) => (
-                                                        <React.Fragment key={file.name}>
-                                                            <ListItem
-                                                                sx={{ mb: '-8px' }}
-                                                                secondaryAction={
-                                                                    <>
-                                                                        <IconButton
-                                                                            edge="end"
-                                                                            aria-label="delete"
-                                                                            onClick={() => handleDelete(idx)}
-                                                                        >
-                                                                            <DeleteIcon />
-                                                                        </IconButton>
-                                                                    </>
+                                    <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}`, p: 2, marginTop: '-4px', pb: 0 }}>
+                                        <Stack onClick={handleTriggerInput} onDrop={handleDrop}
+                                            onDragOver={handleDragOver}
+                                            sx={{ cursor: 'pointer', border: `1px dashed ${theme.palette.primary[600]}`, borderRadius: '8px', background: theme.palette.primary[100], p: '16px', flexDirection: 'row', justifyContent: 'center' }}>
+                                            <input
+                                                hidden
+                                                accept=".jpg,.jpeg,.png,.xlsx,.csv,.pdf,.docx"
+                                                type="file"
+                                                multiple
+                                                ref={inputRef}
+                                                onChange={handleFileChange}
+                                            />
+                                            <TypographyComponent fontSize={14} fontWeight={400} sx={{ mr: 1 }}>Drag & Drop file(s) to upload or </TypographyComponent>
+                                            <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.primary[600], textDecoration: 'underline' }}>Browse</TypographyComponent>
+                                        </Stack>
+                                        <List>
+                                            {arrUploadedFiles && arrUploadedFiles !== null && arrUploadedFiles.length > 0 ?
+                                                arrUploadedFiles.map((file, idx) => (
+                                                    <React.Fragment key={file.name}>
+                                                        <ListItem
+                                                            sx={{ mb: '-8px' }}
+                                                            secondaryAction={
+                                                                <>
+                                                                    <IconButton
+                                                                        edge="end"
+                                                                        aria-label="delete"
+                                                                        onClick={() => handleDelete(idx)}
+                                                                    >
+                                                                        <DeleteIcon />
+                                                                    </IconButton>
+                                                                </>
+                                                            }
+                                                        >
+                                                            <FileIcon sx={{ mr: 1 }} />
+                                                            <ListItemText
+                                                                primary={
+                                                                    <TypographyComponent fontSize={14} fontWeight={500} sx={{ textDecoration: 'underline' }}>
+                                                                        {file?.name}
+                                                                    </TypographyComponent>
                                                                 }
-                                                            >
-                                                                <FileIcon sx={{ mr: 1 }} />
-                                                                <ListItemText
-                                                                    primary={
-                                                                        <TypographyComponent fontSize={14} fontWeight={500} sx={{ textDecoration: 'underline' }}>
-                                                                            {file?.name}
-                                                                        </TypographyComponent>
-                                                                    }
-                                                                />
-                                                            </ListItem>
-                                                        </React.Fragment>
-                                                    ))
-                                                    :
-                                                    <></>
-                                                }
-                                            </List>
-                                        </Box>
+                                                            />
+                                                        </ListItem>
+                                                    </React.Fragment>
+                                                ))
+                                                :
+                                                <></>
+                                            }
+                                        </List>
                                     </Stack>
                                 </Stack>
                             </Grid>

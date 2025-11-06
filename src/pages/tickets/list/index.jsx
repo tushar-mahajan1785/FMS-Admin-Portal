@@ -27,6 +27,7 @@ import CustomTextField from '../../../components/text-field';
 import { actionMasterAssetType, resetMasterAssetTypeResponse } from '../../../store/asset';
 import { useBranch } from '../../../hooks/useBranch';
 import { ViewTicket } from '../view';
+import moment from 'moment';
 
 export const TicketList = () => {
     const theme = useTheme()
@@ -56,11 +57,12 @@ export const TicketList = () => {
     const [selectedAssetTypes, setSelectedAssetTypes] = useState('')
     const [masterAssetTypeOptions, setMasterAssetTypeOptions] = useState([])
     const [masterTicketStatusOptions] = useState(getMasterTicketStatus)
+    const [currentTicketDetails, setCurrentTicketDetails] = useState(null)
 
     const columns = [
         {
             flex: 0.07,
-            field: 'sr_no',
+            field: 'id',
             headerName: 'Sr. No.'
         },
         {
@@ -70,6 +72,7 @@ export const TicketList = () => {
             renderCell: (params) => {
                 return (
                     <Stack sx={{ cursor: 'pointer', justifyContent: 'center', height: '100%' }} onClick={() => {
+                        setCurrentTicketDetails(params?.row)
                         setOpenViewTicket(true)
                     }}>
                         <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.primary[600], textDecoration: 'underline' }}>{params?.row?.ticket_no}</TypographyComponent>
@@ -95,7 +98,22 @@ export const TicketList = () => {
         {
             flex: 0.1,
             field: 'created_on',
-            headerName: 'Created On'
+            headerName: 'Created On',
+            renderCell: (params) => {
+                return (
+                    <Stack sx={{ height: '100%', justifyContent: 'center' }}>
+                        {
+                            params.row.created_on && params.row.created_on !== null ?
+                                <TypographyComponent color={theme.palette.grey.primary} fontSize={14} fontWeight={400} sx={{ py: '10px' }}>
+                                    {params.row.created_on && params.row.created_on !== null ? moment(params.row.created_on, 'YYYY-MM-DD').format('DD MMM YYYY') : ''}
+                                </TypographyComponent>
+                                :
+                                <></>
+                        }
+
+                    </Stack>
+                )
+            }
         },
         {
             flex: 0.1,
@@ -134,16 +152,16 @@ export const TicketList = () => {
             sortable: false,
             field: "",
             headerName: 'Action',
-            renderCell: () => {
+            renderCell: (params) => {
                 return (
                     <React.Fragment>
                         <Box sx={{ display: "flex", alignItems: "center" }}>
                             <Tooltip title="Details" followCursor placement="top">
-                                {/* open employee details */}
+                                {/* open ticket details */}
                                 <IconButton
                                     onClick={() => {
-                                        // setEmployeeData(params.row)
-                                        // setOpenEmployeeDetailsPopup(true)
+                                        setCurrentTicketDetails(params?.row)
+                                        setOpenViewTicket(true)
                                     }}
                                 >
                                     <EyeIcon stroke={'#181D27'} />
@@ -488,6 +506,7 @@ export const TicketList = () => {
             dispatch(actionTicketsList({
                 page: page,
                 limit: LIST_LIMIT,
+                branch_uuid: branch?.currentBranch?.uuid,
                 priority: selectedPriority,
                 status: selectedStatus,
                 asset_type: selectedAssetTypes
@@ -644,14 +663,14 @@ export const TicketList = () => {
                         </Card>
                     ))}
                 </Box>
-                <Stack sx={{ border: `1px solid ${theme.palette.grey[200]}`, borderRadius: '8px' }}>
+                <Stack sx={{ border: `1px solid ${theme.palette.grey[200]}`, borderRadius: '8px', background: theme.palette.common.white, pb: 1 }}>
                     <Stack sx={{ flexDirection: 'row', background: theme.palette.common.white, width: '100%', justifyContent: 'space-between', alignItems: 'center', borderRadius: '8px', py: 1 }}>
                         <Stack sx={{ flexDirection: 'row', columnGap: 1, height: '100%', padding: '15px' }}>
                             <Stack>
                                 <TypographyComponent fontSize={18} fontWeight={500} sx={{ color: theme.palette.grey[700] }}>Tickets List</TypographyComponent>
                             </Stack>
                             <Chip
-                                label={`100 Tickets`}
+                                label={`${total.toString().padStart(2, "0")} Tickets`}
                                 size="small"
                                 sx={{ bgcolor: theme.palette.primary[50], color: theme.palette.primary[600], fontSize: 14, fontWeight: 500 }}
                             />
@@ -800,7 +819,6 @@ export const TicketList = () => {
                                         </MenuItem>
                                     ))}
                             </CustomTextField>
-
                         </Stack>
                     </Stack>
                     {loadingList ? (
@@ -831,12 +849,15 @@ export const TicketList = () => {
             />
             <ViewTicket
                 open={openViewTicket}
+                detail={currentTicketDetails}
                 handleClose={(data) => {
                     setOpenViewTicket(false)
+                    setCurrentTicketDetails(null)
                     if (data === 'delete') {
                         dispatch(actionTicketsList({
                             page: page,
                             limit: LIST_LIMIT,
+                            branch_uuid: branch?.currentBranch?.uuid,
                             priority: selectedPriority,
                             status: selectedStatus,
                             asset_type: selectedAssetTypes

@@ -4,13 +4,17 @@ import SectionHeader from '../section-header';
 import TypographyComponent from '../custom-typography';
 import moment from 'moment';
 import FileIcon from '../../assets/icons/FileIcon';
+import OptionsMenu from "../option-menu";
+import EditIcon from '../../assets/icons/EditIcon';
+import DeleteIcon from '../../assets/icons/DeleteIcon';
 
 export const ShowHistoryComponent = ({
     historyArray,
     title = 'title',
     description = 'description',
     files = 'files',
-    user = 'user'
+    user = 'user',
+    onEditClick,
 }) => {
     const theme = useTheme();
 
@@ -19,6 +23,7 @@ export const ShowHistoryComponent = ({
             case 'Closing Statement':
                 return theme.palette.success[100];
             case 'Reopen Statement':
+            case 'Open Statement':
                 return theme.palette.success[100];
             case 'Rejected Statement':
                 return theme.palette.error[100];
@@ -87,9 +92,56 @@ export const ShowHistoryComponent = ({
 
                                     <Grid size={{ xs: 8, sm: 9, md: 9.5 }}>
                                         <Stack spacing={1.5}>
-                                            <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[900], lineHeight: '24px' }}>
-                                                {entry[title]}
-                                            </TypographyComponent>
+                                            <Stack sx={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' }}>
+                                                <Stack>
+                                                    <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[900], lineHeight: '24px' }}>
+                                                        {entry[title]}
+                                                    </TypographyComponent>
+                                                </Stack>
+                                                {
+                                                    (index === historyArray.length - 1) && (entryIndex === statusGroup.entries.length - 1) ?
+                                                        <Stack>
+                                                            <Box
+                                                                onClick={(event) => event.stopPropagation()}
+                                                                sx={{ ml: 'auto', mr: 0.5, display: 'flex', alignItems: 'center' }}
+                                                            >
+                                                                <OptionsMenu
+                                                                    id={`role-${entry?.title}-${entry?.id}`}
+                                                                    menuProps={{ sx: { '& .MuiMenuItem-root svg': { mr: 2 } } }}
+                                                                    iconButtonProps={{ size: 'small', sx: { color: 'text.secondary' } }}
+                                                                    options={[
+                                                                        {
+                                                                            text: 'Edit',
+                                                                            subject: 'DASHBOARD',
+                                                                            icon: <EditIcon stroke={theme.palette.common.black} />,
+                                                                            sx: { justifyContent: 'space-between', marginLeft: 'auto' },
+                                                                            onClick: () => onEditClick(entry)
+                                                                        },
+                                                                        {
+                                                                            text: 'Delete',
+                                                                            subject: 'DASHBOARD',
+                                                                            icon: <DeleteIcon stroke={theme.palette.common.black} />,
+                                                                            sx: { justifyContent: 'space-between', marginLeft: 'auto' },
+
+                                                                            onClick: () => {
+                                                                                // let objData = {
+                                                                                //     id: role?.id,
+                                                                                //     title: `Delete Role`,
+                                                                                //     text: `Are you sure you want to delete <span style = "color: black">${role?.name}</span>? This action cannot be undone.`
+                                                                                // }
+                                                                                // setObjRole(objData)
+                                                                                // setOpenConfirmationPopup(true)
+                                                                            }
+                                                                        }
+                                                                    ]}
+                                                                />
+                                                            </Box>
+                                                        </Stack>
+                                                        :
+                                                        <></>
+                                                }
+                                            </Stack>
+
                                             <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[900], lineHeight: '20px' }}>
                                                 {entry[user]}
                                             </TypographyComponent>
@@ -101,16 +153,16 @@ export const ShowHistoryComponent = ({
                                                 {entry[description]}
                                             </TypographyComponent>
 
-                                            {entry[files] && entry[files].length > 0 && (
+                                            {entry[files] && entry[files] !== null && entry[files].length > 0 && (
                                                 <Stack direction="row" spacing={1} sx={{ pt: 1, flexWrap: 'wrap' }}>
                                                     <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.grey[900], lineHeight: '20px' }}>
                                                         File Uploaded:
                                                     </TypographyComponent>
-                                                    {entry[files].map((file, fileIndex) => (
+                                                    {entry[files]?.map((file, fileIndex) => (
                                                         <Stack key={fileIndex} sx={{ textDecoration: 'underline', mr: 1, flexDirection: 'row' }}>
                                                             <FileIcon sx={{ mr: 0.2 }} />
                                                             <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.grey[900], lineHeight: '20px' }}>
-                                                                {file}
+                                                                {file?.file_name}
                                                             </TypographyComponent>
                                                         </Stack>
                                                     ))}

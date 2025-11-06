@@ -10,7 +10,11 @@ import {
     API_TICKET_ADD,
     API_TICKET_DETAIL,
     API_CHANGE_TICKET_STATUS,
-    API_TICKET_DELETE
+    API_TICKET_DELETE,
+    API_TICKET_VENDOR_CONTACT_UPDATE,
+    API_TICKET_ADD_UPDATE,
+    API_DELETE_TICKET_UPDATE,
+    API_DELETE_TICKET_UPDATE_FILE
 } from "../../common/api/constants";
 
 export const actionGetTicketCounts = createAsyncThunk('tickets/actionGetTicketCounts', async (params) => {
@@ -99,6 +103,43 @@ export const actionTicketDelete = createAsyncThunk('tickets/actionTicketDelete',
     }
 })
 
+export const actionTicketVendorContactsUpdate = createAsyncThunk('asset/actionTicketVendorContactsUpdate', async (params) => {
+    try {
+        const response = await axiosApi.post(API_TICKET_VENDOR_CONTACT_UPDATE, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+export const actionTicketAddUpdate = createAsyncThunk('asset/actionTicketAddUpdate', async (params) => {
+    try {
+        const response = await axiosApi.post(API_TICKET_ADD_UPDATE, params, MULTIPART_HEADER)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+export const actionTicketUpdateDelete = createAsyncThunk('asset/actionTicketUpdateDelete', async (params) => {
+    try {
+        const response = await axiosApi.post(API_DELETE_TICKET_UPDATE, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+export const actionTicketUpdateFileDelete = createAsyncThunk('asset/actionTicketUpdateFileDelete', async (params) => {
+    try {
+        const response = await axiosApi.post(API_DELETE_TICKET_UPDATE_FILE, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+
 export const ticketsStore = createSlice({
     name: 'tickets',
     initialState: {
@@ -110,7 +151,11 @@ export const ticketsStore = createSlice({
         addTicket: null,
         getTicketDetails: null,
         changeTicketStatus: null,
-        ticketDelete: null
+        ticketDelete: null,
+        ticketVendorContactsUpdate: null,
+        ticketAddUpdate: null,
+        ticketUpdateDelete: null,
+        ticketUpdateFileDelete: null
     },
 
     reducers: {
@@ -140,6 +185,18 @@ export const ticketsStore = createSlice({
         },
         resetTicketDeleteResponse: (state) => {
             state.ticketDelete = null
+        },
+        resetTicketVendorContactsUpdateResponse: (state) => {
+            state.ticketVendorContactsUpdate = null
+        },
+        resetTicketAddUpdateResponse: (state) => {
+            state.ticketAddUpdate = null
+        },
+        resetTicketUpdateDeleteResponse: (state) => {
+            state.ticketUpdateDelete = null
+        },
+        resetTicketUpdateFileDeleteResponse: (state) => {
+            state.ticketUpdateFileDelete = null
         },
     },
     extraReducers: builder => {
@@ -171,6 +228,18 @@ export const ticketsStore = createSlice({
             .addCase(actionTicketDelete.fulfilled, (state, action) => {
                 state.ticketDelete = action.payload
             })
+            .addCase(actionTicketVendorContactsUpdate.fulfilled, (state, action) => {
+                state.ticketVendorContactsUpdate = action.payload
+            })
+            .addCase(actionTicketAddUpdate.fulfilled, (state, action) => {
+                state.ticketAddUpdate = action.payload
+            })
+            .addCase(actionTicketUpdateDelete.fulfilled, (state, action) => {
+                state.ticketUpdateDelete = action.payload
+            })
+            .addCase(actionTicketUpdateFileDelete.fulfilled, (state, action) => {
+                state.ticketUpdateFileDelete = action.payload
+            })
     }
 })
 
@@ -183,7 +252,11 @@ export const {
     resetAddTicketResponse,
     resetGetTicketDetailsResponse,
     resetChangeTicketStatusResponse,
-    resetTicketDeleteResponse
+    resetTicketDeleteResponse,
+    resetTicketVendorContactsUpdateResponse,
+    resetTicketAddUpdateResponse,
+    resetTicketUpdateDeleteResponse,
+    resetTicketUpdateFileDeleteResponse
 } =
     ticketsStore.actions
 
