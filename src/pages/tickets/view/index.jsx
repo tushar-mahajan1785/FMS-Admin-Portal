@@ -29,14 +29,14 @@ import AlertCircleIcon from "../../../assets/icons/AlertCircleIcon";
 import { AntSwitch } from "../../../components/common";
 import AddUpdateTicket from "../add-updates";
 import moment from "moment";
-// import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export const ViewTicket = ({ open, handleClose, detail }) => {
     const dispatch = useDispatch()
     const theme = useTheme()
     const { showSnackbar } = useSnackbar()
     const { logout, hasPermission } = useAuth()
-    // const navigate = useNavigate()
+    const navigate = useNavigate()
 
     const { getTicketDetails, ticketDelete, ticketVendorContactsUpdate, ticketUpdateDelete } = useSelector(state => state.ticketsStore)
     const [ticketDetailsData, setTicketDetailsData] = useState(null)
@@ -255,7 +255,7 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                     rightSection={<Stack flexDirection={'row'} gap={3} sx={{ mx: 3, alignItems: 'center' }}>
                         <Stack sx={{ cursor: 'pointer' }} onClick={() => {
                             console.log("Print clicked ✅");
-                            // navigate(`/tickets/download/${detail?.uuid}`)
+                            navigate(`/tickets/download/${detail?.uuid}`)
                         }}>
                             <TypographyComponent fontSize={16} fontWeight={400}>
                                 Download Report
