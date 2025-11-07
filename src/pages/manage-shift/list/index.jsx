@@ -49,7 +49,7 @@ export default function ManageShiftList() {
         { field: "roster_name", headerName: "Roster Name", flex: 0.1 },
         { field: "asset_type", headerName: "Asset Type", flex: 0.1 },
         { field: "schedule", headerName: "Schedule", flex: 0.1 },
-        { field: "technician", headerName: "Technician", flex: 0.1 },
+        { field: "technician_count", headerName: "Technician", flex: 0.1 },
         { field: "shift_manager", headerName: "Shift Manager", flex: 0.1 },
         {
             flex: 0.04,
@@ -184,7 +184,7 @@ export default function ManageShiftList() {
                 setManageShiftOptions(employeeShiftScheduleList?.response?.data)
                 setManageShiftOriginalData(employeeShiftScheduleList?.response?.data)
                 setLoadingList(false)
-                setTotal(employeeShiftScheduleList?.response?.total)
+                setTotal(employeeShiftScheduleList?.response?.totalRecords)
             } else {
                 setLoadingList(false)
                 setManageShiftOptions([])
@@ -347,8 +347,17 @@ export default function ManageShiftList() {
                                     }}
                                     startIcon={<DownloadIcon />}
                                     onClick={() => {
+                                        // 🔹 Prepare simplified data for export
+                                        const exportData = manageShiftOptions.map(group => ({
+                                            "Roster Name": group.roster_name,
+                                            "Asset Type": group.asset_type,
+                                            "Schedule": group.schedule,
+                                            "No of Technicians": group.technician_count,
+                                            "Shift Manager": group.shift_manager,
+                                        }));
+
                                         // 🔹 Create worksheet and workbook
-                                        const worksheet = XLSX.utils.json_to_sheet(manageShiftOptions);
+                                        const worksheet = XLSX.utils.json_to_sheet(exportData);
                                         const workbook = XLSX.utils.book_new();
                                         XLSX.utils.book_append_sheet(workbook, worksheet, "Manage Shift");
 

@@ -383,9 +383,9 @@ export default function SelectEmployeesStep({ employeeData }) {
                                                                 is_manager: objData.role_type_name === 'Manager' ? 1 : 0,
                                                                 name: employee.name,
                                                                 contact_country_code: employee.contact_country_code,
-                                                                contact: employee.contact,
+                                                                contact_number: employee.contact,
                                                                 role_type_id: employee.role_type_id,
-                                                                role_type: employee.role_type,
+                                                                employee_type: employee.role_type,
                                                             });
                                                         }
                                                     } else {
