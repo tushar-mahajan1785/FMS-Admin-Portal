@@ -498,7 +498,7 @@ export default function ManageShiftDetails({ open, objData, page, handleClose })
                 <CreateShiftDrawer
                     open={openEditManageShiftPopup}
                     objData={viewManageShiftData}
-                    toggle={(data) => {
+                    handleClose={(data) => {
                         if (data && data !== null && data === 'save') {
                             if (manageShiftDetailData?.uuid && manageShiftDetailData?.uuid !== null) {
                                 dispatch(actionEmployeeShiftScheduleDetails({ uuid: manageShiftDetailData?.uuid }))

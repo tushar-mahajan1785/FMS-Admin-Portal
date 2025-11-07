@@ -81,12 +81,12 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
 
     useEffect(() => {
         if (open === true) {
-            if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && rosterData?.roster_group_uuid && rosterData?.roster_group_uuid !== null) {
+            if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && rosterData !== null && rosterData?.roster_group_uuid && rosterData?.roster_group_uuid !== null) {
                 dispatch(actionEmployeeShiftScheduleMasterList({
                     branch_uuid: branch?.currentBranch?.uuid,
                     roster_group_uuid: rosterData?.roster_group_uuid
                 }))
-            } else if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && rosterData?.roster_group_uuid === null) {
+            } else if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && rosterData !== null && rosterData?.roster_group_uuid === null) {
                 dispatch(actionEmployeeShiftScheduleMasterList({
                     branch_uuid: branch?.currentBranch?.uuid
                 }))
@@ -104,8 +104,13 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
         if (employeeShiftScheduleMasterList && employeeShiftScheduleMasterList !== null) {
             dispatch(resetEmployeeShiftScheduleMasterListResponse())
             if (employeeShiftScheduleMasterList?.result === true) {
-                setEmployeeShiftScheduleMasterOption(employeeShiftScheduleMasterList?.response)
-                setEmployeeShiftScheduleMasterOriginalData(employeeShiftScheduleMasterList?.response)
+                if (objData?.shift_schedule && objData?.shift_schedule !== null && objData?.shift_schedule?.length > 0) {
+                    setEmployeeShiftScheduleMasterOption(objData?.shift_schedule)
+                    setEmployeeShiftScheduleMasterOriginalData(objData?.shift_schedule)
+                } else {
+                    setEmployeeShiftScheduleMasterOption(employeeShiftScheduleMasterList?.response)
+                    setEmployeeShiftScheduleMasterOriginalData(employeeShiftScheduleMasterList?.response)
+                }
             } else {
                 setEmployeeShiftScheduleMasterOption([])
                 setEmployeeShiftScheduleMasterOriginalData([])
@@ -140,13 +145,6 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
             dispatch(resetRosterGroupMasterListResponse())
             if (rosterGroupMasterList?.result === true) {
                 setGroupMasterOption(rosterGroupMasterList?.response)
-                if (rosterData === null || rosterData?.roster_group_id === null || rosterData?.roster_group_id === '') {
-                    let objData = Object.assign({}, rosterData)
-                    objData.roster_group_id = rosterGroupMasterList?.response[1]?.id
-                    objData.roster_group_uuid = rosterGroupMasterList?.response[1]?.uuid
-                    objData.roster_group_name = rosterGroupMasterList?.response[1]?.roster_group_name
-                    dispatch(actionRosterData(objData))
-                }
             } else {
                 setGroupMasterOption([])
                 switch (rosterGroupMasterList?.status) {
@@ -168,6 +166,27 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
             }
         }
     }, [rosterGroupMasterList])
+
+    useEffect(() => {
+        if (groupMasterOption && groupMasterOption?.length > 0) {
+            if (objData && objData !== null && objData?.formType === 'edit') {
+                let shiftData = Object.assign({}, rosterData)
+                shiftData.schedule_type = objData?.schedule_type
+                shiftData.roster_group_uuid = objData?.uuid
+                shiftData.roster_group_id = objData?.id
+                shiftData.roster_group_name = objData?.roster_name
+                dispatch(actionRosterData(shiftData))
+            } else {
+                if (rosterData === null || rosterData?.roster_group_id === null || rosterData?.roster_group_id === '') {
+                    let objData = Object.assign({}, rosterData)
+                    objData.roster_group_id = groupMasterOption[1]?.id
+                    objData.roster_group_uuid = groupMasterOption[1]?.uuid
+                    objData.roster_group_name = groupMasterOption[1]?.roster_group_name
+                    dispatch(actionRosterData(objData))
+                }
+            }
+        }
+    }, [groupMasterOption])
 
     /**
      * useEffect
@@ -332,8 +351,8 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                         color={theme.palette.primary[600]}
                         size={48}
                         icon={<UserIcon stroke={theme.palette.primary[600]} size={18} />}
-                        title="Create New Shift"
-                        subtitle="Fill below form to add new asset"
+                        title={`${objData && objData !== null && objData?.formType === 'edit' ? 'Update Shift' : 'Create New Shift'}`}
+                        subtitle={`Fill below form to ${objData && objData !== null && objData?.formType === 'edit' ? 'update Shift' : 'add new asset'}`}
 
                         actions={[
                             <IconButton
@@ -394,15 +413,15 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                                                     sx={{
                                                         m: 0,
                                                         gap: 1,
-                                                        '.MuiTypography-root': { fontWeight: rosterData?.schedule_type === 'Weekly' ? 600 : 400, fontSize: 14 },
-                                                        color: rosterData?.schedule_type === 'Weekly' ? theme.palette.grey[700] : theme.palette.grey[600]
+                                                        '.MuiTypography-root': { fontWeight: rosterData?.schedule_type === 'WEEKLY' ? 600 : 400, fontSize: 14 },
+                                                        color: rosterData?.schedule_type === 'WEEKLY' ? theme.palette.grey[700] : theme.palette.grey[600]
                                                     }}
                                                     control={
                                                         <AntSwitch
-                                                            checked={rosterData?.schedule_type === 'Weekly'}
+                                                            checked={rosterData?.schedule_type === 'WEEKLY'}
                                                             onChange={() => {
                                                                 let objData = Object.assign({}, rosterData)
-                                                                objData.schedule_type = 'Weekly'
+                                                                objData.schedule_type = 'WEEKLY'
                                                                 dispatch(actionRosterData(objData))
                                                             }}
                                                         />
@@ -414,15 +433,15 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                                                     sx={{
                                                         m: 0,
                                                         gap: 1,
-                                                        '.MuiTypography-root': { fontWeight: rosterData?.schedule_type === 'Monthly' ? 600 : 400, fontSize: 14 },
-                                                        color: rosterData?.schedule_type === 'Monthly' ? theme.palette.grey[700] : theme.palette.grey[600]
+                                                        '.MuiTypography-root': { fontWeight: rosterData?.schedule_type === 'MONTHLY' ? 600 : 400, fontSize: 14 },
+                                                        color: rosterData?.schedule_type === 'MONTHLY' ? theme.palette.grey[700] : theme.palette.grey[600]
                                                     }}
                                                     control={
                                                         <AntSwitch
-                                                            checked={rosterData?.schedule_type === 'Monthly'}
+                                                            checked={rosterData?.schedule_type === 'MONTHLY'}
                                                             onChange={() => {
                                                                 let objData = Object.assign({}, rosterData)
-                                                                objData.schedule_type = 'Monthly'
+                                                                objData.schedule_type = 'MONTHLY'
                                                                 dispatch(actionRosterData(objData))
                                                             }}
                                                         />
@@ -563,78 +582,146 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
 
                         {/* ---- Employee Rows (switch content based on activePage) ---- */}
                         <Stack sx={{ gap: 2, mt: 2 }}>
-                            {employeeShiftScheduleMasterOption.map((emp, index) => (
-                                <Box
-                                    key={index}
-                                    sx={{
-                                        overflowX: "auto",
-                                        border: `1px solid ${theme.palette.grey[300]}`,
-                                        borderRadius: "8px",
-                                        bgcolor: theme.palette.common.white,
-                                        minWidth: isMDDown ? "1600px" : "",
-                                    }}
-                                >
-                                    <Grid container alignItems="center" sx={{ p: 2, minWidth: isMDDown ? "1600px" : "" }}>
-                                        {/* ---- Employee Name ---- */}
-                                        <Grid
-                                            size={{ xs: 2, sm: 2, md: 2, lg: 2, xl: 2 }}
-                                            display="flex"
-                                            alignItems="center"
-                                            gap={1.5}
-                                        >
-                                            {activePage === "Preview" && (
-                                                <FormControlLabel
-                                                    sx={{
-                                                        m: 0,
-                                                        gap: 1,
-                                                        ".MuiTypography-root": {
-                                                            fontWeight: emp.status === "Active" ? 600 : 400,
-                                                            fontSize: 14,
-                                                        },
-                                                        color:
-                                                            emp.status === "Active"
-                                                                ? theme.palette.grey[700]
-                                                                : theme.palette.grey[600],
-                                                    }}
-                                                    control={
-                                                        <AntSwitch
-                                                            checked={emp.status === "Active"}
-                                                            onChange={() => {
-                                                                const updated = employeeShiftScheduleMasterOption.map((item, i) =>
-                                                                    i === index
-                                                                        ? {
-                                                                            ...item,
-                                                                            status:
-                                                                                item.status === "Active" ? "Inactive" : "Active",
-                                                                        }
-                                                                        : item
-                                                                );
-                                                                setEmployeeShiftScheduleMasterOption(updated);
-                                                            }}
-                                                        />
-                                                    }
-                                                />
-                                            )}
-
-                                            <Box>
-                                                <Typography fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[600] }}>
-                                                    {_.truncate(emp?.employee_name, { length: 20 })}
-                                                </Typography>
-                                                {emp?.is_manager === 1 && (
-                                                    <Typography fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>
-                                                        {emp?.role_type}
-                                                    </Typography>
+                            {
+                                employeeShiftScheduleMasterOption && employeeShiftScheduleMasterOption?.length > 0 &&
+                                employeeShiftScheduleMasterOption.map((emp, index) => (
+                                    <Box
+                                        key={index}
+                                        sx={{
+                                            overflowX: "auto",
+                                            border: `1px solid ${theme.palette.grey[300]}`,
+                                            borderRadius: "8px",
+                                            bgcolor: theme.palette.common.white,
+                                            minWidth: isMDDown ? "1600px" : "",
+                                        }}
+                                    >
+                                        <Grid container alignItems="center" sx={{ p: 2, minWidth: isMDDown ? "1600px" : "" }}>
+                                            {/* ---- Employee Name ---- */}
+                                            <Grid
+                                                size={{ xs: 2, sm: 2, md: 2, lg: 2, xl: 2 }}
+                                                display="flex"
+                                                alignItems="center"
+                                                gap={1.5}
+                                            >
+                                                {activePage === "Preview" && (
+                                                    <FormControlLabel
+                                                        sx={{
+                                                            m: 0,
+                                                            gap: 1,
+                                                            ".MuiTypography-root": {
+                                                                fontWeight: emp.status === "Active" ? 600 : 400,
+                                                                fontSize: 14,
+                                                            },
+                                                            color:
+                                                                emp.status === "Active"
+                                                                    ? theme.palette.grey[700]
+                                                                    : theme.palette.grey[600],
+                                                        }}
+                                                        control={
+                                                            <AntSwitch
+                                                                checked={emp.status === "Active"}
+                                                                onChange={() => {
+                                                                    const updated = employeeShiftScheduleMasterOption.map((item, i) =>
+                                                                        i === index
+                                                                            ? {
+                                                                                ...item,
+                                                                                status:
+                                                                                    item.status === "Active" ? "Inactive" : "Active",
+                                                                            }
+                                                                            : item
+                                                                    );
+                                                                    setEmployeeShiftScheduleMasterOption(updated);
+                                                                }}
+                                                            />
+                                                        }
+                                                    />
                                                 )}
-                                            </Box>
-                                        </Grid>
 
-                                        {/* ---- Shift Cells ---- */}
-                                        <Grid size={{ xs: 10, sm: 10, md: 10, lg: 10, xl: 10 }} container>
-                                            {weekdays.map((day, dayIndex) => {
-                                                const dateKey = moment(day).format("YYYY-MM-DD");
+                                                <Box>
+                                                    <Typography fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[600] }}>
+                                                        {_.truncate(emp?.employee_name, { length: 20 })}
+                                                    </Typography>
+                                                    {emp?.is_manager === 1 && (
+                                                        <Typography fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>
+                                                            {emp?.role_type}
+                                                        </Typography>
+                                                    )}
+                                                </Box>
+                                            </Grid>
 
-                                                // ✅ PREVIEW MODE — Select shifts
-                                                if (activePage === "Preview" && emp.status === "Active") {
+                                            {/* ---- Shift Cells ---- */}
+                                            <Grid size={{ xs: 10, sm: 10, md: 10, lg: 10, xl: 10 }} container>
+                                                {weekdays.map((day, dayIndex) => {
+                                                    const dateKey = moment(day).format("YYYY-MM-DD");
+
+                                                    // ✅ PREVIEW MODE — Select shifts
+                                                    if (activePage === "Preview" && emp.status === "Active") {
+                                                        return (
+                                                            <Grid
+                                                                key={dayIndex}
+                                                                size={{ xs: 1.7, sm: 1.7, md: 1.7, lg: 1.7, xl: 1.7 }}
+                                                                display="flex"
+                                                                justifyContent="center"
+                                                                alignItems="center"
+                                                                gap={0.5}
+                                                            >
+                                                                {emp?.shifts?.map((s, shiftIndex) => {
+                                                                    const isSelected = emp.shift_selection?.[dateKey] === s.short_name;
+                                                                    const currentColor = getCurrentColor(s.short_name, isSelected);
+
+                                                                    return (
+                                                                        <Button
+                                                                            key={`${dateKey}-${shiftIndex}`}
+                                                                            size="small"
+                                                                            variant="outlined"
+                                                                            sx={{
+                                                                                minWidth: 32,
+                                                                                height: 32,
+                                                                                borderRadius: 1,
+                                                                                fontSize: 12,
+                                                                                textTransform: "none",
+                                                                                borderColor: isSelected
+                                                                                    ? currentColor.dark
+                                                                                    : theme.palette.grey[300],
+                                                                                color: isSelected
+                                                                                    ? currentColor.text
+                                                                                    : theme.palette.grey[700],
+                                                                                background: isSelected
+                                                                                    ? `linear-gradient(180deg, ${currentColor.light} 0%, ${currentColor.dark} 100%)`
+                                                                                    : "transparent",
+                                                                                transition: "all 0.2s ease",
+                                                                                "&:hover": {
+                                                                                    background: isSelected
+                                                                                        ? `linear-gradient(180deg, ${currentColor.dark} 0%, ${currentColor.dark} 100%)`
+                                                                                        : theme.palette.action.hover,
+                                                                                },
+                                                                            }}
+                                                                            onClick={() => {
+                                                                                setEmployeeShiftScheduleMasterOption(prev =>
+                                                                                    prev.map((empItem, empIndex) => {
+                                                                                        if (empIndex !== index) return empItem;
+                                                                                        const newSelection = { ...empItem.shift_selection };
+                                                                                        if (newSelection[dateKey] === s.short_name) {
+                                                                                            delete newSelection[dateKey];
+                                                                                        } else {
+                                                                                            newSelection[dateKey] = s.short_name;
+                                                                                        }
+                                                                                        return { ...empItem, shift_selection: newSelection };
+                                                                                    })
+                                                                                );
+                                                                            }}
+                                                                        >
+                                                                            {s.short_name}
+                                                                        </Button>
+                                                                    );
+                                                                })}
+                                                            </Grid>
+                                                        );
+                                                    }
+
+                                                    // ✅ PUBLISH MODE — Show only selected short_name
+                                                    const selectedShortName = emp.shift_selection?.[dateKey];
+                                                    const color = getDisplayCurrentColor(selectedShortName);
                                                     return (
                                                         <Grid
                                                             key={dayIndex}
@@ -642,101 +729,35 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                                                             display="flex"
                                                             justifyContent="center"
                                                             alignItems="center"
-                                                            gap={0.5}
                                                         >
-                                                            {emp?.shifts?.map((s, shiftIndex) => {
-                                                                const isSelected = emp.shift_selection?.[dateKey] === s.short_name;
-                                                                const currentColor = getCurrentColor(s.short_name, isSelected);
-
-                                                                return (
-                                                                    <Button
-                                                                        key={`${dateKey}-${shiftIndex}`}
-                                                                        size="small"
-                                                                        variant="outlined"
-                                                                        sx={{
-                                                                            minWidth: 32,
-                                                                            height: 32,
-                                                                            borderRadius: 1,
-                                                                            fontSize: 12,
-                                                                            textTransform: "none",
-                                                                            borderColor: isSelected
-                                                                                ? currentColor.dark
-                                                                                : theme.palette.grey[300],
-                                                                            color: isSelected
-                                                                                ? currentColor.text
-                                                                                : theme.palette.grey[700],
-                                                                            background: isSelected
-                                                                                ? `linear-gradient(180deg, ${currentColor.light} 0%, ${currentColor.dark} 100%)`
-                                                                                : "transparent",
-                                                                            transition: "all 0.2s ease",
-                                                                            "&:hover": {
-                                                                                background: isSelected
-                                                                                    ? `linear-gradient(180deg, ${currentColor.dark} 0%, ${currentColor.dark} 100%)`
-                                                                                    : theme.palette.action.hover,
-                                                                            },
-                                                                        }}
-                                                                        onClick={() => {
-                                                                            setEmployeeShiftScheduleMasterOption(prev =>
-                                                                                prev.map((empItem, empIndex) => {
-                                                                                    if (empIndex !== index) return empItem;
-                                                                                    const newSelection = { ...empItem.shift_selection };
-                                                                                    if (newSelection[dateKey] === s.short_name) {
-                                                                                        delete newSelection[dateKey];
-                                                                                    } else {
-                                                                                        newSelection[dateKey] = s.short_name;
-                                                                                    }
-                                                                                    return { ...empItem, shift_selection: newSelection };
-                                                                                })
-                                                                            );
-                                                                        }}
-                                                                    >
-                                                                        {s.short_name}
-                                                                    </Button>
-                                                                );
-                                                            })}
+                                                            {selectedShortName && (
+                                                                <Button
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    sx={{
+                                                                        minWidth: 168,
+                                                                        height: 32,
+                                                                        borderRadius: 1,
+                                                                        fontSize: 12,
+                                                                        textTransform: "none",
+                                                                        borderColor: color.dark,
+                                                                        color: color.text,
+                                                                        background: `linear-gradient(180deg, ${color.light} 0%, ${color.dark} 100%)`,
+                                                                        "&:hover": {
+                                                                            background: `linear-gradient(180deg, ${color.dark} 0%, ${color.dark} 100%)`,
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    {selectedShortName}
+                                                                </Button>
+                                                            )}
                                                         </Grid>
                                                     );
-                                                }
-
-                                                // ✅ PUBLISH MODE — Show only selected short_name
-                                                const selectedShortName = emp.shift_selection?.[dateKey];
-                                                const color = getDisplayCurrentColor(selectedShortName);
-                                                return (
-                                                    <Grid
-                                                        key={dayIndex}
-                                                        size={{ xs: 1.7, sm: 1.7, md: 1.7, lg: 1.7, xl: 1.7 }}
-                                                        display="flex"
-                                                        justifyContent="center"
-                                                        alignItems="center"
-                                                    >
-                                                        {selectedShortName && (
-                                                            <Button
-                                                                size="small"
-                                                                variant="outlined"
-                                                                sx={{
-                                                                    minWidth: 168,
-                                                                    height: 32,
-                                                                    borderRadius: 1,
-                                                                    fontSize: 12,
-                                                                    textTransform: "none",
-                                                                    borderColor: color.dark,
-                                                                    color: color.text,
-                                                                    background: `linear-gradient(180deg, ${color.light} 0%, ${color.dark} 100%)`,
-                                                                    "&:hover": {
-                                                                        background: `linear-gradient(180deg, ${color.dark} 0%, ${color.dark} 100%)`,
-                                                                    },
-                                                                }}
-                                                            >
-                                                                {selectedShortName}
-                                                            </Button>
-                                                        )}
-                                                    </Grid>
-                                                );
-                                            })}
+                                                })}
+                                            </Grid>
                                         </Grid>
-                                    </Grid>
-                                </Box>
-                            ))}
+                                    </Box>
+                                ))}
                         </Stack>
                     </Box>
                     {/* Footer */}
@@ -790,7 +811,7 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                                 if (activePage === "Preview") {
                                     // ✅ Determine days to check (Weekdays or Month days)
                                     const daysToCheck =
-                                        rosterData?.schedule_type === "Monthly"
+                                        rosterData?.schedule_type === "MONTHLY"
                                             ? Array.from(
                                                 { length: moment().daysInMonth() },
                                                 (_, i) => moment().startOf("month").add(i, "days")
@@ -809,7 +830,7 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
 
                                     if (!allValid) {
                                         const msg =
-                                            rosterData?.schedule_type === "Monthly"
+                                            rosterData?.schedule_type === "MONTHLY"
                                                 ? "Please select shift for all month days before publishing."
                                                 : "Please select shift for all weekdays before publishing.";
 
@@ -830,7 +851,7 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                                 } else {
                                     // ✅ Final Publish Action
                                     let dateRange =
-                                        rosterData?.schedule_type === "Monthly"
+                                        rosterData?.schedule_type === "MONTHLY"
                                             ? `${moment().startOf("month").format("D MMM")} - ${moment()
                                                 .endOf("month")
                                                 .format("D MMM")}`
@@ -847,7 +868,7 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
 
                                     let updated = { ...input };
                                     if (objData?.formType === "edit" && objData?.uuid) {
-                                        updated.id = objData.uuid;
+                                        updated.uuid = objData?.uuid;
                                     }
 
                                     dispatch(actionAddEmployeeShiftSchedule(updated));
