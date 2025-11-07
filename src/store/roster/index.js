@@ -16,7 +16,8 @@ import {
     API_ADD_EMPLOYEE_SHIFT_SCHEDULE,
     API_DELETE_EMPLOYEE_SHIFT_SCHEDULE,
     API_EMPLOYEE_SHIFT_SCHEDULE_MASTER_LIST,
-    API_ROSTER_GROUP_MASTER_LIST
+    API_ROSTER_GROUP_MASTER_LIST,
+    API_EMPLOYEE_SHIFT_SCHEDULE_DETAILS
 } from "../../common/api/constants";
 
 export const defaultRosterData = {
@@ -178,6 +179,16 @@ export const actionRosterGroupMasterList = createAsyncThunk('roster/actionRoster
     }
 })
 
+export const actionEmployeeShiftScheduleDetails = createAsyncThunk('roster/actionEmployeeShiftScheduleDetails', async (params) => {
+    try {
+        const response = await axiosApi.post(API_EMPLOYEE_SHIFT_SCHEDULE_DETAILS, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+
 export const rosterStore = createSlice({
     name: 'roster',
     initialState: {
@@ -196,7 +207,8 @@ export const rosterStore = createSlice({
         addEmployeeShiftSchedule: null,
         deleteEmployeeShiftSchedule: null,
         employeeShiftScheduleMasterList: null,
-        rosterGroupMasterList: null
+        rosterGroupMasterList: null,
+        employeeShiftScheduleDetails: null
     },
 
     reducers: {
@@ -247,6 +259,9 @@ export const rosterStore = createSlice({
         },
         resetRosterGroupMasterListResponse: (state) => {
             state.rosterGroupMasterList = null
+        },
+        resetEmployeeShiftScheduleDetailsResponse: (state) => {
+            state.employeeShiftScheduleDetails = null
         },
     },
     extraReducers: builder => {
@@ -299,6 +314,9 @@ export const rosterStore = createSlice({
             .addCase(actionRosterGroupMasterList.fulfilled, (state, action) => {
                 state.rosterGroupMasterList = action.payload
             })
+            .addCase(actionEmployeeShiftScheduleDetails.fulfilled, (state, action) => {
+                state.employeeShiftScheduleDetails = action.payload
+            })
     }
 })
 
@@ -318,7 +336,8 @@ export const {
     resetAddEmployeeShiftScheduleResponse,
     resetDeleteEmployeeShiftScheduleResponse,
     resetEmployeeShiftScheduleMasterListResponse,
-    resetRosterGroupMasterListResponse
+    resetRosterGroupMasterListResponse,
+    resetEmployeeShiftScheduleDetailsResponse
 } =
     rosterStore.actions
 

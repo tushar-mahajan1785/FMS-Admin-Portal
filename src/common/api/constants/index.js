@@ -229,6 +229,8 @@ export const API_ADD_EMPLOYEE_SHIFT_SCHEDULE = `${BASE}/employee-shift-schedule/
 
 export const API_DELETE_EMPLOYEE_SHIFT_SCHEDULE = `${BASE}/employee-shift-schedule/remove`
 
+export const API_EMPLOYEE_SHIFT_SCHEDULE_DETAILS = `${BASE}/employee-shift-schedule/details`
+
 export const API_EMPLOYEE_SHIFT_SCHEDULE_MASTER_LIST = `${BASE}/employee-shift-schedule/employee-shift-master-list`
 
 //tickets

@@ -530,8 +530,6 @@ export default function AddNewMemberGroup({ open, handleClose }) {
                                 </CardContent>
                             </Card>
                         </Grid>
-                        {console.log("rosterData", rosterData)}
-
                         {/* Right Panel: Group Details */}
                         <Grid size={{ xs: 12, sm: 12, md: 8, lg: 8, xl: 8 }}>
                             <Box>

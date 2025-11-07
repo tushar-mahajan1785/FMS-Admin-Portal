@@ -185,6 +185,7 @@ export default function ManageShiftList() {
                 setManageShiftOriginalData(employeeShiftScheduleList?.response?.data)
                 setLoadingList(false)
                 setTotal(employeeShiftScheduleList?.response?.totalRecords)
+                dispatch(resetRosterDataResponse())
             } else {
                 setLoadingList(false)
                 setManageShiftOptions([])
