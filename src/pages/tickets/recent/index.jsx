@@ -6,7 +6,7 @@ import AddIcon from '@mui/icons-material/Add';
 import TicketIcon from '../../../assets/icons/TicketIcon';
 import OpenTicketIcon from '../../../assets/icons/OpenTicketIcon';
 import OnHoldTicketIcon from '../../../assets/icons/OnHoldTicketIcon';
-import OverDueIcon from '../../../assets/OverdueIcon';
+import OverDueIcon from '../../../assets/icons/OverdueIcon';
 import CircleCloseIcon from '../../../assets/icons/CircleCloseIcon';
 import { ERROR, IMAGES_SCREEN_NO_DATA, LIST_LIMIT, SERVER_ERROR, UNAUTHORIZED } from '../../../constants';
 import EmptyContent from '../../../components/empty_content';
@@ -31,7 +31,7 @@ import moment from 'moment';
 export const RecentTicket = () => {
   const theme = useTheme()
   const dispatch = useDispatch()
-  const { logout } = useAuth()
+  const { logout, hasPermission } = useAuth()
   const navigate = useNavigate()
   const branch = useBranch()
   const { showSnackbar } = useSnackbar()
@@ -132,19 +132,24 @@ export const RecentTicket = () => {
       renderCell: (params) => {
         return (
           <React.Fragment>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <Tooltip title="Details" followCursor placement="top">
-                {/* open ticket details */}
-                <IconButton
-                  onClick={() => {
-                    setCurrentTicketDetails(params?.row)
-                    setOpenViewTicket(true)
-                  }}
-                >
-                  <EyeIcon stroke={'#181D27'} />
-                </IconButton>
-              </Tooltip>
-            </Box>
+            {
+              hasPermission('TICKET_VIEW') ?
+                <Box sx={{ display: "flex", alignItems: "center", height: '100%' }}>
+                  <Tooltip title="Details" followCursor placement="top">
+                    {/* open ticket details */}
+                    <IconButton
+                      onClick={() => {
+                        setCurrentTicketDetails(params?.row)
+                        setOpenViewTicket(true)
+                      }}
+                    >
+                      <EyeIcon stroke={'#181D27'} />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+                :
+                <></>
+            }
           </React.Fragment>
         );
       },
@@ -224,19 +229,26 @@ export const RecentTicket = () => {
       <Stack>
         <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <MyBreadcrumbs />
-          <Stack>
-            <Button
-              size={'small'}
-              sx={{ textTransform: "capitalize", px: 4, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, borderColor: theme.palette.primary[600] }}
-              onClick={() => {
-                setOpenAddTicket(true)
-              }}
-              variant='contained'
-            >
-              <AddIcon sx={{ color: 'white', fontSize: { xs: '20px', sm: '20px', md: '22px' } }} />
-              Add New Ticket
-            </Button>
-          </Stack>
+
+          {
+            hasPermission('TICKET_ADD') ?
+              <Stack>
+                <Button
+                  size={'small'}
+                  sx={{ textTransform: "capitalize", px: 4, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, borderColor: theme.palette.primary[600] }}
+                  onClick={() => {
+                    setOpenAddTicket(true)
+                  }}
+                  variant='contained'
+                >
+                  <AddIcon sx={{ color: 'white', fontSize: { xs: '20px', sm: '20px', md: '22px' } }} />
+                  Add New Ticket
+                </Button>
+              </Stack>
+              :
+              <></>
+          }
+
         </Stack>
         <Box
           sx={{
@@ -344,7 +356,7 @@ export const RecentTicket = () => {
               />
             </Stack>
             <Stack sx={{ paddingRight: '15px', cursor: 'pointer' }} onClick={() => {
-              navigate('/list')
+              navigate('all')
             }}>
               <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.common.black }}>View All</TypographyComponent>
             </Stack>

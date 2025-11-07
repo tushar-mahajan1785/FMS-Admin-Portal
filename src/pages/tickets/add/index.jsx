@@ -41,11 +41,13 @@ import { useBranch } from "../../../hooks/useBranch";
 import { actionAddTicket, resetAddTicketResponse } from "../../../store/tickets";
 import { compressFile, getFormData, getObjectByUuid } from "../../../utils";
 import moment from "moment";
+import EditVendor from "../../vendors/edit";
+import { actionVendorDetails, resetVendorDetailsResponse } from "../../../store/vendor";
 
 export default function AddTicket({ open, handleClose }) {
     const theme = useTheme()
     const dispatch = useDispatch()
-    const { logout } = useAuth()
+    const { logout, hasPermission } = useAuth()
     const { showSnackbar } = useSnackbar()
     const branch = useBranch()
     const inputRef = useRef();
@@ -61,6 +63,7 @@ export default function AddTicket({ open, handleClose }) {
     //Stores
     const { masterAssetType, getMasterAssetName, getAssetDetailsByName, assetCustodianList } = useSelector(state => state.AssetStore)
     const { addTicket } = useSelector(state => state.ticketsStore)
+    const { vendorDetails } = useSelector(state => state.vendorStore)
 
     const {
         control,
@@ -94,6 +97,8 @@ export default function AddTicket({ open, handleClose }) {
     const [assetDetailData, setAssetDetailData] = useState(null)
     const [vendorEscalationDetailsData, setVendorEscalationDetailsData] = useState([])
     const [arrUploadedFiles, setArrUploadedFiles] = useState([])
+    const [openViewEditVendorPopup, setOpenViewEditVendorPopup] = useState(false)
+    const [vendorDetailData, setVendorDetailData] = useState(null)
 
     //Initial Render
     useEffect(() => {
@@ -112,7 +117,7 @@ export default function AddTicket({ open, handleClose }) {
             setMasterAssetTypeOptions([])
             setMasterAssetNameOptions([])
             setSupervisorMasterOptions([])
-            setAssetDetailData([])
+            setAssetDetailData(null)
             setVendorEscalationDetailsData([])
             setArrUploadedFiles([])
         }
@@ -129,6 +134,7 @@ export default function AddTicket({ open, handleClose }) {
                 asset_type: watchAssetType
             }))
         } else {
+            setValue('asset_name', '')
             setMasterAssetNameOptions([])
             setVendorEscalationDetailsData([])
             setAssetDetailData(null)
@@ -292,62 +298,18 @@ export default function AddTicket({ open, handleClose }) {
             if (getAssetDetailsByName?.result === true) {
                 setAssetDetailData(getAssetDetailsByName?.response)
                 setValue('location', getAssetDetailsByName?.response?.location)
-                setVendorEscalationDetailsData(getAssetDetailsByName?.response?.vendor_escalation)
-            } else {
-                let objData = {
-                    "id": 1,
-                    "uuid": "VQyyyvRMgRE6o8iWnvCjN1ko8uTORy2D",
-                    "client_id": 1,
-                    "branch_id": 1,
-                    "client_name": "TATA Steel",
-                    "branch_name": "Tata AIA General Insurance",
-                    "asset_id": "ASSET101",
-                    "asset_description": "electric data",
-                    "type": "BMS",
-                    "sub_type": "fibre electric",
-                    "make": "TATA",
-                    "model": "MOTOR",
-                    "rating_capacity": "400vh",
-                    "serial_no": "23456",
-                    "vendor_id": 27,
-                    "vendor": "Lorem Iop",
-                    "manufacturing_date": "2025-11-12",
-                    "installation_date": null,
-                    "commissioning_date": null,
-                    "warranty_start_date": null,
-                    "warranty_expiry_date": null,
-                    "amc_start_date": null,
-                    "amc_expiry_date": null,
-                    "asset_owner": "Avinash",
-                    "asset_custodian_id": 1,
-                    "asset_custodian": " Mr. Avinash Sangita Vinayak Suryawanshi",
-                    "asset_end_life_selection": null,
-                    "asset_end_life_period": null,
-                    "location": "Pune",
-                    "status": "Active"
+                setValue('supervisor', getAssetDetailsByName?.response?.asset_custodian_id)
+                if (getAssetDetailsByName?.response?.vendor_escalation && getAssetDetailsByName?.response?.vendor_escalation !== null && getAssetDetailsByName?.response?.vendor_escalation.length > 0) {
+                    setVendorEscalationDetailsData(getAssetDetailsByName?.response?.vendor_escalation)
+                } else {
+                    setVendorEscalationDetailsData([])
                 }
-                setAssetDetailData(objData)
-                setValue('location', objData?.location)
-                setVendorEscalationDetailsData([
-                    {
-                        id: 1,
-                        name: 'Level - 1 - Sunil Shah',
-                        email: 'mumbaiservice@stulzservice.in',
-                        is_selected: 1
-                    },
-                    {
-                        id: 2,
-                        name: 'Level - 2 - Sunil Shah',
-                        email: 'mumbaiservice@stulzservice.in',
-                        is_selected: 0
-                    },
-                    {
-                        id: 3,
-                        name: 'Level - 3 - Sunil Shah',
-                        email: 'mumbaiservice@stulzservice.in',
-                        is_selected: 0
-                    }
-                ])
+                if (Object.hasOwn(getAssetDetailsByName?.response, 'vendor_escalation') === false || getAssetDetailsByName?.response?.vendor_escalation.length === 0) {
+                    dispatch(actionVendorDetails({ uuid: getAssetDetailsByName?.response?.vendor_uuid }))
+                }
+            } else {
+                setAssetDetailData(null)
+                setVendorEscalationDetailsData([])
                 switch (getAssetDetailsByName?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -396,6 +358,38 @@ export default function AddTicket({ open, handleClose }) {
             }
         }
     }, [assetCustodianList])
+
+    /**
+     * useEffect
+     * @dependency : vendorDetails
+     * @type : HANDLE API RESULT
+     * @description : Handle the result of vendor Details API
+     */
+    useEffect(() => {
+        if (vendorDetails && vendorDetails !== null) {
+            dispatch(resetVendorDetailsResponse())
+            if (vendorDetails?.result === true) {
+
+                setVendorDetailData(vendorDetails?.response)
+            } else {
+                setVendorDetailData(null)
+                switch (vendorDetails?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetVendorDetailsResponse())
+                        break
+                    case SERVER_ERROR:
+                        toast.dismiss()
+                        showSnackbar({ message: vendorDetails?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [vendorDetails])
 
     /**
      * useEffect
@@ -572,7 +566,7 @@ export default function AddTicket({ open, handleClose }) {
                                                                         sx={{
                                                                             whiteSpace: 'normal',        // allow wrapping
                                                                             wordBreak: 'break-word',     // break long words if needed
-                                                                            maxWidth: 300,               // control dropdown width
+                                                                            // maxWidth: 300,               // control dropdown width
                                                                             display: '-webkit-box',
                                                                             WebkitLineClamp: 2,          // limit to 2 lines
                                                                             WebkitBoxOrient: 'vertical',
@@ -628,7 +622,7 @@ export default function AddTicket({ open, handleClose }) {
                                                                         sx={{
                                                                             whiteSpace: 'normal',        // allow wrapping
                                                                             wordBreak: 'break-word',     // break long words if needed
-                                                                            maxWidth: 300,               // control dropdown width
+                                                                            // maxWidth: 300,               // control dropdown width
                                                                             display: '-webkit-box',
                                                                             WebkitLineClamp: 2,          // limit to 2 lines
                                                                             WebkitBoxOrient: 'vertical',
@@ -961,12 +955,88 @@ export default function AddTicket({ open, handleClose }) {
                                                         }</Stack>
                                                 </>
                                                 :
-                                                <Stack sx={{ px: 1, py: 5, justifyContent: 'center', width: '100%' }}>
-                                                    <Stack sx={{ alignItems: 'center' }}>
-                                                        <Avatar alt={""} src={'/assets/person-details.png'} sx={{ justifyContent: 'center', overFlow: 'hidden', borderRadius: 0, height: 232, width: 253 }} />
+                                                <>
+                                                    {
+                                                        assetDetailData && assetDetailData !== null && (Object.hasOwn(assetDetailData, 'vendor_escalation') === false || assetDetailData?.vendor_escalation.length === 0) ?
+                                                            <>
+                                                                <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                                                    <TypographyComponent fontSize={16} fontWeight={500}>{assetDetailData?.vendor && assetDetailData?.vendor !== null ? assetDetailData?.vendor : ''}</TypographyComponent>
+                                                                    <TypographyComponent fontSize={14} fontWeight={400}>{assetDetailData?.vendor_id && assetDetailData?.vendor_id !== null ? assetDetailData?.vendor_id : ''}</TypographyComponent>
+                                                                </Stack>
+                                                            </>
+                                                            :
+                                                            <></>
+                                                    }
+                                                    <Stack sx={{ px: 1, py: 5, justifyContent: 'center', width: '100%' }}>
+
+                                                        <Stack sx={{ alignItems: 'center' }}>
+                                                            <Avatar alt={""} src={'/assets/person-details.png'} sx={{ justifyContent: 'center', overFlow: 'hidden', borderRadius: 0, height: 232, width: 253 }} />
+                                                        </Stack>
+                                                        {
+                                                            assetDetailData === null ?
+                                                                <TypographyComponent fontSize={16} fontWeight={500} sx={{ mt: 3, textAlign: 'center' }}>Select Asset to get vendor details</TypographyComponent>
+                                                                :
+                                                                <></>
+                                                        }
+
+                                                        {
+                                                            assetDetailData && assetDetailData !== null && (Object.hasOwn(assetDetailData, 'vendor_escalation') === false || assetDetailData?.vendor_escalation.length === 0) ?
+                                                                <>
+                                                                    {
+                                                                        hasPermission('VENDOR_EDIT') ?
+                                                                            <TypographyComponent
+                                                                                fontSize={16}
+                                                                                fontWeight={400}
+                                                                                sx={{
+                                                                                    mt: 3,
+                                                                                    textAlign: 'center',
+                                                                                    // color: theme.palette.grey[600],
+                                                                                    wordWrap: 'break-word',
+                                                                                    display: 'inline', // ensures inline text flow
+                                                                                }}
+                                                                            >
+                                                                                The selected asset has no vendor details assigned. Click to{' '}
+                                                                                <TypographyComponent
+                                                                                    fontSize={16}
+                                                                                    fontWeight={500}
+                                                                                    sx={{
+                                                                                        color: theme.palette.primary[600],
+                                                                                        textDecoration: 'underline',
+                                                                                        cursor: 'pointer',
+                                                                                        display: 'inline', // keeps inline
+                                                                                    }}
+                                                                                    onClick={() => {
+                                                                                        setOpenViewEditVendorPopup(true)
+                                                                                    }}
+                                                                                >
+                                                                                    add
+                                                                                </TypographyComponent>{' '}
+                                                                                vendor details.
+                                                                            </TypographyComponent>
+                                                                            :
+                                                                            <><TypographyComponent
+                                                                                fontSize={16}
+                                                                                fontWeight={400}
+                                                                                sx={{
+                                                                                    mt: 3,
+                                                                                    textAlign: 'center',
+                                                                                    // color: theme.palette.grey[600],
+                                                                                    wordWrap: 'break-word',
+                                                                                    display: 'inline', // ensures inline text flow
+                                                                                }}
+                                                                            >
+                                                                                The selected asset has no vendor details assigned. Please contact your administrator to add the vendor details.
+                                                                            </TypographyComponent></>
+                                                                    }
+
+                                                                </>
+
+                                                                :
+                                                                <></>
+                                                        }
+
                                                     </Stack>
-                                                    <TypographyComponent fontSize={16} fontWeight={500} sx={{ mt: 3, textAlign: 'center' }}>Select Asset to get vendor details</TypographyComponent>
-                                                </Stack>
+                                                </>
                                         }
                                     </Stack>
                                     <SectionHeader title="Upload Files" show_progress={0} sx={{ marginTop: 2 }} />
@@ -1037,18 +1107,33 @@ export default function AddTicket({ open, handleClose }) {
                         Cancel
                     </Button>
                     <Button
-                        sx={{ textTransform: "capitalize", px: 6, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, borderColor: theme.palette.primary[600] }}
+                        sx={{ textTransform: "capitalize", px: 6, borderRadius: '8px', backgroundColor: vendorEscalationDetailsData.length === 0 ? theme.palette.grey[400] : (loading ? theme.palette.grey[400] : theme.palette.primary[600]), color: theme.palette.common.white, fontSize: 16, fontWeight: 600, borderColor: theme.palette.primary[600] }}
                         onClick={() => {
                             handleSubmit(onSubmit)()
                         }}
                         name='submit'
                         variant='contained'
-                        disabled={loading}
+                        disabled={(vendorEscalationDetailsData.length === 0 ? true : (loading ? true : false))}
                     >
                         {loading ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'Confirm'}
                     </Button>
                 </Stack>
             </Stack>
+            {
+                openViewEditVendorPopup &&
+                <EditVendor
+                    open={openViewEditVendorPopup}
+                    objData={vendorDetailData}
+                    toggle={(data) => {
+                        if (data && data !== null && data === 'save') {
+                            dispatch(actionGetAssetDetailsByName({
+                                uuid: watchAssetName
+                            }))
+                        }
+                        setOpenViewEditVendorPopup(false)
+                    }}
+                />
+            }
         </Drawer>
     );
 }

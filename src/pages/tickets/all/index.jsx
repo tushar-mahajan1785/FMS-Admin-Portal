@@ -5,7 +5,7 @@ import AddIcon from '@mui/icons-material/Add';
 import TicketIcon from '../../../assets/icons/TicketIcon';
 import OpenTicketIcon from '../../../assets/icons/OpenTicketIcon';
 import OnHoldTicketIcon from '../../../assets/icons/OnHoldTicketIcon';
-import OverDueIcon from '../../../assets/OverdueIcon';
+import OverDueIcon from '../../../assets/icons/OverdueIcon';
 import CircleCloseIcon from '../../../assets/icons/CircleCloseIcon';
 import { ERROR, getMasterTicketStatus, getPriorityArray, IMAGES_SCREEN_NO_DATA, LIST_LIMIT, SERVER_ERROR, UNAUTHORIZED } from '../../../constants';
 import EmptyContent from '../../../components/empty_content';
@@ -32,7 +32,7 @@ import moment from 'moment';
 export const TicketList = () => {
     const theme = useTheme()
     const dispatch = useDispatch()
-    const { logout } = useAuth()
+    const { logout, hasPermission } = useAuth()
     const navigate = useNavigate()
     const branch = useBranch()
     const { showSnackbar } = useSnackbar()
@@ -71,12 +71,22 @@ export const TicketList = () => {
             headerName: 'Ticket No.',
             renderCell: (params) => {
                 return (
-                    <Stack sx={{ cursor: 'pointer', justifyContent: 'center', height: '100%' }} onClick={() => {
-                        setCurrentTicketDetails(params?.row)
-                        setOpenViewTicket(true)
-                    }}>
-                        <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.primary[600], textDecoration: 'underline' }}>{params?.row?.ticket_no}</TypographyComponent>
-                    </Stack>
+                    <>
+                        {
+                            hasPermission('TICKET_VIEW') ?
+                                <Stack sx={{ cursor: 'pointer', justifyContent: 'center', height: '100%' }} onClick={() => {
+                                    setCurrentTicketDetails(params?.row)
+                                    setOpenViewTicket(true)
+                                }}>
+                                    <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.primary[600], textDecoration: 'underline' }}>{params?.row?.ticket_no}</TypographyComponent>
+                                </Stack>
+                                :
+                                <Stack sx={{ justifyContent: 'center', height: '100%' }}>
+                                    <TypographyComponent fontSize={14} fontWeight={400}>{params?.row?.ticket_no}</TypographyComponent>
+                                </Stack>
+                        }
+                    </>
+
                 )
             }
         },
@@ -155,19 +165,24 @@ export const TicketList = () => {
             renderCell: (params) => {
                 return (
                     <React.Fragment>
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                            <Tooltip title="Details" followCursor placement="top">
-                                {/* open ticket details */}
-                                <IconButton
-                                    onClick={() => {
-                                        setCurrentTicketDetails(params?.row)
-                                        setOpenViewTicket(true)
-                                    }}
-                                >
-                                    <EyeIcon stroke={'#181D27'} />
-                                </IconButton>
-                            </Tooltip>
-                        </Box>
+                        {
+                            hasPermission('TICKET_VIEW') ?
+                                <Box sx={{ display: "flex", alignItems: "center", height: '100%' }}>
+                                    <Tooltip title="Details" followCursor placement="top">
+                                        {/* open ticket details */}
+                                        <IconButton
+                                            onClick={() => {
+                                                setCurrentTicketDetails(params?.row)
+                                                setOpenViewTicket(true)
+                                            }}
+                                        >
+                                            <EyeIcon stroke={'#181D27'} />
+                                        </IconButton>
+                                    </Tooltip>
+                                </Box>
+                                :
+                                <></>
+                        }
                     </React.Fragment>
                 );
             },
@@ -568,19 +583,25 @@ export const TicketList = () => {
                             </TypographyComponent>
                         </Stack>
                     </Stack>
-                    <Stack>
-                        <Button
-                            size={'small'}
-                            sx={{ textTransform: "capitalize", px: 4, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, borderColor: theme.palette.primary[600] }}
-                            onClick={() => {
-                                setOpenAddTicket(true)
-                            }}
-                            variant='contained'
-                        >
-                            <AddIcon sx={{ color: 'white', fontSize: { xs: '20px', sm: '20px', md: '22px' } }} />
-                            Add New Ticket
-                        </Button>
-                    </Stack>
+                    {
+                        hasPermission('TICKET_ADD') ?
+                            <Stack>
+                                <Button
+                                    size={'small'}
+                                    sx={{ textTransform: "capitalize", px: 4, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, borderColor: theme.palette.primary[600] }}
+                                    onClick={() => {
+                                        setOpenAddTicket(true)
+                                    }}
+                                    variant='contained'
+                                >
+                                    <AddIcon sx={{ color: 'white', fontSize: { xs: '20px', sm: '20px', md: '22px' } }} />
+                                    Add New Ticket
+                                </Button>
+                            </Stack>
+                            :
+                            <></>
+                    }
+
                 </Stack>
                 <Box
                     sx={{
@@ -843,8 +864,18 @@ export const TicketList = () => {
             </Stack>
             <AddTicket
                 open={openAddTicket}
-                handleClose={() => {
+                handleClose={(data) => {
                     setOpenAddTicket(false)
+                    if (data === 'save') {
+                        dispatch(actionTicketsList({
+                            page: page,
+                            limit: LIST_LIMIT,
+                            branch_uuid: branch?.currentBranch?.uuid,
+                            priority: selectedPriority,
+                            status: selectedStatus,
+                            asset_type: selectedAssetTypes
+                        }))
+                    }
                 }}
             />
             <ViewTicket

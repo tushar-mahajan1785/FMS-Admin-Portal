@@ -6,7 +6,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import IconButton from '@mui/material/IconButton';
 import { useTheme } from "@emotion/react";
-import { Grid, List, ListItem, ListItemText, MenuItem, Stack, useMediaQuery } from "@mui/material";
+import { Grid, List, ListItem, ListItemText, MenuItem, Stack, Tooltip, useMediaQuery } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
 import { CircularProgress } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
@@ -275,9 +275,19 @@ export default function AddUpdateTicket({ open, handleClose, entryDetails, type,
             if (ticketUpdateFileDelete?.result === true) {
                 setOpenTicketUpdateFileDeletePopup(false)
                 setViewLoadingFileDelete(false)
-                setViewTicketData(null)
+                // setViewTicketData(null)
                 showSnackbar({ message: ticketUpdateFileDelete?.message, severity: "success" })
-                handleClose('delete')
+
+                //remove file locally
+                let arrFiles = Object.assign([], arrUploadedFiles)
+                arrFiles = arrUploadedFiles?.filter(obj => obj?.id != viewTicketData?.id)
+                setArrUploadedFiles(arrFiles)
+
+                dispatch(actionGetTicketDetails({
+                    uuid: selectedEntryDetailsData?.uuid
+                }))
+
+                setViewTicketData(null)
             } else {
                 setViewLoadingFileDelete(false)
                 switch (ticketUpdateFileDelete?.status) {
@@ -512,12 +522,15 @@ export default function AddUpdateTicket({ open, handleClose, entryDetails, type,
                                                     file?.is_new == 1 ?
                                                         <></>
                                                         :
-                                                        <IconButton
-                                                            edge="end"
-                                                            aria-label="check"
-                                                        >
-                                                            <CircleCheckIcon size={20} stroke={theme.palette.success[600]} />
-                                                        </IconButton>
+                                                        <Tooltip title={'Existing File'} placement='top'>
+                                                            <IconButton
+                                                                edge="end"
+                                                                aria-label="check"
+                                                            >
+                                                                <CircleCheckIcon size={20} stroke={theme.palette.success[600]} />
+                                                            </IconButton>
+                                                        </Tooltip>
+
                                                 }
 
                                                 <IconButton
@@ -547,7 +560,7 @@ export default function AddUpdateTicket({ open, handleClose, entryDetails, type,
                     </List>
                 </Stack>
 
-            </DialogContent>
+            </DialogContent >
             <DialogActions sx={{ mx: 1, mb: 1 }}>
                 <Button color="secondary" variant="outlined" sx={{ color: theme.palette.grey[800], textTransform: 'capitalize', px: 2 }} onClick={handleClose}>
                     Close
@@ -591,6 +604,6 @@ export default function AddUpdateTicket({ open, handleClose, entryDetails, type,
                     }
                 />
             }
-        </BootstrapDialog>
+        </BootstrapDialog >
     )
 }

@@ -19,7 +19,7 @@ import FieldBox from "../../../components/field-box";
 import { ShowHistoryComponent } from "../../../components/show-list-component";
 import ChangeTicketStatus from "../change-status";
 import { useDispatch, useSelector } from "react-redux";
-import { actionGetTicketDetails, actionTicketDelete, resetGetTicketDetailsResponse, resetTicketDeleteResponse, actionTicketVendorContactsUpdate, resetTicketVendorContactsUpdateResponse } from "../../../store/tickets";
+import { actionGetTicketDetails, actionTicketDelete, resetGetTicketDetailsResponse, resetTicketDeleteResponse, actionTicketVendorContactsUpdate, resetTicketVendorContactsUpdateResponse, actionTicketUpdateDelete, resetTicketUpdateDeleteResponse } from "../../../store/tickets";
 import { ERROR, SERVER_ERROR, UNAUTHORIZED } from "../../../constants";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import { useAuth } from "../../../hooks/useAuth";
@@ -29,14 +29,16 @@ import AlertCircleIcon from "../../../assets/icons/AlertCircleIcon";
 import { AntSwitch } from "../../../components/common";
 import AddUpdateTicket from "../add-updates";
 import moment from "moment";
+// import { useNavigate } from "react-router-dom";
 
 export const ViewTicket = ({ open, handleClose, detail }) => {
     const dispatch = useDispatch()
     const theme = useTheme()
     const { showSnackbar } = useSnackbar()
-    const { logout } = useAuth()
+    const { logout, hasPermission } = useAuth()
+    // const navigate = useNavigate()
 
-    const { getTicketDetails, ticketDelete, ticketVendorContactsUpdate } = useSelector(state => state.ticketsStore)
+    const { getTicketDetails, ticketDelete, ticketVendorContactsUpdate, ticketUpdateDelete } = useSelector(state => state.ticketsStore)
     const [ticketDetailsData, setTicketDetailsData] = useState(null)
     const [ticketsHistory, setTicketsHistory] = useState([])
     const [openChangeTicketStatusPopup, setOpenChangeTicketStatusPopup] = useState(false)
@@ -49,7 +51,7 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
     const [openAddUpdateTicketPopup, setOpenAddUpdateTicketPopup] = useState(false)
     const [addUpdateType, setAddUpdateType] = useState(null)
     const [selectedEntryUpdateDetails, setSelectedEntryUpdateDetails] = useState(null)
-    // const [openTicketUpdateDeletePopup, setOpenTicketUpdateDeletePopup] = useState(false)
+    const [openTicketUpdateDeletePopup, setOpenTicketUpdateDeletePopup] = useState(false)
 
     useEffect(() => {
         if (open === true) {
@@ -141,6 +143,43 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
 
     /**
      * useEffect
+     * @dependency : ticketUpdateDelete
+     * @type : HANDLE API RESULT
+     * @description : Handle the result of delete ticket update API
+     */
+    useEffect(() => {
+        if (ticketUpdateDelete && ticketUpdateDelete !== null) {
+            dispatch(resetTicketUpdateDeleteResponse())
+            if (ticketUpdateDelete?.result === true) {
+                setOpenTicketUpdateDeletePopup(false)
+                setViewLoadingDelete(false)
+                setViewTicketData(null)
+                showSnackbar({ message: ticketUpdateDelete?.message, severity: "success" })
+                dispatch(actionGetTicketDetails({
+                    uuid: detail?.uuid
+                }))
+            } else {
+                setViewLoadingDelete(false)
+                switch (ticketUpdateDelete?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetTicketUpdateDeleteResponse())
+                        showSnackbar({ message: ticketUpdateDelete?.message, severity: "error" })
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: ticketUpdateDelete?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [ticketUpdateDelete])
+
+    /**
+     * useEffect
      * @dependency : ticketVendorContactsUpdate
      * @type : HANDLE API RESULT
      * @description : Handle the result of ticket Vendor Contacts Update API
@@ -177,8 +216,17 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
 
     const handleEditClick = (entry) => {
         setAddUpdateType('Edit')
-        setSelectedEntryUpdateDetails(entry);     // store clicked item
-        setOpenAddUpdateTicketPopup(true);      // open popup
+        setSelectedEntryUpdateDetails(entry);
+        setOpenAddUpdateTicketPopup(true);
+    };
+    const handleDeleteClick = (entry) => {
+        let objData = {
+            id: entry?.id,
+            title: `Delete Ticket Update`,
+            text: `Are you sure you want to delete this ticket update? This action cannot be undone.`
+        }
+        setViewTicketData(objData)
+        setOpenTicketUpdateDeletePopup(true)
     };
 
     return (
@@ -204,23 +252,37 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                             <CloseIcon size={16} />
                         </IconButton>
                     ]}
-                    rightSection={<Stack flexDirection={'row'} gap={3} sx={{ mx: 3 }}>
-                        <Tooltip title="Delete" followCursor placement="top">
-                            {/* open setting delete popup */}
-                            <IconButton
-                                onClick={() => {
-                                    let objData = {
-                                        uuid: ticketDetailsData?.ticket_uuid,
-                                        title: `Delete Ticket`,
-                                        text: `Are you sure you want to delete this ticket? This action cannot be undone.`
-                                    }
-                                    setViewTicketData(objData)
-                                    setOpenViewDeleteTicketPopup(true)
-                                }}
-                            >
-                                <DeleteIcon />
-                            </IconButton>
-                        </Tooltip>
+                    rightSection={<Stack flexDirection={'row'} gap={3} sx={{ mx: 3, alignItems: 'center' }}>
+                        <Stack sx={{ cursor: 'pointer' }} onClick={() => {
+                            console.log("Print clicked ✅");
+                            // navigate(`/tickets/download/${detail?.uuid}`)
+                        }}>
+                            <TypographyComponent fontSize={16} fontWeight={400}>
+                                Download Report
+                            </TypographyComponent>
+                        </Stack>
+                        {
+                            hasPermission('TICKET_DELETE') ?
+                                <Tooltip title="Delete" followCursor placement="top">
+                                    {/* open setting delete popup */}
+                                    <IconButton
+                                        onClick={() => {
+                                            let objData = {
+                                                uuid: ticketDetailsData?.ticket_uuid,
+                                                title: `Delete Ticket`,
+                                                text: `Are you sure you want to delete this ticket? This action cannot be undone.`
+                                            }
+                                            setViewTicketData(objData)
+                                            setOpenViewDeleteTicketPopup(true)
+                                        }}
+                                    >
+                                        <DeleteIcon />
+                                    </IconButton>
+                                </Tooltip>
+                                :
+                                <></>
+                        }
+
                     </Stack>}
                 />
                 <Divider sx={{ m: 2 }} />
@@ -328,7 +390,7 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                                 <SectionHeader title="Linked Asset" show_progress={0} sx={{ marginTop: 2.5 }} />
                                 <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}`, marginTop: '-4px' }}>
                                     <Grid container>
-                                        {/* Row 1: Asset ID, Make, Model, Rating. */}
+                                        {/* Row 1: Asset ID, Make, Model, Serial No. */}
                                         <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
                                             <FieldBox
                                                 textColor={theme.palette.grey[900]}
@@ -350,13 +412,19 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                                                 value={ticketDetailsData?.model && ticketDetailsData?.model !== null ? ticketDetailsData?.model : '--'}
                                             />
                                         </Grid>
-                                        {/* <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
+                                        <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
                                             <FieldBox
                                                 textColor={theme.palette.grey[900]}
                                                 label="Serial No."
                                                 value={ticketDetailsData?.serial_no && ticketDetailsData?.serial_no !== null ? ticketDetailsData?.serial_no : '--'}
                                             />
-                                        </Grid> */}
+                                        </Grid>
+
+                                        <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
+                                            <Stack sx={{ borderBottom: `1px solid ${theme.palette.grey[300]}`, mx: 2 }} />
+                                        </Grid>
+
+                                        {/* Row 2: Rating, Customer, Owner, Custodian */}
                                         <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
                                             <FieldBox
                                                 textColor={theme.palette.grey[900]}
@@ -364,12 +432,6 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                                                 value={ticketDetailsData?.rating && ticketDetailsData?.rating !== null ? ticketDetailsData?.rating : '--'}
                                             />
                                         </Grid>
-                                        <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
-                                            <Stack sx={{ borderBottom: `1px solid ${theme.palette.grey[300]}`, mx: 2 }} />
-                                        </Grid>
-
-                                        {/* Row 2: Customer, Owner, Custodian */}
-
                                         <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
                                             <FieldBox
                                                 textColor={theme.palette.grey[900]}
@@ -402,7 +464,9 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                                         description="description"
                                         files="files"
                                         user="user"
+                                        permission={'TICKET_EDIT'}
                                         onEditClick={handleEditClick}
+                                        onDeleteClick={handleDeleteClick}
                                     />
                                 </Stack>
                             </Stack>
@@ -453,14 +517,13 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                                 <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2.5 }}>
                                     <SectionHeader title="Vendor Contact" show_progress={0} />
                                     {
-                                        vendorContactType !== 'edit' ?
+                                        vendorContactType !== 'edit' && hasPermission('TICKET_EDIT') ?
                                             <TypographyComponent fontSize={16} sx={{ cursor: 'pointer', textDecoration: 'underline', color: theme.palette.primary[600] }} onClick={() => {
                                                 setVendorContactType('edit')
                                             }}>Edit</TypographyComponent>
                                             :
                                             <></>
                                     }
-
                                 </Stack>
                                 <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}`, p: 2, marginTop: '-4px' }}>
                                     {
@@ -470,8 +533,8 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                                                     vendorEscalationDetailsData && vendorEscalationDetailsData !== null && vendorEscalationDetailsData.length > 0 ?
                                                         <>
                                                             <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                                                <TypographyComponent fontSize={16} fontWeight={500}>Vendor 1</TypographyComponent>
-                                                                <TypographyComponent fontSize={14} fontWeight={400}>VF-2025-0001672</TypographyComponent>
+                                                                <TypographyComponent fontSize={16} fontWeight={500}>{ticketDetailsData?.vendor && ticketDetailsData?.vendor !== null ? ticketDetailsData?.vendor : 'Vendor 1'}</TypographyComponent>
+                                                                <TypographyComponent fontSize={14} fontWeight={400}>{ticketDetailsData?.vendor_id && ticketDetailsData?.vendor_id !== null ? ticketDetailsData?.vendor_id : 'VF-2025-0001672'}</TypographyComponent>
                                                             </Stack>
                                                             <Stack sx={{
                                                                 marginTop: 2,
@@ -627,24 +690,32 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                 <Stack sx={{ p: 2 }} flexDirection={'row'} justifyContent={'space-between'} gap={2}>
                     {/* <Stack> */}
                     <Stack flexDirection={'row'} sx={{ columnGap: 1 }}>
-                        <Button
-                            sx={{ textTransform: "capitalize", px: 6, borderColor: `${theme.palette.primary[300]}`, color: `${theme.palette.primary[700]}`, borderRadius: '8px', fontSize: 16, fontWeight: 600 }}
-                            onClick={() => {
-                                setOpenChangeTicketStatusPopup(true)
-                            }}
-                            variant='outlined'
-                        >
-                            Change Status
-                        </Button>
-                        <Button
-                            sx={{ textTransform: "capitalize", px: 6, borderColor: `${theme.palette.primary[300]}`, color: `${theme.palette.primary[700]}`, borderRadius: '8px', fontSize: 16, fontWeight: 600 }}
-                            onClick={() => {
-                                setOpenAddUpdateTicketPopup(true)
-                            }}
-                            variant='outlined'
-                        >
-                            Add Updates
-                        </Button>
+                        {
+                            hasPermission('TICKET_EDIT') ?
+                                <React.Fragment>
+                                    <Button
+                                        sx={{ textTransform: "capitalize", px: 6, borderColor: `${theme.palette.primary[300]}`, color: `${theme.palette.primary[700]}`, borderRadius: '8px', fontSize: 16, fontWeight: 600 }}
+                                        onClick={() => {
+                                            setOpenChangeTicketStatusPopup(true)
+                                        }}
+                                        variant='outlined'
+                                    >
+                                        Change Status
+                                    </Button>
+                                    <Button
+                                        sx={{ textTransform: "capitalize", px: 6, borderColor: `${theme.palette.primary[300]}`, color: `${theme.palette.primary[700]}`, borderRadius: '8px', fontSize: 16, fontWeight: 600 }}
+                                        onClick={() => {
+                                            setOpenAddUpdateTicketPopup(true)
+                                        }}
+                                        variant='outlined'
+                                    >
+                                        Add Updates
+                                    </Button>
+                                </React.Fragment>
+                                :
+                                <></>
+                        }
+
                     </Stack>
                     <Stack flexDirection={'row'} sx={{ columnGap: 1 }}>
                         <Button
@@ -699,6 +770,34 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                             if (viewTicketData?.uuid && viewTicketData?.uuid !== null) {
                                 dispatch(actionTicketDelete({
                                     uuid: viewTicketData?.uuid
+                                }))
+                            }
+                        }}>
+                            {viewLoadingDelete ? <CircularProgress size={20} color="white" /> : 'Delete'}
+                        </Button>
+                    ]
+                    }
+                />
+            }
+            {
+                openTicketUpdateDeletePopup &&
+                <AlertPopup
+                    open={openTicketUpdateDeletePopup}
+                    icon={<AlertCircleIcon sx={{ color: theme.palette.error[600] }} fontSize="inherit" />}
+                    color={theme.palette.error[600]}
+                    objData={viewTicketData}
+                    actionButtons={[
+                        <Button key="cancel" color="secondary" variant="outlined" sx={{ width: '100%', color: theme.palette.grey[800], textTransform: 'capitalize' }} onClick={() => {
+                            setOpenTicketUpdateDeletePopup(false)
+                        }}>
+                            Cancel
+                        </Button >
+                        ,
+                        <Button key="delete" variant="contained" sx={{ width: '100%', textTransform: 'capitalize', background: theme.palette.error[600], color: theme.palette.common.white }} disabled={viewLoadingDelete} onClick={() => {
+                            setViewLoadingDelete(true)
+                            if (viewTicketData?.id && viewTicketData?.id !== null) {
+                                dispatch(actionTicketUpdateDelete({
+                                    id: viewTicketData?.id
                                 }))
                             }
                         }}>

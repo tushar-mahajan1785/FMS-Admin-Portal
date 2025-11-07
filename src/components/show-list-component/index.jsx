@@ -7,6 +7,7 @@ import FileIcon from '../../assets/icons/FileIcon';
 import OptionsMenu from "../option-menu";
 import EditIcon from '../../assets/icons/EditIcon';
 import DeleteIcon from '../../assets/icons/DeleteIcon';
+import { useAuth } from '../../hooks/useAuth';
 
 export const ShowHistoryComponent = ({
     historyArray,
@@ -15,8 +16,11 @@ export const ShowHistoryComponent = ({
     files = 'files',
     user = 'user',
     onEditClick,
+    onDeleteClick,
+    permission
 }) => {
     const theme = useTheme();
+    const { hasPermission } = useAuth()
 
     const getStatusColor = (statusType) => {
         switch (statusType) {
@@ -99,7 +103,7 @@ export const ShowHistoryComponent = ({
                                                     </TypographyComponent>
                                                 </Stack>
                                                 {
-                                                    (index === historyArray.length - 1) && (entryIndex === statusGroup.entries.length - 1) ?
+                                                    (index === historyArray.length - 1) && (entryIndex === statusGroup.entries.length - 1) && hasPermission(permission) ?
                                                         <Stack>
                                                             <Box
                                                                 onClick={(event) => event.stopPropagation()}
@@ -123,15 +127,7 @@ export const ShowHistoryComponent = ({
                                                                             icon: <DeleteIcon stroke={theme.palette.common.black} />,
                                                                             sx: { justifyContent: 'space-between', marginLeft: 'auto' },
 
-                                                                            onClick: () => {
-                                                                                // let objData = {
-                                                                                //     id: role?.id,
-                                                                                //     title: `Delete Role`,
-                                                                                //     text: `Are you sure you want to delete <span style = "color: black">${role?.name}</span>? This action cannot be undone.`
-                                                                                // }
-                                                                                // setObjRole(objData)
-                                                                                // setOpenConfirmationPopup(true)
-                                                                            }
+                                                                            onClick: () => onDeleteClick(entry)
                                                                         }
                                                                     ]}
                                                                 />
@@ -159,7 +155,9 @@ export const ShowHistoryComponent = ({
                                                         File Uploaded:
                                                     </TypographyComponent>
                                                     {entry[files]?.map((file, fileIndex) => (
-                                                        <Stack key={fileIndex} sx={{ textDecoration: 'underline', mr: 1, flexDirection: 'row' }}>
+                                                        <Stack key={fileIndex} sx={{ cursor: 'pointer', textDecoration: 'underline', mr: 1, flexDirection: 'row' }} onClick={() => {
+                                                            window.open(file?.image_url, '_blank')
+                                                        }}>
                                                             <FileIcon sx={{ mr: 0.2 }} />
                                                             <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.grey[900], lineHeight: '20px' }}>
                                                                 {file?.file_name}
