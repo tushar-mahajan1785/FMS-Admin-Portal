@@ -158,6 +158,11 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
                     title: 'Reopening',
                     placeholder: 'reopening'
                 }
+            case 'Open':
+                return {
+                    title: 'Opening',
+                    placeholder: 'Opening'
+                }
             case 'Closed':
                 return {
                     title: 'Closing',
@@ -286,6 +291,8 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
         }
     }, [assetCustodianList])
 
+    // console.log('-------ticketDetailsData----', ticketDetailsData)
+
     /**
      * useEffect
      * @dependency : changeTicketStatus
@@ -301,9 +308,10 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
                 reset()
                 setArrUploadedFiles([])
                 dispatch(actionGetTicketDetails({
-                    uuid: ticketDetailsData?.uuid
+                    uuid: ticketDetailsData?.ticket_uuid
                 }))
                 handleClose()
+                window.localStorage.setItem('ticket_update', true)
             } else {
                 setLoading(false)
                 switch (changeTicketStatus?.status) {
@@ -331,6 +339,7 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
                 ticket_id: ticketDetailsData?.ticket_id,
                 client_uuid: branch?.currentBranch?.client_uuid,
                 branch_uuid: branch?.currentBranch?.uuid,
+                priority: ticketDetailsData?.priority,
                 changed_status: selectedStatus,
                 title: data?.title,
                 description: data?.description,

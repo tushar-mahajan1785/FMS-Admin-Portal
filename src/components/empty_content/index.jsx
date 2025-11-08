@@ -2,15 +2,15 @@ import { Avatar, Stack, useTheme } from "@mui/material";
 import parse from 'html-react-parser';
 import TypographyComponent from "../custom-typography";
 
-export default function EmptyContent({ imageUrl, title, subTitle, subTitleProps, message, containerProps }) {
+export default function EmptyContent({ imageUrl, title, subTitle, subTitleProps, message, containerProps, imageSize = 300, mt = 10 }) {
   const theme = useTheme()
 
   return (
-    <Stack flexDirection={'column'} alignItems={'center'} mt={10} rowGap={2} {...containerProps}>
+    <Stack flexDirection={'column'} alignItems={'center'} mt={mt} rowGap={2} {...containerProps}>
       {
         imageUrl && imageUrl.length > 0 ?
           <Stack>
-            <Avatar alt={""} src={imageUrl} sx={{ overFlow: 'hidden', borderRadius: 0, height: 300, width: 300 }} />
+            <Avatar alt={""} src={imageUrl} sx={{ overFlow: 'hidden', borderRadius: 0, height: imageSize, width: imageSize }} />
           </Stack>
           :
           <></>

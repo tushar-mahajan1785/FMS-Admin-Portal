@@ -23,7 +23,6 @@ import {
     UNAUTHORIZED,
 } from '../../../constants';
 import { useDispatch, useSelector } from "react-redux";
-import toast from "react-hot-toast";
 import FormHeader from "../../../components/form-header";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import { useAuth } from "../../../hooks/useAuth";
@@ -42,7 +41,7 @@ import { actionAddTicket, resetAddTicketResponse } from "../../../store/tickets"
 import { compressFile, getFormData, getObjectByUuid } from "../../../utils";
 import moment from "moment";
 import EditVendor from "../../vendors/edit";
-import { actionVendorDetails, resetVendorDetailsResponse } from "../../../store/vendor";
+import { actionMasterCountryCodeList, actionVendorDetails, resetVendorDetailsResponse } from "../../../store/vendor";
 
 export default function AddTicket({ open, handleClose }) {
     const theme = useTheme()
@@ -245,7 +244,6 @@ export default function AddTicket({ open, handleClose }) {
                         dispatch(resetMasterAssetTypeResponse())
                         break
                     case SERVER_ERROR:
-                        toast.dismiss()
                         showSnackbar({ message: masterAssetType?.message, severity: "error" })
                         break
                     default:
@@ -276,7 +274,6 @@ export default function AddTicket({ open, handleClose }) {
                         dispatch(resetGetMasterAssetNameResponse())
                         break
                     case SERVER_ERROR:
-                        toast.dismiss()
                         showSnackbar({ message: getMasterAssetName?.message, severity: "error" })
                         break
                     default:
@@ -318,7 +315,6 @@ export default function AddTicket({ open, handleClose }) {
                         dispatch(resetGetAssetDetailsByNameResponse())
                         break
                     case SERVER_ERROR:
-                        toast.dismiss()
                         showSnackbar({ message: getAssetDetailsByName?.message, severity: "error" })
                         break
                     default:
@@ -349,7 +345,6 @@ export default function AddTicket({ open, handleClose }) {
                         dispatch(resetAssetCustodianListResponse())
                         break
                     case SERVER_ERROR:
-                        toast.dismiss()
                         showSnackbar({ message: assetCustodianList?.message, severity: "error" })
                         break
                     default:
@@ -381,7 +376,6 @@ export default function AddTicket({ open, handleClose }) {
                         dispatch(resetVendorDetailsResponse())
                         break
                     case SERVER_ERROR:
-                        toast.dismiss()
                         showSnackbar({ message: vendorDetails?.message, severity: "error" })
                         break
                     default:
@@ -413,11 +407,9 @@ export default function AddTicket({ open, handleClose }) {
                         break
                     case ERROR:
                         dispatch(resetAddTicketResponse())
-                        toast.dismiss()
                         showSnackbar({ message: addTicket?.message, severity: "error" })
                         break
                     case SERVER_ERROR:
-                        toast.dismiss()
                         showSnackbar({ message: addTicket?.message, severity: "error" })
                         break
                     default:
@@ -435,37 +427,40 @@ export default function AddTicket({ open, handleClose }) {
         let selectedVendors = vendorEscalationDetailsData && vendorEscalationDetailsData !== null && vendorEscalationDetailsData.length > 0 ?
             vendorEscalationDetailsData?.filter(obj => obj?.is_selected === 1)
             : [];
+        if (selectedVendors && selectedVendors !== null && selectedVendors?.length > 0) {
+            let objData = {
+                branch_uuid: branch?.currentBranch?.uuid,
+                asset_type: data.type,
+                asset_uuid: data.asset_name,
+                title: data.title && data.title !== null ? data.title : null,
+                supervisor_id: data.supervisor && data.supervisor !== null ? data.supervisor : null,
+                priority: data.priority && data.priority !== null ? data.priority : null,
+                description: data.description && data.description !== null ? data.description : null,
+                assigned_vendors: selectedVendors
+            }
+            const files = [];
+            let hasNewFiles = arrUploadedFiles.filter(obj => obj?.is_new === 1)
+            if (hasNewFiles && hasNewFiles.length > 0 && arrUploadedFiles && arrUploadedFiles.length > 0) {
+                for (const objFile of arrUploadedFiles) {
+                    if (objFile?.is_new === 1) {
 
-        let objData = {
-            branch_uuid: branch?.currentBranch?.uuid,
-            asset_type: data.type,
-            asset_uuid: data.asset_name,
-            title: data.title && data.title !== null ? data.title : null,
-            supervisor_id: data.supervisor && data.supervisor !== null ? data.supervisor : null,
-            priority: data.priority && data.priority !== null ? data.priority : null,
-            description: data.description && data.description !== null ? data.description : null,
-            assigned_vendors: selectedVendors
-        }
+                        //Compress the files with type image
+                        const compressedFile = await compressFile(objFile.file);
 
-        const files = [];
-        let hasNewFiles = arrUploadedFiles.filter(obj => obj?.is_new === 1)
-        if (hasNewFiles && hasNewFiles.length > 0 && arrUploadedFiles && arrUploadedFiles.length > 0) {
-            for (const objFile of arrUploadedFiles) {
-                if (objFile?.is_new === 1) {
-
-                    //Compress the files with type image
-                    const compressedFile = await compressFile(objFile.file);
-
-                    files.push({
-                        title: `ticket_upload`,
-                        data: compressedFile
-                    });
+                        files.push({
+                            title: `ticket_upload`,
+                            data: compressedFile
+                        });
+                    }
                 }
             }
+            setLoading(true)
+            const formData = getFormData(objData, files);
+            dispatch(actionAddTicket(formData))
+        } else {
+            showSnackbar({ message: 'Atleast one vendor selection is required', severity: "error" })
         }
-        setLoading(true)
-        const formData = getFormData(objData, files);
-        dispatch(actionAddTicket(formData))
+
     };
 
     return (
@@ -499,7 +494,7 @@ export default function AddTicket({ open, handleClose }) {
                         <Stack sx={{ borderRight: `1px solid ${theme.palette.common.black}` }} />
                         <Stack>
                             <TypographyComponent fontSize={14} fontWeight={400}>Time</TypographyComponent>
-                            <TypographyComponent fontSize={18} fontWeight={600}>{moment().format('hh:mm A')}</TypographyComponent>
+                            <TypographyComponent fontSize={18} fontWeight={600}>{moment().format('HH:MM A')}</TypographyComponent>
                         </Stack>
                     </Stack>}
                 />
@@ -1007,6 +1002,7 @@ export default function AddTicket({ open, handleClose }) {
                                                                                     }}
                                                                                     onClick={() => {
                                                                                         setOpenViewEditVendorPopup(true)
+                                                                                        dispatch(actionMasterCountryCodeList())
                                                                                     }}
                                                                                 >
                                                                                     add
@@ -1095,7 +1091,7 @@ export default function AddTicket({ open, handleClose }) {
                     </form>
                 </Stack>
                 <Divider sx={{ m: 2 }} />
-                <Stack sx={{ p: 2 }} flexDirection={'row'} justifyContent={'flex-end'} gap={2}>
+                <Stack sx={{ px: 2, pb: 2 }} flexDirection={'row'} justifyContent={'flex-end'} gap={2}>
                     <Button
                         sx={{ textTransform: "capitalize", px: 6, borderColor: `${theme.palette.grey[300]}`, color: `${theme.palette.grey[700]}`, borderRadius: '8px', fontSize: 16, fontWeight: 600 }}
                         onClick={() => {
@@ -1115,7 +1111,7 @@ export default function AddTicket({ open, handleClose }) {
                         variant='contained'
                         disabled={(vendorEscalationDetailsData.length === 0 ? true : (loading ? true : false))}
                     >
-                        {loading ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'Confirm'}
+                        {loading ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'Create Ticket'}
                     </Button>
                 </Stack>
             </Stack>

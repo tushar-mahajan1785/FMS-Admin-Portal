@@ -9,13 +9,18 @@ import { useDispatch, useSelector } from 'react-redux';
 import { actionGetTicketsByStatus, resetGetTicketsByStatusResponse } from '../../../../../store/tickets';
 import { useAuth } from '../../../../../hooks/useAuth';
 import { useSnackbar } from '../../../../../hooks/useSnackbar';
-import { ERROR, SERVER_ERROR, UNAUTHORIZED } from '../../../../../constants';
+import { ERROR, IMAGES_SCREEN_NO_DATA, SERVER_ERROR, UNAUTHORIZED } from '../../../../../constants';
+import { useBranch } from '../../../../../hooks/useBranch';
+import EmptyContent from '../../../../../components/empty_content';
 
 export const TicketsByStatusChart = () => {
     const theme = useTheme();
     const dispatch = useDispatch()
     const { logout } = useAuth()
+    const branch = useBranch()
     const { showSnackbar } = useSnackbar()
+
+    let is_update = window.localStorage.getItem('ticket_update')
 
     //Stores
     const { getTicketsByStatus } = useSelector(state => state.ticketsStore)
@@ -34,21 +39,18 @@ export const TicketsByStatusChart = () => {
         label: 'Last 6 Months',
         value: 'Last 6 Months'
     }])
-    const [ticketsByStatusData, setTicketsByStatusData] = useState([
-        { label: 'Active', value: 16, color: theme.palette.primary[600] },
-        { label: 'In Progress', value: 7, color: theme.palette.info.main },
-        { label: 'Closed', value: 4, color: theme.palette.error[600] },
-    ])
+    const [ticketsByStatusData, setTicketsByStatusData] = useState([])
+    const [totalTicketsCount, setTotalTicketsCount] = useState(0)
 
     /**
      * Initial Render
      * Get Tickets By Status API Call
      */
     useEffect(() => {
-        if (filterValue && filterValue !== null) {
-            dispatch(actionGetTicketsByStatus({ type: filterValue }))
+        if ((filterValue && filterValue !== null && branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null) || is_update == true) {
+            dispatch(actionGetTicketsByStatus({ type: filterValue, branch_uuid: branch?.currentBranch?.uuid }))
         }
-    }, [filterValue])
+    }, [filterValue, branch?.currentBranch?.uuid, is_update])
 
     /**
    * useEffect
@@ -60,9 +62,11 @@ export const TicketsByStatusChart = () => {
         if (getTicketsByStatus && getTicketsByStatus !== null) {
             dispatch(resetGetTicketsByStatusResponse())
             if (getTicketsByStatus?.result === true) {
-                setTicketsByStatusData(getTicketsByStatus?.response)
+                setTicketsByStatusData(getTicketsByStatus?.response?.data)
+                setTotalTicketsCount(getTicketsByStatus?.response?.total)
             } else {
-                // setTicketsByStatusData([])
+                setTicketsByStatusData([])
+                setTotalTicketsCount(0)
                 switch (getTicketsByStatus?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -147,88 +151,95 @@ export const TicketsByStatusChart = () => {
             <Divider sx={{ my: 1.5 }} />
 
             {/* Donut + Legends container */}
-            <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
-                {/* Chart container */}
-                <Box sx={{ position: 'relative', width: 250, height: 250 }}>
-                    <PieChart
-                        height={250}
-                        width={250}
-                        series={[
-                            {
-                                data: ticketsByStatusData,
-                                innerRadius: 90,
-                                outerRadius: 120,
-                                arcLabelMinAngle: 20,
-                                valueFormatter,
-                            },
-                        ]}
-                        sx={{
-                            '& .MuiChartsLegend-root': {
-                                display: 'none',
-                            },
-                        }}
-                        // hide internal legend; we'll make custom one on the right
-                        slotProps={{ legend: { hidden: true } }}
-                    />
+            {
+                ticketsByStatusData && ticketsByStatusData !== null && ticketsByStatusData.length > 0 ?
+                    <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
+                        {/* Chart container */}
+                        <Box sx={{ position: 'relative', width: 250, height: 250 }}>
+                            <PieChart
+                                height={250}
+                                width={250}
+                                series={[
+                                    {
+                                        data: ticketsByStatusData,
+                                        innerRadius: 90,
+                                        outerRadius: 120,
+                                        arcLabelMinAngle: 20,
+                                        valueFormatter,
+                                    },
+                                ]}
+                                sx={{
+                                    '& .MuiChartsLegend-root': {
+                                        display: 'none',
+                                    },
+                                }}
+                                // hide internal legend; we'll make custom one on the right
+                                slotProps={{ legend: { hidden: true } }}
+                            />
 
-                    {/* Center overlay text */}
-                    <Box
-                        sx={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            textAlign: 'center',
-                            pointerEvents: 'none',
-                        }}
-                    >
-                        <TypographyComponent
-                            fontSize={26}
-                            fontWeight={700}
-                            sx={{ color: theme.palette.text.primary, lineHeight: 1 }}
-                        >
-                            27
-                        </TypographyComponent>
-                        <TypographyComponent
-                            fontSize={14}
-                            fontWeight={500}
-                            sx={{ color: theme.palette.text.secondary }}
-                        >
-                            Total Tickets
-                        </TypographyComponent>
-                    </Box>
-                </Box>
-
-                {/* Custom legends on right side */}
-                <Box>
-                    <Stack spacing={2} sx={{ textAlign: 'left' }}>
-                        {ticketsByStatusData.map((item) => (
-                            <Stack key={item.label} alignItems="flex-start" spacing={0.4}>
-                                <TypographyComponent fontSize={14} fontWeight={400}>
-                                    {item.label}
+                            {/* Center overlay text */}
+                            <Box
+                                sx={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    textAlign: 'center',
+                                    pointerEvents: 'none',
+                                }}
+                            >
+                                <TypographyComponent
+                                    fontSize={26}
+                                    fontWeight={700}
+                                    sx={{ color: theme.palette.text.primary, lineHeight: 1 }}
+                                >
+                                    {totalTicketsCount && totalTicketsCount !== null ? totalTicketsCount : '0'}
                                 </TypographyComponent>
-                                <Stack sx={{ flexDirection: 'row', alignItems: 'center', columnGap: 1, marginTop: '-29px' }}>
-                                    <Box
-                                        sx={{
-                                            width: 12,
-                                            height: 12,
-                                            borderRadius: '50%',
-                                            backgroundColor: item.color,
-                                        }}
-                                    />
-                                    <TypographyComponent
-                                        fontSize={14}
-                                        fontWeight={600}
-                                        sx={{ color: theme.palette.text.primary, lineHeight: '20px', }}
-                                    >
-                                        {item.value}
-                                    </TypographyComponent>
-                                </Stack>
+                                <TypographyComponent
+                                    fontSize={14}
+                                    fontWeight={500}
+                                    sx={{ color: theme.palette.text.secondary }}
+                                >
+                                    Total Tickets
+                                </TypographyComponent>
+                            </Box>
+                        </Box>
+
+                        {/* Custom legends on right side */}
+                        <Box>
+                            <Stack spacing={2} sx={{ textAlign: 'left' }}>
+                                {ticketsByStatusData.map((item) => (
+                                    <Stack key={item.label} alignItems="flex-start" spacing={0.4}>
+                                        <TypographyComponent fontSize={14} fontWeight={400}>
+                                            {item.label}
+                                        </TypographyComponent>
+                                        <Stack sx={{ flexDirection: 'row', alignItems: 'center', columnGap: 1, marginTop: '-29px' }}>
+                                            <Box
+                                                sx={{
+                                                    width: 12,
+                                                    height: 12,
+                                                    borderRadius: '50%',
+                                                    backgroundColor: item.color,
+                                                }}
+                                            />
+                                            <TypographyComponent
+                                                fontSize={14}
+                                                fontWeight={600}
+                                                sx={{ color: theme.palette.text.primary, lineHeight: '20px', }}
+                                            >
+                                                {item.value}
+                                            </TypographyComponent>
+                                        </Stack>
+                                    </Stack>
+                                ))}
                             </Stack>
-                        ))}
+                        </Box>
                     </Stack>
-                </Box>
-            </Stack >
+                    :
+                    <EmptyContent imageSize={250} mt={0} imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Tickets Found'} subTitle={''} />
+
+            }
+
         </Box >
     );
 };

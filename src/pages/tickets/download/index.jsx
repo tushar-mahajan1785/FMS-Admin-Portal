@@ -1,5 +1,6 @@
-import { Avatar, Box, Button, Divider, Grid, IconButton, Stack, useTheme } from '@mui/material';
-import React, { useEffect, useState } from 'react'
+/* eslint-disable react-hooks/exhaustive-deps */
+import { Avatar, Box, Button, Divider, Grid, Stack, useTheme } from '@mui/material';
+import React, { useEffect, useState } from 'react';
 import TicketIcon from '../../../assets/icons/TicketIcon';
 import SectionHeader from '../../../components/section-header';
 import FieldBox from '../../../components/field-box';
@@ -22,16 +23,21 @@ export const TicketDownloadReport = () => {
     const { logout } = useAuth()
     const { uuid } = useParams()
     const navigate = useNavigate()
-
     const { getTicketDetails } = useSelector(state => state.ticketsStore)
 
     const [ticketDetailsData, setTicketDetailsData] = useState(null)
+    const [previousRouteDetailsData, setPreviousRouteDetailsData] = useState(null)
 
     useEffect(() => {
-        console.log('------uuid---', uuid)
-        dispatch(actionGetTicketDetails({
-            uuid: uuid
-        }))
+        if (uuid && uuid !== null) {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            dispatch(actionGetTicketDetails({
+                uuid: uuid
+            }))
+            let data = window.localStorage.getItem('previous_route_details');
+            setPreviousRouteDetailsData(JSON.parse(data))
+        }
+
     }, [uuid])
 
     /**
@@ -64,21 +70,21 @@ export const TicketDownloadReport = () => {
     }, [getTicketDetails])
 
     return (
-        // 🧩 Wrapped everything in this div for targeted printing
+        // Wrapped everything in this div for targeted printing
         <React.Fragment>
-            <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <Stack sx={{ flexDirection: 'row', columnGap: 1, alignItems: 'center', height: '100%', justifyContent: 'center' }}>
-                    <Stack >
-                        <IconButton
-                            onClick={() => {
-                                navigate('/tickets')
-                            }}
-                        >
-                            <KeyboardBackspaceIcon fontSize={"large"} />
-                        </IconButton>
+            <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Stack sx={{ flexDirection: 'row', columnGap: 1, alignItems: 'center', height: '100%', justifyContent: 'center', cursor: 'pointer' }} onClick={() => {
+                    navigate(previousRouteDetailsData?.from, { state: { uuid: uuid, redirect_from: 'download' } })
+
+                    let currentData = Object.assign({}, previousRouteDetailsData)
+                    currentData.redirect_from = 'download'
+                    window.localStorage.setItem('previous_route_details', JSON.stringify(currentData))
+                }}>
+                    <Stack>
+                        <KeyboardBackspaceIcon fontSize={"medium"} />
                     </Stack>
                     <Stack>
-                        <TypographyComponent color={theme.palette.grey.primary} fontSize={24} fontWeight={500}>
+                        <TypographyComponent color={theme.palette.grey.primary} fontSize={22} fontWeight={500}>
                             Back
                         </TypographyComponent>
                     </Stack>
@@ -119,22 +125,12 @@ export const TicketDownloadReport = () => {
                         subtitle=""
                     />
 
-                    <Divider sx={{ m: 2, background: 'white' }} />
+                    <Divider sx={{ mb: 2, mx: 2, background: 'white' }} />
                     <Stack
                         sx={{
-                            px: 2,
-                            // overflowY: 'auto',
-                            // background: 'white',
-                            // '&::-webkit-scrollbar': {
-                            //     width: '2px'
-                            // },
-                            // '&::-webkit-scrollbar-thumb': {
-                            //     backgroundColor: '#ccc',
-                            //     borderRadius: '2px'
-                            // }
+                            px: 2
                         }}
                     >
-                        {/* <Grid container spacing={'24px'}> */}
                         <Stack>
                             {/* --- Ticket Information Section --- */}
                             <SectionHeader title="Ticket Information" show_progress={0} sx={{ marginTop: 2.5 }} />
@@ -197,7 +193,7 @@ export const TicketDownloadReport = () => {
                         {/* Stakeholder & Vendor Sections (kept unchanged) */}
                         <Stack sx={{ width: '100%', height: '100%', marginTop: 2.5 }}>
                             <SectionHeader title="Stakeholder Info" show_progress={0} />
-                            <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}`, px: 2, py: 1, marginTop: '-4px', width: '100%' }}>
+                            <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}`, px: 1, py: 1, marginTop: '-4px', width: '100%' }}>
                                 <Stack
                                     disablePadding
                                     sx={{ py: 1.5, px: 1 }}
@@ -240,28 +236,17 @@ export const TicketDownloadReport = () => {
                             <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2.5 }}>
                                 <SectionHeader title="Vendor Contact" show_progress={0} />
                             </Stack>
-                            <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}`, p: 2, marginTop: '-4px' }}>
+                            <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}`, p: 1, marginTop: '-4px' }}>
                                 <React.Fragment>
                                     {
                                         ticketDetailsData?.vendor_escalation_json && ticketDetailsData?.vendor_escalation_json !== null && ticketDetailsData?.vendor_escalation_json.length > 0 ?
                                             <>
-                                                <Stack sx={{
-                                                    minHeight: 200,
-                                                    maxHeight: 430,
-                                                    overflowY: "auto",
-                                                    scrollbarWidth: "thin",
-                                                    "&::-webkit-scrollbar": {
-                                                        width: "6px",
-                                                    },
-                                                    "&::-webkit-scrollbar-thumb": {
-                                                        backgroundColor: theme.palette.grey[400],
-                                                        borderRadius: "3px",
-                                                    },
-                                                }}>
+                                                <Stack>
                                                     {
                                                         ticketDetailsData?.vendor_escalation_json && ticketDetailsData?.vendor_escalation_json !== null && ticketDetailsData?.vendor_escalation_json.length > 0 ?
                                                             ticketDetailsData?.vendor_escalation_json.map((objDetail, index) => {
                                                                 return (<Stack
+                                                                    key={index}
                                                                     disablePadding
                                                                     sx={{
                                                                         flexDirection: 'row',
@@ -292,7 +277,6 @@ export const TicketDownloadReport = () => {
                                     }
                                 </React.Fragment>
                             </Stack>
-                            {/* <Stack sx={{ borderRadius: '8px', px: 2, py: 1, marginTop: '-4px' }}> */}
                             {
                                 ticketDetailsData?.history_by_status && ticketDetailsData?.history_by_status !== null && ticketDetailsData?.history_by_status?.length > 0 &&
                                 <ShowHistoryComponent
@@ -303,9 +287,7 @@ export const TicketDownloadReport = () => {
                                     user="user"
                                 />
                             }
-                            {/* </Stack> */}
                         </Stack>
-                        {/* </Grid> */}
                     </Stack>
                 </Stack>
             </div>

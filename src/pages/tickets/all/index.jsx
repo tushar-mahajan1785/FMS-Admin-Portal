@@ -61,12 +61,7 @@ export const TicketList = () => {
 
     const columns = [
         {
-            flex: 0.07,
-            field: 'id',
-            headerName: 'Sr. No.'
-        },
-        {
-            flex: 0.1,
+            flex: 0.12,
             field: 'ticket_no',
             headerName: 'Ticket No.',
             renderCell: (params) => {
@@ -96,14 +91,19 @@ export const TicketList = () => {
             headerName: 'Asset Name'
         },
         {
-            flex: 0.15,
+            flex: 0.12,
             field: 'location',
             headerName: 'Location'
         },
         {
-            flex: 0.3,
+            flex: 0.2,
             field: 'problem',
             headerName: 'Problem'
+        },
+        {
+            flex: 0.1,
+            field: 'priority',
+            headerName: 'Priority'
         },
         {
             flex: 0.1,
@@ -128,7 +128,22 @@ export const TicketList = () => {
         {
             flex: 0.1,
             field: 'total_time',
-            headerName: 'Total Time'
+            headerName: 'Total Time',
+            renderCell: (params) => {
+                return (
+                    <Stack sx={{ height: '100%', justifyContent: 'center' }}>
+                        {
+                            params.row.total_time && params.row.total_time !== null && !['Open'].includes(params.row.status) ?
+                                <TypographyComponent color={theme.palette.grey.primary} fontSize={14} fontWeight={400} sx={{ py: '10px' }}>
+                                    {params.row.total_time && params.row.total_time !== null ? params.row.total_time : ''}
+                                </TypographyComponent>
+                                :
+                                <>--:-- Hrs</>
+                        }
+
+                    </Stack>
+                )
+            }
         },
         {
             flex: 0.1,
@@ -198,6 +213,23 @@ export const TicketList = () => {
     ]);
 
     /**
+     * If redirect from Download open view for current ticket
+     */
+    useEffect(() => {
+
+        let previousData = window.localStorage.getItem('previous_route_details');
+        let parsedData = JSON.parse(previousData)
+        if (parsedData?.redirect_from === 'download') {
+            setCurrentTicketDetails({ uuid: parsedData?.uuid })
+            setOpenViewTicket(true)
+            localStorage.removeItem('previous_route_details')
+
+        } else {
+            localStorage.removeItem('previous_route_details')
+        }
+    }, [])
+
+    /**
         * useEffect
         * @dependency : masterAssetType
         * @type : HANDLE API RESULT
@@ -250,230 +282,9 @@ export const TicketList = () => {
                 setLoadingList(false)
             } else {
                 setLoadingList(false)
-                setRecentTicketsData([{
-                    id: 1,
-                    ticket_no: 'VF-2025-0001674',
-                    sr_no: '0005',
-                    asset_name: 'SERVICE-LIFT',
-                    location: 'Centre Core Service Lift',
-                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-                    created_on: '23/09/1867',
-                    total_time: '03:00 Hrs',
-                    status: 'Open'
-                },
-                {
-                    id: 2,
-                    ticket_no: 'VF-2025-987',
-                    sr_no: '0005',
-                    asset_name: 'SERVICE-LIFT',
-                    location: 'Centre Core Service Lift',
-                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-                    created_on: '23/09/1867',
-                    total_time: '03:00 Hrs',
-                    status: 'Closed'
-                },
-                {
-                    id: 3,
-                    ticket_no: 'VF-2025-0001625',
-                    sr_no: '0005',
-                    asset_name: 'SERVICE-LIFT',
-                    location: 'Centre Core Service Lift',
-                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-                    created_on: '23/09/1867',
-                    total_time: '03:00 Hrs',
-                    status: 'On Hold'
-                },
-                {
-                    id: 4,
-                    ticket_no: 'VF-2025-0001621',
-                    sr_no: '0005',
-                    asset_name: 'SERVICE-LIFT',
-                    location: 'Centre Core Service Lift',
-                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-                    created_on: '23/09/1867',
-                    total_time: '03:00 Hrs',
-                    status: 'Closed'
-                },
-                {
-                    id: 5,
-                    ticket_no: 'VF-2025-0001625',
-                    sr_no: '0005',
-                    asset_name: 'SERVICE-LIFT',
-                    location: 'Centre Core Service Lift',
-                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-                    created_on: '23/09/1867',
-                    total_time: '03:00 Hrs',
-                    status: 'On Hold'
-                },
-                {
-                    id: 6,
-                    ticket_no: 'VF-2025-0001621',
-                    sr_no: '0005',
-                    asset_name: 'SERVICE-LIFT',
-                    location: 'Centre Core Service Lift',
-                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-                    created_on: '23/09/1867',
-                    total_time: '03:00 Hrs',
-                    status: 'Closed'
-                },
-                {
-                    id: 7,
-                    ticket_no: 'VF-2025-0001625',
-                    sr_no: '0005',
-                    asset_name: 'SERVICE-LIFT',
-                    location: 'Centre Core Service Lift',
-                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-                    created_on: '23/09/1867',
-                    total_time: '03:00 Hrs',
-                    status: 'On Hold'
-                },
-                {
-                    id: 8,
-                    ticket_no: 'VF-2025-0001621',
-                    sr_no: '0005',
-                    asset_name: 'SERVICE-LIFT',
-                    location: 'Centre Core Service Lift',
-                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-                    created_on: '23/09/1867',
-                    total_time: '03:00 Hrs',
-                    status: 'Closed'
-                },
-                {
-                    id: 9,
-                    ticket_no: 'VF-2025-0001625',
-                    sr_no: '0005',
-                    asset_name: 'SERVICE-LIFT',
-                    location: 'Centre Core Service Lift',
-                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-                    created_on: '23/09/1867',
-                    total_time: '03:00 Hrs',
-                    status: 'On Hold'
-                },
-                {
-                    id: 10,
-                    ticket_no: 'VF-2025-0001625',
-                    sr_no: '0005',
-                    asset_name: 'SERVICE-LIFT',
-                    location: 'Centre Core Service Lift',
-                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-                    created_on: '23/09/1867',
-                    total_time: '03:00 Hrs',
-                    status: 'On Hold'
-                },
-                ])
-                setOriginalRecentTicketsData([{
-                    id: 1,
-                    ticket_no: 'VF-2025-0001674',
-                    sr_no: '0005',
-                    asset_name: 'SERVICE-LIFT',
-                    location: 'Centre Core Service Lift',
-                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-                    created_on: '23/09/1867',
-                    total_time: '03:00 Hrs',
-                    status: 'Open'
-                },
-                {
-                    id: 2,
-                    ticket_no: 'VF-2025-987',
-                    sr_no: '0005',
-                    asset_name: 'SERVICE-LIFT',
-                    location: 'Centre Core Service Lift',
-                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-                    created_on: '23/09/1867',
-                    total_time: '03:00 Hrs',
-                    status: 'Closed'
-                },
-                {
-                    id: 3,
-                    ticket_no: 'VF-2025-0001625',
-                    sr_no: '0005',
-                    asset_name: 'SERVICE-LIFT',
-                    location: 'Centre Core Service Lift',
-                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-                    created_on: '23/09/1867',
-                    total_time: '03:00 Hrs',
-                    status: 'On Hold'
-                },
-                {
-                    id: 4,
-                    ticket_no: 'VF-2025-0001621',
-                    sr_no: '0005',
-                    asset_name: 'SERVICE-LIFT',
-                    location: 'Centre Core Service Lift',
-                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-                    created_on: '23/09/1867',
-                    total_time: '03:00 Hrs',
-                    status: 'Closed'
-                },
-                {
-                    id: 5,
-                    ticket_no: 'VF-2025-0001625',
-                    sr_no: '0005',
-                    asset_name: 'SERVICE-LIFT',
-                    location: 'Centre Core Service Lift',
-                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-                    created_on: '23/09/1867',
-                    total_time: '03:00 Hrs',
-                    status: 'On Hold'
-                },
-                {
-                    id: 6,
-                    ticket_no: 'VF-2025-0001621',
-                    sr_no: '0005',
-                    asset_name: 'SERVICE-LIFT',
-                    location: 'Centre Core Service Lift',
-                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-                    created_on: '23/09/1867',
-                    total_time: '03:00 Hrs',
-                    status: 'Closed'
-                },
-                {
-                    id: 7,
-                    ticket_no: 'VF-2025-0001625',
-                    sr_no: '0005',
-                    asset_name: 'SERVICE-LIFT',
-                    location: 'Centre Core Service Lift',
-                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-                    created_on: '23/09/1867',
-                    total_time: '03:00 Hrs',
-                    status: 'On Hold'
-                },
-                {
-                    id: 8,
-                    ticket_no: 'VF-2025-0001621',
-                    sr_no: '0005',
-                    asset_name: 'SERVICE-LIFT',
-                    location: 'Centre Core Service Lift',
-                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-                    created_on: '23/09/1867',
-                    total_time: '03:00 Hrs',
-                    status: 'Closed'
-                },
-                {
-                    id: 9,
-                    ticket_no: 'VF-2025-0001625',
-                    sr_no: '0005',
-                    asset_name: 'SERVICE-LIFT',
-                    location: 'Centre Core Service Lift',
-                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-                    created_on: '23/09/1867',
-                    total_time: '03:00 Hrs',
-                    status: 'On Hold'
-                },
-                {
-                    id: 10,
-                    ticket_no: 'VF-2025-0001625',
-                    sr_no: '0005',
-                    asset_name: 'SERVICE-LIFT',
-                    location: 'Centre Core Service Lift',
-                    problem: 'we observed the abnormal sound in flushing pump room A . kindly arrange your engineer ASAP.',
-                    created_on: '23/09/1867',
-                    total_time: '03:00 Hrs',
-                    status: 'On Hold'
-                },
-                ])
-                setTotal(100)
-                // setGetArrTicketCounts(null)
+                setRecentTicketsData([])
+                setOriginalRecentTicketsData([])
+                setTotal(0)
                 let objData = {
                     total_tickets: 0,
                     open_tickets: 0,
@@ -691,7 +502,7 @@ export const TicketList = () => {
                                 <TypographyComponent fontSize={18} fontWeight={500} sx={{ color: theme.palette.grey[700] }}>Tickets List</TypographyComponent>
                             </Stack>
                             <Chip
-                                label={`${total.toString().padStart(2, "0")} Tickets`}
+                                label={`${recentTicketsData?.length.toString().padStart(2, "0")} Tickets`}
                                 size="small"
                                 sx={{ bgcolor: theme.palette.primary[50], color: theme.palette.primary[600], fontSize: 14, fontWeight: 500 }}
                             />
@@ -853,12 +664,11 @@ export const TicketList = () => {
                             page={page}
                             onPageChange={setPage}
                             pageSize={LIST_LIMIT}
-                            onChange={(selectedIds) => {
-                                console.log("Selected row IDs in EmployeeList:", selectedIds);
-                            }}
                         />
                     ) : (
-                        <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Tickets Found'} subTitle={''} />
+                        <Stack sx={{ height: 580 }}>
+                            <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Tickets Found'} subTitle={''} />
+                        </Stack>
                     )}
                 </Stack>
             </Stack>
@@ -884,7 +694,8 @@ export const TicketList = () => {
                 handleClose={(data) => {
                     setOpenViewTicket(false)
                     setCurrentTicketDetails(null)
-                    if (data === 'delete') {
+                    let is_update = window.localStorage.getItem('ticket_update')
+                    if (data === 'delete' || JSON.parse(is_update) == true) {
                         dispatch(actionTicketsList({
                             page: page,
                             limit: LIST_LIMIT,
@@ -893,6 +704,7 @@ export const TicketList = () => {
                             status: selectedStatus,
                             asset_type: selectedAssetTypes
                         }))
+                        window.localStorage.removeItem('ticket_update')
                     }
                 }}
             />

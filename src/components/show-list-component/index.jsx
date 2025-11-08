@@ -17,7 +17,8 @@ export const ShowHistoryComponent = ({
     user = 'user',
     onEditClick,
     onDeleteClick,
-    permission
+    permission,
+    can_show_action
 }) => {
     const theme = useTheme();
     const { hasPermission } = useAuth()
@@ -41,7 +42,7 @@ export const ShowHistoryComponent = ({
 
     return (
         <Stack sx={{ width: '100%' }}>
-            {historyArray.map((statusGroup, index) => (
+            {historyArray && historyArray !== null && historyArray.length > 0 && historyArray?.map((statusGroup, index) => (
                 <Box key={index}>
                     <SectionHeader title={statusGroup.status_type} show_progress={0} sx={{ marginTop: 2.5 }} />
                     <Stack
@@ -73,7 +74,7 @@ export const ShowHistoryComponent = ({
                                                     {moment(entry.timestamp, 'YYYY-MM-DD').format('DD MMM YYYY')}
                                                 </TypographyComponent>
                                                 <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[900] }}>
-                                                    {moment(entry.timestamp, 'YYYY-MM-DD').format('hh:mm:ss')}
+                                                    {moment(entry.timestamp, 'YYYY-MM-DD hh:mm:ss').format('HH:MM:SS')}
                                                 </TypographyComponent>
                                             </Stack>
                                         </Stack>
@@ -103,7 +104,7 @@ export const ShowHistoryComponent = ({
                                                     </TypographyComponent>
                                                 </Stack>
                                                 {
-                                                    (index === historyArray.length - 1) && (entryIndex === statusGroup.entries.length - 1) && hasPermission(permission) ?
+                                                    (index === historyArray.length - 1) && (entryIndex === statusGroup.entries.length - 1) && hasPermission(permission) && can_show_action ?
                                                         <Stack>
                                                             <Box
                                                                 onClick={(event) => event.stopPropagation()}

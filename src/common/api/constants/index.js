@@ -239,9 +239,9 @@ export const API_GET_TICKET_COUNTS = `${BASE}/tickets/get-count`
 
 export const API_TICKETS_LIST = `${BASE}/ticket/list`
 
-export const API_GET_TICKETS_BY_STATUS = `${BASE}/tickets/get-tickets-by-status`
+export const API_GET_TICKETS_BY_STATUS = `${BASE}/ticket/status-wise-ticket-summary`
 
-export const API_LAST_SIX_MONTH_TICKETS = `${BASE}/tickets/last-six-month`
+export const API_LAST_SIX_MONTH_TICKETS = `${BASE}/ticket/last-six-months-ticket-summary`
 
 export const API_GET_TICKETS_BY_ASSET_TYPES = `${BASE}/tickets/get-tickets-by-asset-types`
 
@@ -253,14 +253,14 @@ export const API_TICKET_DETAIL = `${BASE}/ticket/details`
 
 export const API_GET_MASTER_ASSET_NAME = `${BASE}/roster-group/type-wise-asset-list`
 
-export const API_CHANGE_TICKET_STATUS = `${BASE}/tickets/change-status`
+export const API_CHANGE_TICKET_STATUS = `${BASE}/ticket/add-or-update-history`
 
 export const API_TICKET_DELETE = `${BASE}/ticket/remove`
 
 export const API_TICKET_VENDOR_CONTACT_UPDATE = `${BASE}/ticket/vendor-edit`
 
-export const API_TICKET_ADD_UPDATE = `${BASE}/tickets/add-update`
+export const API_TICKET_ADD_UPDATE = `${BASE}/ticket/add-or-update-history`
 
-export const API_DELETE_TICKET_UPDATE = `${BASE}/tickets/delete-update`
+export const API_DELETE_TICKET_UPDATE = `${BASE}/ticket/remove-history`
 
-export const API_DELETE_TICKET_UPDATE_FILE = `${BASE}/tickets/delete-update-file`
+export const API_DELETE_TICKET_UPDATE_FILE = `${BASE}/ticket/remove-history-media`

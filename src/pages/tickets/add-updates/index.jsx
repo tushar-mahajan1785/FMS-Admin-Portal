@@ -63,8 +63,6 @@ export default function AddUpdateTicket({ open, handleClose, entryDetails, type,
     const [viewLoadingFileDelete, setViewLoadingFileDelete] = useState(false)
     const [viewTicketData, setViewTicketData] = useState(null)
 
-    console.log('---------arrUploadedFiles-------', arrUploadedFiles)
-
     const {
         control,
         handleSubmit,
@@ -97,14 +95,16 @@ export default function AddUpdateTicket({ open, handleClose, entryDetails, type,
             setSelectedEntryDetailsData(null)
         }
     }, [open, entryDetails])
-    console.log('--------selectedEntryDetailsData--------', selectedEntryDetailsData)
+
+    /**
+     * If Edit Update Case set previously filled data
+     */
     useEffect(() => {
         if (selectedEntryDetailsData && selectedEntryDetailsData !== null) {
             if (type == 'Edit') {
                 setValue('title', selectedEntryDetailsData?.title)
                 setValue('description', selectedEntryDetailsData?.description)
                 setValue('supervisor', selectedEntryDetailsData?.user_id)
-                console.log('--------selectedEntryDetailsData?.files--------', selectedEntryDetailsData?.files)
                 if (selectedEntryDetailsData?.files && selectedEntryDetailsData?.files !== null && selectedEntryDetailsData?.files.length > 0) {
                     setArrUploadedFiles(selectedEntryDetailsData?.files)
                 } else {
@@ -113,7 +113,6 @@ export default function AddUpdateTicket({ open, handleClose, entryDetails, type,
 
             }
         }
-
     }, [selectedEntryDetailsData])
 
     //handle delete function
@@ -123,7 +122,7 @@ export default function AddUpdateTicket({ open, handleClose, entryDetails, type,
             newFiles.splice(index, 1);
             setArrUploadedFiles(newFiles);
         } else {
-            console.log('----file-----', file)
+            // console.log('----file-----', file)
             let objData = {
                 id: file?.id,
                 title: `Delete File`,
@@ -240,9 +239,10 @@ export default function AddUpdateTicket({ open, handleClose, entryDetails, type,
                 reset()
                 setArrUploadedFiles([])
                 dispatch(actionGetTicketDetails({
-                    uuid: selectedEntryDetailsData?.uuid
+                    uuid: ticketDetails?.ticket_uuid
                 }))
                 handleClose()
+                window.localStorage.setItem('ticket_update', true)
             } else {
                 setLoading(false)
                 switch (ticketAddUpdate?.status) {
@@ -284,7 +284,7 @@ export default function AddUpdateTicket({ open, handleClose, entryDetails, type,
                 setArrUploadedFiles(arrFiles)
 
                 dispatch(actionGetTicketDetails({
-                    uuid: selectedEntryDetailsData?.uuid
+                    uuid: ticketDetails?.ticket_uuid
                 }))
 
                 setViewTicketData(null)
@@ -310,16 +310,17 @@ export default function AddUpdateTicket({ open, handleClose, entryDetails, type,
 
     const onSubmit = async data => {
         let objData = {
-            ticket_id: selectedEntryDetailsData?.ticket_id,
+            ticket_id: ticketDetails?.ticket_id,
+            priority: ticketDetails?.priority,
             client_uuid: branch?.currentBranch?.client_uuid,
             branch_uuid: branch?.currentBranch?.uuid,
-            current_status: ticketDetails?.status,
+            changed_status: ticketDetails?.status,
             title: data?.title,
             description: data?.description,
             supervisor_id: data?.supervisor
         }
         if (type == 'Edit') {
-            objData.update_id = selectedEntryDetailsData?.id
+            objData.history_id = selectedEntryDetailsData?.id
         }
         const files = [];
         let hasNewFiles = arrUploadedFiles?.filter(obj => obj?.is_new === 1)

@@ -140,30 +140,30 @@ export const concatMultipleStrings = (branch) => {
 
 export const valueFormatter = (item) => `${item.value}%`;
 
-
-
-
-
 /**
- * Function to compress the images files while upload
- * @param {*} file 
- * @returns 
+ * Compress an image file while keeping its original name and metadata
  */
 export const compressFile = async (file) => {
   const isImage = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(file.type);
 
   if (isImage) {
-    // Light compression options — keep quality high
     const options = {
-      maxSizeMB: 1.5,             // allow up to ~1.5MB
-      maxWidthOrHeight: 1920,     // scale down large dimensions
+      maxSizeMB: 1.5,
+      maxWidthOrHeight: 1920,
       useWebWorker: true,
-      initialQuality: 0.9,        // 0.9 keeps almost same visual quality
-      alwaysKeepResolution: true, // prevents aggressive resizing
+      initialQuality: 0.9,
+      alwaysKeepResolution: true,
     };
 
     try {
-      const compressedFile = await imageCompression(file, options);
+      const compressedBlob = await imageCompression(file, options);
+
+      // 🔹 Preserve the original name and type
+      const compressedFile = new File([compressedBlob], file.name, {
+        type: file.type,
+        lastModified: Date.now(),
+      });
+
       return compressedFile;
     } catch (error) {
       console.error('Image compression failed:', error);
@@ -171,6 +171,7 @@ export const compressFile = async (file) => {
     }
   }
 
-  return file; // skip non-images
+  return file; // skip non-image files
 };
+
 

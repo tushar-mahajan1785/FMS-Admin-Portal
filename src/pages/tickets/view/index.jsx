@@ -29,7 +29,7 @@ import AlertCircleIcon from "../../../assets/icons/AlertCircleIcon";
 import { AntSwitch } from "../../../components/common";
 import AddUpdateTicket from "../add-updates";
 import moment from "moment";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export const ViewTicket = ({ open, handleClose, detail }) => {
     const dispatch = useDispatch()
@@ -37,6 +37,7 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
     const { showSnackbar } = useSnackbar()
     const { logout, hasPermission } = useAuth()
     const navigate = useNavigate()
+    const location = useLocation();
 
     const { getTicketDetails, ticketDelete, ticketVendorContactsUpdate, ticketUpdateDelete } = useSelector(state => state.ticketsStore)
     const [ticketDetailsData, setTicketDetailsData] = useState(null)
@@ -256,6 +257,11 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                         <Stack sx={{ cursor: 'pointer' }} onClick={() => {
                             console.log("Print clicked ✅");
                             navigate(`/tickets/download/${detail?.uuid}`)
+                            let previous = {
+                                from: location?.pathname,
+                                uuid: detail?.uuid
+                            }
+                            window.localStorage.setItem('previous_route_details', JSON.stringify(previous))
                         }}>
                             <TypographyComponent fontSize={16} fontWeight={400}>
                                 Download Report
@@ -285,7 +291,7 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
 
                     </Stack>}
                 />
-                <Divider sx={{ m: 2 }} />
+                <Divider sx={{ mb: 2, mx: 2 }} />
                 <Stack
                     sx={{
                         px: 2,
@@ -373,14 +379,14 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                                             <FieldBox
                                                 textColor={theme.palette.grey[900]}
                                                 label="Created On"
-                                                value={ticketDetailsData?.created_on && ticketDetailsData?.created_on !== null ? moment(ticketDetailsData?.created_on, 'YYYY-MM-DD').format('DD MMM YYYY hh:mm A') : '--'}
+                                                value={ticketDetailsData?.created_on && ticketDetailsData?.created_on !== null ? moment(ticketDetailsData?.created_on, 'YYYY-MM-DD hh:mm:ss').format('DD MMM YYYY HH:MM A') : '--'}
                                             />
                                         </Grid>
                                         <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
                                             <FieldBox
                                                 textColor={theme.palette.grey[900]}
                                                 label="Last Updated"
-                                                value={ticketDetailsData?.last_updated && ticketDetailsData?.last_updated !== null ? moment(ticketDetailsData?.last_updated, 'YYYY-MM-DD').format('DD MMM YYYY hh:mm A') : '--'}
+                                                value={ticketDetailsData?.last_updated && ticketDetailsData?.last_updated !== null ? moment(ticketDetailsData?.last_updated, 'YYYY-MM-DD hh:mm:ss').format('DD MMM YYYY HH:MM A') : '--'}
                                             />
                                         </Grid>
                                     </Grid>
@@ -465,6 +471,7 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                                         files="files"
                                         user="user"
                                         permission={'TICKET_EDIT'}
+                                        can_show_action={!['Rejected', 'Closed'].includes(ticketDetailsData?.status)}
                                         onEditClick={handleEditClick}
                                         onDeleteClick={handleDeleteClick}
                                     />
@@ -553,6 +560,7 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                                                                     vendorEscalationDetailsData && vendorEscalationDetailsData !== null && vendorEscalationDetailsData.length > 0 ?
                                                                         vendorEscalationDetailsData.map((objDetail, index) => {
                                                                             return (<Stack
+                                                                                key={index}
                                                                                 disablePadding
                                                                                 sx={{
                                                                                     flexDirection: 'row',
@@ -600,17 +608,30 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                                                                     disabled={loadingVendorUpdate}
                                                                     sx={{ textTransform: "capitalize", px: 2, background: `${theme.palette.primary[600]}`, borderRadius: '8px', fontSize: 16, fontWeight: 600 }}
                                                                     onClick={() => {
-                                                                        setLoadingVendorUpdate(true)
+
                                                                         let selectedVendors = vendorEscalationDetailsData && vendorEscalationDetailsData !== null && vendorEscalationDetailsData.length > 0 ?
                                                                             vendorEscalationDetailsData?.filter(obj => obj?.is_selected === 1)
                                                                             : [];
+                                                                        if (selectedVendors && selectedVendors !== null && selectedVendors?.length > 0) {
+                                                                            setLoadingVendorUpdate(true)
+                                                                            dispatch(actionTicketVendorContactsUpdate({
+                                                                                uuid: ticketDetailsData?.ticket_uuid,
+                                                                                vendor_escalation_json: selectedVendors
+                                                                            }))
+                                                                        } else {
+                                                                            showSnackbar({ message: 'Atleast one vendor selection is required', severity: "error" })
 
-                                                                        dispatch(actionTicketVendorContactsUpdate({
-                                                                            uuid: ticketDetailsData?.ticket_uuid,
-                                                                            vendor_escalation_json: selectedVendors
-                                                                        }))
+                                                                            let vendors = Object.assign([], ticketDetailsData?.vendor_escalation)
+                                                                            let arrSelected = ticketDetailsData?.vendor_escalation_json?.filter(obj => obj?.is_selected === 1)?.map(obj => obj?.id)?.join(',')
 
+                                                                            // Update vendors where IDs match
+                                                                            vendors = vendors.map(vendor => ({
+                                                                                ...vendor,
+                                                                                is_selected: arrSelected.includes(vendor.id) ? 1 : 0
+                                                                            }));
+                                                                            setVendorEscalationDetailsData(vendors)
 
+                                                                        }
                                                                     }}
                                                                     variant='contained'
                                                                 >
@@ -649,6 +670,7 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                                                                     ticketDetailsData?.vendor_escalation_json && ticketDetailsData?.vendor_escalation_json !== null && ticketDetailsData?.vendor_escalation_json.length > 0 ?
                                                                         ticketDetailsData?.vendor_escalation_json.map((objDetail, index) => {
                                                                             return (<Stack
+                                                                                key={index}
                                                                                 disablePadding
                                                                                 sx={{
                                                                                     flexDirection: 'row',
@@ -688,36 +710,45 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                 </Stack>
                 <Divider sx={{ m: 2 }} />
                 <Stack sx={{ p: 2 }} flexDirection={'row'} justifyContent={'space-between'} gap={2}>
-                    {/* <Stack> */}
+
                     <Stack flexDirection={'row'} sx={{ columnGap: 1 }}>
                         {
                             hasPermission('TICKET_EDIT') ?
                                 <React.Fragment>
-                                    <Button
-                                        sx={{ textTransform: "capitalize", px: 6, borderColor: `${theme.palette.primary[300]}`, color: `${theme.palette.primary[700]}`, borderRadius: '8px', fontSize: 16, fontWeight: 600 }}
-                                        onClick={() => {
-                                            setOpenChangeTicketStatusPopup(true)
-                                        }}
-                                        variant='outlined'
-                                    >
-                                        Change Status
-                                    </Button>
-                                    <Button
-                                        sx={{ textTransform: "capitalize", px: 6, borderColor: `${theme.palette.primary[300]}`, color: `${theme.palette.primary[700]}`, borderRadius: '8px', fontSize: 16, fontWeight: 600 }}
-                                        onClick={() => {
-                                            setOpenAddUpdateTicketPopup(true)
-                                        }}
-                                        variant='outlined'
-                                    >
-                                        Add Updates
-                                    </Button>
+                                    {
+                                        !['Rejected'].includes(ticketDetailsData?.status) ?
+                                            <Button
+                                                sx={{ textTransform: "capitalize", px: 6, borderColor: `${theme.palette.primary[300]}`, color: `${theme.palette.primary[700]}`, borderRadius: '8px', fontSize: 16, fontWeight: 600 }}
+                                                onClick={() => {
+                                                    setOpenChangeTicketStatusPopup(true)
+                                                }}
+                                                variant='outlined'
+                                            >
+                                                Change Status
+                                            </Button>
+                                            :
+                                            <></>
+                                    }
+                                    {
+                                        !['Rejected', 'Closed'].includes(ticketDetailsData?.status) ?
+                                            <Button
+                                                sx={{ textTransform: "capitalize", px: 6, borderColor: `${theme.palette.primary[300]}`, color: `${theme.palette.primary[700]}`, borderRadius: '8px', fontSize: 16, fontWeight: 600 }}
+                                                onClick={() => {
+                                                    setOpenAddUpdateTicketPopup(true)
+                                                }}
+                                                variant='outlined'
+                                            >
+                                                Add Updates
+                                            </Button>
+                                            :
+                                            <></>
+                                    }
                                 </React.Fragment>
                                 :
                                 <></>
                         }
-
                     </Stack>
-                    <Stack flexDirection={'row'} sx={{ columnGap: 1 }}>
+                    <Stack>
                         <Button
                             sx={{ textTransform: "capitalize", px: 6, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, borderColor: theme.palette.primary[600] }}
                             onClick={() => {
@@ -797,7 +828,7 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                             setViewLoadingDelete(true)
                             if (viewTicketData?.id && viewTicketData?.id !== null) {
                                 dispatch(actionTicketUpdateDelete({
-                                    id: viewTicketData?.id
+                                    history_id: viewTicketData?.id
                                 }))
                             }
                         }}>

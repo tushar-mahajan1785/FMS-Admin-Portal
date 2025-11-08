@@ -9,11 +9,13 @@ import { actionGetTicketsByAssetTypes, resetGetTicketsByAssetTypesResponse } fro
 import { ERROR, SERVER_ERROR, UNAUTHORIZED } from "../../../../../constants";
 import { useAuth } from "../../../../../hooks/useAuth";
 import { useSnackbar } from "../../../../../hooks/useSnackbar";
+import { useBranch } from "../../../../../hooks/useBranch";
 
 export const TicketsByAssetTypesChart = () => {
     const theme = useTheme();
     const dispatch = useDispatch()
     const { logout } = useAuth()
+    const branch = useBranch()
     const { showSnackbar } = useSnackbar()
 
     //Stores
@@ -34,13 +36,7 @@ export const TicketsByAssetTypesChart = () => {
         value: 'Last 6 Months'
     }])
 
-    const [arrTicketsByAssetTypes, setArrTicketsByAssetTypes] = useState([
-        { month: "Electrical", tickets: 1090 },
-        { month: "Cooling", tickets: 1735 },
-        { month: "BMS", tickets: 2287 },
-        { month: "IBMS", tickets: 827 },
-        { month: "Other", tickets: 1142 }
-    ]);
+    const [arrTicketsByAssetTypes, setArrTicketsByAssetTypes] = useState([]);
 
     const options = {
         chart: {
@@ -133,10 +129,10 @@ export const TicketsByAssetTypesChart = () => {
      * Get Tickets By Asset Types API Call
      */
     useEffect(() => {
-        if (filterValue && filterValue !== null) {
-            dispatch(actionGetTicketsByAssetTypes({ type: filterValue }))
+        if (filterValue && filterValue !== null && branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null) {
+            dispatch(actionGetTicketsByAssetTypes({ type: filterValue, branch_uuid: branch?.currentBranch?.uuid }))
         }
-    }, [filterValue])
+    }, [filterValue, branch?.currentBranch?.uuid])
 
     /**
    * useEffect
@@ -150,7 +146,13 @@ export const TicketsByAssetTypesChart = () => {
             if (getTicketsByAssetTypes?.result === true) {
                 setArrTicketsByAssetTypes(getTicketsByAssetTypes?.response)
             } else {
-                // setArrTicketsByAssetTypes([])
+                setArrTicketsByAssetTypes([
+                    { month: "Electrical", tickets: 1090 },
+                    { month: "Cooling", tickets: 1735 },
+                    { month: "BMS", tickets: 2287 },
+                    { month: "IBMS", tickets: 827 },
+                    { month: "Other", tickets: 1142 }
+                ])
                 switch (getTicketsByAssetTypes?.status) {
                     case UNAUTHORIZED:
                         logout()

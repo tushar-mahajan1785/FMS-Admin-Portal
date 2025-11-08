@@ -8,11 +8,13 @@ import { actionGetLastSixMonthsTickets, resetGetLastSixMonthsTicketsResponse } f
 import { ERROR, SERVER_ERROR, UNAUTHORIZED } from "../../../../../constants";
 import { useAuth } from "../../../../../hooks/useAuth";
 import { useSnackbar } from "../../../../../hooks/useSnackbar";
+import { useBranch } from "../../../../../hooks/useBranch";
 
 export const SixMonthsTotalTicketChart = () => {
     const theme = useTheme();
     const dispatch = useDispatch()
     const { logout } = useAuth()
+    const branch = useBranch()
     const { showSnackbar } = useSnackbar()
 
     //Stores
@@ -119,8 +121,13 @@ export const SixMonthsTotalTicketChart = () => {
      * Get last 6 month tickets API Call
      */
     useEffect(() => {
-        dispatch(actionGetLastSixMonthsTickets())
-    }, [])
+        if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null) {
+            dispatch(actionGetLastSixMonthsTickets({
+                branch_uuid: branch?.currentBranch?.uuid
+            }))
+        }
+
+    }, [branch?.currentBranch?.uuid])
 
     /**
    * useEffect

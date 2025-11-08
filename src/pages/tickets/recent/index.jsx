@@ -48,12 +48,7 @@ export const RecentTicket = () => {
 
   const columns = [
     {
-      flex: 0.07,
-      field: 'id',
-      headerName: 'Sr. No.'
-    },
-    {
-      flex: 0.1,
+      flex: 0.12,
       field: 'ticket_no',
       headerName: 'Ticket No.'
     },
@@ -63,14 +58,19 @@ export const RecentTicket = () => {
       headerName: 'Asset Name'
     },
     {
-      flex: 0.15,
+      flex: 0.12,
       field: 'location',
       headerName: 'Location'
     },
     {
-      flex: 0.3,
+      flex: 0.2,
       field: 'problem',
       headerName: 'Problem'
+    },
+    {
+      flex: 0.1,
+      field: 'priority',
+      headerName: 'Priority'
     },
     {
       flex: 0.1,
@@ -95,7 +95,22 @@ export const RecentTicket = () => {
     {
       flex: 0.1,
       field: 'total_time',
-      headerName: 'Total Time'
+      headerName: 'Total Time',
+      renderCell: (params) => {
+        return (
+          <Stack sx={{ height: '100%', justifyContent: 'center' }}>
+            {
+              params.row.total_time && params.row.total_time !== null && !['Open'].includes(params.row.status) ?
+                <TypographyComponent color={theme.palette.grey.primary} fontSize={14} fontWeight={400} sx={{ py: '10px' }}>
+                  {params.row.total_time && params.row.total_time !== null ? params.row.total_time : ''}
+                </TypographyComponent>
+                :
+                <>--:-- Hrs</>
+            }
+
+          </Stack>
+        )
+      }
     },
     {
       flex: 0.1,
@@ -167,6 +182,22 @@ export const RecentTicket = () => {
   const [total, setTotal] = useState(0);
 
   /**
+     * If redirect from Download open view for current ticket
+     */
+  useEffect(() => {
+
+    let previousData = window.localStorage.getItem('previous_route_details');
+    let parsedData = JSON.parse(previousData)
+    if (parsedData?.redirect_from === 'download') {
+      setCurrentTicketDetails({ uuid: parsedData?.uuid })
+      setOpenViewTicket(true)
+      localStorage.removeItem('previous_route_details')
+    } else {
+      localStorage.removeItem('previous_route_details')
+    }
+  }, [])
+
+  /**
   * useEffect
   * @dependency : ticketsList
   * @type : HANDLE API RESULT
@@ -187,10 +218,23 @@ export const RecentTicket = () => {
 
         setLoadingList(false)
         setTotal(ticketsList?.response?.counts?.total_tickets)
+
       } else {
         setLoadingList(false)
         setRecentTicketsData([])
-        setGetArrTicketCounts(null);
+        let objData = {
+          total_tickets: 0,
+          open_tickets: 0,
+          overdue_tickets: 0,
+          on_hold_tickets: 0,
+          closed_tickets: 0
+        }
+        setGetArrTicketCounts(prevArr =>
+          prevArr.map(item => ({
+            ...item,
+            value: objData[item.key] !== undefined ? objData[item.key] : 0
+          }))
+        );
         setTotal(0)
         switch (ticketsList?.status) {
           case UNAUTHORIZED:
@@ -223,6 +267,12 @@ export const RecentTicket = () => {
     }
 
   }, [page])
+
+  useEffect(() => {
+    return () => {
+      // window.localStorage.setItem('previous_route_details', null)
+    }
+  }, [])
 
   return (
     <React.Fragment>
@@ -378,7 +428,10 @@ export const RecentTicket = () => {
               }}
             />
           ) : (
-            <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Tickets Found'} subTitle={''} />
+            <Stack sx={{ height: 480 }}>
+              <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Tickets Found'} subTitle={''} />
+            </Stack>
+
           )}
         </Stack>
       </Stack>
@@ -402,14 +455,19 @@ export const RecentTicket = () => {
         handleClose={(data) => {
           setOpenViewTicket(false)
           setCurrentTicketDetails(null)
-          if (data === 'delete') {
+          let is_update = window.localStorage.getItem('ticket_update')
+
+          if (data === 'delete' || JSON.parse(is_update) == true) {
             dispatch(actionTicketsList({
               type: 'recent',
               branch_uuid: branch?.currentBranch?.uuid,
               page: page,
               limit: LIST_LIMIT
             }))
+            window.localStorage.removeItem('ticket_update')
           }
+
+
         }}
       />
     </React.Fragment>
