@@ -22,7 +22,7 @@ import SearchIcon from "../../../assets/icons/SearchIcon";
 import _ from "lodash";
 import AlertPopup from "../../../components/alert-confirm"
 import AlertCircleIcon from "../../../assets/icons/AlertCircleIcon"
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
 
 export default function ManageShiftDetails({ open, objData, page, handleClose }) {
     const theme = useTheme()
@@ -184,13 +184,23 @@ export default function ManageShiftDetails({ open, objData, page, handleClose })
         default: {
             light: theme.palette.grey[100],
             dark: theme.palette.grey[300],
-            text: theme.palette.grey[700],
+            text: theme.palette.common.white,
         },
     };
 
     // 🧠 Get the correct color for the short name
     const getDisplayCurrentColor = (shortName) => {
         return displayColorMap[shortName] || displayColorMap.default;
+    };
+
+    // ✅ Helper to normalize hex (e.g. "#fff" → "FFFFFF")
+    const normalizeHex = (color) => {
+        if (!color) return "000000";
+        let hex = color.replace("#", "").toUpperCase();
+        if (hex.length === 3) {
+            hex = hex.split("").map(ch => ch + ch).join("");
+        }
+        return hex;
     };
 
     return (
@@ -285,7 +295,7 @@ export default function ManageShiftDetails({ open, objData, page, handleClose })
 
                                         // ✅ Extract all date keys
                                         const dateKeys = Object.keys(schedule[0].shift_selection);
-                                        const dateHeaders = dateKeys.map(date => moment(date).format("DD")); // e.g. ['02','03','04','05','06','07','08']
+                                        const dateHeaders = dateKeys.map(date => moment(date).format("DD MMM")); // e.g. ['02 NOV','03 NOV']
 
                                         // ✅ Header row
                                         const header = ["Employee Name", "Role Type", ...dateHeaders];
@@ -303,41 +313,73 @@ export default function ManageShiftDetails({ open, objData, page, handleClose })
                                         // ✅ Create sheet
                                         const ws = XLSX.utils.aoa_to_sheet(data);
 
-                                        // ✅ Auto column width
-                                        ws["!cols"] = header.map((h, i) => ({
-                                            wch: Math.max(
-                                                h.length,
-                                                ...rows.map(r => (r[i] ? r[i].toString().length : 0))
-                                            ) + 2
-                                        }));
+                                        // ✅ Header style
+                                        const headerStyle = {
+                                            font: { bold: true, color: { rgb: normalizeHex(theme.palette.grey[900]) }, sz: 12 },
+                                            fill: { patternType: "solid", fgColor: { rgb: normalizeHex(theme.palette.grey[100]) } },
+                                            alignment: { horizontal: "center", vertical: "center" },
+                                            border: {
+                                                top: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                left: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                right: { style: "thin", color: { rgb: "CCCCCC" } },
+                                            },
+                                        };
 
-                                        // ✅ Apply colors to shift cells
-                                        rows.forEach((emp, rIndex) => {
-                                            dateKeys.forEach((date, dIndex) => {
-                                                const colIndex = 2 + dIndex; // because first two columns = name, role
-                                                const cellAddress = XLSX.utils.encode_cell({ r: rIndex + 1, c: colIndex });
-                                                const shift = emp[colIndex] || "";
-                                                const colorSet = displayColorMap[shift] || displayColorMap.default;
+                                        // ✅ Employee/Role column style
+                                        const empColStyle = {
+                                            font: { color: { rgb: normalizeHex(theme.palette.grey[900]) }, sz: 11 },
+                                            fill: { patternType: "solid", fgColor: { rgb: normalizeHex(theme.palette.grey[100]) } },
+                                            alignment: { horizontal: "left", vertical: "center" },
+                                            border: {
+                                                top: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                left: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                right: { style: "thin", color: { rgb: "CCCCCC" } },
+                                            },
+                                        };
 
-                                                const cell = ws[cellAddress];
-                                                if (cell) {
-                                                    cell.s = {
-                                                        fill: {
-                                                            patternType: "solid",
-                                                            fgColor: { rgb: colorSet.dark.replace("#", "") },
-                                                        },
-                                                        font: {
-                                                            color: { rgb: colorSet.text.replace("#", "") },
-                                                            bold: true,
-                                                        },
-                                                        alignment: {
-                                                            horizontal: "center",
-                                                            vertical: "center",
+                                        // ✅ Apply header styles
+                                        header.forEach((_, cIndex) => {
+                                            const cellAddress = XLSX.utils.encode_cell({ r: 0, c: cIndex });
+                                            if (ws[cellAddress]) ws[cellAddress].s = headerStyle;
+                                        });
+
+                                        // ✅ Apply data cell styles
+                                        rows.forEach((row, rIndex) => {
+                                            row.forEach((cellValue, cIndex) => {
+                                                const cellAddress = XLSX.utils.encode_cell({ r: rIndex + 1, c: cIndex });
+                                                if (!ws[cellAddress]) return;
+
+                                                if (cIndex < 2) {
+                                                    // Employee name + role type columns
+                                                    ws[cellAddress].s = empColStyle;
+                                                } else {
+                                                    // Shift color cells
+                                                    const shift = cellValue;
+                                                    const colorSet = displayColorMap[shift] || displayColorMap.default;
+                                                    ws[cellAddress].s = {
+                                                        font: { bold: false, color: { rgb: normalizeHex(colorSet.text) } },
+                                                        fill: { patternType: "solid", fgColor: { rgb: normalizeHex(colorSet.dark) } },
+                                                        alignment: { horizontal: "center", vertical: "center" },
+                                                        border: {
+                                                            top: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                            bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                            left: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                            right: { style: "thin", color: { rgb: "CCCCCC" } },
                                                         },
                                                     };
                                                 }
                                             });
                                         });
+
+                                        // ✅ Auto column widths
+                                        ws["!cols"] = header.map((_, i) => ({
+                                            wch: Math.max(
+                                                header[i].length,
+                                                ...rows.map(r => (r[i] ? r[i].toString().length : 0))
+                                            ) + 2,
+                                        }));
 
                                         // ✅ Detect month & year for filename
                                         const firstDate = moment(dateKeys[0]);
