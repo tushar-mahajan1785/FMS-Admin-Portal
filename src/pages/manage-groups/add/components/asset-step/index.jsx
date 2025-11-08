@@ -183,7 +183,14 @@ export default function SelectAssetStep() {
                 <TypographyComponent fontSize={16} fontWeight={600}>
                     Select Asset
                 </TypographyComponent>
-                <Card sx={{ borderRadius: '16px', padding: '24px', gap: '32px', border: `1px solid ${theme.palette.grey[300]}`, mt: 2 }}>
+                <Card
+                    sx={{
+                        borderRadius: '16px',
+                        padding: '24px',
+                        gap: '32px',
+                        border: `1px solid ${theme.palette.grey[300]}`,
+                        mt: 2
+                    }}>
                     <CardContent sx={{ p: 0, }}>
                         <Stack>
                             <Controller
@@ -244,7 +251,7 @@ export default function SelectAssetStep() {
                                 )}
                             />
                         </Stack>
-                        <Stack sx={{ my: 2  }}>
+                        <Stack sx={{ my: 2 }}>
                             <SearchInput
                                 id="search-assets"
                                 placeholder="Search"
@@ -262,7 +269,19 @@ export default function SelectAssetStep() {
                                 }}
                             />
                         </Stack>
-                        <List dense sx={{ p: 0 }}>
+                        <List dense sx={{
+                            p: 0,
+                            height: 420,
+                            flexGrow: 1,
+                            overflowY: 'auto',
+                            '&::-webkit-scrollbar': {
+                                width: '2px'
+                            },
+                            '&::-webkit-scrollbar-thumb': {
+                                backgroundColor: '#ccc',
+                                borderRadius: '2px'
+                            }
+                        }}>
                             {assetTypeWiseListOptions?.length > 0 ? (
                                 assetTypeWiseListOptions.map((asset) => {
                                     const isChecked = rosterData?.assets?.some(
@@ -348,7 +367,7 @@ export default function SelectAssetStep() {
             {/* Right Panel: Selected Asset Details & Group Details */}
             <Grid size={{ xs: 12, sm: 12, md: 8, lg: 8, xl: 8 }}>
                 <Box>
-                    <TypographyComponent fontSize={16} fontWeight={600}>
+                    <TypographyComponent fontSize={16} fontWeight={600} sx={{ mb: 2 }}>
                         Selected Asset Details
                     </TypographyComponent>
                     <Card
@@ -357,7 +376,18 @@ export default function SelectAssetStep() {
                             padding: '12px',
                             gap: '16px',
                             border: `1px solid ${theme.palette.grey[300]}`,
-                            my: 2
+                            minHeight: 100,
+                            maxHeight: 430,
+                            flexGrow: 1,
+                            mb: 4,
+                            overflowY: 'auto',
+                            '&::-webkit-scrollbar': {
+                                width: '2px'
+                            },
+                            '&::-webkit-scrollbar-thumb': {
+                                backgroundColor: '#ccc',
+                                borderRadius: '2px'
+                            }
                         }}
                     >
                         <CardContent sx={{ p: 2 }}>
@@ -367,7 +397,7 @@ export default function SelectAssetStep() {
                                         <Grid container spacing={2} alignItems="center" sx={{ py: 1 }}>
                                             <Grid
                                                 size={{ xs: 3, sm: 3, md: 3, lg: 3, xl: 3 }}
-                                                sx={{ borderRight: `1px solid ${theme.palette.grey[300]}` }}
+                                                sx={{ borderRight: `1px solid ${theme.palette.grey[300]}`, px: 2 }}
                                             >
                                                 <TypographyComponent fontSize={16} fontWeight={400}>
                                                     Asset Name
@@ -408,8 +438,8 @@ export default function SelectAssetStep() {
                     <TypographyComponent fontSize={16} fontWeight={600} sx={{ mb: 2 }}>
                         Group Details
                     </TypographyComponent>
-                    <Card sx={{ borderRadius: '16px', padding: '12px', gap: '16px', border: `1px solid ${theme.palette.grey[300]}`, my: 2 }}>
-                        <CardContent sx={{ p: 2 }}>
+                    <Card sx={{ borderRadius: '16px', padding: '12px', gap: '16px', border: `1px solid ${theme.palette.grey[300]}` }}>
+                        <CardContent>
                             <Grid container>
                                 <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
                                     <Controller

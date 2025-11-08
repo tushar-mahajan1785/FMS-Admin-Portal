@@ -55,6 +55,13 @@ export default function EditManageGroups({ open, objData, handleClose }) {
 
     const handleNext = () => {
         if (!isLastStep) {
+            if (!rosterData?.roster_group_name) {
+                showSnackbar({
+                    message: "Please enter group name",
+                    severity: "error",
+                });
+                return;
+            }
             setActiveStep((prevActiveStep) => prevActiveStep + 1);
         } else {
             dispatch(actionEditManageGroups({
@@ -124,7 +131,7 @@ export default function EditManageGroups({ open, objData, handleClose }) {
             variant='temporary'
             onClose={handleClose}
             ModalProps={{ keepMounted: true }}
-            sx={{ '& .MuiDrawer-paper': { width: { xs: '100%', sm: '100%', md: '100%', lg: '86%' } } }}
+            sx={{ '& .MuiDrawer-paper': { width: { xs: '100%', sm: '100%', md: '100%', lg: '100%', xl: '86%' } } }}
         >
             <Stack sx={{ height: '100%' }} justifyContent={'flex-start'} flexDirection={'column'}>
                 <FormHeader
@@ -197,9 +204,7 @@ export default function EditManageGroups({ open, objData, handleClose }) {
                         px: 4,
                         pb: 4,
                         flexGrow: 1,
-                        overflowY: 'auto',
-                        '&::-webkit-scrollbar': { width: '2px' },
-                        '&::-webkit-scrollbar-thumb': { backgroundColor: '#ccc', borderRadius: '2px' }
+                        overflowY: 'auto'
                     }}
                 >
                     {activeStep !== steps.length && (
@@ -211,7 +216,7 @@ export default function EditManageGroups({ open, objData, handleClose }) {
                     direction="row"
                     justifyContent="space-between"
                     alignItems="center"
-                    sx={{ p: 4 }}
+                    sx={{ px: 2, pb: 2 }}
                 >
                     <Button
                         sx={{ textTransform: "capitalize", px: 6, borderColor: `${theme.palette.grey[300]}`, color: `${theme.palette.grey[700]}`, borderRadius: '8px', fontSize: 16, fontWeight: 600 }}

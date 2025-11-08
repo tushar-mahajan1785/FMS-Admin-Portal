@@ -231,20 +231,13 @@ export default function ManageGroupsDetails({ open, objData, page, handleClose }
                             sx={{
                                 px: 2,
                                 flexGrow: 1,
-                                overflowY: 'auto',
-                                '&::-webkit-scrollbar': {
-                                    width: '2px'
-                                },
-                                '&::-webkit-scrollbar-thumb': {
-                                    backgroundColor: '#ccc',
-                                    borderRadius: '2px'
-                                }
+                                overflowY: 'auto'
                             }}
                         >
 
                             <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
                                 <Box>
-                                    <TypographyComponent fontSize={16} fontWeight={600}>
+                                    <TypographyComponent fontSize={16} fontWeight={600} sx={{ mb: 2 }}>
                                         Group Details
                                     </TypographyComponent>
                                     <Card
@@ -253,7 +246,18 @@ export default function ManageGroupsDetails({ open, objData, page, handleClose }
                                             padding: '12px',
                                             gap: '16px',
                                             border: `1px solid ${theme.palette.grey[300]}`,
-                                            my: 2
+                                            minHeight: 100,
+                                            maxHeight: 200,
+                                            flexGrow: 1,
+                                            mb: 4,
+                                            overflowY: 'auto',
+                                            '&::-webkit-scrollbar': {
+                                                width: '2px'
+                                            },
+                                            '&::-webkit-scrollbar-thumb': {
+                                                backgroundColor: '#ccc',
+                                                borderRadius: '2px'
+                                            }
                                         }}
                                     >
                                         <CardContent sx={{ p: 2 }}>
@@ -263,7 +267,7 @@ export default function ManageGroupsDetails({ open, objData, page, handleClose }
                                                         <Grid container spacing={2} alignItems="center" sx={{ py: 1 }}>
                                                             <Grid
                                                                 size={{ xs: 3, sm: 3, md: 3, lg: 3, xl: 3 }}
-                                                                sx={{ borderRight: `1px solid ${theme.palette.grey[300]}` }}
+                                                                sx={{ borderRight: `1px solid ${theme.palette.grey[300]}`, px: 2 }}
                                                             >
                                                                 <TypographyComponent fontSize={16} fontWeight={400}>
                                                                     Asset Name
@@ -315,20 +319,22 @@ export default function ManageGroupsDetails({ open, objData, page, handleClose }
                                     <TypographyComponent fontSize={16} fontWeight={600} sx={{ mb: 2 }}>
                                         Selected Employees
                                     </TypographyComponent>
-                                    <Card sx={{ borderRadius: '16px', border: `1px solid ${theme.palette.grey[300]}`, my: 2 }}>
+                                    <Card sx={{ borderRadius: '16px', border: `1px solid ${theme.palette.grey[300]}` }}>
                                         <CardContent>
                                             {manageGroupDetailData.employees && manageGroupDetailData.employees !== null && manageGroupDetailData.employees.length > 0 ? (
                                                 <ListComponents
                                                     rows={manageGroupDetailData.employees}
                                                     columns={columns}
                                                     isCheckbox={false}
-                                                    height={200}
+                                                    height={300}
                                                     onChange={(selectedIds) => {
                                                         console.log("Selected row IDs in UsersList:", selectedIds);
                                                     }}
                                                 />
                                             ) : (
-                                                <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Employee Found'} subTitle={''} />
+                                                <Stack sx={{ height: 310 }}>
+                                                    <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Employee Found'} subTitle={''} />
+                                                </Stack>
                                             )}
                                         </CardContent>
                                     </Card>
@@ -338,13 +344,13 @@ export default function ManageGroupsDetails({ open, objData, page, handleClose }
                         </Stack>
 
                     ) : (
-                        <Stack sx={{ height: '100%' }}>
+                        <Stack sx={{ height: 310 }}>
                             <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Details Found'} subTitle={''} />
                         </Stack>
                     )}
 
                     <Divider sx={{ m: 2 }} />
-                    <Stack sx={{ p: 2 }} flexDirection={'row'} justifyContent={'flex-end'} gap={2}>
+                    <Stack sx={{ px: 2, pb: 2 }} flexDirection={'row'} justifyContent={'flex-end'}>
                         <Button
                             sx={{ textTransform: "capitalize", px: 6, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, borderColor: theme.palette.primary[600] }}
                             onClick={handleClose}

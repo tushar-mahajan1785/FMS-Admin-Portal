@@ -421,7 +421,9 @@ export default function ManageGroupsList() {
                         </Grid>
                     </Box>
                 ) : (
-                    <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Manage Groups Found'} subTitle={''} />
+                    <Box sx={{ height: 470 }}>
+                        <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Manage Groups Found'} subTitle={''} />
+                    </Box>
                 )}
                 {/* Pagination */}
                 <Divider sx={{ my: 2 }} />
