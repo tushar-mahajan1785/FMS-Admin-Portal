@@ -214,7 +214,7 @@ export default function ConfigureShiftList() {
             </Stack>
             <Box
                 sx={{
-                    height: '620px',
+                    height: '640px',
                     background: theme.palette.common.white,
                     borderRadius: '12px',
                     border: `1px solid ${theme.palette.grey[300]}`,
@@ -225,7 +225,8 @@ export default function ConfigureShiftList() {
                     '&::-webkit-scrollbar-thumb': {
                         backgroundColor: '#ccc',
                         borderRadius: '2px'
-                    }
+                    },
+                    mb: 6
                 }}>
                 <Stack flexDirection={'row'} gap={1} padding={4}>
                     <TypographyComponent fontSize={16} fontWeight={600} sx={{ color: theme.palette.grey[700] }}>
@@ -465,8 +466,8 @@ export default function ConfigureShiftList() {
                     </form>
                 </Stack>
             </Box>
-            <Divider sx={{ my: 3 }} />
-            <Stack flexDirection={'row'} justifyContent={'flex-end'} gap={2}>
+            <Divider sx={{ mt: 3, mb: 2 }} />
+            <Stack flexDirection={'row'} justifyContent={'flex-end'} gap={2} >
                 <Button
                     sx={{ textTransform: "capitalize", px: 6, borderColor: `${theme.palette.grey[300]}`, backgroundColor: theme.palette.common.white, color: `${theme.palette.grey[700]}`, borderRadius: '8px', fontSize: 16, fontWeight: 600 }}
                     onClick={() => {
