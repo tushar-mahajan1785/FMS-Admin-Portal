@@ -16,6 +16,7 @@ import {
     List,
     ListItem,
     CircularProgress,
+    Tooltip,
 } from "@mui/material";
 import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
@@ -38,6 +39,7 @@ import CloseIcon from '../../../../../assets/icons/CloseIcon';
 import { useAuth } from '../../../../../hooks/useAuth';
 import { useSnackbar } from '../../../../../hooks/useSnackbar';
 import { useBranch } from '../../../../../hooks/useBranch';
+import DeleteIcon from '../../../../../assets/icons/DeleteIcon';
 
 export default function AddNewMemberGroup({ open, handleClose }) {
     const theme = useTheme()
@@ -264,6 +266,37 @@ export default function AddNewMemberGroup({ open, handleClose }) {
                     </Stack>
                 )
             }
+        },
+        {
+            flex: 0.04,
+            sortable: false,
+            field: "",
+            headerName: "Action",
+            renderCell: (params) => {
+                return (
+                    <React.Fragment>
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                            <Tooltip title="Delete" followCursor placement="top">
+                                {/* open manager shift */}
+                                <IconButton
+                                    onClick={() => {
+                                        let objData = Object.assign({}, rosterData);
+                                        let updatedEmployees = Array.isArray(objData?.employees) ? [...objData.employees] : [];
+                                        updatedEmployees = updatedEmployees.filter(
+                                            item =>
+                                                !(item.employee_id === params?.row?.employee_id && item.role_type_id === params?.row?.role_type_id)
+                                        );
+                                        objData.employees = updatedEmployees;
+                                        dispatch(actionRosterData(objData));
+                                    }}
+                                >
+                                    <DeleteIcon stroke={'#181D27'} />
+                                </IconButton>
+                            </Tooltip>
+                        </Box>
+                    </React.Fragment>
+                );
+            },
         }
     ];
 
@@ -334,9 +367,7 @@ export default function AddNewMemberGroup({ open, handleClose }) {
                         px: 4,
                         pb: 4,
                         flexGrow: 1,
-                        overflowY: 'auto',
-                        '&::-webkit-scrollbar': { width: '2px' },
-                        '&::-webkit-scrollbar-thumb': { backgroundColor: '#ccc', borderRadius: '2px' }
+                        overflowY: 'auto'
                     }}
                 >
                     <Grid container spacing={4} sx={{ mt: 1 }}>
@@ -345,7 +376,14 @@ export default function AddNewMemberGroup({ open, handleClose }) {
                             <TypographyComponent fontSize={16} fontWeight={600}>
                                 Select Employees
                             </TypographyComponent>
-                            <Card sx={{ borderRadius: '16px', padding: '24px', gap: '32px', border: `1px solid ${theme.palette.grey[300]}`, mt: 2 }}>
+                            <Card
+                                sx={{
+                                    borderRadius: '16px',
+                                    padding: '24px',
+                                    gap: '32px',
+                                    border: `1px solid ${theme.palette.grey[300]}`,
+                                    mt: 2
+                                }}>
                                 <CardContent sx={{ p: 0 }}>
                                     <Stack>
                                         <Controller
@@ -441,7 +479,19 @@ export default function AddNewMemberGroup({ open, handleClose }) {
                                         />
                                     </Stack>
 
-                                    <List dense sx={{ p: 0 }}>
+                                    <List dense sx={{
+                                        p: 0,
+                                        height: 410,
+                                        flexGrow: 1,
+                                        overflowY: 'auto',
+                                        '&::-webkit-scrollbar': {
+                                            width: '2px'
+                                        },
+                                        '&::-webkit-scrollbar-thumb': {
+                                            backgroundColor: '#ccc',
+                                            borderRadius: '2px'
+                                        }
+                                    }}>
                                         {employeeTypeWiseListOptions?.length > 0 ? (
                                             employeeTypeWiseListOptions.map((employee) => {
                                                 const isChecked = rosterData?.employees?.some(
@@ -456,7 +506,7 @@ export default function AddNewMemberGroup({ open, handleClose }) {
                                                             display: 'flex',
                                                             justifyContent: 'space-between',
                                                             alignItems: 'center',
-                                                            py: 1.5,
+                                                            py: 2,
                                                             px: 1,
                                                             borderBottom: `1px solid ${theme.palette.grey[300]}`,
                                                         }}
@@ -520,11 +570,13 @@ export default function AddNewMemberGroup({ open, handleClose }) {
                                                 );
                                             })
                                         ) : (
-                                            <EmptyContent
-                                                imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND}
-                                                title="No Employee Found"
-                                                subTitle=""
-                                            />
+                                            <Stack sx={{ height: 420 }}>
+                                                <EmptyContent
+                                                    imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND}
+                                                    title="No Employee Found"
+                                                    subTitle=""
+                                                />
+                                            </Stack>
                                         )}
                                     </List>
                                 </CardContent>
@@ -533,7 +585,7 @@ export default function AddNewMemberGroup({ open, handleClose }) {
                         {/* Right Panel: Group Details */}
                         <Grid size={{ xs: 12, sm: 12, md: 8, lg: 8, xl: 8 }}>
                             <Box>
-                                <TypographyComponent fontSize={16} fontWeight={600}>
+                                <TypographyComponent fontSize={16} fontWeight={600} sx={{ mb: 2 }}>
                                     Group Details
                                 </TypographyComponent>
                                 <Card
@@ -542,7 +594,18 @@ export default function AddNewMemberGroup({ open, handleClose }) {
                                         padding: '12px',
                                         gap: '16px',
                                         border: `1px solid ${theme.palette.grey[300]}`,
-                                        my: 2
+                                        minHeight: 100,
+                                        maxHeight: 200,
+                                        flexGrow: 1,
+                                        mb: 4,
+                                        overflowY: 'auto',
+                                        '&::-webkit-scrollbar': {
+                                            width: '2px'
+                                        },
+                                        '&::-webkit-scrollbar-thumb': {
+                                            backgroundColor: '#ccc',
+                                            borderRadius: '2px'
+                                        }
                                     }}
                                 >
                                     <CardContent sx={{ p: 2 }}>
@@ -552,7 +615,7 @@ export default function AddNewMemberGroup({ open, handleClose }) {
                                                     <Grid container spacing={2} alignItems="center" sx={{ py: 1 }}>
                                                         <Grid
                                                             size={{ xs: 3, sm: 3, md: 3, lg: 3, xl: 3 }}
-                                                            sx={{ borderRight: `1px solid ${theme.palette.grey[300]}` }}
+                                                            sx={{ borderRight: `1px solid ${theme.palette.grey[300]}`, px: 2 }}
                                                         >
                                                             <TypographyComponent fontSize={16} fontWeight={400}>
                                                                 Asset Name
@@ -604,20 +667,22 @@ export default function AddNewMemberGroup({ open, handleClose }) {
                                 <TypographyComponent fontSize={16} fontWeight={600} sx={{ mb: 2 }}>
                                     Selected Employees
                                 </TypographyComponent>
-                                <Card sx={{ borderRadius: '16px', padding: '12px', gap: '16px', border: `1px solid ${theme.palette.grey[300]}`, my: 2 }}>
-                                    <CardContent sx={{ p: 2 }}>
+                                <Card sx={{ borderRadius: '16px', padding: '12px', gap: '16px', border: `1px solid ${theme.palette.grey[300]}` }}>
+                                    <CardContent>
                                         {rosterData?.employees && rosterData?.employees !== null && rosterData?.employees.length > 0 ? (
                                             <ListComponents
                                                 rows={rosterData?.employees}
                                                 columns={columns}
                                                 isCheckbox={false}
-                                                height={200}
+                                                height={230}
                                                 onChange={(selectedIds) => {
                                                     console.log("Selected row IDs in UsersList:", selectedIds);
                                                 }}
                                             />
                                         ) : (
-                                            <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Employee Found'} subTitle={''} />
+                                            <Stack sx={{ height: 310 }}>
+                                                <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Employee Found'} subTitle={''} />
+                                            </Stack>
                                         )}
                                     </CardContent>
                                 </Card>
@@ -630,7 +695,7 @@ export default function AddNewMemberGroup({ open, handleClose }) {
                     direction="row"
                     justifyContent="space-between"
                     alignItems="center"
-                    sx={{ p: 4 }}
+                    sx={{ px: 2, pb: 2 }}
                 >
                     <Button
                         sx={{ textTransform: "capitalize", px: 6, borderColor: `${theme.palette.grey[300]}`, color: `${theme.palette.grey[700]}`, borderRadius: '8px', fontSize: 16, fontWeight: 600 }}

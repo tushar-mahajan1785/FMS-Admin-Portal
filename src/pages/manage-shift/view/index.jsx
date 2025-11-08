@@ -10,7 +10,7 @@ import React, { useEffect, useState } from "react";
 import TypographyComponent from "../../../components/custom-typography";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import UploadIcon from "../../../assets/icons/UploadIcon";
-import { actionDeleteEmployeeShiftSchedule, resetDeleteEmployeeShiftScheduleResponse, actionEmployeeShiftScheduleDetails, resetEmployeeShiftScheduleDetailsResponse, actionEmployeeShiftScheduleList } from "../../../store/roster";
+import { actionDeleteEmployeeShiftSchedule, resetDeleteEmployeeShiftScheduleResponse, actionEmployeeShiftScheduleDetails, resetEmployeeShiftScheduleDetailsResponse, actionEmployeeShiftScheduleList, resetRosterDataResponse } from "../../../store/roster";
 import { useDispatch, useSelector } from "react-redux";
 import EmptyContent from "../../../components/empty_content";
 import { ERROR, IMAGES_SCREEN_NO_DATA, LIST_LIMIT, SERVER_ERROR, UNAUTHORIZED } from "../../../constants";
@@ -22,6 +22,7 @@ import SearchIcon from "../../../assets/icons/SearchIcon";
 import _ from "lodash";
 import AlertPopup from "../../../components/alert-confirm"
 import AlertCircleIcon from "../../../assets/icons/AlertCircleIcon"
+import * as XLSX from "xlsx";
 
 export default function ManageShiftDetails({ open, objData, page, handleClose }) {
     const theme = useTheme()
@@ -268,14 +269,92 @@ export default function ManageShiftDetails({ open, objData, page, handleClose })
                                     </IconButton>
                                 </Tooltip>
                             </Box>
-                            <Button
-                                variant="outlined"
-                                size="small"
-                                color={theme.palette.grey[700]}
-                                sx={{ paddingY: '10px', paddingX: '16px', border: `1px solid ${theme.palette.grey[300]}`, borderRadius: '8px' }}
-                            >
-                                <UploadIcon stroke={theme.palette.grey[700]} size={18} />
-                            </Button>
+                            <Tooltip title="Export Shift Roster">
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    color={theme.palette.grey[700]}
+                                    sx={{ paddingY: '10px', paddingX: '16px', border: `1px solid ${theme.palette.grey[300]}`, borderRadius: '8px' }}
+                                    onClick={() => {
+                                        if (!manageShiftDetailData?.shift_schedule?.length) {
+                                            console.error("No data available to export");
+                                            return;
+                                        }
+
+                                        const schedule = manageShiftDetailData?.shift_schedule;
+
+                                        // ✅ Extract all date keys
+                                        const dateKeys = Object.keys(schedule[0].shift_selection);
+                                        const dateHeaders = dateKeys.map(date => moment(date).format("DD")); // e.g. ['02','03','04','05','06','07','08']
+
+                                        // ✅ Header row
+                                        const header = ["Employee Name", "Role Type", ...dateHeaders];
+
+                                        // ✅ Build rows
+                                        const rows = schedule.map(emp => [
+                                            emp.employee_name.trim(),
+                                            emp.role_type,
+                                            ...dateKeys.map(date => emp.shift_selection[date] || "")
+                                        ]);
+
+                                        // ✅ Combine header + rows
+                                        const data = [header, ...rows];
+
+                                        // ✅ Create sheet
+                                        const ws = XLSX.utils.aoa_to_sheet(data);
+
+                                        // ✅ Auto column width
+                                        ws["!cols"] = header.map((h, i) => ({
+                                            wch: Math.max(
+                                                h.length,
+                                                ...rows.map(r => (r[i] ? r[i].toString().length : 0))
+                                            ) + 2
+                                        }));
+
+                                        // ✅ Apply colors to shift cells
+                                        rows.forEach((emp, rIndex) => {
+                                            dateKeys.forEach((date, dIndex) => {
+                                                const colIndex = 2 + dIndex; // because first two columns = name, role
+                                                const cellAddress = XLSX.utils.encode_cell({ r: rIndex + 1, c: colIndex });
+                                                const shift = emp[colIndex] || "";
+                                                const colorSet = displayColorMap[shift] || displayColorMap.default;
+
+                                                const cell = ws[cellAddress];
+                                                if (cell) {
+                                                    cell.s = {
+                                                        fill: {
+                                                            patternType: "solid",
+                                                            fgColor: { rgb: colorSet.dark.replace("#", "") },
+                                                        },
+                                                        font: {
+                                                            color: { rgb: colorSet.text.replace("#", "") },
+                                                            bold: true,
+                                                        },
+                                                        alignment: {
+                                                            horizontal: "center",
+                                                            vertical: "center",
+                                                        },
+                                                    };
+                                                }
+                                            });
+                                        });
+
+                                        // ✅ Detect month & year for filename
+                                        const firstDate = moment(dateKeys[0]);
+                                        const monthYear = firstDate.format("MMMM YYYY"); // e.g., November 2025
+
+                                        // ✅ Create workbook & add sheet
+                                        const wb = XLSX.utils.book_new();
+                                        XLSX.utils.book_append_sheet(wb, ws, "Shift Roster");
+
+                                        // ✅ Export file with dynamic name
+                                        const fileName = `Shift Roster ${monthYear}.xlsx`;
+                                        XLSX.writeFile(wb, fileName);
+                                    }}
+                                >
+                                    <UploadIcon stroke={theme.palette.grey[700]} size={18} />
+                                </Button>
+                            </Tooltip>
                         </Stack>
                     </Box>
                     {loadingDetail ? (
@@ -482,7 +561,7 @@ export default function ManageShiftDetails({ open, objData, page, handleClose })
                         </Stack>
                     )}
                     <Divider sx={{ m: 2 }} />
-                    <Stack sx={{ p: 2 }} flexDirection={'row'} justifyContent={'flex-end'} gap={2}>
+                    <Stack sx={{ px: 2, pb: 2 }} flexDirection={'row'} justifyContent={'flex-end'} gap={2}>
                         <Button
                             sx={{ textTransform: "capitalize", px: 6, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, borderColor: theme.palette.primary[600] }}
                             onClick={handleClose}
@@ -499,6 +578,7 @@ export default function ManageShiftDetails({ open, objData, page, handleClose })
                     open={openEditManageShiftPopup}
                     objData={viewManageShiftData}
                     handleClose={(data) => {
+                        dispatch(resetRosterDataResponse())
                         if (data && data !== null && data === 'save') {
                             if (manageShiftDetailData?.uuid && manageShiftDetailData?.uuid !== null) {
                                 dispatch(actionEmployeeShiftScheduleDetails({ uuid: manageShiftDetailData?.uuid }))

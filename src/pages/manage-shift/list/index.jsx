@@ -246,7 +246,7 @@ export default function ManageShiftList() {
 
             </Stack>
             <Box sx={{
-                height: '720px',
+                height: '740px',
                 background: theme.palette.common.white,
                 borderRadius: '12px',
                 border: `1px solid ${theme.palette.grey[300]}`,
