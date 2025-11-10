@@ -28,7 +28,7 @@ const baseThemeOptions = {
     secondary: { light: "#B2B4B8", main: "#A8AAAE", dark: "#949699" },
     background: { default: "#f2f2f2", light: "#ffffff", dark: "#121212" },
     text: { primary: "#101828", secondary: "#535862", disabled: "#FDFDFD" },
-    info: { light: "#1FD5EB", main: "#00CFE8", dark: "#00B6CC" },
+    // info: { light: "#1FD5EB", main: "#00CFE8", dark: "#00B6CC" },
     common: { black: "#000", white: "#fff" },
     grey: {
       25: "#FDFDFD",
@@ -97,6 +97,20 @@ const baseThemeOptions = {
       800: "#912018",
       900: "#7A271A"
     },
+    info: {
+      25: "#F5FCFE",
+      50: "#E6FAFE",
+      100: "#C0F3FB",
+      200: "#99EBF9",
+      300: "#66E0F4",
+      400: "#33D4EE",
+      500: "#00CFE8", // main
+      600: "#00B9CF",
+      700: "#0093A6",
+      800: "#006E7E",
+      900: "#004C55"
+    },
+
     action: {
       active: `rgba(${mainColor}, 0.54)`,
       hover: `rgba(${mainColor}, 0.04)`,

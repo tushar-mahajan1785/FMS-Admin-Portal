@@ -30,6 +30,7 @@ import { AntSwitch } from "../../../components/common";
 import AddUpdateTicket from "../add-updates";
 import moment from "moment";
 import { useLocation, useNavigate } from "react-router-dom";
+import CustomChip from "../../../components/custom-chip";
 
 export const ViewTicket = ({ open, handleClose, detail }) => {
     const dispatch = useDispatch()
@@ -39,7 +40,10 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
     const navigate = useNavigate()
     const location = useLocation();
 
+    //Store 
     const { getTicketDetails, ticketDelete, ticketVendorContactsUpdate, ticketUpdateDelete } = useSelector(state => state.ticketsStore)
+
+    //States
     const [ticketDetailsData, setTicketDetailsData] = useState(null)
     const [ticketsHistory, setTicketsHistory] = useState([])
     const [openChangeTicketStatusPopup, setOpenChangeTicketStatusPopup] = useState(false)
@@ -54,6 +58,7 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
     const [selectedEntryUpdateDetails, setSelectedEntryUpdateDetails] = useState(null)
     const [openTicketUpdateDeletePopup, setOpenTicketUpdateDeletePopup] = useState(false)
 
+    //Initial Render
     useEffect(() => {
         if (open === true) {
             setVendorContactType('view')
@@ -215,11 +220,20 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
         }
     }, [ticketVendorContactsUpdate])
 
+    /**
+     * handle history Edit Click
+     * @param {*} entry 
+     */
     const handleEditClick = (entry) => {
         setAddUpdateType('Edit')
         setSelectedEntryUpdateDetails(entry);
         setOpenAddUpdateTicketPopup(true);
     };
+
+    /**
+    * handle history Delete Click
+    * @param {*} entry 
+    */
     const handleDeleteClick = (entry) => {
         let objData = {
             id: entry?.id,
@@ -245,6 +259,7 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                     size={48}
                     icon={<TicketIcon stroke={theme.palette.primary[600]} size={20} />}
                     title={`Ticket ${ticketDetailsData?.ticket_no && ticketDetailsData?.ticket_no !== null ? `#${ticketDetailsData?.ticket_no}` : ''}`}
+                    currentStatus={ticketDetailsData?.status && ticketDetailsData?.status !== null ? ticketDetailsData?.status : ''}
                     subtitle=""
                     actions={[
                         <IconButton
@@ -254,19 +269,23 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                         </IconButton>
                     ]}
                     rightSection={<Stack flexDirection={'row'} gap={3} sx={{ mx: 3, alignItems: 'center' }}>
-                        <Stack sx={{ cursor: 'pointer' }} onClick={() => {
-                            console.log("Print clicked ✅");
-                            navigate(`/tickets/download/${detail?.uuid}`)
-                            let previous = {
-                                from: location?.pathname,
-                                uuid: detail?.uuid
-                            }
-                            window.localStorage.setItem('previous_route_details', JSON.stringify(previous))
-                        }}>
-                            <TypographyComponent fontSize={16} fontWeight={400}>
-                                Download Report
-                            </TypographyComponent>
-                        </Stack>
+                        {
+                            ticketDetailsData && ticketDetailsData !== null ?
+                                <Stack sx={{ cursor: 'pointer' }} onClick={() => {
+                                    navigate(`/ tickets / download / ${detail?.uuid}`)
+                                    let previous = {
+                                        from: location?.pathname,
+                                        uuid: detail?.uuid
+                                    }
+                                    window.localStorage.setItem('previous_route_details', JSON.stringify(previous))
+                                }}>
+                                    <TypographyComponent fontSize={16} fontWeight={400}>
+                                        Download Report
+                                    </TypographyComponent>
+                                </Stack>
+                                :
+                                <></>
+                        }
                         {
                             hasPermission('TICKET_DELETE') ?
                                 <Tooltip title="Delete" followCursor placement="top">
@@ -288,11 +307,10 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                                 :
                                 <></>
                         }
-
                     </Stack>}
                 />
-                <Divider sx={{ mb: 2, mx: 2 }} />
-                <Stack
+                < Divider sx={{ mb: 2, mx: 2 }} />
+                <Stack Stack
                     sx={{
                         px: 2,
                         flexGrow: 1,
@@ -524,7 +542,7 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                                 <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2.5 }}>
                                     <SectionHeader title="Vendor Contact" show_progress={0} />
                                     {
-                                        vendorContactType !== 'edit' && hasPermission('TICKET_EDIT') ?
+                                        vendorContactType !== 'edit' && hasPermission('TICKET_EDIT') && !['Rejected', 'Closed'].includes(ticketDetailsData?.status) ?
                                             <TypographyComponent fontSize={16} sx={{ cursor: 'pointer', textDecoration: 'underline', color: theme.palette.primary[600] }} onClick={() => {
                                                 setVendorContactType('edit')
                                             }}>Edit</TypographyComponent>
@@ -707,10 +725,9 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                         </Grid>
                     </Grid>
 
-                </Stack>
+                </Stack >
                 <Divider sx={{ m: 2 }} />
                 <Stack sx={{ p: 2 }} flexDirection={'row'} justifyContent={'space-between'} gap={2}>
-
                     <Stack flexDirection={'row'} sx={{ columnGap: 1 }}>
                         {
                             hasPermission('TICKET_EDIT') ?
@@ -762,7 +779,7 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                     {/* </Stack> */}
 
                 </Stack>
-            </Stack>
+            </Stack >
             <ChangeTicketStatus
                 details={ticketDetailsData}
                 open={openChangeTicketStatusPopup}

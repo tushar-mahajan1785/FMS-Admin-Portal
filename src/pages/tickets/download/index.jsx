@@ -23,11 +23,18 @@ export const TicketDownloadReport = () => {
     const { logout } = useAuth()
     const { uuid } = useParams()
     const navigate = useNavigate()
+
+    //Stores
     const { getTicketDetails } = useSelector(state => state.ticketsStore)
 
+    //States
     const [ticketDetailsData, setTicketDetailsData] = useState(null)
     const [previousRouteDetailsData, setPreviousRouteDetailsData] = useState(null)
 
+    /**
+     * Initial Render
+     * scrollToTop , get previous_route_details from local storage & get ticket details api call
+     */
     useEffect(() => {
         if (uuid && uuid !== null) {
             window.scrollTo({ top: 0, behavior: "smooth" });
@@ -70,7 +77,6 @@ export const TicketDownloadReport = () => {
     }, [getTicketDetails])
 
     return (
-        // Wrapped everything in this div for targeted printing
         <React.Fragment>
             <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                 <Stack sx={{ flexDirection: 'row', columnGap: 1, alignItems: 'center', height: '100%', justifyContent: 'center', cursor: 'pointer' }} onClick={() => {
@@ -96,25 +102,25 @@ export const TicketDownloadReport = () => {
                         onClick={() => {
                             const printDiv = document.getElementById("ticketPrintSection");
                             if (printDiv) {
-                                // Hide everything except the print div during printing
                                 const originalContents = document.body.innerHTML;
                                 const printContents = printDiv.innerHTML;
+
+                                // Save original title
+                                const originalTitle = document.title;
+                                document.title = "Ticket-Report";
 
                                 document.body.innerHTML = printContents;
                                 window.print();
                                 document.body.innerHTML = originalContents;
-                                // window.location.reload(); // Optional: reload to restore React state
+                                document.title = originalTitle;
                             }
                         }}
                         variant='contained'
                     >
-                        {/* <AddIcon sx={{ color: 'white', fontSize: { xs: '20px', sm: '20px', md: '22px' } }} /> */}
                         Print/Save Report
                     </Button>
                 </Stack>
-
             </Stack>
-
             <div id="ticketPrintSection">
                 <Stack sx={{ height: '100%', background: 'white' }} justifyContent={'flex-start'} flexDirection={'column'}>
                     <FormHeader
@@ -124,7 +130,6 @@ export const TicketDownloadReport = () => {
                         title={`Ticket ${ticketDetailsData?.ticket_no && ticketDetailsData?.ticket_no !== null ? `#${ticketDetailsData?.ticket_no}` : ''}`}
                         subtitle=""
                     />
-
                     <Divider sx={{ mb: 2, mx: 2, background: 'white' }} />
                     <Stack
                         sx={{

@@ -174,4 +174,37 @@ export const compressFile = async (file) => {
   return file; // skip non-image files
 };
 
+/**
+ * Get formatted duration between two dates
+ * @param {*} startDate 
+ * @param {*} endDate 
+ * @returns 
+ */
+export const getFormattedDuration = (startDate, endDate) => {
+  if (!startDate || !endDate) return "00:00 Hrs"; // handle missing dates
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  // Calculate difference in milliseconds
+  const diffMs = end - start;
+
+  if (diffMs < 0) return "00:00 Hrs"; // in case end < start
+
+  // Convert to minutes
+  const totalMinutes = Math.floor(diffMs / (1000 * 60));
+
+  // Calculate days, hours, minutes
+  const days = Math.floor(totalMinutes / (60 * 24));
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+  const minutes = totalMinutes % 60;
+
+  // Format based on duration
+  if (days > 0) {
+    return `${days} Day${days > 1 ? "s" : ""} ${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")} Hrs`;
+  }
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")} Hrs`;
+}
+
 

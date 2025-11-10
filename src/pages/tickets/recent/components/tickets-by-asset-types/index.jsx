@@ -6,10 +6,11 @@ import CustomTextField from "../../../../../components/text-field";
 import TypographyComponent from "../../../../../components/custom-typography";
 import { useDispatch, useSelector } from "react-redux";
 import { actionGetTicketsByAssetTypes, resetGetTicketsByAssetTypesResponse } from "../../../../../store/tickets";
-import { ERROR, SERVER_ERROR, UNAUTHORIZED } from "../../../../../constants";
+import { ERROR, IMAGES_SCREEN_NO_DATA, SERVER_ERROR, UNAUTHORIZED } from "../../../../../constants";
 import { useAuth } from "../../../../../hooks/useAuth";
 import { useSnackbar } from "../../../../../hooks/useSnackbar";
 import { useBranch } from "../../../../../hooks/useBranch";
+import EmptyContent from "../../../../../components/empty_content";
 
 export const TicketsByAssetTypesChart = () => {
     const theme = useTheme();
@@ -17,6 +18,8 @@ export const TicketsByAssetTypesChart = () => {
     const { logout } = useAuth()
     const branch = useBranch()
     const { showSnackbar } = useSnackbar()
+
+    let is_update = window.localStorage.getItem('ticket_update')
 
     //Stores
     const { getTicketsByAssetTypes } = useSelector(state => state.ticketsStore)
@@ -35,7 +38,6 @@ export const TicketsByAssetTypesChart = () => {
         label: 'Last 6 Months',
         value: 'Last 6 Months'
     }])
-
     const [arrTicketsByAssetTypes, setArrTicketsByAssetTypes] = useState([]);
 
     const options = {
@@ -65,7 +67,7 @@ export const TicketsByAssetTypesChart = () => {
             formatter: (val) => val.toLocaleString(),
         },
         xaxis: {
-            categories: arrTicketsByAssetTypes?.map((d) => d.month),
+            categories: arrTicketsByAssetTypes?.map((d) => d.category),
             labels: {
                 style: {
                     colors: theme.palette.text.secondary,
@@ -132,7 +134,7 @@ export const TicketsByAssetTypesChart = () => {
         if (filterValue && filterValue !== null && branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null) {
             dispatch(actionGetTicketsByAssetTypes({ type: filterValue, branch_uuid: branch?.currentBranch?.uuid }))
         }
-    }, [filterValue, branch?.currentBranch?.uuid])
+    }, [filterValue, branch?.currentBranch?.uuid, is_update])
 
     /**
    * useEffect
@@ -146,13 +148,7 @@ export const TicketsByAssetTypesChart = () => {
             if (getTicketsByAssetTypes?.result === true) {
                 setArrTicketsByAssetTypes(getTicketsByAssetTypes?.response)
             } else {
-                setArrTicketsByAssetTypes([
-                    { month: "Electrical", tickets: 1090 },
-                    { month: "Cooling", tickets: 1735 },
-                    { month: "BMS", tickets: 2287 },
-                    { month: "IBMS", tickets: 827 },
-                    { month: "Other", tickets: 1142 }
-                ])
+                setArrTicketsByAssetTypes([])
                 switch (getTicketsByAssetTypes?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -180,12 +176,7 @@ export const TicketsByAssetTypesChart = () => {
                 height: '100%'
             }}
         >
-            <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={1}
-            >
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <TypographyComponent
                     fontSize={16}
                     fontWeight={600}
@@ -206,7 +197,7 @@ export const TicketsByAssetTypesChart = () => {
                         MenuProps: {
                             PaperProps: {
                                 style: {
-                                    maxHeight: 220,
+                                    maxHeight: 220, // Set your desired max height
                                     scrollbarWidth: 'thin'
                                 }
                             }
@@ -237,20 +228,25 @@ export const TicketsByAssetTypesChart = () => {
                         ))}
                 </CustomTextField>
             </Stack>
-
-            <Divider sx={{ mb: 2 }} />
+            <Divider sx={{ my: 1.5 }} />
             {
-                series && series !== null && series.length > 0 ?
-                    <Chart
-                        options={options}
-                        series={series}
-                        type="bar"
-                        height={280}
-                    />
+                arrTicketsByAssetTypes && arrTicketsByAssetTypes !== null && arrTicketsByAssetTypes.length > 0 ?
+                    <>
+                        {
+                            series && series !== null && series.length > 0 ?
+                                <Chart
+                                    options={options}
+                                    series={series}
+                                    type="bar"
+                                    height={280}
+                                />
+                                :
+                                <EmptyContent imageSize={250} mt={0} imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Tickets Found'} subTitle={''} />
+                        }
+                    </>
                     :
-                    <></>
+                    <EmptyContent imageSize={250} mt={0} imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Tickets Found'} subTitle={''} />
             }
-
         </Box>
     );
 };

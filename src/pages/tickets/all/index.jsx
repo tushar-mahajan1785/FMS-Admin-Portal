@@ -28,6 +28,7 @@ import { actionMasterAssetType, resetMasterAssetTypeResponse } from '../../../st
 import { useBranch } from '../../../hooks/useBranch';
 import { ViewTicket } from '../view';
 import moment from 'moment';
+import { getFormattedDuration } from '../../../utils';
 
 export const TicketList = () => {
     const theme = useTheme()
@@ -133,14 +134,13 @@ export const TicketList = () => {
                 return (
                     <Stack sx={{ height: '100%', justifyContent: 'center' }}>
                         {
-                            params.row.total_time && params.row.total_time !== null && !['Open'].includes(params.row.status) ?
+                            params?.row?.first_created_at && params?.row?.first_created_at !== null && !['Open'].includes(params.row.status) ?
                                 <TypographyComponent color={theme.palette.grey.primary} fontSize={14} fontWeight={400} sx={{ py: '10px' }}>
-                                    {params.row.total_time && params.row.total_time !== null ? params.row.total_time : ''}
+                                    {params?.row?.first_created_at && params?.row?.first_created_at !== null ? getFormattedDuration(params?.row?.first_created_at, params?.row?.last_updated_at) : ''}
                                 </TypographyComponent>
                                 :
                                 <>--:-- Hrs</>
                         }
-
                     </Stack>
                 )
             }
@@ -153,16 +153,22 @@ export const TicketList = () => {
                 let color = 'primary'
                 switch (params?.row?.status) {
                     case 'Open':
-                        color = 'success'
+                        color = 'primary'//'#6941C6'
+                        break
+                    case 'Re Open':
+                        color = 'info'//'#039BE5'
                         break
                     case 'Closed':
-                        color = 'primary'
+                        color = 'success'//'#039855'
                         break
                     case 'On Hold':
-                        color = 'warning'
+                        color = 'warning'//#FEC84B'
                         break
                     case 'Rejected':
-                        color = 'error'
+                        color = 'error'//'#D32F2F'
+                        break
+                    case 'Overdue':
+                        color = 'warning'//'#F79009'
                         break
                     default:
                         color = 'primary'
@@ -208,8 +214,10 @@ export const TicketList = () => {
         { labelTop: "Total", labelBottom: "Tickets", key: 'total_tickets', value: 0, icon: <TicketIcon size={'24'} stroke={theme.palette.primary[600]} />, color: theme.palette.primary[50] },
         { labelTop: "Open", labelBottom: "Tickets", key: 'open_tickets', value: 0, icon: <OpenTicketIcon size={'24'} stroke={theme.palette.primary[600]} />, color: theme.palette.primary[50] },
         { labelTop: "On-Hold", labelBottom: "Tickets", key: 'on_hold_tickets', value: 0, icon: <OnHoldTicketIcon size={'24'} stroke={theme.palette.primary[600]} />, color: theme.palette.primary[50] },
+        { labelTop: "Re Open", labelBottom: "Tickets", key: 'reopen_tickets', value: 0, icon: <OpenTicketIcon size={'24'} stroke={theme.palette.primary[600]} />, color: theme.palette.primary[50] },
         { labelTop: "Overdue", labelBottom: "Tickets", key: 'overdue_tickets', value: 0, icon: <OverDueIcon size={'24'} stroke={theme.palette.primary[600]} />, color: theme.palette.primary[50] },
         { labelTop: "Closed", labelBottom: "Tickets", key: 'closed_tickets', value: 0, icon: <CircleCloseIcon size={'24'} stroke={theme.palette.primary[600]} />, color: theme.palette.primary[50] },
+        { labelTop: "Rejected", labelBottom: "Tickets", key: 'reject_tickets', value: 0, icon: <CircleCloseIcon size={'24'} stroke={theme.palette.primary[600]} />, color: theme.palette.primary[50] },
     ]);
 
     /**
@@ -230,11 +238,11 @@ export const TicketList = () => {
     }, [])
 
     /**
-        * useEffect
-        * @dependency : masterAssetType
-        * @type : HANDLE API RESULT
-        * @description : Handle the result of master Asset Type List API
-        */
+    * useEffect
+    * @dependency : masterAssetType
+    * @type : HANDLE API RESULT
+    * @description : Handle the result of master Asset Type List API
+    */
     useEffect(() => {
         if (masterAssetType && masterAssetType !== null) {
             dispatch(resetMasterAssetTypeResponse())
@@ -315,6 +323,7 @@ export const TicketList = () => {
         }
     }, [ticketsList])
 
+    // Initial Render
     useEffect(() => {
         if (branch?.currentBranch?.client_uuid && branch?.currentBranch?.client_uuid !== null) {
             dispatch(actionMasterAssetType({
@@ -390,7 +399,7 @@ export const TicketList = () => {
                         </Stack>
                         <Stack>
                             <TypographyComponent color={theme.palette.grey.primary} fontSize={24} fontWeight={500}>
-                                Ticket List
+                                Tickets List
                             </TypographyComponent>
                         </Stack>
                     </Stack>
@@ -415,34 +424,41 @@ export const TicketList = () => {
 
                 </Stack>
                 <Box
+                    display="grid"
+                    gap={2}
+                    gridTemplateColumns={{
+                        xs: "repeat(2, 1fr)",  // mobile: 1 per row
+                        sm: "repeat(3, 1fr)",  // small tablets: 2 per row
+                        md: "repeat(4, 1fr)",  // tablets: 4 per row
+                        lg: "repeat(7, 1fr)",  // desktops: 7 per row
+                    }}
                     sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        borderRadius: "8px",
-                        columnGap: 2
+                        my: 2,
+                        alignItems: "stretch", // ensures equal height
                     }}
                 >
-                    {getArrTicketCounts?.map((item, index) => (
+                    {getArrTicketCounts.map((item, index) => (
                         <Card
                             key={index}
                             sx={{
-                                flex: 1,
                                 display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
                                 flexDirection: "column",
-                                gap: 0.5,
+                                justifyContent: "center",
+                                alignItems: "center",
                                 p: 2,
-                                my: 2,
-                                borderRadius: '8px',
-                                overflow: "hidden",
+                                borderRadius: "8px",
                                 bgcolor: "#fff",
-
+                                height: "100%", // equal height cards
+                                boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
                             }}
                         >
-                            <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                                <Stack sx={{ flexDirection: 'row', columnGap: 1, alignItems: 'center' }}>
+                            <Stack
+                                direction="row"
+                                justifyContent="space-between"
+                                alignItems="center"
+                                width="100%"
+                            >
+                                <Stack direction="row" spacing={1} alignItems="center">
                                     <Box
                                         sx={{
                                             width: 48,
@@ -459,20 +475,17 @@ export const TicketList = () => {
                                         {item.icon}
                                     </Box>
                                     <Stack>
-                                        {/* Label Top */}
                                         <Typography
                                             fontSize={14}
                                             fontWeight={400}
-                                            sx={{ color: theme.palette.grey[650], fontSize: "0.85rem", lineHeight: '20px' }}
+                                            sx={{ color: theme.palette.grey[650], lineHeight: "20px" }}
                                         >
                                             {item.labelTop}
                                         </Typography>
-
-                                        {/* Label Bottom */}
                                         <Typography
                                             fontSize={14}
                                             fontWeight={400}
-                                            sx={{ color: theme.palette.grey[650], fontSize: "0.85rem", lineHeight: '20px' }}
+                                            sx={{ color: theme.palette.grey[650], lineHeight: "20px" }}
                                         >
                                             {item.labelBottom}
                                         </Typography>
@@ -481,17 +494,15 @@ export const TicketList = () => {
 
                                 <Typography
                                     fontSize={24}
-                                    fontWeight={600}
+                                    fontWeight={700}
                                     sx={{
                                         color: theme.palette.primary[600],
-                                        fontWeight: 700,
                                         mt: 0.3,
                                     }}
                                 >
                                     {item.value.toString().padStart(2, "0")}
                                 </Typography>
                             </Stack>
-
                         </Card>
                     ))}
                 </Box>

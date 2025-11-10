@@ -122,7 +122,6 @@ export default function AddUpdateTicket({ open, handleClose, entryDetails, type,
             newFiles.splice(index, 1);
             setArrUploadedFiles(newFiles);
         } else {
-            // console.log('----file-----', file)
             let objData = {
                 id: file?.id,
                 title: `Delete File`,
@@ -448,7 +447,7 @@ export default function AddUpdateTicket({ open, handleClose, entryDetails, type,
                                                             sx={{
                                                                 whiteSpace: 'normal',        // allow wrapping
                                                                 wordBreak: 'break-word',     // break long words if needed
-                                                                maxWidth: 300,               // control dropdown width
+                                                                // maxWidth: 300,               // control dropdown width
                                                                 display: '-webkit-box',
                                                                 WebkitLineClamp: 2,          // limit to 2 lines
                                                                 WebkitBoxOrient: 'vertical',

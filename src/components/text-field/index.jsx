@@ -58,22 +58,22 @@ const TextFieldStyled = styled(TextField)(({ theme }) => ({
         borderColor: theme.palette.primary[600],
       },
       '&.MuiInputBase-colorSecondary': {
-        borderColor: theme.palette.secondary.main,
+        borderColor: theme.palette.secondary[600],
       },
       '&.MuiInputBase-colorInfo': {
-        borderColor: theme.palette.info.main,
+        borderColor: theme.palette.info[600],
       },
       '&.MuiInputBase-colorSuccess': {
-        borderColor: theme.palette.success.main,
+        borderColor: theme.palette.success[600],
       },
       '&.MuiInputBase-colorWarning': {
-        borderColor: theme.palette.warning.main,
+        borderColor: theme.palette.warning[600],
       },
       '&.MuiInputBase-colorError': {
-        borderColor: theme.palette.error.main,
+        borderColor: theme.palette.error[600],
       },
       '&.Mui-error': {
-        borderColor: theme.palette.error.main,
+        borderColor: theme.palette.error[600],
       },
     },
 

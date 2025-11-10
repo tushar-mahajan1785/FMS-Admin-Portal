@@ -399,6 +399,8 @@ export default function AddTicket({ open, handleClose }) {
                 reset()
                 setLoading(false)
                 showSnackbar({ message: addTicket?.message, severity: "success" })
+
+                window.localStorage.setItem('ticket_update', true)
             } else {
                 setLoading(false)
                 switch (addTicket?.status) {
@@ -602,7 +604,6 @@ export default function AddTicket({ open, handleClose }) {
                                                                     }
                                                                 }
                                                             }}
-
                                                             error={Boolean(errors.asset_name)}
                                                             {...(errors.asset_name && { helperText: errors.asset_name.message })}
                                                         >
@@ -772,7 +773,6 @@ export default function AddTicket({ open, handleClose }) {
                                                                     }
                                                                 }
                                                             }}
-
                                                             error={Boolean(errors.supervisor)}
                                                             {...(errors.supervisor && { helperText: errors.supervisor.message })}
                                                         >
@@ -787,12 +787,12 @@ export default function AddTicket({ open, handleClose }) {
                                                                         sx={{
                                                                             whiteSpace: 'normal',        // allow wrapping
                                                                             wordBreak: 'break-word',     // break long words if needed
-                                                                            maxWidth: 300,               // control dropdown width
+                                                                            // maxWidth: 300,               // control dropdown width
                                                                             display: '-webkit-box',
                                                                             WebkitLineClamp: 2,          // limit to 2 lines
                                                                             WebkitBoxOrient: 'vertical',
                                                                             overflow: 'hidden',
-                                                                            textOverflow: 'ellipsis'
+                                                                            textOverflow: 'ellipsis',
                                                                         }}
                                                                     >
                                                                         {option?.name}

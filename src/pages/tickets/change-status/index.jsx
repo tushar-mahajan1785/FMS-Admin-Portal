@@ -5,9 +5,8 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import IconButton from '@mui/material/IconButton';
-import CloseIcon from '@mui/icons-material/Close';
 import { useTheme } from "@emotion/react";
-import { Box, Grid, List, ListItem, ListItemText, MenuItem, Stack, useMediaQuery } from "@mui/material";
+import { Grid, List, ListItem, ListItemText, MenuItem, Stack, useMediaQuery } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
 import { CircularProgress } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
@@ -168,7 +167,6 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
                     title: 'Closing',
                     placeholder: 'closing'
                 }
-
             default:
                 return ''
         }
@@ -291,8 +289,6 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
         }
     }, [assetCustodianList])
 
-    // console.log('-------ticketDetailsData----', ticketDetailsData)
-
     /**
      * useEffect
      * @dependency : changeTicketStatus
@@ -332,6 +328,7 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
         }
     }, [changeTicketStatus])
 
+    //handle on SUbmit
     const onSubmit = async data => {
         if (selectedStatus && selectedStatus !== null) {
             setStatusError(null)
@@ -442,7 +439,6 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
 
                     </Grid>
                 </Stack>
-
                 <SectionHeader title="Select Status to Change" show_progress={0} sx={{ marginTop: 2.5 }} />
                 <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}` }}>
                     <Stack sx={{ flexDirection: 'row', columnGap: 2, paddingY: statusError && statusError !== null ? '10px' : '24px', paddingX: statusError && statusError !== null ? '10px' : '20px', border: statusError && statusError !== null ? `1px solid ${theme.palette.error[600]}` : 'none', borderRadius: statusError && statusError !== null ? '5px' : '', m: statusError && statusError !== null ? '10px' : '' }}>
@@ -470,7 +466,6 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
                             :
                             <></>
                     }
-
                     <Stack sx={{ paddingY: '24px', paddingX: '20px' }}>
                         <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
                             <Grid container spacing={'24px'}>
@@ -540,7 +535,7 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
                                                             sx={{
                                                                 whiteSpace: 'normal',        // allow wrapping
                                                                 wordBreak: 'break-word',     // break long words if needed
-                                                                maxWidth: 300,               // control dropdown width
+                                                                // maxWidth: 300,               // control dropdown width
                                                                 display: '-webkit-box',
                                                                 WebkitLineClamp: 2,          // limit to 2 lines
                                                                 WebkitBoxOrient: 'vertical',
@@ -645,7 +640,6 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
                 <Button
                     variant="contained"
                     sx={{ textTransform: 'capitalize', background: theme.palette.primary[600], color: theme.palette.common.white, px: 5 }}
-                    // disabled={loading ? false : true}
                     onClick={() => {
                         handleSubmit(onSubmit)()
                     }}

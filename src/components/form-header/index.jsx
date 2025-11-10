@@ -3,6 +3,8 @@ import { Box, Stack, Divider, useTheme } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import TwoColorIconCircle from "../../components/two-layer-icon";
 import TypographyComponent from "../custom-typography";
+import React from "react";
+import CustomChip from "../custom-chip";
 
 export default function FormHeader({
   excelIcon,
@@ -14,9 +16,39 @@ export default function FormHeader({
   size = 40,
   message,
   centerSection,
-  rightSection
+  rightSection,
+  currentStatus
 }) {
   const theme = useTheme();
+
+  const getCurrentStatus = (status) => {
+    let color = 'primary'
+    switch (status) {
+      case 'Open':
+        color = 'primary'//'#6941C6'
+        break
+      case 'Re Open':
+        color = 'info'//'#039BE5'
+        break
+      case 'Closed':
+        color = 'success'//'#039855'
+        break
+      case 'On Hold':
+        color = 'warning'//#FEC84B'
+        break
+      case 'Rejected':
+        color = 'error'//'#D32F2F'
+        break
+      case 'Overdue':
+        color = 'warning'//'#F79009'
+        break
+      default:
+        color = 'primary'
+    }
+    return (
+      <React.Fragment><CustomChip text={status} colorName={color} /></React.Fragment>
+    )
+  }
 
   return (
     <Box
@@ -33,9 +65,15 @@ export default function FormHeader({
         <TwoColorIconCircle IconComponent={icon} color={color} size={size} />
 
         <Box>
-          <TypographyComponent fontSize={18} fontWeight={600} color={theme.palette.grey[900]}>
-            {title}
-          </TypographyComponent>
+          <Stack sx={{ flexDirection: 'row', columnGap: 1 }}>
+            <TypographyComponent fontSize={18} fontWeight={600} color={theme.palette.grey[900]} sx={{ gap: 1 }}>
+              {title}
+            </TypographyComponent>
+            {currentStatus && currentStatus !== null ?
+              getCurrentStatus(currentStatus)
+              : ''}
+          </Stack>
+
 
           {subtitle && (
             <TypographyComponent fontSize={14} fontWeight={400} color={theme.palette.grey[900]}>
@@ -68,7 +106,7 @@ export default function FormHeader({
       {centerSection && centerSection !== null ? centerSection : <></>}
       {/* Right side actions */}
       <Stack direction="row" alignItems="center" spacing={2}>
-         {rightSection && rightSection !== null ?
+        {rightSection && rightSection !== null ?
           rightSection
           :
           <></>

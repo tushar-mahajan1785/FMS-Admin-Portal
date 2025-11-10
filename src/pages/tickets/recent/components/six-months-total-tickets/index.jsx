@@ -5,10 +5,11 @@ import { Box, Stack, Divider, useTheme } from "@mui/material";
 import TypographyComponent from "../../../../../components/custom-typography";
 import { useDispatch, useSelector } from "react-redux";
 import { actionGetLastSixMonthsTickets, resetGetLastSixMonthsTicketsResponse } from "../../../../../store/tickets";
-import { ERROR, SERVER_ERROR, UNAUTHORIZED } from "../../../../../constants";
+import { ERROR, IMAGES_SCREEN_NO_DATA, SERVER_ERROR, UNAUTHORIZED } from "../../../../../constants";
 import { useAuth } from "../../../../../hooks/useAuth";
 import { useSnackbar } from "../../../../../hooks/useSnackbar";
 import { useBranch } from "../../../../../hooks/useBranch";
+import EmptyContent from "../../../../../components/empty_content";
 
 export const SixMonthsTotalTicketChart = () => {
     const theme = useTheme();
@@ -17,18 +18,13 @@ export const SixMonthsTotalTicketChart = () => {
     const branch = useBranch()
     const { showSnackbar } = useSnackbar()
 
+    let is_update = window.localStorage.getItem('ticket_update')
+
     //Stores
     const { getLastSixMonthsTickets } = useSelector(state => state.ticketsStore)
 
     //States
-    const [sixMonthsTotalTicketData, setSixMonthsTotalTicketData] = useState([
-        { month: "January", tickets: 1090 },
-        { month: "February", tickets: 1735 },
-        { month: "March", tickets: 2287 },
-        { month: "April", tickets: 827 },
-        { month: "May", tickets: 1142 },
-        { month: "June", tickets: 1142 }
-    ]);
+    const [sixMonthsTotalTicketData, setSixMonthsTotalTicketData] = useState([]);
 
     const options = {
         chart: {
@@ -127,7 +123,7 @@ export const SixMonthsTotalTicketChart = () => {
             }))
         }
 
-    }, [branch?.currentBranch?.uuid])
+    }, [branch?.currentBranch?.uuid, is_update])
 
     /**
    * useEffect
@@ -141,7 +137,7 @@ export const SixMonthsTotalTicketChart = () => {
             if (getLastSixMonthsTickets?.result === true) {
                 setSixMonthsTotalTicketData(getLastSixMonthsTickets?.response)
             } else {
-                // setSixMonthsTotalTicketData([])
+                setSixMonthsTotalTicketData([])
                 switch (getLastSixMonthsTickets?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -173,27 +169,35 @@ export const SixMonthsTotalTicketChart = () => {
                 direction="row"
                 justifyContent="space-between"
                 alignItems="center"
-                mb={1}
+                pt={1}
+                mb={2}
             >
                 <TypographyComponent
                     fontSize={16}
                     fontWeight={600}
                     sx={{ color: theme.palette.common.black }}
                 >
-                    6 Months Total Tickets
+                    Last 6 Months Total Tickets
                 </TypographyComponent>
             </Stack>
             <Divider sx={{ mb: 2 }} />
             {
-                series && series !== null && series.length > 0 ?
-                    <Chart
-                        options={options}
-                        series={series}
-                        type="bar"
-                        height={280}
-                    />
+                sixMonthsTotalTicketData && sixMonthsTotalTicketData !== null && sixMonthsTotalTicketData.length > 0 ?
+                    <>
+                        {
+                            series && series !== null && series.length > 0 ?
+                                <Chart
+                                    options={options}
+                                    series={series}
+                                    type="bar"
+                                    height={280}
+                                />
+                                :
+                                <EmptyContent imageSize={250} mt={0} imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Tickets Found'} subTitle={''} />
+                        }
+                    </>
                     :
-                    <></>
+                    <EmptyContent imageSize={250} mt={0} imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Tickets Found'} subTitle={''} />
             }
         </Box>
     );

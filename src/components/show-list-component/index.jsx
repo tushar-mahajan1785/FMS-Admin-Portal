@@ -23,11 +23,12 @@ export const ShowHistoryComponent = ({
     const theme = useTheme();
     const { hasPermission } = useAuth()
 
+    //get Status Color
     const getStatusColor = (statusType) => {
         switch (statusType) {
             case 'Closing Statement':
                 return theme.palette.success[100];
-            case 'Reopen Statement':
+            case 'Re Open Statement':
             case 'Open Statement':
                 return theme.palette.success[100];
             case 'Rejected Statement':
@@ -104,7 +105,7 @@ export const ShowHistoryComponent = ({
                                                     </TypographyComponent>
                                                 </Stack>
                                                 {
-                                                    (index === historyArray.length - 1) && (entryIndex === statusGroup.entries.length - 1) && hasPermission(permission) && can_show_action ?
+                                                    entry?.is_editable == 1 && hasPermission(permission) && can_show_action ?
                                                         <Stack>
                                                             <Box
                                                                 onClick={(event) => event.stopPropagation()}

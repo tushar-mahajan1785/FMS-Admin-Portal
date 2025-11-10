@@ -243,7 +243,7 @@ export const API_GET_TICKETS_BY_STATUS = `${BASE}/ticket/status-wise-ticket-summ
 
 export const API_LAST_SIX_MONTH_TICKETS = `${BASE}/ticket/last-six-months-ticket-summary`
 
-export const API_GET_TICKETS_BY_ASSET_TYPES = `${BASE}/tickets/get-tickets-by-asset-types`
+export const API_GET_TICKETS_BY_ASSET_TYPES = `${BASE}/ticket/asset-type-wise-ticket-summary`
 
 export const API_GET_ASSET_DETAILS_BY_NAME = `${BASE}/asset/details`
 
