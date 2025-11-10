@@ -259,10 +259,10 @@ export default function ManageShiftDetails({ open, objData, page, handleClose })
                     />
                     <Divider sx={{ m: 2 }} />
                     <Box display="flex" justifyContent="space-between" alignItems="center" m={2} >
-                        <Stack sx={{ flexDirection: 'row', columnGap: 2 }}>
+                        <Stack sx={{ flexDirection: 'row', columnGap: 2, px: 2 }}>
                             <TypographyComponent fontSize={16} fontWeight={600} sx={{ color: theme.palette.grey[700] }}>Shift Schedule</TypographyComponent>
                         </Stack>
-                        <Stack sx={{ flexDirection: 'row', columnGap: 2 }}>
+                        <Stack sx={{ flexDirection: 'row', columnGap: 2, px: 2 }}>
 
                             <Box display="flex" alignItems="center" sx={{ paddingY: '10px', paddingX: '16px', border: `1px solid ${theme.palette.grey[300]}`, borderRadius: '8px' }}>
                                 <Tooltip title="Previous Week">
@@ -420,7 +420,14 @@ export default function ManageShiftDetails({ open, objData, page, handleClose })
                                 }
                             }}
                         >
-                            <Box display="flex" justifyContent="space-between" alignItems="center" mx={2} >
+                            <Box
+                                display="flex"
+                                justifyContent="space-between"
+                                mx={2}
+                                flexDirection={{ xs: 'column', md: 'row' }}
+                                alignItems={{ xs: 'flex-start', md: 'center' }}
+                                rowGap={{ xs: 2, sm: 2 }}
+                            >
                                 <Stack sx={{ flexDirection: 'row' }} columnGap={1}>
                                     <Button
                                         sx={{
@@ -455,7 +462,7 @@ export default function ManageShiftDetails({ open, objData, page, handleClose })
                                         </Stack>
                                     </Button>
                                 </Stack>
-                                <Stack>
+                                <Stack sx={{ minWidth: { xs: "100%", sm: "100%", md: "260px" } }}>
                                     <SearchInput
                                         id="search-manage-shift"
                                         placeholder="Search"
@@ -534,7 +541,7 @@ export default function ManageShiftDetails({ open, objData, page, handleClose })
                                                     minWidth: isMDDown ? "1600px" : "",
                                                 }}
                                             >
-                                                <Grid container alignItems="center" sx={{ p: 2, minWidth: isMDDown ? "1600px" : "" }}>
+                                                <Grid container alignItems="center" sx={{ p: 2 }}>
                                                     <Grid
                                                         size={{ xs: 2, sm: 2, md: 2, lg: 2, xl: 2 }}
                                                         display="flex"

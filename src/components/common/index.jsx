@@ -70,7 +70,7 @@ export const SearchInput = styled(TextField)`
 
   // Responsive behavior for smaller screens
    @media (max-width: 800px) {
-    width: 300px;
+    width: 'auto';
   }
   @media (max-width: 600px) {
     width: 100%;

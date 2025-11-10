@@ -44,6 +44,7 @@ import SearchIcon from "../../../assets/icons/SearchIcon";
 import _ from "lodash";
 import UploadIcon from "../../../assets/icons/UploadIcon";
 import AddNewMemberGroup from "./components/add-new-members";
+import * as XLSX from "xlsx-js-style";
 
 export default function CreateShiftDrawer({ open, objData, handleClose }) {
     const theme = useTheme()
@@ -53,6 +54,7 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
     const { showSnackbar } = useSnackbar()
     // media query
     const isMDDown = useMediaQuery(theme.breakpoints.down('md'))
+    const isMDUp = useMediaQuery(theme.breakpoints.up('md'))
 
     // store
     const { rosterData, addEmployeeShiftSchedule, employeeShiftScheduleMasterList, rosterGroupMasterList } = useSelector(state => state.rosterStore)
@@ -336,6 +338,16 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
         return displayColorMap[shortName] || displayColorMap.default;
     };
 
+    // ✅ Helper to normalize hex (e.g. "#fff" → "FFFFFF")
+    const normalizeHex = (color) => {
+        if (!color) return "000000";
+        let hex = color.replace("#", "").toUpperCase();
+        if (hex.length === 3) {
+            hex = hex.split("").map(ch => ch + ch).join("");
+        }
+        return hex;
+    };
+
     return (
         <React.Fragment>
             <Drawer
@@ -365,17 +377,31 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                     <Divider sx={{ m: 2 }} />
 
                     {/* Toolbar */}
-                    <Box display="flex" justifyContent="space-between" alignItems="center" m={2} >
-                        <Stack sx={{ flexDirection: 'row', columnGap: 2 }}>
+                    <Box
+                        display="flex"
+                        justifyContent="space-between"
+                        flexDirection={{ xs: 'column', md: 'row' }}
+                        alignItems={{ xs: 'flex-start', md: 'center' }}
+                        m={2}
+                        rowGap={{ xs: 2, sm: 2 }}
+                    >
+                        <Stack sx={{ flexDirection: 'row', columnGap: 2, px: 2 }}>
                             <TypographyComponent fontSize={16} fontWeight={600} sx={{ color: theme.palette.grey[700] }}>Shift Schedule</TypographyComponent>
                             <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>Define working days and weekly off</TypographyComponent>
                         </Stack>
-                        <Stack sx={{ flexDirection: 'row', columnGap: 2 }}>
+                        <Stack
+
+                            sx={{
+                                flexDirection: { xs: 'column', sm: 'row', md: 'row' },
+                                columnGap: 1,
+                                rowGap: { xs: 2, sm: 2 },
+                                px: 2
+                            }}
+                        >
                             {
                                 activePage === 'Preview' &&
                                 (
                                     <Button
-                                        startIcon={<UserIcon stroke={theme.palette.grey[700]} size={18} />}
                                         variant="outlined"
                                         size="small"
                                         color={theme.palette.grey[700]}
@@ -384,7 +410,13 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                                             setOpenAddNewMemberGroupPopup(true)
                                         }}
                                     >
-                                        Add new member to this group
+                                        <UserIcon stroke={theme.palette.grey[700]} size={18} />
+                                        {
+                                            isMDUp &&
+                                            <TypographyComponent fontSize={14} fontWeight={600} sx={{ color: theme.palette.grey[700], ml: 1 }}>
+                                                Add new member to this group
+                                            </TypographyComponent>
+                                        }
                                     </Button>
                                 )}
                             <Box display="flex" alignItems="center" sx={{ paddingY: '10px', paddingX: '16px', border: `1px solid ${theme.palette.grey[300]}`, borderRadius: '8px' }}>
@@ -484,6 +516,114 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                                             size="small"
                                             color={theme.palette.grey[700]}
                                             sx={{ paddingY: '10px', paddingX: '16px', border: `1px solid ${theme.palette.grey[300]}`, borderRadius: '8px' }}
+                                            onClick={() => {
+                                                if (!employeeShiftScheduleMasterOption?.length) {
+                                                    console.error("No data available to export");
+                                                    return;
+                                                }
+
+                                                const schedule = employeeShiftScheduleMasterOption;
+
+                                                // ✅ Extract all date keys
+                                                const dateKeys = Object.keys(schedule[0].shift_selection);
+                                                const dateHeaders = dateKeys.map(date => moment(date).format("DD MMM")); // e.g. ['02 NOV','03 NOV']
+
+                                                // ✅ Header row
+                                                const header = ["Employee Name", "Role Type", ...dateHeaders];
+
+                                                // ✅ Build rows
+                                                const rows = schedule.map(emp => [
+                                                    emp.employee_name.trim(),
+                                                    emp.role_type,
+                                                    ...dateKeys.map(date => emp.shift_selection[date] || "")
+                                                ]);
+
+                                                // ✅ Combine header + rows
+                                                const data = [header, ...rows];
+
+                                                // ✅ Create sheet
+                                                const ws = XLSX.utils.aoa_to_sheet(data);
+
+                                                // ✅ Header style
+                                                const headerStyle = {
+                                                    font: { bold: true, color: { rgb: normalizeHex(theme.palette.grey[900]) }, sz: 12 },
+                                                    fill: { patternType: "solid", fgColor: { rgb: normalizeHex(theme.palette.grey[100]) } },
+                                                    alignment: { horizontal: "center", vertical: "center" },
+                                                    border: {
+                                                        top: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                        bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                        left: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                        right: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                    },
+                                                };
+
+                                                // ✅ Employee/Role column style
+                                                const empColStyle = {
+                                                    font: { color: { rgb: normalizeHex(theme.palette.grey[900]) }, sz: 11 },
+                                                    fill: { patternType: "solid", fgColor: { rgb: normalizeHex(theme.palette.grey[100]) } },
+                                                    alignment: { horizontal: "left", vertical: "center" },
+                                                    border: {
+                                                        top: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                        bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                        left: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                        right: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                    },
+                                                };
+
+                                                // ✅ Apply header styles
+                                                header.forEach((_, cIndex) => {
+                                                    const cellAddress = XLSX.utils.encode_cell({ r: 0, c: cIndex });
+                                                    if (ws[cellAddress]) ws[cellAddress].s = headerStyle;
+                                                });
+
+                                                // ✅ Apply data cell styles
+                                                rows.forEach((row, rIndex) => {
+                                                    row.forEach((cellValue, cIndex) => {
+                                                        const cellAddress = XLSX.utils.encode_cell({ r: rIndex + 1, c: cIndex });
+                                                        if (!ws[cellAddress]) return;
+
+                                                        if (cIndex < 2) {
+                                                            // Employee name + role type columns
+                                                            ws[cellAddress].s = empColStyle;
+                                                        } else {
+                                                            // Shift color cells
+                                                            const shift = cellValue;
+                                                            const colorSet = displayColorMap[shift] || displayColorMap.default;
+                                                            ws[cellAddress].s = {
+                                                                font: { bold: false, color: { rgb: normalizeHex(colorSet.text) } },
+                                                                fill: { patternType: "solid", fgColor: { rgb: normalizeHex(colorSet.dark) } },
+                                                                alignment: { horizontal: "center", vertical: "center" },
+                                                                border: {
+                                                                    top: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                                    bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                                    left: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                                    right: { style: "thin", color: { rgb: "CCCCCC" } },
+                                                                },
+                                                            };
+                                                        }
+                                                    });
+                                                });
+
+                                                // ✅ Auto column widths
+                                                ws["!cols"] = header.map((_, i) => ({
+                                                    wch: Math.max(
+                                                        header[i].length,
+                                                        ...rows.map(r => (r[i] ? r[i].toString().length : 0))
+                                                    ) + 2,
+                                                }));
+
+                                                // ✅ Detect month & year for filename
+                                                const firstDate = moment(dateKeys[0]);
+                                                const monthYear = firstDate.format("MMMM YYYY"); // e.g., November 2025
+
+                                                // ✅ Create workbook & add sheet
+                                                const wb = XLSX.utils.book_new();
+                                                XLSX.utils.book_append_sheet(wb, ws, "Shift Roster");
+
+                                                // ✅ Export file with dynamic name
+                                                const fileName = `Shift Roster ${monthYear}.xlsx`;
+                                                XLSX.writeFile(wb, fileName);
+                                            }}
                                         >
                                             <UploadIcon stroke={theme.palette.grey[700]} size={18} />
                                         </Button>
@@ -506,7 +646,14 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                         }}
                     >
                         {/* Group selection */}
-                        <Box display="flex" justifyContent="space-between" alignItems="center" mx={2} >
+                        <Box
+                            display="flex"
+                            justifyContent="space-between"
+                            mx={2}
+                            flexDirection={{ xs: 'column', md: 'row' }}
+                            alignItems={{ xs: 'flex-start', md: 'center' }}
+                            rowGap={{ xs: 2, sm: 2 }}
+                        >
                             <Stack sx={{ flexDirection: 'row' }} columnGap={1}>
                                 {groupMasterOption && groupMasterOption !== null && groupMasterOption?.length > 0 &&
                                     groupMasterOption.map((g, index) => (
@@ -552,7 +699,7 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                                         </Button>
                                     ))}
                             </Stack>
-                            <Stack>
+                            <Stack sx={{ minWidth: { xs: "100%", sm: "100%", md: "260px" } }}>
                                 <SearchInput
                                     id="search-manage-shift"
                                     placeholder="Search"
@@ -634,7 +781,7 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                                                 minWidth: isMDDown ? "1600px" : "",
                                             }}
                                         >
-                                            <Grid container alignItems="center" sx={{ p: 2, minWidth: isMDDown ? "1600px" : "" }}>
+                                            <Grid container alignItems="center" sx={{ p: 2 }}>
                                                 {/* ---- Employee Name ---- */}
                                                 <Grid
                                                     size={{ xs: 2, sm: 2, md: 2, lg: 2, xl: 2 }}

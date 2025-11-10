@@ -258,11 +258,18 @@ export default function ManageGroupsList() {
                 }
             }}>
                 <Stack
-                    flexDirection={{ xs: 'column', sm: 'row' }}
-                    alignItems={{ xs: 'flex-start', sm: 'center' }}
+                    flexDirection={{ xs: 'column', md: 'row' }}
+                    alignItems={{ xs: 'flex-start', md: 'center' }}
                     justifyContent="space-between"
-                    m={2}>
-                    <Stack sx={{ flexDirection: 'row', columnGap: 1, alignItems: 'center', height: '100%', justifyContent: 'center' }}>
+                    m={2}
+                    rowGap={{ xs: 2, sm: 2 }}
+                >
+                    <Stack
+                        flexDirection="row"
+                        alignItems="center"
+                        columnGap={1}
+                        sx={{ width: { xs: '100%', md: 'auto' } }}
+                    >
                         <Stack>
                             <TypographyComponent fontSize={18} fontWeight={500}>Group List</TypographyComponent>
                         </Stack>
@@ -272,8 +279,14 @@ export default function ManageGroupsList() {
                             sx={{ bgcolor: theme.palette.primary[50], color: theme.palette.primary[600], fontWeight: 500 }}
                         />
                     </Stack>
-                    <Stack sx={{ flexDirection: 'row', columnGap: 1, alignItems: 'center' }}>
-                        <Stack sx={{ width: '100%' }}>
+                    <Stack
+                        flexDirection={{ xs: 'column', md: 'row' }}
+                        alignItems={{ xs: 'stretch', md: 'center' }}
+                        columnGap={{ md: 1 }}
+                        rowGap={{ xs: 1.5, sm: 1.5 }}
+                        width={{ xs: '100%', md: '50%' }}
+                    >
+                        <Stack sx={{ width: { xs: '100%', md: '50%' } }}>
                             <SearchInput
                                 id="search-assets"
                                 placeholder="Search"
@@ -290,80 +303,84 @@ export default function ManageGroupsList() {
                                 }}
                             />
                         </Stack>
-                        <CustomTextField
-                            select
-                            fullWidth
-                            sx={{ marginBottom: 1 }}
-                            value={assetType}
-                            label={<FormLabel label='All Asset Types' required={false} />}
-                            onChange={(event) => {
-                                setAssetType(event.target.value)
-                            }}
-                            SelectProps={{
-                                displayEmpty: true,
-                                IconComponent: ChevronDownIcon,
-                                MenuProps: {
-                                    PaperProps: {
-                                        style: {
-                                            maxHeight: 220, // Set your desired max height
-                                            scrollbarWidth: 'thin'
+                        <Stack sx={{ width: { xs: '100%', md: '50%' } }}>
+                            <CustomTextField
+                                select
+                                fullWidth
+                                sx={{ marginBottom: 1 }}
+                                value={assetType}
+                                label={<FormLabel label='All Asset Types' required={false} />}
+                                onChange={(event) => {
+                                    setAssetType(event.target.value)
+                                }}
+                                SelectProps={{
+                                    displayEmpty: true,
+                                    IconComponent: ChevronDownIcon,
+                                    MenuProps: {
+                                        PaperProps: {
+                                            style: {
+                                                maxHeight: 220, // Set your desired max height
+                                                scrollbarWidth: 'thin'
+                                            }
                                         }
                                     }
-                                }
-                            }}
-                        >
-                            <MenuItem value=''>
-                                <em>All Asset Types</em>
-                            </MenuItem>
-                            {assetTypeMasterOption &&
-                                assetTypeMasterOption.map(option => (
-                                    <MenuItem
-                                        key={option?.id}
-                                        value={option?.id}
-                                        sx={{
-                                            whiteSpace: 'normal',        // allow wrapping
-                                            wordBreak: 'break-word',     // break long words if needed
-                                            maxWidth: 500,               // control dropdown width
-                                            display: '-webkit-box',
-                                            WebkitLineClamp: 2,          // limit to 2 lines
-                                            WebkitBoxOrient: 'vertical',
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis'
-                                        }}
-                                    >
-                                        {option?.name}
-                                    </MenuItem>
-                                ))}
-                        </CustomTextField>
+                                }}
+                            >
+                                <MenuItem value=''>
+                                    <em>All Asset Types</em>
+                                </MenuItem>
+                                {assetTypeMasterOption &&
+                                    assetTypeMasterOption.map(option => (
+                                        <MenuItem
+                                            key={option?.id}
+                                            value={option?.id}
+                                            sx={{
+                                                whiteSpace: 'normal',        // allow wrapping
+                                                wordBreak: 'break-word',     // break long words if needed
+                                                maxWidth: 500,               // control dropdown width
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 2,          // limit to 2 lines
+                                                WebkitBoxOrient: 'vertical',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis'
+                                            }}
+                                        >
+                                            {option?.name}
+                                        </MenuItem>
+                                    ))}
+                            </CustomTextField>
+                        </Stack>
                         {
                             manageGroupsOptions && manageGroupsOptions.length > 0 && (
-                                <Button
-                                    variant="outlined"
-                                    color={theme.palette.common.white} // text color
-                                    sx={{
-                                        border: `1px solid ${theme.palette.grey[300]}`,
-                                        px: 4,
-                                    }}
-                                    startIcon={<DownloadIcon />}
-                                    onClick={() => {
-                                        // 🔹 Prepare simplified data for export
-                                        const exportData = manageGroupsOptions.map(group => ({
-                                            "Group Name": group.group_name,
-                                            "No of Manager": group.manager_count,
-                                            "No of Technicians": group.technician_count,
-                                        }));
+                                <Stack sx={{ width: { xs: '100%', md: 'auto' } }}>
+                                    <Button
+                                        variant="outlined"
+                                        color={theme.palette.common.white} // text color
+                                        sx={{
+                                            border: `1px solid ${theme.palette.grey[300]}`,
+                                            px: 4,
+                                        }}
+                                        startIcon={<DownloadIcon />}
+                                        onClick={() => {
+                                            // 🔹 Prepare simplified data for export
+                                            const exportData = manageGroupsOptions.map(group => ({
+                                                "Group Name": group.group_name,
+                                                "No of Manager": group.manager_count,
+                                                "No of Technicians": group.technician_count,
+                                            }));
 
-                                        // 🔹 Create worksheet and workbook
-                                        const worksheet = XLSX.utils.json_to_sheet(exportData);
-                                        const workbook = XLSX.utils.book_new();
-                                        XLSX.utils.book_append_sheet(workbook, worksheet, "Manage Groups");
+                                            // 🔹 Create worksheet and workbook
+                                            const worksheet = XLSX.utils.json_to_sheet(exportData);
+                                            const workbook = XLSX.utils.book_new();
+                                            XLSX.utils.book_append_sheet(workbook, worksheet, "Manage Groups");
 
-                                        // 🔹 Trigger download
-                                        XLSX.writeFile(workbook, "Manage Groups.xlsx");
-                                    }}
-                                >
-                                    Export
-                                </Button>
+                                            // 🔹 Trigger download
+                                            XLSX.writeFile(workbook, "Manage Groups.xlsx");
+                                        }}
+                                    >
+                                        Export
+                                    </Button>
+                                </Stack>
                             )
                         }
                     </Stack>
