@@ -264,3 +264,6 @@ export const API_TICKET_ADD_UPDATE = `${BASE}/ticket/add-or-update-history`
 export const API_DELETE_TICKET_UPDATE = `${BASE}/ticket/remove-history`
 
 export const API_DELETE_TICKET_UPDATE_FILE = `${BASE}/ticket/remove-history-media`
+
+// documents
+export const API_DOCUMENTS_LIST = `${BASE}/documents/list`

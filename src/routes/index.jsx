@@ -16,6 +16,7 @@ import ManageGroups from "../pages/manage-groups";
 import { Tickets } from "../pages/tickets";
 import { TicketList } from "../pages/tickets/all";
 import ManageShift from "../pages/manage-shift";
+import Documents from "../pages/documents";
 
 const routes = [
     {
@@ -116,6 +117,12 @@ const routes = [
         path: "/manage-shift/*",
         element: <ManageShift />,
         permission: 'MANAGE_SHIFT',
+        protected: true,
+    },
+    {
+        path: "/documents/*",
+        element: <Documents />,
+        permission: 'DOCUMENT',
         protected: true,
     },
 ];

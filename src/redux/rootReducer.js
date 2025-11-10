@@ -13,6 +13,7 @@ import CommonStore from '../store/common';
 import branchThemeStore from '../store/branch-theme';
 import rosterStore from '../store/roster';
 import ticketsStore from '../store/tickets';
+import documentStore from '../store/documents';
 
 const rootReducer = {
     loginStore,
@@ -29,7 +30,8 @@ const rootReducer = {
     CommonStore,
     branchThemeStore,
     rosterStore,
-    ticketsStore
+    ticketsStore,
+    documentStore
 };
 
 export default rootReducer;

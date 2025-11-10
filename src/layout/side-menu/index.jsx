@@ -5,6 +5,7 @@ import AssetIcon from "../../assets/icons/AssetIcon";
 import VendorIcon from "../../assets/icons/VendorIcon";
 import CalendarIcon from "../../assets/icons/CalendarIcon";
 import CircleIcon from "../../assets/icons/CircleIcon"
+import ReportsIcon from "../../assets/icons/ReportsIcon"
 
 export const sideMenuItems = [
     { title: "Dashboard", path: "/", icon: DashboardIcon, permission: 'DASHBOARD' },
@@ -22,4 +23,5 @@ export const sideMenuItems = [
             { title: "Manage Shift", path: "/manage-shift", icon: CircleIcon, permission: 'MANAGE_SHIFT' },
         ],
     },
+     { title: "Documents", path: "/documents", icon: ReportsIcon, permission: 'DOCUMENT' },
 ];
