@@ -564,7 +564,7 @@ export default function AddTicket({ open, handleClose }) {
                                                                         sx={{
                                                                             whiteSpace: 'normal',        // allow wrapping
                                                                             wordBreak: 'break-word',     // break long words if needed
-                                                                            // maxWidth: 300,               // control dropdown width
+                                                                            maxWidth: 400,               // control dropdown width
                                                                             display: '-webkit-box',
                                                                             WebkitLineClamp: 2,          // limit to 2 lines
                                                                             WebkitBoxOrient: 'vertical',
@@ -619,7 +619,7 @@ export default function AddTicket({ open, handleClose }) {
                                                                         sx={{
                                                                             whiteSpace: 'normal',        // allow wrapping
                                                                             wordBreak: 'break-word',     // break long words if needed
-                                                                            // maxWidth: 300,               // control dropdown width
+                                                                            maxWidth: 400,              // control dropdown width
                                                                             display: '-webkit-box',
                                                                             WebkitLineClamp: 2,          // limit to 2 lines
                                                                             WebkitBoxOrient: 'vertical',
@@ -788,7 +788,7 @@ export default function AddTicket({ open, handleClose }) {
                                                                         sx={{
                                                                             whiteSpace: 'normal',        // allow wrapping
                                                                             wordBreak: 'break-word',     // break long words if needed
-                                                                            // maxWidth: 300,               // control dropdown width
+                                                                            maxWidth: 400,               // control dropdown width
                                                                             display: '-webkit-box',
                                                                             WebkitLineClamp: 2,          // limit to 2 lines
                                                                             WebkitBoxOrient: 'vertical',
@@ -844,7 +844,7 @@ export default function AddTicket({ open, handleClose }) {
                                                                         sx={{
                                                                             whiteSpace: 'normal',        // allow wrapping
                                                                             wordBreak: 'break-word',     // break long words if needed
-                                                                            maxWidth: 250,               // control dropdown width
+                                                                            maxWidth: 400,               // control dropdown width
                                                                             display: '-webkit-box',
                                                                             WebkitLineClamp: 2,          // limit to 2 lines
                                                                             WebkitBoxOrient: 'vertical',
