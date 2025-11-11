@@ -17,6 +17,7 @@ import { Tickets } from "../pages/tickets";
 import { TicketList } from "../pages/tickets/all";
 import ManageShift from "../pages/manage-shift";
 import Documents from "../pages/documents";
+import Inventory from "../pages/inventory";
 
 const routes = [
     {
@@ -107,12 +108,6 @@ const routes = [
         permission: 'TICKET',
         protected: true,
     },
-    // {
-    //     path: "/list",
-    //     element: <TicketList />,
-    //     permission: 'TICKET',
-    //     protected: true,
-    // },
     {
         path: "/manage-shift/*",
         element: <ManageShift />,
@@ -123,6 +118,12 @@ const routes = [
         path: "/documents/*",
         element: <Documents />,
         permission: 'DOCUMENT',
+        protected: true,
+    },
+    {
+        path: "/inventory/*",
+        element: <Inventory />,
+        permission: 'INVENTORY',
         protected: true,
     },
 ];
