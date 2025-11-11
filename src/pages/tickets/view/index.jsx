@@ -272,7 +272,7 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
                         {
                             ticketDetailsData && ticketDetailsData !== null ?
                                 <Stack sx={{ cursor: 'pointer' }} onClick={() => {
-                                    navigate(`/ tickets / download / ${detail?.uuid}`)
+                                    navigate(`/tickets/download/${detail?.uuid}`)
                                     let previous = {
                                         from: location?.pathname,
                                         uuid: detail?.uuid

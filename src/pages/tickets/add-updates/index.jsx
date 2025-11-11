@@ -29,6 +29,7 @@ import { compressFile, getFormData } from '../../../utils';
 import CircleCheckIcon from '../../../assets/icons/CircleCheck';
 import AlertPopup from '../../../components/alert-confirm';
 import AlertCircleIcon from '../../../assets/icons/AlertCircleIcon';
+import _ from 'lodash';
 
 export default function AddUpdateTicket({ open, handleClose, entryDetails, type, ticketDetails }) {
     const dispatch = useDispatch()
@@ -547,7 +548,7 @@ export default function AddUpdateTicket({ open, handleClose, entryDetails, type,
                                         <ListItemText
                                             primary={
                                                 <TypographyComponent fontSize={14} fontWeight={500} sx={{ textDecoration: 'underline' }}>
-                                                    {file?.is_new == 1 ? file?.file?.name : file?.file_name}
+                                                    {file?.is_new == 1 ? _.truncate(file?.file?.name, { length: 25 }) : _.truncate(file?.file_name, { length: 25 })}
                                                 </TypographyComponent>
                                             }
                                         />

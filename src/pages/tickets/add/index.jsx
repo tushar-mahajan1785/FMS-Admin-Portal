@@ -42,6 +42,7 @@ import { compressFile, getFormData, getObjectByUuid } from "../../../utils";
 import moment from "moment";
 import EditVendor from "../../vendors/edit";
 import { actionMasterCountryCodeList, actionVendorDetails, resetVendorDetailsResponse } from "../../../store/vendor";
+import _ from "lodash";
 
 export default function AddTicket({ open, handleClose }) {
     const theme = useTheme()
@@ -1073,7 +1074,7 @@ export default function AddTicket({ open, handleClose }) {
                                                             <ListItemText
                                                                 primary={
                                                                     <TypographyComponent fontSize={14} fontWeight={500} sx={{ textDecoration: 'underline' }}>
-                                                                        {file?.name}
+                                                                        {file?.name && file?.name !== null ? _.truncate(file?.name, { length: 25 }) : ''}
                                                                     </TypographyComponent>
                                                                 }
                                                             />

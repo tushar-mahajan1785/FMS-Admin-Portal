@@ -27,6 +27,7 @@ import { ERROR, SERVER_ERROR, UNAUTHORIZED } from '../../../constants';
 import { actionAssetCustodianList, resetAssetCustodianListResponse } from '../../../store/asset';
 import { useBranch } from '../../../hooks/useBranch';
 import { compressFile, getFormData } from '../../../utils';
+import _ from 'lodash';
 
 export default function ChangeTicketStatus({ open, handleClose, details }) {
     const dispatch = useDispatch()
@@ -620,7 +621,7 @@ export default function ChangeTicketStatus({ open, handleClose, details }) {
                                         <ListItemText
                                             primary={
                                                 <TypographyComponent fontSize={14} fontWeight={500} sx={{ textDecoration: 'underline' }}>
-                                                    {file?.name}
+                                                    {file?.name && file?.name !== null ? _.truncate(file?.name, { length: 25 }) : ''}
                                                 </TypographyComponent>
                                             }
                                         />
