@@ -268,6 +268,12 @@ export const API_DELETE_TICKET_UPDATE_FILE = `${BASE}/ticket/remove-history-medi
 // documents
 export const API_DOCUMENTS_LIST = `${BASE}/documents/list`
 
+export const API_ADD_DOCUMENTS_GROUP = `${BASE}/documents/add`
+
+export const API_DELETE_DOCUMENTS_GROUP = `${BASE}/documents/delete`
+
+export const API_DOCUMENTS_GROUP_DETAILS = `${BASE}/documents/details`
+
 // inventory
 export const API_INVENTORY_LIST = `${BASE}/inventory/list`
 

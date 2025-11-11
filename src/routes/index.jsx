@@ -18,6 +18,7 @@ import { TicketList } from "../pages/tickets/all";
 import ManageShift from "../pages/manage-shift";
 import Documents from "../pages/documents";
 import Inventory from "../pages/inventory";
+import ViewDocument from "../pages/documents/view";
 
 const routes = [
     {
@@ -124,6 +125,12 @@ const routes = [
         path: "/inventory/*",
         element: <Inventory />,
         permission: 'INVENTORY',
+        protected: true,
+    },
+    {
+        path: "/view",
+        element: <ViewDocument />,
+        permission: 'DOCUMENT_VIEW',
         protected: true,
     },
 ];
