@@ -1,5 +1,5 @@
 import { Route, Routes } from "react-router-dom";
-import { InventoryList } from "./list";
+import InventoryList from "./list";
 
 export default function Inventory() {
     return (

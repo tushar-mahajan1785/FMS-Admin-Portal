@@ -11,7 +11,7 @@ import FileAlertIcon from "../../assets/icons/FileAlertIcon";
 export const sideMenuItems = [
     { title: "Dashboard", path: "/", icon: DashboardIcon, permission: 'DASHBOARD' },
     { title: "Tickets", path: "/tickets", icon: ClientsIcon, permission: 'TICKET' },
-    { title: "Inventory", path: "/inventory", icon: FileAlertIcon, permission: 'INVENTORY' },
+    { title: "Inventory Management", path: "/inventory", icon: FileAlertIcon, permission: 'INVENTORY' },
     { title: "Employee", path: "/employees", icon: ClientsIcon, permission: 'EMPLOYEE' },
     { title: "Vendor", path: "/vendors", icon: VendorIcon, permission: 'VENDOR' },
     { title: "Asset", path: "/assets", icon: AssetIcon, permission: 'ASSET' },
