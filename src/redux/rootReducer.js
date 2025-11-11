@@ -14,6 +14,7 @@ import branchThemeStore from '../store/branch-theme';
 import rosterStore from '../store/roster';
 import ticketsStore from '../store/tickets';
 import documentStore from '../store/documents';
+import inventoryStore from '../store/inventory';
 
 const rootReducer = {
     loginStore,
@@ -31,7 +32,8 @@ const rootReducer = {
     branchThemeStore,
     rosterStore,
     ticketsStore,
-    documentStore
+    documentStore,
+    inventoryStore
 };
 
 export default rootReducer;

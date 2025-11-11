@@ -144,3 +144,16 @@ export const getMasterTicketStatus = [{
     id: 'Rejected',
     name: 'Rejected'
 }]
+
+export const getInventoryStockStatus = [{
+    id: 'Low Stock',
+    name: 'Low Stock'
+},
+{
+    id: 'Out Of Stock',
+    name: 'Out Of Stock'
+},
+{
+    id: 'Good Stock',
+    name: 'Good Stock'
+}]
