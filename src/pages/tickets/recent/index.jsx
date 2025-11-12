@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
 import MyBreadcrumbs from '../../../components/breadcrumb';
-import { Box, Button, Card, Chip, Grid, IconButton, Stack, Tooltip, Typography, useTheme } from '@mui/material';
+import { Box, Button, Card, Chip, Grid, IconButton, Stack, Tooltip, useTheme } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import TicketIcon from '../../../assets/icons/TicketIcon';
 import OpenTicketIcon from '../../../assets/icons/OpenTicketIcon';
@@ -353,24 +353,24 @@ export const RecentTicket = () => {
                     {item.icon}
                   </Box>
                   <Stack>
-                    <Typography
+                    <TypographyComponent
                       fontSize={14}
                       fontWeight={400}
                       sx={{ color: theme.palette.grey[650], lineHeight: "20px" }}
                     >
                       {item.labelTop}
-                    </Typography>
-                    <Typography
+                    </TypographyComponent>
+                    <TypographyComponent
                       fontSize={14}
                       fontWeight={400}
                       sx={{ color: theme.palette.grey[650], lineHeight: "20px" }}
                     >
                       {item.labelBottom}
-                    </Typography>
+                    </TypographyComponent>
                   </Stack>
                 </Stack>
 
-                <Typography
+                <TypographyComponent
                   fontSize={24}
                   fontWeight={700}
                   sx={{
@@ -379,7 +379,7 @@ export const RecentTicket = () => {
                   }}
                 >
                   {item.value.toString().padStart(2, "0")}
-                </Typography>
+                </TypographyComponent>
               </Stack>
             </Card>
           ))}

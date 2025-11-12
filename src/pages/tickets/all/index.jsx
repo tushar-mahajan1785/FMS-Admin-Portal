@@ -358,7 +358,7 @@ export const TicketList = () => {
     }
 
     /**
-     * Filter the Client list
+     * Filter the ticket list
      */
     useEffect(() => {
         if (searchQuery && searchQuery.trim().length > 0) {
