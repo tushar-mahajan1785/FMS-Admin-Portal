@@ -140,7 +140,6 @@ export default function InventoryList() {
         updated_on: '2024-04-13 21:09:12'
     }
     ]);
-    console.log('openAddInventoryPopup==============', openAddInventoryPopup);
     //Default Inventory Counts Array
     const [getArrInventoryCounts, setGetArrInventoryCounts] = useState([
         { labelTop: "Total", labelBottom: "Items", key: 'total_items', value: 0, icon: <BoxIcon size={'24'} stroke={theme.palette.primary[600]} />, color: theme.palette.primary[50] },
@@ -298,7 +297,7 @@ export default function InventoryList() {
                 setArrRecentlyAddedItems(inventoryList?.response?.recently_added_items)
                 setLoadingList(false)
             } else {
-                // setLoadingList(false)
+                setLoadingList(false)
                 // setInventoryListData([])
                 // setOriginalInventoryListData([])
                 // setArrRecentlyAddedItems([])
@@ -698,6 +697,7 @@ export default function InventoryList() {
             </Grid>
             <AddInventory
                 open={openAddInventoryPopup}
+                type={'add'}
                 handleClose={(data) => {
                     setOpenAddInventoryPopup(false)
                     if (data == 'save') {

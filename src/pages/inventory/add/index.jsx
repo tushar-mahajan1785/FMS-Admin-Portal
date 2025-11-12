@@ -9,17 +9,13 @@ import {
     IconButton,
     Grid,
     useTheme,
-    MenuItem, Box, List,
-    ListItem, ListItemText,
-    Avatar,
-    InputAdornment
+    MenuItem, Box, InputAdornment
 } from "@mui/material";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import CustomTextField from '../../../components/text-field';
 import FormLabel from '../../../components/form-label';
 import {
     ERROR,
-    getPriorityArray,
     isEmail,
     isMobile,
     SERVER_ERROR,
@@ -30,30 +26,23 @@ import FormHeader from "../../../components/form-header";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import { useAuth } from "../../../hooks/useAuth";
 import CloseIcon from "../../../assets/icons/CloseIcon";
-import TicketIcon from "../../../assets/icons/TicketIcon";
 import TypographyComponent from "../../../components/custom-typography";
 import SectionHeader from "../../../components/section-header";
 import ChevronDownIcon from "../../../assets/icons/ChevronDown";
-import FieldBox from "../../../components/field-box";
-import { AntSwitch } from "../../../components/common";
-import DeleteIcon from "../../../assets/icons/DeleteIcon";
-import FileIcon from "../../../assets/icons/FileIcon";
-import { actionAssetCustodianList, actionGetAssetDetailsByName, actionGetMasterAssetName, actionMasterAssetType, resetAssetCustodianListResponse, resetGetAssetDetailsByNameResponse, resetGetMasterAssetNameResponse, resetMasterAssetTypeResponse } from "../../../store/asset";
+import { actionAssetCustodianList, resetAssetCustodianListResponse } from "../../../store/asset";
 import { useBranch } from "../../../hooks/useBranch";
-import { actionAddTicket, resetAddTicketResponse } from "../../../store/tickets";
-import { compressFile, getFormData, getObjectByUuid } from "../../../utils";
-import moment from "moment";
+import { compressFile, getFormData } from "../../../utils";
 // import EditVendor from "../../vendors/edit";
-import { actionMasterCountryCodeList, actionVendorDetails, resetVendorDetailsResponse } from "../../../store/vendor";
-import _ from "lodash";
+import { actionMasterCountryCodeList } from "../../../store/vendor";
 import BoxPlusIcon from "../../../assets/icons/BoxPlusIcon";
 import MailIcon from "../../../assets/icons/MailIcon";
 import CountryCodeSelect from "../../../components/country-code-component";
+import { actionAddInventory, resetAddInventoryResponse, resetInventoryCategoryListResponse } from "../../../store/inventory";
 
-export default function AddInventory({ open, handleClose }) {
+export default function AddInventory({ open, handleClose, type }) {
     const theme = useTheme()
     const dispatch = useDispatch()
-    const { logout, hasPermission } = useAuth()
+    const { logout } = useAuth()
     const { showSnackbar } = useSnackbar()
     const branch = useBranch()
     const inputRef = useRef();
@@ -67,16 +56,14 @@ export default function AddInventory({ open, handleClose }) {
     };
 
     //Stores
-    const { masterAssetType, getMasterAssetName, getAssetDetailsByName, assetCustodianList } = useSelector(state => state.AssetStore)
-    const { addTicket } = useSelector(state => state.ticketsStore)
-    const { vendorDetails } = useSelector(state => state.vendorStore)
+    const { assetCustodianList } = useSelector(state => state.AssetStore)
+    const { addInventory, inventoryCategoryList } = useSelector(state => state.inventoryStore)
 
     const {
         control,
         handleSubmit,
         reset,
         watch,
-        setValue,
         formState: { errors }
     } = useForm({
         defaultValues: {
@@ -84,7 +71,8 @@ export default function AddInventory({ open, handleClose }) {
             category: '',
             description: '',
             initial_quantity: '',
-            maximum_quantity: '',
+            minimum_quantity: '',
+            critical_quantity: '',
             unit: '',
             storage_location: '',
             asset_name: '',
@@ -97,25 +85,60 @@ export default function AddInventory({ open, handleClose }) {
     });
 
     //Watchers
-    const watchAssetType = watch('type')
-    const watchAssetName = watch('asset_name')
+    const watchItemName = watch('item_name')
+    const watchCategory = watch('category')
+    const watchInitialQuantity = watch('initial_quantity')
+    const watchMinimumQuantity = watch('minimum_quantity')
+    const watchCriticalQuantity = watch('critical_quantity')
+    const watchUnit = watch('unit')
 
     //States
     const [loading, setLoading] = useState(false)
-    const [masterAssetTypeOptions, setMasterAssetTypeOptions] = useState([])
-    const [masterAssetNameOptions, setMasterAssetNameOptions] = useState([])
     const [supervisorMasterOptions, setSupervisorMasterOptions] = useState([])
-    const [assetDetailData, setAssetDetailData] = useState(null)
+    // const [assetDetailData, setAssetDetailData] = useState(null)
     const [vendorEscalationDetailsData, setVendorEscalationDetailsData] = useState([])
-    const [arrUploadedFiles, setArrUploadedFiles] = useState([])
-    const [openViewEditVendorPopup, setOpenViewEditVendorPopup] = useState(false)
-    const [vendorDetailData, setVendorDetailData] = useState(null)
+    const [arrUploadedFiles, setArrUploadedFiles] = useState(null)
+    // const [openViewEditVendorPopup, setOpenViewEditVendorPopup] = useState(false)
+    // const [vendorDetailData, setVendorDetailData] = useState(null)
+
+    const [masterCategoryOptions, setMasterCategoryOptions] = useState([])
+    const [masterUnitOptions, setMasterUnitOptions] = useState([])
+
+    console.log('-------inventoryCategoryList----', masterCategoryOptions)
 
     //Initial Render
     useEffect(() => {
         if (open === true) {
-            // dispatch(actionMasterCountryCodeList())
-
+            setMasterCategoryOptions([
+                {
+                    "id": 1,
+                    "name": "Chemicals",
+                    "description": "Chemicals details",
+                    "status": "Active"
+                },
+                {
+                    "id": 2,
+                    "name": "Electrical ",
+                    "description": "Electrical items",
+                    "status": "Active"
+                }])
+            setMasterUnitOptions([
+                {
+                    "id": 1,
+                    "name": "Kilograms",
+                    "status": "Active"
+                },
+                {
+                    "id": 2,
+                    "name": "Grams",
+                    "status": "Active"
+                },
+                {
+                    "id": 3,
+                    "name": "Liters",
+                    "status": "Active"
+                }])
+            dispatch(actionMasterCountryCodeList())
             dispatch(actionAssetCustodianList({
                 client_id: branch?.currentBranch?.client_id,
                 branch_uuid: branch?.currentBranch?.uuid
@@ -124,55 +147,15 @@ export default function AddInventory({ open, handleClose }) {
 
         return () => {
             reset()
-            setMasterAssetTypeOptions([])
-            setMasterAssetNameOptions([])
+            setMasterCategoryOptions([])
+            setMasterUnitOptions([])
             setSupervisorMasterOptions([])
-            setAssetDetailData(null)
+            // setAssetDetailData(null)
             setVendorEscalationDetailsData([])
             setArrUploadedFiles([])
         }
 
     }, [open])
-
-    /**
-     * actionGetMasterAssetName on selection of Asset Type
-     */
-    useEffect(() => {
-        if (watchAssetType && watchAssetType !== null) {
-            dispatch(actionGetMasterAssetName({
-                branch_uuid: branch?.currentBranch?.uuid,
-                asset_type: watchAssetType
-            }))
-        } else {
-            setValue('asset_name', '')
-            setMasterAssetNameOptions([])
-            setVendorEscalationDetailsData([])
-            setAssetDetailData(null)
-        }
-    }, [watchAssetType])
-
-
-    /**
-     * actionGetAssetDetailsByName on selection of Asset Name
-     */
-    useEffect(() => {
-        if (watchAssetName && watchAssetName !== null) {
-            dispatch(actionGetAssetDetailsByName({
-                uuid: watchAssetName
-            }))
-        } else {
-            setMasterAssetNameOptions([])
-            setAssetDetailData(null)
-            setVendorEscalationDetailsData([])
-        }
-    }, [watchAssetName])
-
-    //handle delete function
-    const handleDelete = (index) => {
-        const newFiles = [...arrUploadedFiles];
-        newFiles.splice(index, 1);
-        setArrUploadedFiles(newFiles);
-    };
 
     /**
      * Check if the selected files extension is valid or not
@@ -187,7 +170,7 @@ export default function AddInventory({ open, handleClose }) {
     //handle file change function
     const handleFileChange = (event) => {
         const selectedFiles = Array.from(event.target.files);
-        let filesToAdd = [];
+        // let filesToAdd = [];
         for (let file of selectedFiles) {
             if (!isValidExtension(file.name)) {
                 showSnackbar({ message: `File "${file.name}" has an invalid file type.`, severity: "error" });
@@ -198,11 +181,12 @@ export default function AddInventory({ open, handleClose }) {
                 continue;
             }
             // Add is_new anf file name key here
-            filesToAdd.push({ file, is_new: 1, name: file?.name });
+            // filesToAdd.push({ file, is_new: 1, name: file?.name });
+            setArrUploadedFiles({ file, is_new: 1, name: file?.name })
         }
-        if (filesToAdd.length > 0) {
-            setArrUploadedFiles((prev) => [...prev, ...filesToAdd]);
-        }
+        // if (filesToAdd.length > 0) {
+        // setArrUploadedFiles((prev) => [...prev, ...filesToAdd]);
+        // }
         event.target.value = null;
     };
 
@@ -236,104 +220,33 @@ export default function AddInventory({ open, handleClose }) {
 
     /**
        * useEffect
-       * @dependency : masterAssetType
+       * @dependency : inventoryCategoryList
        * @type : HANDLE API RESULT
-       * @description : Handle the result of master Asset Type List API
+       * @description : Handle the result of inventory category List API
        */
     useEffect(() => {
-        if (masterAssetType && masterAssetType !== null) {
-            dispatch(resetMasterAssetTypeResponse())
-            if (masterAssetType?.result === true) {
-                setMasterAssetTypeOptions(masterAssetType?.response)
+        if (inventoryCategoryList && inventoryCategoryList !== null) {
+            dispatch(resetInventoryCategoryListResponse())
+            if (inventoryCategoryList?.result === true) {
+                setMasterCategoryOptions(inventoryCategoryList?.response)
             } else {
-                setMasterAssetTypeOptions([])
-                switch (masterAssetType?.status) {
+                // setMasterCategoryOptions([])
+                switch (inventoryCategoryList?.status) {
                     case UNAUTHORIZED:
                         logout()
                         break
                     case ERROR:
-                        dispatch(resetMasterAssetTypeResponse())
+                        dispatch(resetInventoryCategoryListResponse())
                         break
                     case SERVER_ERROR:
-                        showSnackbar({ message: masterAssetType?.message, severity: "error" })
+                        showSnackbar({ message: inventoryCategoryList?.message, severity: "error" })
                         break
                     default:
                         break
                 }
             }
         }
-    }, [masterAssetType])
-
-    /**
-       * useEffect
-       * @dependency : getMasterAssetName
-       * @type : HANDLE API RESULT
-       * @description : Handle the result of master Asset Name API
-       */
-    useEffect(() => {
-        if (getMasterAssetName && getMasterAssetName !== null) {
-            dispatch(resetGetMasterAssetNameResponse())
-            if (getMasterAssetName?.result === true) {
-                setMasterAssetNameOptions(getMasterAssetName?.response)
-            } else {
-                setMasterAssetNameOptions([])
-                switch (getMasterAssetName?.status) {
-                    case UNAUTHORIZED:
-                        logout()
-                        break
-                    case ERROR:
-                        dispatch(resetGetMasterAssetNameResponse())
-                        break
-                    case SERVER_ERROR:
-                        showSnackbar({ message: getMasterAssetName?.message, severity: "error" })
-                        break
-                    default:
-                        break
-                }
-            }
-        }
-    }, [getMasterAssetName])
-
-    /**
-       * useEffect
-       * @dependency : getAssetDetailsByName
-       * @type : HANDLE API RESULT
-       * @description : Handle the result of master Asset Name API
-       */
-    useEffect(() => {
-        if (getAssetDetailsByName && getAssetDetailsByName !== null) {
-            dispatch(resetGetAssetDetailsByNameResponse())
-            if (getAssetDetailsByName?.result === true) {
-                setAssetDetailData(getAssetDetailsByName?.response)
-                setValue('location', getAssetDetailsByName?.response?.location)
-                setValue('supervisor', getAssetDetailsByName?.response?.asset_custodian_id)
-                if (getAssetDetailsByName?.response?.vendor_escalation && getAssetDetailsByName?.response?.vendor_escalation !== null && getAssetDetailsByName?.response?.vendor_escalation.length > 0) {
-                    setVendorEscalationDetailsData(getAssetDetailsByName?.response?.vendor_escalation)
-                } else {
-                    setVendorEscalationDetailsData([])
-                }
-                if (Object.hasOwn(getAssetDetailsByName?.response, 'vendor_escalation') === false || getAssetDetailsByName?.response?.vendor_escalation.length === 0) {
-                    dispatch(actionVendorDetails({ uuid: getAssetDetailsByName?.response?.vendor_uuid }))
-                }
-            } else {
-                setAssetDetailData(null)
-                setVendorEscalationDetailsData([])
-                switch (getAssetDetailsByName?.status) {
-                    case UNAUTHORIZED:
-                        logout()
-                        break
-                    case ERROR:
-                        dispatch(resetGetAssetDetailsByNameResponse())
-                        break
-                    case SERVER_ERROR:
-                        showSnackbar({ message: getAssetDetailsByName?.message, severity: "error" })
-                        break
-                    default:
-                        break
-                }
-            }
-        }
-    }, [getAssetDetailsByName])
+    }, [inventoryCategoryList])
 
     /**
       * useEffect
@@ -367,70 +280,37 @@ export default function AddInventory({ open, handleClose }) {
 
     /**
      * useEffect
-     * @dependency : vendorDetails
+     * @dependency : addInventory
      * @type : HANDLE API RESULT
-     * @description : Handle the result of vendor Details API
+     * @description : Handle the result of add inventory API
      */
     useEffect(() => {
-        if (vendorDetails && vendorDetails !== null) {
-            dispatch(resetVendorDetailsResponse())
-            if (vendorDetails?.result === true) {
-
-                setVendorDetailData(vendorDetails?.response)
-            } else {
-                setVendorDetailData(null)
-                switch (vendorDetails?.status) {
-                    case UNAUTHORIZED:
-                        logout()
-                        break
-                    case ERROR:
-                        dispatch(resetVendorDetailsResponse())
-                        break
-                    case SERVER_ERROR:
-                        showSnackbar({ message: vendorDetails?.message, severity: "error" })
-                        break
-                    default:
-                        break
-                }
-            }
-        }
-    }, [vendorDetails])
-
-    /**
-     * useEffect
-     * @dependency : addTicket
-     * @type : HANDLE API RESULT
-     * @description : Handle the result of add ticket API
-     */
-    useEffect(() => {
-        if (addTicket && addTicket !== null) {
-            dispatch(resetAddTicketResponse())
-            if (addTicket?.result === true) {
+        if (addInventory && addInventory !== null) {
+            dispatch(resetAddInventoryResponse())
+            if (addInventory?.result === true) {
                 handleClose('save')
                 reset()
                 setLoading(false)
-                showSnackbar({ message: addTicket?.message, severity: "success" })
-
-                window.localStorage.setItem('ticket_update', true)
+                showSnackbar({ message: addInventory?.message, severity: "success" })
             } else {
                 setLoading(false)
-                switch (addTicket?.status) {
+                switch (addInventory?.status) {
                     case UNAUTHORIZED:
                         logout()
                         break
                     case ERROR:
-                        dispatch(resetAddTicketResponse())
-                        showSnackbar({ message: addTicket?.message, severity: "error" })
+                        dispatch(resetAddInventoryResponse())
+                        showSnackbar({ message: addInventory?.message, severity: "error" })
                         break
                     case SERVER_ERROR:
-                        showSnackbar({ message: addTicket?.message, severity: "error" })
+                        showSnackbar({ message: addInventory?.message, severity: "error" })
                         break
                     default:
                         break
                 }
             }
         }
-    }, [addTicket])
+    }, [addInventory])
 
     /**
      * handle Submit function
@@ -452,24 +332,24 @@ export default function AddInventory({ open, handleClose }) {
                 assigned_vendors: selectedVendors
             }
             const files = [];
-            let hasNewFiles = arrUploadedFiles.filter(obj => obj?.is_new === 1)
-            if (hasNewFiles && hasNewFiles.length > 0 && arrUploadedFiles && arrUploadedFiles.length > 0) {
-                for (const objFile of arrUploadedFiles) {
-                    if (objFile?.is_new === 1) {
 
-                        //Compress the files with type image
-                        const compressedFile = await compressFile(objFile.file);
+            if (arrUploadedFiles && arrUploadedFiles !== null) {
+                // for (const objFile of arrUploadedFiles) {
+                if (arrUploadedFiles?.is_new === 1) {
 
-                        files.push({
-                            title: `ticket_upload`,
-                            data: compressedFile
-                        });
-                    }
+                    //Compress the files with type image
+                    const compressedFile = await compressFile(arrUploadedFiles.file);
+
+                    files.push({
+                        title: `file_upload`,
+                        data: compressedFile
+                    });
                 }
+                // }
             }
             setLoading(true)
             const formData = getFormData(objData, files);
-            dispatch(actionAddTicket(formData))
+            dispatch(actionAddInventory(formData))
         } else {
             showSnackbar({ message: 'Atleast one vendor selection is required', severity: "error" })
         }
@@ -579,8 +459,8 @@ export default function AddInventory({ open, handleClose }) {
                                                             <MenuItem value=''>
                                                                 <em>Select Category</em>
                                                             </MenuItem>
-                                                            {masterAssetTypeOptions && masterAssetTypeOptions !== null && masterAssetTypeOptions.length > 0 &&
-                                                                masterAssetTypeOptions.map(option => (
+                                                            {masterCategoryOptions && masterCategoryOptions !== null && masterCategoryOptions.length > 0 &&
+                                                                masterCategoryOptions.map(option => (
                                                                     <MenuItem
                                                                         key={option?.id}
                                                                         value={option?.name}
@@ -635,7 +515,7 @@ export default function AddInventory({ open, handleClose }) {
                                     <SectionHeader title="Stock Information" show_progress={0} sx={{ marginTop: 2.5 }} />
                                     <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}`, p: 3, marginTop: '-4px' }}>
                                         <Grid container spacing={'24px'}>
-                                            <Grid size={{ xs: 12, sm: 4, md: 4, lg: 4, xl: 4 }}>
+                                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 3, xl: 3 }}>
                                                 <Controller
                                                     name='initial_quantity'
                                                     control={control}
@@ -649,6 +529,7 @@ export default function AddInventory({ open, handleClose }) {
                                                     render={({ field }) => (
                                                         <CustomTextField
                                                             fullWidth
+                                                            disabled={type === 'edit' ? true : false}
                                                             placeholder={'Initial Quantity'}
                                                             value={field?.value}
                                                             label={<FormLabel label='Initial Quantity' required={true} />}
@@ -660,13 +541,10 @@ export default function AddInventory({ open, handleClose }) {
                                                     )}
                                                 />
                                             </Grid>
-                                            <Grid size={{ xs: 12, sm: 4, md: 4, lg: 4, xl: 4 }}>
+                                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 3, xl: 3 }}>
                                                 <Controller
                                                     name='unit'
                                                     control={control}
-                                                    rules={{
-                                                        required: 'Please select Unit'
-                                                    }}
                                                     render={({ field }) => (
                                                         <CustomTextField
                                                             select
@@ -693,8 +571,8 @@ export default function AddInventory({ open, handleClose }) {
                                                             <MenuItem value=''>
                                                                 <em>Select Unit</em>
                                                             </MenuItem>
-                                                            {masterAssetTypeOptions && masterAssetTypeOptions !== null && masterAssetTypeOptions.length > 0 &&
-                                                                masterAssetTypeOptions.map(option => (
+                                                            {masterUnitOptions && masterUnitOptions !== null && masterUnitOptions.length > 0 &&
+                                                                masterUnitOptions.map(option => (
                                                                     <MenuItem
                                                                         key={option?.id}
                                                                         value={option?.name}
@@ -716,9 +594,9 @@ export default function AddInventory({ open, handleClose }) {
                                                     )}
                                                 />
                                             </Grid>
-                                            <Grid size={{ xs: 12, sm: 4, md: 4, lg: 4, xl: 4 }}>
+                                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 3, xl: 3 }}>
                                                 <Controller
-                                                    name='maximum_quantity'
+                                                    name='minimum_quantity'
                                                     control={control}
                                                     rules={{
                                                         required: 'Maximum Quantity is required',
@@ -735,8 +613,33 @@ export default function AddInventory({ open, handleClose }) {
                                                             label={<FormLabel label='Maximum Quantity' required={true} />}
                                                             onChange={field.onChange}
                                                             inputProps={{ maxLength: 255 }}
-                                                            error={Boolean(errors.maximum_quantity)}
-                                                            {...(errors.maximum_quantity && { helperText: errors.maximum_quantity.message })}
+                                                            error={Boolean(errors.minimum_quantity)}
+                                                            {...(errors.minimum_quantity && { helperText: errors.minimum_quantity.message })}
+                                                        />
+                                                    )}
+                                                />
+                                            </Grid>
+                                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 3, xl: 3 }}>
+                                                <Controller
+                                                    name='critical_quantity'
+                                                    control={control}
+                                                    rules={{
+                                                        required: 'Critical Quantity is required',
+                                                        maxLength: {
+                                                            value: 255,
+                                                            message: 'Maximum length is 255 characters'
+                                                        },
+                                                    }}
+                                                    render={({ field }) => (
+                                                        <CustomTextField
+                                                            fullWidth
+                                                            placeholder={'Critical Quantity'}
+                                                            value={field?.value}
+                                                            label={<FormLabel label='Critical Quantity' required={true} />}
+                                                            onChange={field.onChange}
+                                                            inputProps={{ maxLength: 255 }}
+                                                            error={Boolean(errors.critical_quantity)}
+                                                            {...(errors.critical_quantity && { helperText: errors.critical_quantity.message })}
                                                         />
                                                     )}
                                                 />
@@ -842,6 +745,7 @@ export default function AddInventory({ open, handleClose }) {
                                                     render={({ field }) => (
                                                         <CustomTextField
                                                             fullWidth
+                                                            disabled
                                                             value={field.value ?? ''}
                                                             label={<FormLabel label="Phone" required={true} />}
                                                             onChange={field.onChange}
@@ -874,7 +778,7 @@ export default function AddInventory({ open, handleClose }) {
                                                     name='email'
                                                     control={control}
                                                     rules={{
-                                                        required: 'Email is required',
+                                                        // required: 'Email is required',
                                                         validate: {
                                                             isEmail: value => !value || isEmail(value) || 'Invalid email address'
                                                         },
@@ -886,8 +790,9 @@ export default function AddInventory({ open, handleClose }) {
                                                     render={({ field }) => (
                                                         <CustomTextField
                                                             fullWidth
+                                                            disabled
                                                             value={field?.value ?? ''}
-                                                            label={<FormLabel label='Email' required={true} />}
+                                                            label={<FormLabel label='Email' required={false} />}
                                                             onChange={field?.onChange}
                                                             inputProps={{ maxLength: 150 }}
                                                             InputProps={{
@@ -914,198 +819,76 @@ export default function AddInventory({ open, handleClose }) {
                             </Grid>
                             <Grid size={{ xs: 12, sm: 12, md: 12, lg: 4, xl: 4 }}>
                                 <Stack>
-                                    <SectionHeader title="Stock Summary" show_progress={0} />
-                                    <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}`, p: 2, marginTop: '-4px' }}>
-                                        {
-                                            vendorEscalationDetailsData && vendorEscalationDetailsData !== null && vendorEscalationDetailsData.length > 0 ?
-                                                <>
-                                                    <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                                        <TypographyComponent fontSize={16} fontWeight={500}>{assetDetailData?.vendor && assetDetailData?.vendor !== null ? assetDetailData?.vendor : ''}</TypographyComponent>
-                                                        <TypographyComponent fontSize={14} fontWeight={400}>{assetDetailData?.vendor_id && assetDetailData?.vendor_id !== null ? assetDetailData?.vendor_id : ''}</TypographyComponent>
-                                                    </Stack>
-                                                    <Stack sx={{
-                                                        marginTop: 2,
-                                                        height: 320,
-                                                        overflowY: "auto",
-                                                        scrollbarWidth: "thin",
-                                                        "&::-webkit-scrollbar": {
-                                                            width: "6px",
-                                                        },
-                                                        "&::-webkit-scrollbar-thumb": {
-                                                            backgroundColor: theme.palette.grey[400],
-                                                            borderRadius: "3px",
-                                                        },
-                                                    }}>
-                                                        {
-                                                            vendorEscalationDetailsData && vendorEscalationDetailsData !== null && vendorEscalationDetailsData.length > 0 ?
-                                                                vendorEscalationDetailsData.map((objDetail, index) => {
-                                                                    return (<Stack
-                                                                        disablePadding
-                                                                        sx={{
-                                                                            flexDirection: 'row',
-                                                                            justifyContent: 'space-between',
-                                                                            alignItems: 'center',
-                                                                            py: 1.5,
-                                                                            px: 1,
-                                                                            borderBottom: index + 1 < vendorEscalationDetailsData.length ? '1px solid #eee' : 'none',
-                                                                        }}
-                                                                    >
-                                                                        <Box>
-                                                                            <TypographyComponent fontSize={16} fontWeight={400} sx={{ color: theme.palette.grey[900] }}>{objDetail.name}</TypographyComponent>
-                                                                            <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>{objDetail.email}</TypographyComponent>
-                                                                        </Box>
-                                                                        <AntSwitch
-                                                                            checked={objDetail.is_selected === 1 ? true : false}
-                                                                            onChange={() => {
-                                                                                let escalationsArray = Object.assign([], vendorEscalationDetailsData)
-                                                                                let currentIndex = vendorEscalationDetailsData?.findIndex(obj => obj?.name === objDetail?.name)
-                                                                                let currentObj = Object.assign({}, vendorEscalationDetailsData[currentIndex])
-                                                                                currentObj.is_selected = objDetail.is_selected === 1 ? 0 : 1
-                                                                                escalationsArray[currentIndex] = currentObj
-                                                                                setVendorEscalationDetailsData(escalationsArray)
-                                                                            }}
-                                                                        />
-                                                                    </Stack>)
-                                                                })
-                                                                :
-                                                                <></>
-                                                        }</Stack>
-                                                </>
-                                                :
-                                                <>
-                                                    {
-                                                        assetDetailData && assetDetailData !== null && (Object.hasOwn(assetDetailData, 'vendor_escalation') === false || assetDetailData?.vendor_escalation.length === 0) ?
-                                                            <>
-                                                                <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                                                    <TypographyComponent fontSize={16} fontWeight={500}>{assetDetailData?.vendor && assetDetailData?.vendor !== null ? assetDetailData?.vendor : ''}</TypographyComponent>
-                                                                    <TypographyComponent fontSize={14} fontWeight={400}>{assetDetailData?.vendor_id && assetDetailData?.vendor_id !== null ? assetDetailData?.vendor_id : ''}</TypographyComponent>
-                                                                </Stack>
-                                                            </>
-                                                            :
-                                                            <></>
-                                                    }
-                                                    <Stack sx={{ px: 1, py: 5, justifyContent: 'center', width: '100%' }}>
-
-                                                        <Stack sx={{ alignItems: 'center' }}>
-                                                            <Avatar alt={""} src={'/assets/person-details.png'} sx={{ justifyContent: 'center', overFlow: 'hidden', borderRadius: 0, height: 232, width: 253 }} />
-                                                        </Stack>
-                                                        {
-                                                            assetDetailData === null ?
-                                                                <TypographyComponent fontSize={16} fontWeight={500} sx={{ mt: 3, textAlign: 'center' }}>Select Asset to get vendor details</TypographyComponent>
-                                                                :
-                                                                <></>
-                                                        }
-
-                                                        {
-                                                            assetDetailData && assetDetailData !== null && (Object.hasOwn(assetDetailData, 'vendor_escalation') === false || assetDetailData?.vendor_escalation.length === 0) ?
-                                                                <>
-                                                                    {
-                                                                        hasPermission('VENDOR_EDIT') ?
-                                                                            <TypographyComponent
-                                                                                fontSize={16}
-                                                                                fontWeight={400}
-                                                                                sx={{
-                                                                                    mt: 3,
-                                                                                    textAlign: 'center',
-                                                                                    // color: theme.palette.grey[600],
-                                                                                    wordWrap: 'break-word',
-                                                                                    display: 'inline', // ensures inline text flow
-                                                                                }}
-                                                                            >
-                                                                                The selected asset has no vendor details assigned. Click to{' '}
-                                                                                <TypographyComponent
-                                                                                    fontSize={16}
-                                                                                    fontWeight={500}
-                                                                                    sx={{
-                                                                                        color: theme.palette.primary[600],
-                                                                                        textDecoration: 'underline',
-                                                                                        cursor: 'pointer',
-                                                                                        display: 'inline', // keeps inline
-                                                                                    }}
-                                                                                    onClick={() => {
-                                                                                        setOpenViewEditVendorPopup(true)
-                                                                                        dispatch(actionMasterCountryCodeList())
-                                                                                    }}
-                                                                                >
-                                                                                    add
-                                                                                </TypographyComponent>{' '}
-                                                                                vendor details.
-                                                                            </TypographyComponent>
-                                                                            :
-                                                                            <><TypographyComponent
-                                                                                fontSize={16}
-                                                                                fontWeight={400}
-                                                                                sx={{
-                                                                                    mt: 3,
-                                                                                    textAlign: 'center',
-                                                                                    // color: theme.palette.grey[600],
-                                                                                    wordWrap: 'break-word',
-                                                                                    display: 'inline', // ensures inline text flow
-                                                                                }}
-                                                                            >
-                                                                                The selected asset has no vendor details assigned. Please contact your administrator to add the vendor details.
-                                                                            </TypographyComponent></>
-                                                                    }
-
-                                                                </>
-
-                                                                :
-                                                                <></>
-                                                        }
-
-                                                    </Stack>
-                                                </>
-                                        }
-                                    </Stack>
                                     <SectionHeader title="Upload Files" show_progress={0} sx={{ marginTop: 2 }} />
                                     <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}`, p: 2, marginTop: '-4px', pb: 0 }}>
                                         <Stack onClick={handleTriggerInput} onDrop={handleDrop}
                                             onDragOver={handleDragOver}
-                                            sx={{ cursor: 'pointer', border: `1px dashed ${theme.palette.primary[600]}`, borderRadius: '8px', background: theme.palette.primary[100], p: '16px', flexDirection: 'row', justifyContent: 'center' }}>
-                                            <input
-                                                hidden
-                                                accept=".jpg,.jpeg,.png,.xlsx,.csv,.pdf,.docx"
-                                                type="file"
-                                                multiple
-                                                ref={inputRef}
-                                                onChange={handleFileChange}
-                                            />
-                                            <TypographyComponent fontSize={14} fontWeight={400} sx={{ mr: 1 }}>Drag & Drop file(s) to upload or </TypographyComponent>
-                                            <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.primary[600], textDecoration: 'underline' }}>Browse</TypographyComponent>
+                                            sx={{ borderRadius: '8px', background: theme.palette.primary[100], p: 4 }}
+                                        >
+                                            <Stack sx={{ alignItems: 'center', height: '100%', mb: 1 }}>
+                                                <Box
+                                                    sx={{
+                                                        display: 'flex',
+                                                        justifyContent: 'center',
+                                                        alignItems: 'center',
+                                                        height: 200,
+                                                        width: 200,
+                                                        borderRadius: 0,
+                                                        overflow: 'hidden'
+                                                    }}
+                                                >
+                                                    <img
+                                                        src="/assets/box.png"
+                                                        alt=""
+                                                        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                                    />
+                                                </Box>
+                                            </Stack>
+                                            <Stack sx={{ cursor: 'pointer', py: '8px', flexDirection: 'row', justifyContent: 'center', background: theme.palette.common.white, width: 'auto', m: 2 }}>
+                                                <input
+                                                    hidden
+                                                    accept=".jpg,.jpeg,.png,.xlsx,.csv,.pdf,.docx"
+                                                    type="file"
+                                                    multiple
+                                                    ref={inputRef}
+                                                    onChange={handleFileChange}
+                                                />
+                                                <TypographyComponent fontSize={14} fontWeight={400} sx={{ mr: 1 }}>Drag & Drop file(s) to upload or </TypographyComponent>
+                                                <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.primary[600], textDecoration: 'underline' }}>Browse</TypographyComponent>
+                                            </Stack>
+
                                         </Stack>
-                                        <List>
-                                            {arrUploadedFiles && arrUploadedFiles !== null && arrUploadedFiles.length > 0 ?
-                                                arrUploadedFiles.map((file, idx) => (
-                                                    <React.Fragment key={file.name}>
-                                                        <ListItem
-                                                            sx={{ mb: '-8px' }}
-                                                            secondaryAction={
-                                                                <>
-                                                                    <IconButton
-                                                                        edge="end"
-                                                                        aria-label="delete"
-                                                                        onClick={() => handleDelete(idx)}
-                                                                    >
-                                                                        <DeleteIcon />
-                                                                    </IconButton>
-                                                                </>
-                                                            }
-                                                        >
-                                                            <FileIcon sx={{ mr: 1 }} />
-                                                            <ListItemText
-                                                                primary={
-                                                                    <TypographyComponent fontSize={14} fontWeight={500} sx={{ textDecoration: 'underline' }}>
-                                                                        {file?.name && file?.name !== null ? _.truncate(file?.name, { length: 25 }) : ''}
-                                                                    </TypographyComponent>
-                                                                }
-                                                            />
-                                                        </ListItem>
-                                                    </React.Fragment>
-                                                ))
-                                                :
-                                                <></>
-                                            }
-                                        </List>
+                                        <Stack spacing={1.5} sx={{ width: '100%', my: 2 }}>
+                                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                                <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[500] }}>Item Name -</TypographyComponent>
+                                                <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[500] }}>{watchItemName && watchItemName !== null ? watchItemName : 'NA'}</TypographyComponent>
+                                            </Stack>
+                                            <Divider />
+                                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                                <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[500] }}>Category -</TypographyComponent>
+                                                <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[500] }}>{watchCategory && watchCategory !== null ? watchCategory : 'NA'}</TypographyComponent>
+                                            </Stack>
+                                            <Divider />
+                                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                                <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[500] }}>Quantity -</TypographyComponent>
+                                                <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[500] }}>{watchInitialQuantity && watchInitialQuantity !== null ? watchInitialQuantity : 'NA'}</TypographyComponent>
+                                            </Stack>
+                                            <Divider />
+                                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                                <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[500] }}>Unity -</TypographyComponent>
+                                                <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[500] }}>{watchUnit && watchUnit !== null ? watchUnit : 'NA'}</TypographyComponent>
+                                            </Stack>
+                                            <Divider />
+                                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                                <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[500] }}>Minimum Quantity -</TypographyComponent>
+                                                <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[500] }}>{watchMinimumQuantity && watchMinimumQuantity !== null ? watchMinimumQuantity : 'NA'}</TypographyComponent>
+                                            </Stack>
+                                            <Divider />
+                                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                                <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[500] }}>Critical Quantity -</TypographyComponent>
+                                                <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[500] }}>{watchCriticalQuantity && watchCriticalQuantity !== null ? watchCriticalQuantity : 'NA'}</TypographyComponent>
+                                            </Stack>
+                                        </Stack>
                                     </Stack>
                                 </Stack>
                             </Grid>
