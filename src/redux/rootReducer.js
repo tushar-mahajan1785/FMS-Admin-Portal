@@ -16,6 +16,7 @@ import ticketsStore from '../store/tickets';
 import documentStore from '../store/documents';
 import inventoryStore from '../store/inventory';
 import PmActivityStore from '../store/pm-activity';
+import documentCategoriesStore from '../store/document-categories';
 
 const rootReducer = {
     loginStore,
@@ -35,7 +36,8 @@ const rootReducer = {
     ticketsStore,
     documentStore,
     inventoryStore,
-    PmActivityStore
+    PmActivityStore,
+    documentCategoriesStore
 };
 
 export default rootReducer;

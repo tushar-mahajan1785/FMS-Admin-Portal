@@ -296,3 +296,10 @@ export const API_INVENTORY_CATEGORY_DETAILS = `${BASE}/inventory/category/detail
 export const API_PM_ACTIVITY_LIST = `${BASE}/pm-activity/list`
 
 export const API_SELECTED_ASSET_REMOVE = `${BASE}/roster-shift/remove`
+
+// document categories
+export const API_DOCUMENTS_CATEGORIES_LIST = `${BASE}/document-category/list`
+
+export const API_ADD_DOCUMENTS_CATEGORIES = `${BASE}/document-category/add-or-edit`
+
+export const API_DELETE_DOCUMENTS_CATEGORIES = `${BASE}/document-category/remove`
