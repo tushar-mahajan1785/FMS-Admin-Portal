@@ -283,6 +283,14 @@ export const API_INVENTORY_DETAIL = `${BASE}/inventory/details`
 
 export const API_INVENTORY_DELETE = `${BASE}/inventory/remove`
 
+export const API_INVENTORY_CATEGORY = `${BASE}/inventory/category/list`
+
+export const API_INVENTORY_CATEGORY_ADD = `${BASE}/inventory/category/add`
+
+export const API_INVENTORY_CATEGORY_DELETE = `${BASE}/inventory/category/remove`
+
+export const API_INVENTORY_CATEGORY_DETAILS = `${BASE}/inventory/category/details`
+
 //PM ACTIVITY
 
 export const API_PM_ACTIVITY_LIST = `${BASE}/pm-activity/list`

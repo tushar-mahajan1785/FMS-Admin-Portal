@@ -20,126 +20,133 @@ import Documents from "../pages/documents";
 import Inventory from "../pages/inventory";
 import ViewDocument from "../pages/documents/view";
 import PmActivity from "../pages/pm-activity";
+import InventoryCategory from "../pages/inventory-category";
 
 const routes = [
-  {
-    path: "/",
-    element: <DashboardPage />,
-    permission: "DASHBOARD",
-    protected: true,
-  },
-  {
-    path: "/profile",
-    element: <ProfilePage />,
-    permission: "PROFILE",
-    protected: true,
-  },
-  {
-    path: "/login",
-    element: <LoginPage />,
-    protected: false,
-  },
-  {
-    path: "/assets/*",
-    element: <Assets />,
-    permission: "ASSET",
-    protected: true,
-  },
-  {
-    path: "/employees/*",
-    element: <Employees />,
-    permission: "EMPLOYEE",
-    protected: true,
-  },
-  {
-    path: "/forgot-password",
-    element: <ForgetPassword />,
-    protected: false,
-  },
-  {
-    path: "/vendors/*",
-    element: <Vendors />,
-    permission: "VENDOR",
-    protected: true,
-  },
-  {
-    path: "/bulk-upload",
-    element: <AssetBulkUpload />,
-    permission: "ASSET_BULK_UPLOAD",
-    protected: true,
-  },
-  {
-    path: "/bulk-upload",
-    element: <EmployeeBulkUpload />,
-    permission: "EMPLOYEE_BULK_UPLOAD",
-    protected: true,
-  },
-  {
-    path: "/bulk-upload",
-    element: <VendorBulkUpload />,
-    permission: "VENDOR_BULK_UPLOAD",
-    protected: true,
-  },
-  {
-    path: "/setting/*",
-    element: <Settings />,
-    permission: "SETTING",
-    protected: true,
-  },
-  {
-    path: "/admin-setting/*",
-    element: <AdminSetting />,
-    permission: "SETTING",
-    protected: true,
-  },
-  {
-    path: "/configuration-shift",
-    element: <ConfigureShiftList />,
-    permission: "CONFIGURATION_SHIFT",
-    protected: true,
-  },
-  {
-    path: "/manage-groups",
-    element: <ManageGroups />,
-    permission: "MANAGE_GROUPS",
-    protected: true,
-  },
-  {
-    path: "/tickets/*",
-    element: <Tickets />,
-    permission: "TICKET",
-    protected: true,
-  },
-  {
-    path: "/manage-shift/*",
-    element: <ManageShift />,
-    permission: "MANAGE_SHIFT",
-    protected: true,
-  },
-  {
-    path: "/documents/*",
-    element: <Documents />,
-    permission: "DOCUMENT",
-    protected: true,
-  },
-  {
-    path: "/inventory/*",
-    element: <Inventory />,
-    permission: "INVENTORY",
-    protected: true,
-  },
-  {
-    path: "/view",
-    element: <ViewDocument />,
-    permission: "DOCUMENT_VIEW",
-    protected: true,
-  },
-  {
-    path: "/pm-activity",
-    element: <PmActivity />,
-    permission: "EMPLOYEE",
-    protected: true,
-  },
+    {
+        path: "/",
+        element: <DashboardPage />,
+        permission: "DASHBOARD",
+        protected: true,
+    },
+    {
+        path: "/profile",
+        element: <ProfilePage />,
+        permission: "PROFILE",
+        protected: true,
+    },
+    {
+        path: "/login",
+        element: <LoginPage />,
+        protected: false,
+    },
+    {
+        path: "/assets/*",
+        element: <Assets />,
+        permission: "ASSET",
+        protected: true,
+    },
+    {
+        path: "/employees/*",
+        element: <Employees />,
+        permission: "EMPLOYEE",
+        protected: true,
+    },
+    {
+        path: "/forgot-password",
+        element: <ForgetPassword />,
+        protected: false,
+    },
+    {
+        path: "/vendors/*",
+        element: <Vendors />,
+        permission: "VENDOR",
+        protected: true,
+    },
+    {
+        path: "/bulk-upload",
+        element: <AssetBulkUpload />,
+        permission: "ASSET_BULK_UPLOAD",
+        protected: true,
+    },
+    {
+        path: "/bulk-upload",
+        element: <EmployeeBulkUpload />,
+        permission: "EMPLOYEE_BULK_UPLOAD",
+        protected: true,
+    },
+    {
+        path: "/bulk-upload",
+        element: <VendorBulkUpload />,
+        permission: "VENDOR_BULK_UPLOAD",
+        protected: true,
+    },
+    {
+        path: "/setting/*",
+        element: <Settings />,
+        permission: "SETTING",
+        protected: true,
+    },
+    {
+        path: "/admin-setting/*",
+        element: <AdminSetting />,
+        permission: "SETTING",
+        protected: true,
+    },
+    {
+        path: "/configuration-shift",
+        element: <ConfigureShiftList />,
+        permission: "CONFIGURATION_SHIFT",
+        protected: true,
+    },
+    {
+        path: "/manage-groups",
+        element: <ManageGroups />,
+        permission: "MANAGE_GROUPS",
+        protected: true,
+    },
+    {
+        path: "/tickets/*",
+        element: <Tickets />,
+        permission: "TICKET",
+        protected: true,
+    },
+    {
+        path: "/manage-shift/*",
+        element: <ManageShift />,
+        permission: "MANAGE_SHIFT",
+        protected: true,
+    },
+    {
+        path: "/documents/*",
+        element: <Documents />,
+        permission: "DOCUMENT",
+        protected: true,
+    },
+    {
+        path: "/inventory/*",
+        element: <Inventory />,
+        permission: "INVENTORY",
+        protected: true,
+    },
+    {
+        path: "/view",
+        element: <ViewDocument />,
+        permission: "DOCUMENT_VIEW",
+        protected: true,
+    },
+    {
+        path: "/pm-activity",
+        element: <PmActivity />,
+        permission: "EMPLOYEE",
+        protected: true,
+    },
+    {
+        path: "/inventory-category/*",
+        element: <InventoryCategory />,
+        permission: 'CATEGORY',
+        protected: true,
+    },
 ];
 
 export default routes;
