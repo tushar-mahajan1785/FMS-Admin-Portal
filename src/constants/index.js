@@ -157,3 +157,51 @@ export const getInventoryStockStatus = [{
     id: 'Good Stock',
     name: 'Good Stock'
 }]
+export const getMasterPMActivityStatus = [{
+    id: 'Active',
+    name: 'Active'
+},
+{
+    id: 'Completed',
+    name: 'Completed'
+},
+{
+    id: 'Overdue',
+    name: 'Overdue'
+}
+]
+
+export const getPmActivityFrequencyArray = [
+    {
+        id: 'Monthly',
+        name: 'Monthly'
+    },
+    {
+        id: '3 Month',
+        name: '3 Month'
+    },
+    {
+        id: '6 Month',
+        name: '6 Month'
+    },
+    {
+        id: 'Yearly',
+        name: 'Yearly'
+    }
+
+]
+
+export const getMasterPMActivitySchedule = [{
+    id: 'This Week',
+    name: 'This Week'
+},
+{
+    id: 'Next Week',
+    name: 'Next Week'
+},
+{
+    id: 'This Month',
+    name: 'This Month'
+},
+
+]

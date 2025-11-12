@@ -282,3 +282,9 @@ export const API_INVENTORY_ADD = `${BASE}/inventory/add-or-edit`
 export const API_INVENTORY_DETAIL = `${BASE}/inventory/details`
 
 export const API_INVENTORY_DELETE = `${BASE}/inventory/remove`
+
+//PM ACTIVITY
+
+export const API_PM_ACTIVITY_LIST = `${BASE}/pm-activity/list`
+
+export const API_SELECTED_ASSET_REMOVE = `${BASE}/roster-shift/remove`
