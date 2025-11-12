@@ -12,7 +12,6 @@ import { Controller, useForm } from "react-hook-form";
 import { actionMasterAssetType, resetMasterAssetTypeResponse } from "../../../store/asset";
 import { actionAssetTypeWiseList, actionRosterData, resetAssetTypeWiseListResponse } from "../../../store/roster";
 import { ERROR, IMAGES_SCREEN_NO_DATA, SERVER_ERROR, UNAUTHORIZED } from "../../../constants";
-import { getObjectById } from "../../../utils";
 import ChevronDownIcon from "../../../assets/icons/ChevronDown";
 import EmptyContent from "../../../components/empty_content";
 import TypographyComponent from "../../../components/custom-typography";
@@ -38,7 +37,8 @@ export default function CreateNewDocumentGroup({ open, objData, handleClose }) {
         formState: { errors }
     } = useForm({
         defaultValues: {
-            asset_group_name: ''
+            asset_group_name: '',
+            asset_type: ''
         }
     });
 
@@ -48,6 +48,7 @@ export default function CreateNewDocumentGroup({ open, objData, handleClose }) {
     const [assetTypeWiseListOptions, setAssetTypeWiseListOptions] = useState([])
     const [assetTypeWiseListOriginalData, setAssetTypeWiseListOriginalData] = useState([])
     const [loading, setLoading] = useState(false)
+    const [documentGroupDetailData, setDocumentGroupDetailData] = useState(null)
 
     // store
     const { masterAssetType } = useSelector(state => state.AssetStore)
@@ -119,10 +120,6 @@ export default function CreateNewDocumentGroup({ open, objData, handleClose }) {
             dispatch(resetMasterAssetTypeResponse())
             if (masterAssetType?.result === true) {
                 setAssetTypeMasterOption(masterAssetType?.response)
-                setValue('asset_type', masterAssetType?.response[0]?.id)
-                let objData = Object.assign({}, rosterData)
-                objData.asset_type = masterAssetType?.response[0]?.name
-                dispatch(actionRosterData(objData))
             } else {
                 setAssetTypeMasterOption([])
                 switch (masterAssetType?.status) {
@@ -243,12 +240,9 @@ export default function CreateNewDocumentGroup({ open, objData, handleClose }) {
         if (documentGroupDetails && documentGroupDetails !== null) {
             dispatch(resetDocumentGroupDetailsResponse())
             if (documentGroupDetails?.result === true) {
-                setValue('asset_group_name', documentGroupDetails?.response?.asset_group_name)
-                setValue('asset_type', documentGroupDetails?.response?.asset_tye_id)
-                let objData = Object.assign({}, rosterData)
-                objData.asset_type = documentGroupDetails?.response?.asset_tye_name
-                dispatch(actionRosterData(objData))
+                setDocumentGroupDetailData(documentGroupDetails?.response)
             } else {
+                setDocumentGroupDetailData(null)
                 switch (documentGroupDetails?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -266,13 +260,37 @@ export default function CreateNewDocumentGroup({ open, objData, handleClose }) {
         }
     }, [documentGroupDetails])
 
+    useEffect(() => {
+        if (assetTypeMasterOption && assetTypeMasterOption?.length > 0) {
+            if (objData && objData !== null && objData?.formType === 'edit') {
+                setValue('asset_group_name', documentGroupDetailData?.asset_group_name)
+                setValue('asset_type', documentGroupDetailData?.asset_type)
+                let objData = Object.assign({}, rosterData)
+                objData.assets = documentGroupDetailData?.assets
+                objData.asset_group_name = documentGroupDetailData?.asset_group_name
+                objData.asset_type = documentGroupDetailData?.asset_type
+                dispatch(actionRosterData(objData))
+                setAssetTypeWiseListOptions(documentGroupDetailData?.assets)
+            }
+            else {
+                if (rosterData === null || rosterData?.asset_type === null || rosterData?.asset_type === '') {
+                    setValue('asset_type', assetTypeMasterOption[0]?.name)
+                    let objData = Object.assign({}, rosterData)
+                    objData.asset_type = assetTypeMasterOption[0]?.name
+                    dispatch(actionRosterData(objData))
+                }
+            }
+        }
+    }, [assetTypeMasterOption, documentGroupDetailData])
+
     // handle submit function
     const onSubmit = data => {
         setLoading(true)
         let input = {
             branch_uuid: branch?.currentBranch?.uuid,
             asset_group_name: data.asset_group_name,
-            assets: rosterData?.assets
+            assets: rosterData?.assets,
+            asset_type: data.asset_type
         }
         let updated = Object.assign({}, input)
         if (objData && objData !== null && objData.formType && objData.formType === 'edit' && objData.uuid && objData.uuid !== null) {
@@ -297,7 +315,7 @@ export default function CreateNewDocumentGroup({ open, objData, handleClose }) {
                         size={48}
                         icon={<BrandSteamIcon stroke={theme.palette.primary[600]} size={24} />}
                         title={`${objData && objData?.formType && objData.formType === 'edit' ? 'Edit' : 'Create New'} Group`}
-                        subtitle={`Fill below form to ${objData && objData?.formType && objData.formType === 'edit' ? 'Edit' :  'create new'} group`}
+                        subtitle={`Fill below form to ${objData && objData?.formType && objData.formType === 'edit' ? 'Edit' : 'create new'} group`}
 
                         actions={[
                             <IconButton
@@ -337,6 +355,7 @@ export default function CreateNewDocumentGroup({ open, objData, handleClose }) {
                                                     <CustomTextField
                                                         fullWidth
                                                         value={field?.value}
+                                                        disabled={objData?.formType === 'edit'}
                                                         label={<FormLabel label='Asset Group Name' required={true} />}
                                                         onChange={(e) => {
                                                             field.onChange(e); // ✅ update form state
@@ -396,12 +415,12 @@ export default function CreateNewDocumentGroup({ open, objData, handleClose }) {
                                                     select
                                                     fullWidth
                                                     value={field?.value ?? ''}
+                                                    disabled={objData?.formType === 'edit'}
                                                     label={<FormLabel label='Asset Type' required={false} />}
                                                     onChange={(event) => {
                                                         field.onChange(event)
                                                         let objData = Object.assign({}, rosterData)
-                                                        let objCurrent = getObjectById(assetTypeMasterOption, event.target.value)
-                                                        objData.asset_type = objCurrent.name
+                                                        objData.asset_type = event.target.value
                                                         dispatch(actionRosterData(objData))
                                                     }}
                                                     SelectProps={{
@@ -426,8 +445,8 @@ export default function CreateNewDocumentGroup({ open, objData, handleClose }) {
                                                     {assetTypeMasterOption &&
                                                         assetTypeMasterOption.map(option => (
                                                             <MenuItem
-                                                                key={option?.id}
-                                                                value={option?.id}
+                                                                key={option?.name}
+                                                                value={option?.name}
                                                                 sx={{
                                                                     whiteSpace: 'normal',        // allow wrapping
                                                                     wordBreak: 'break-word',     // break long words if needed

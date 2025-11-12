@@ -250,8 +250,10 @@ export default function DocumentsList() {
                     page: page,
                     limit: LIST_LIMIT
                 }))
+                setCurrentGroupData(null)
             } else {
                 setLoadingDelete(false)
+                setCurrentGroupData(null)
                 switch (deleteDocumentGroup?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -431,6 +433,7 @@ export default function DocumentsList() {
                             }))
                         }
                         setOpenAddDocumentGroupPopup(false)
+                        setCurrentGroupData(null)
                     }}
                 />
             }
