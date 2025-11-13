@@ -25,6 +25,7 @@ import { actionInventoryList, resetInventoryListResponse } from '../../../store/
 import { useBranch } from '../../../hooks/useBranch';
 import { useSnackbar } from '../../../hooks/useSnackbar';
 import AddInventory from '../add';
+import { InventoryDetails } from '../details';
 
 export default function InventoryList() {
     const theme = useTheme()
@@ -101,8 +102,8 @@ export default function InventoryList() {
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
     const [openAddInventoryPopup, setOpenAddInventoryPopup] = useState(false);
-    // const [openViewInvertoryPopup, setOpenViewInventoryPopup] = useState(false);
-    // const [inventoryDetailsData, setInventoryDetailsData] = useState(null);
+    const [openViewInventoryPopup, setOpenViewInventoryPopup] = useState(false);
+    // const [inventoryData, setInventoryData] = useState(null);
     const [arrRecentlyAddedItems, setArrRecentlyAddedItems] = useState([{
         id: 1,
         item_id: 'INV-000121',
@@ -215,13 +216,13 @@ export default function InventoryList() {
                 let color = 'primary'
                 switch (params?.row?.stock_status) {
                     case 'Low Stock':
-                        color = 'warning'//'#6941C6'
+                        color = 'warning'
                         break
                     case 'Out Of Stock':
-                        color = 'error'//'#039BE5'
+                        color = 'error'
                         break
                     case 'Good Stock':
-                        color = 'success'//'#039855'
+                        color = 'success'
                         break
                     default:
                         color = 'primary'
@@ -236,16 +237,16 @@ export default function InventoryList() {
             sortable: false,
             field: "",
             headerName: 'Action',
-            renderCell: () => {
+            renderCell: (params) => {
                 return (
                     <Stack sx={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center', gap: 2, height: '100%' }}>
-                        <Stack sx={{ flexDirection: 'row', gap: 1, border: `1px solid${theme.palette.info[500]}`, background: theme.palette.info[50], borderRadius: '6px', padding: '5px 8px', cursor: 'pointer' }}>
+                        <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.info[500]}`, background: theme.palette.info[50], borderRadius: '6px', padding: '5px 8px', cursor: 'pointer' }}>
                             <BoxIcon stroke={theme.palette.info[700]} />
                             <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.info[700] }}>
                                 Record Usage
                             </TypographyComponent>
                         </Stack>
-                        <Stack sx={{ flexDirection: 'row', gap: 1, border: `1px solid${theme.palette.primary[600]}`, background: theme.palette.common.white, borderRadius: '6px', padding: '5px 8px', cursor: 'pointer' }}>
+                        <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.primary[600]}`, background: theme.palette.common.white, borderRadius: '6px', padding: '5px 8px', cursor: 'pointer' }}>
                             <BoxPlusIcon stroke={theme.palette.primary[500]} />
                             <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.primary[600] }}>
                                 Restock
@@ -257,8 +258,8 @@ export default function InventoryList() {
                                     <Tooltip title="Details" followCursor placement="top">
                                         <IconButton
                                             onClick={() => {
-                                                // setInventoryDetailsData(params?.row)
-                                                // setOpenViewInventoryPopup(true)
+                                                // setInventoryData(params?.row)
+                                                setOpenViewInventoryPopup(true)
                                             }}
                                         >
                                             <EyeIcon stroke={'#181D27'} />
@@ -707,6 +708,12 @@ export default function InventoryList() {
                         }))
                     }
                 }}
+            />
+            <InventoryDetails
+                open={openViewInventoryPopup}
+                handleClose={() => [
+                    setOpenViewInventoryPopup(false)
+                ]}
             />
         </React.Fragment>
     )

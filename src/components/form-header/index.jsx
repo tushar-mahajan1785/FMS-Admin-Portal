@@ -31,12 +31,15 @@ export default function FormHeader({
         color = 'info'//'#039BE5'
         break
       case 'Closed':
+      case 'Good Stock':
         color = 'success'//'#039855'
         break
       case 'On Hold':
+      case 'Low Stock':
         color = 'warning'//#FEC84B'
         break
       case 'Rejected':
+      case 'Out Of Stock':
         color = 'error'//'#D32F2F'
         break
       case 'Overdue':
