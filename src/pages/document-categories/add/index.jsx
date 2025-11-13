@@ -18,7 +18,6 @@ import {
     SERVER_ERROR,
     UNAUTHORIZED,
     validateFileSize,
-    validateFileType,
 } from '../../../constants';
 import { useDispatch, useSelector } from "react-redux";
 import FormHeader from "../../../components/form-header";
@@ -68,6 +67,7 @@ export default function AddDocumentCategories({ open, dataObj, handleClose }) {
                 setValue('category_name', dataObj.category_name && dataObj.category_name !== null ? dataObj.category_name : '')
                 setValue('category_short_name', dataObj.category_short_name && dataObj.category_short_name !== null ? dataObj.category_short_name : '')
                 setValue('description', dataObj.description && dataObj.description !== null ? dataObj.description : '')
+                setValue('icon', dataObj.image_url && dataObj.image_url !== null ? dataObj.image_url : '')
             } else {
                 reset()
             }
@@ -131,6 +131,23 @@ export default function AddDocumentCategories({ open, dataObj, handleClose }) {
         }
     }, [addDocumentCategories])
 
+    const validateFileType = file => {
+        if (!file) {
+            return true // Return true if file is undefined or null
+        }
+        const fileName = file.name
+        if (!fileName) {
+            return true // Return true if file name is undefined or null
+        }
+        const fileExtension = fileName.split('.').pop().toLowerCase() // Extract file extension
+        const allowedExtensions = ['svg'] // Allowed file extensions
+        if (!allowedExtensions.includes(fileExtension)) {
+            return 'Only SVG files are allowed'
+        }
+
+        return true // Check if file extension is allowed
+    }
+
     // handle submit function
     const onSubmit = (data) => {
         let updated = Object.assign({}, data)
@@ -160,7 +177,7 @@ export default function AddDocumentCategories({ open, dataObj, handleClose }) {
             variant='temporary'
             onClose={handleClose}
             ModalProps={{ keepMounted: true }}
-            sx={{ '& .MuiDrawer-paper': { width: { xs: '100%', md: '100%', lg: 750 } } }}
+            sx={{ '& .MuiDrawer-paper': { width: { xs: '100%', md: '100%', lg: 550 } } }}
         >
             <Stack sx={{ height: '100%' }} justifyContent={'flex-start'} flexDirection={'column'}>
                 <FormHeader
@@ -199,7 +216,7 @@ export default function AddDocumentCategories({ open, dataObj, handleClose }) {
                         <SectionHeader title="Document Categories Details" progress={documentCategoriesProgress} />
                         <Grid container spacing={'24px'} marginTop={2} marginBottom={3} sx={{ backgroundColor: `${theme.palette.grey[50]}`, borderRadius: '16px', padding: '16px' }}>
                             {/* Category Name */}
-                            <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 6 }}>
+                            <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
                                 <Controller
                                     name='category_name'
                                     control={control}
@@ -224,7 +241,7 @@ export default function AddDocumentCategories({ open, dataObj, handleClose }) {
                                 />
                             </Grid>
                             {/* Category Short Name */}
-                            <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 6 }}>
+                            <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
                                 <Controller
                                     name='category_short_name'
                                     control={control}
@@ -239,6 +256,7 @@ export default function AddDocumentCategories({ open, dataObj, handleClose }) {
                                         <CustomTextField
                                             fullWidth
                                             value={field?.value}
+                                            disabled={dataObj?.formType === 'edit'}
                                             inputProps={{ maxLength: 100 }}
                                             label={<FormLabel label='Category Short Name' required={true} />}
                                             onChange={field.onChange}
@@ -249,7 +267,7 @@ export default function AddDocumentCategories({ open, dataObj, handleClose }) {
                                 />
                             </Grid>
                             {/* Description */}
-                            <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 6 }}>
+                            <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
                                 <Controller
                                     name='description'
                                     control={control}
@@ -263,6 +281,8 @@ export default function AddDocumentCategories({ open, dataObj, handleClose }) {
                                     render={({ field }) => (
                                         <CustomTextField
                                             fullWidth
+                                            multiline
+                                            minRows={3}
                                             value={field?.value}
                                             inputProps={{ maxLength: 255 }}
                                             label={<FormLabel label='Description' required={true} />}
@@ -274,13 +294,14 @@ export default function AddDocumentCategories({ open, dataObj, handleClose }) {
                                 />
                             </Grid>
                             {/* document categories icon */}
-                            <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 6 }}>
-                                <Stack flexDirection={'row'} alignItems={'center'} justifyContent={'space-between'} columnGap={2}>
-                                    <Stack>
+                            <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
+                                <Stack flexDirection={'row'} alignItems={'center'} columnGap={2}>
+                                    <Stack sx={{ width: '100%' }}>
                                         <Controller
                                             name='icon'
                                             control={control}
                                             rules={{
+                                                required: 'Document Categories Icon is required',
                                                 validate: {
                                                     fileSize: validateFileSize,
                                                     fileType: validateFileType
@@ -291,7 +312,7 @@ export default function AddDocumentCategories({ open, dataObj, handleClose }) {
                                                     fullWidth
                                                     name={'icon'}
                                                     id={'icon'}
-                                                    label={<FormLabel label='Document Categories Icon' required={false} />}
+                                                    label={<FormLabel label='Document Categories Icon' required={true} />}
                                                     value={value?.fileName}
                                                     {...field}
                                                     onChange={(event) => {

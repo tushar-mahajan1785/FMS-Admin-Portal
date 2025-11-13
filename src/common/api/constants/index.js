@@ -305,3 +305,9 @@ export const API_DOCUMENTS_CATEGORIES_LIST = `${BASE}/document-category/list`
 export const API_ADD_DOCUMENTS_CATEGORIES = `${BASE}/document-category/add-or-edit`
 
 export const API_DELETE_DOCUMENTS_CATEGORIES = `${BASE}/document-category/remove`
+
+export const API_DOCUMENTS_CATEGORIES_DETAILS = `${BASE}/document-category/details`
+
+export const API_UPLOAD_DOCUMENTS_CATEGORIES = `${BASE}/document-category/upload`
+
+export const API_UPLOAD_DOCUMENTS_CATEGORIES_LIST = `${BASE}/document-category/details`

@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
-import { axiosApi } from "../../common/api"
+import { axiosApi, MULTIPART_HEADER } from "../../common/api"
 import { getErrorResponse } from "../../utils";
-import { API_DOCUMENTS_LIST, API_ADD_DOCUMENTS_GROUP, API_DELETE_DOCUMENTS_GROUP, API_DOCUMENTS_GROUP_DETAILS } from "../../common/api/constants";
+import { API_DOCUMENTS_LIST, API_ADD_DOCUMENTS_GROUP, API_DELETE_DOCUMENTS_GROUP, API_DOCUMENTS_GROUP_DETAILS, API_DOCUMENTS_CATEGORIES_DETAILS, API_UPLOAD_DOCUMENTS_CATEGORIES, API_UPLOAD_DOCUMENTS_CATEGORIES_LIST } from "../../common/api/constants";
 
 export const actionDocumentList = createAsyncThunk('documents/actionDocumentList', async (params) => {
     try {
@@ -43,13 +43,46 @@ export const actionDocumentGroupDetails = createAsyncThunk('documents/actionDocu
     }
 })
 
+export const actionDocumentCategoriesDetails = createAsyncThunk('documents/actionDocumentCategoriesDetails', async (params) => {
+    try {
+        const response = await axiosApi.post(API_DOCUMENTS_CATEGORIES_DETAILS, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+
+export const actionUploadDocumentCategories = createAsyncThunk('documents/actionUploadDocumentCategories', async (params) => {
+    try {
+        const response = await axiosApi.post(API_UPLOAD_DOCUMENTS_CATEGORIES, params, MULTIPART_HEADER)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+
+export const actionUploadDocumentCategoriesList = createAsyncThunk('documents/actionUploadDocumentCategoriesList', async (params) => {
+    try {
+        const response = await axiosApi.post(API_UPLOAD_DOCUMENTS_CATEGORIES_LIST, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+
 export const documentStore = createSlice({
     name: 'documents',
     initialState: {
         documentList: null,
         addDocumentGroup: null,
         deleteDocumentGroup: null,
-        documentGroupDetails: null
+        documentGroupDetails: null,
+        documentCategoriesDetails: null,
+        uploadDocumentCategories: null,
+        uploadDocumentCategoriesList: null
     },
 
     reducers: {
@@ -64,6 +97,15 @@ export const documentStore = createSlice({
         },
         resetDocumentGroupDetailsResponse: (state) => {
             state.documentGroupDetails = null
+        },
+        resetDocumentCategoriesDetailsResponse: (state) => {
+            state.documentCategoriesDetails = null
+        },
+        resetUploadDocumentCategoriesResponse: (state) => {
+            state.uploadDocumentCategories = null
+        },
+        resetUploadDocumentCategoriesListResponse: (state) => {
+            state.uploadDocumentCategoriesList = null
         },
     },
     extraReducers: builder => {
@@ -80,6 +122,15 @@ export const documentStore = createSlice({
             .addCase(actionDocumentGroupDetails.fulfilled, (state, action) => {
                 state.documentGroupDetails = action.payload
             })
+            .addCase(actionDocumentCategoriesDetails.fulfilled, (state, action) => {
+                state.documentCategoriesDetails = action.payload
+            })
+            .addCase(actionUploadDocumentCategories.fulfilled, (state, action) => {
+                state.uploadDocumentCategories = action.payload
+            })
+            .addCase(actionUploadDocumentCategoriesList.fulfilled, (state, action) => {
+                state.uploadDocumentCategoriesList = action.payload
+            })
     }
 })
 
@@ -87,7 +138,10 @@ export const {
     resetDocumentListResponse,
     resetAddDocumentGroupResponse,
     resetDeleteDocumentGroupResponse,
-    resetDocumentGroupDetailsResponse
+    resetDocumentGroupDetailsResponse,
+    resetDocumentCategoriesDetailsResponse,
+    resetUploadDocumentCategoriesResponse,
+    resetUploadDocumentCategoriesListResponse
 } =
     documentStore.actions
 

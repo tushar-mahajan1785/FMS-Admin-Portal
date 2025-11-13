@@ -22,6 +22,7 @@ import ViewDocument from "../pages/documents/view";
 import PmActivity from "../pages/pm-activity";
 import InventoryCategory from "../pages/inventory-category";
 import DocumentCategories from "../pages/document-categories";
+import CategoriesDetails from "../pages/documents/categories-details";
 
 const routes = [
   {
@@ -125,15 +126,21 @@ const routes = [
     protected: true,
   },
   {
-    path: "/inventory/*",
-    element: <Inventory />,
-    permission: "INVENTORY",
-    protected: true,
-  },
-  {
     path: "/view",
     element: <ViewDocument />,
     permission: "DOCUMENT_VIEW",
+    protected: true,
+  },
+  {
+    path: "/categories-details",
+    element: <CategoriesDetails />,
+    permission: "DOCUMENT_VIEW",
+    protected: true,
+  },
+  {
+    path: "/inventory/*",
+    element: <Inventory />,
+    permission: "INVENTORY",
     protected: true,
   },
   {
