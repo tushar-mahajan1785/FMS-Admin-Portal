@@ -5,11 +5,11 @@ import FormLabel from '../form-label';
 import ChevronDownIcon from '../../assets/icons/ChevronDown';
 import TypographyComponent from '../custom-typography';
 
-const CustomAutocomplete = forwardRef(({ options, label, error, helperText, value, onChange, ...rest }, ref) => {
+const CustomAutocomplete = forwardRef(({ options, label, error, helperText, value, onChange, displayName1, displayName2, ...rest }, ref) => {
     const theme = useTheme();
 
     // Helper function to get the correct option label based on available keys
-    const getOptionLabel = (option) => option.name || option.label || '';
+    const getOptionLabel = (option) => option?.[displayName1] || '';
 
     // Helper function to check if the option is equal to the current value
     const isOptionEqualToValue = (option, val) => option.id === val || option.value === val;
@@ -29,7 +29,7 @@ const CustomAutocomplete = forwardRef(({ options, label, error, helperText, valu
             getOptionLabel={getOptionLabel}
             isOptionEqualToValue={isOptionEqualToValue}
             disableClearable
-            popupIcon={<ChevronDownIcon/>}
+            popupIcon={<ChevronDownIcon />}
             renderInput={(params) => (
                 <CustomTextField
                     {...params}
@@ -45,12 +45,11 @@ const CustomAutocomplete = forwardRef(({ options, label, error, helperText, valu
                     <Box key={key} {...rest}>
                         <Stack>
                             <TypographyComponent fontSize={16} fontWeight={400}>
-                                {option?.name || option?.label}
+                                {option?.[displayName1]}
                             </TypographyComponent>
-                            {/* Conditionally render role or a secondary text if it exists */}
-                            {(option?.role || option?.secondaryText) && (
+                            {option?.[displayName2] && (
                                 <TypographyComponent fontSize={12} fontWeight={400} color={theme.palette.grey[400]}>
-                                    {option?.role || option?.secondaryText}
+                                    {option?.[displayName2]}
                                 </TypographyComponent>
                             )}
                         </Stack>

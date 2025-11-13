@@ -709,6 +709,8 @@ export default function AddEmployee({ open, syncData, toggle }) {
                     <CustomAutocomplete
                       {...field}
                       label="Manager Name"
+                      displayName1="name"
+                      displayName2="role"
                       options={managerNameOptions}
                       error={Boolean(errors.manager_id)}
                       helperText={errors.manager_id?.message}
