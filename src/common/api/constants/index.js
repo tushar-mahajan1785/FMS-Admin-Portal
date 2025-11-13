@@ -297,7 +297,9 @@ export const API_GET_UNIT_LIST = `${BASE}/unit/list`
 
 export const API_PM_ACTIVITY_LIST = `${BASE}/pm-activity/list`
 
-export const API_SELECTED_ASSET_REMOVE = `${BASE}/roster-shift/remove`
+export const API_SELECTED_ASSET_REMOVE = `${BASE}/pm-activity/remove`
+
+export const API_PM_ACTIVITY_ADD = `${BASE}/pm-activity/add`
 
 // document categories
 export const API_DOCUMENTS_CATEGORIES_LIST = `${BASE}/document-category/list`

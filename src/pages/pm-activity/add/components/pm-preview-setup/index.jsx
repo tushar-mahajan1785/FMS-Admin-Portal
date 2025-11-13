@@ -50,20 +50,28 @@ import { useSnackbar } from "../../../../../hooks/useSnackbar";
 import DeleteIcon from "../../../../../assets/icons/DeleteIcon";
 import DatePicker from "react-datepicker";
 import EditIcon from "../../../../../assets/icons/EditIcon";
-import { actionPMScheduleData } from "../../../../../store/pm-activity";
 import { DataGrid } from "@mui/x-data-grid";
+import CustomChip from "../../../../../components/custom-chip";
+import moment from "moment/moment";
+import { getFormattedDuration } from "../../../../../utils";
+import EyeIcon from "../../../../../assets/icons/EyeIcon";
+import PmUserCircleIcon from "../../../../../assets/icons/PmUserCircleIcon";
+import PmEditReschedulerIcon from "../../../../../assets/icons/PMEditReshedulerIcon";
+import ReschedulePopup from "../edit-rechedule";
+import { actionPMScheduleData } from "../../../../../store/pm-activity";
 
-export default function PMActivityPreviewSetUp({ onBack, onSave }) {
+export default function PMActivityPreviewSetUp() {
   const theme = useTheme();
   const dispatch = useDispatch();
   const { logout } = useAuth();
-  const { showSnackbar } = useSnackbar();
+
   const branch = useBranch();
 
   const {
     control,
     setValue,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -82,47 +90,150 @@ export default function PMActivityPreviewSetUp({ onBack, onSave }) {
     useState([]);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Redux Store
-  const { masterAssetType } = useSelector((state) => state.AssetStore);
-  const { rosterData = {}, assetTypeWiseList } = useSelector(
-    (state) => state.rosterStore
-  );
-
   const { pmScheduleData } = useSelector((state) => state.PmActivityStore);
 
-  console.log("-----pmScheduleData--------", pmScheduleData);
+  // Inside your PMActivityPreviewSetUp component, add this state:
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState(null);
+
+  // console.log("-----pmScheduleData--------", pmScheduleData);
+
+  // Add these functions inside your component:
+  const handleRescheduleClick = (activity) => {
+    setSelectedActivity(activity);
+    setRescheduleOpen(true);
+  };
+
+  const handleRescheduleConfirm = (rescheduleData) => {
+    console.log("Reschedule data:", rescheduleData);
+    // Add your reschedule logic here
+    toast.success(
+      `Activity #${rescheduleData.activityId} rescheduled successfully`
+    );
+    setRescheduleOpen(false);
+    setSelectedActivity(null);
+  };
+
+  const handleRescheduleClose = () => {
+    setRescheduleOpen(false);
+    setSelectedActivity(null);
+  };
+
   const columns = [
     {
       flex: 0.3,
       field: "activity",
       headerName: "Activity #",
       width: 100,
+      renderCell: (params) => {
+        return (
+          <>
+            <Stack sx={{ justifyContent: "center", height: "100%" }}>
+              <TypographyComponent fontSize={14} fontWeight={400}>
+                {`#${params?.row?.id}`}
+              </TypographyComponent>
+            </Stack>
+          </>
+        );
+      },
     },
     {
-      flex: 0.5,
+      flex: 0.3,
       field: "date_time",
       headerName: "Date & Time",
       editable: false,
+      renderCell: (params) => {
+        return (
+          <Stack sx={{ height: "100%", justifyContent: "center" }}>
+            {params.row.date && params.row.date !== null ? (
+              <TypographyComponent
+                color={theme.palette.grey.primary}
+                fontSize={14}
+                fontWeight={400}
+                sx={{ py: "10px" }}
+              >
+                {params.row.date && params.row.date !== null
+                  ? moment(params.row.date, "YYYY-MM-DD").format("DD MMM YYYY")
+                  : ""}
+              </TypographyComponent>
+            ) : (
+              <></>
+            )}
+          </Stack>
+        );
+      },
     },
     {
       flex: 0.3,
       field: "status",
       headerName: "Status",
-      editable: true,
-      width: 120,
+      renderCell: (params) => {
+        let color = "primary";
+        switch (params?.row?.status) {
+          case "Upcoming":
+            color = "grey";
+            break;
+          case "On Hold":
+            color = "primary";
+            break;
+          case "Completed":
+            color = "warning";
+            break;
+          default:
+            color = "primary";
+        }
+        return (
+          <React.Fragment>
+            <CustomChip text={params?.row?.status} colorName={color} />
+          </React.Fragment>
+        );
+      },
     },
     {
-      flex: 0.4,
+      flex: 0.3,
       field: "completed_date",
       headerName: "Completed Date",
       editable: true,
+      renderCell: (params) => {
+        return (
+          <Stack sx={{ height: "100%", justifyContent: "center" }}>
+            {params.row.completed_date && params.row.completed_date !== null ? (
+              <TypographyComponent
+                color={theme.palette.grey.primary}
+                fontSize={14}
+                fontWeight={400}
+                sx={{ py: "10px" }}
+              >
+                {params.row.completed_date && params.row.completed_date !== null
+                  ? moment(params.row.completed_date, "YYYY-MM-DD").format(
+                      "DD MMM YYYY"
+                    )
+                  : ""}
+              </TypographyComponent>
+            ) : (
+              <></>
+            )}
+          </Stack>
+        );
+      },
     },
     {
-      flex: 0.4,
+      flex: 0.3,
       field: "supervision_by",
       headerName: "Supervision By",
       description: "This column has a value getter and is not sortable.",
       sortable: false,
+      renderCell: (params) => {
+        return (
+          <React.Fragment>
+            <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
+              <IconButton>
+                <PmUserCircleIcon stroke={"#101828"} />
+              </IconButton>
+            </Box>
+          </React.Fragment>
+        );
+      },
     },
     {
       flex: 0.3,
@@ -130,9 +241,31 @@ export default function PMActivityPreviewSetUp({ onBack, onSave }) {
       field: "time",
       headerName: "Time",
       editable: true,
+      renderCell: (params) => {
+        return (
+          <Stack sx={{ height: "100%", justifyContent: "center" }}>
+            {params?.row?.time &&
+            params?.row?.time !== null &&
+            !["Open"].includes(params.row.time) ? (
+              <TypographyComponent
+                color={theme.palette.grey.primary}
+                fontSize={14}
+                fontWeight={400}
+                sx={{ py: "10px" }}
+              >
+                {params?.row?.time && params?.row?.time !== null
+                  ? getFormattedDuration(params?.row?.time, params?.row?.time)
+                  : ""}
+              </TypographyComponent>
+            ) : (
+              <>--:-- Hrs</>
+            )}
+          </Stack>
+        );
+      },
     },
     {
-      flex: 0.5,
+      flex: 0.4,
 
       field: "additional_info",
       headerName: "Additional Information",
@@ -140,290 +273,69 @@ export default function PMActivityPreviewSetUp({ onBack, onSave }) {
     },
     {
       flex: 0.5,
-
       field: "actions",
       headerName: "Actions",
       editable: true,
       sortable: false,
+      renderCell: (params) => {
+        return (
+          <React.Fragment>
+            <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
+              <Stack
+                sx={{
+                  flexDirection: "row",
+                  gap: 1,
+                  border: `1px solid${theme.palette.grey[500]}`,
+                  background: theme.palette.grey[50],
+                  borderRadius: "6px",
+                  padding: "5px 8px",
+                  cursor: "pointer",
+                }}
+                onClick={() => handleRescheduleClick(params.row)}
+              >
+                <PmEditReschedulerIcon stroke={"#101828"} />
+                <TypographyComponent
+                  fontSize={14}
+                  fontWeight={500}
+                  sx={{ color: theme.palette.text.primary[700] }}
+                >
+                  Reschedule
+                </TypographyComponent>
+              </Stack>
+            </Box>
+          </React.Fragment>
+        );
+      },
     },
   ];
 
-  const rows = [
-    {
-      id: 1,
-      activity: "#1",
-      date_time: "05 Nov 2025",
-      status: "Upcoming",
-      completed_date: "--",
-      supervision_by: "💬",
-      time: "--",
-      additional_info: "--",
-      actions: "💬 Mark Done | On Hold | Reschedule",
-    },
-    {
-      id: 2,
-      activity: "#2",
-      date_time: "05 Dec 2025",
-      status: "Upcoming",
-      completed_date: "--",
-      supervision_by: "💬",
-      time: "--",
-      additional_info: "--",
-      actions: "💬 Mark Done | On Hold | Reschedule",
-    },
-    {
-      id: 3,
-      activity: "#3",
-      date_time: "05 Jan 2026",
-      status: "Upcoming",
-      completed_date: "--",
-      supervision_by: "💬",
-      time: "--",
-      additional_info: "--",
-      actions: " Mark Done  Reschedule",
-    },
-    {
-      id: 4,
-      activity: "#4",
-      date_time: "05 Feb 2026",
-      status: "Upcoming",
-      completed_date: "--",
-      supervision_by: "💬",
-      time: "--",
-      additional_info: "--",
-      actions: "💬 Mark Done | On Hold | Reschedule",
-    },
-    {
-      id: 5,
-      activity: "#5",
-      date_time: "05 Mar 2026",
-      status: "Upcoming",
-      completed_date: "--",
-      supervision_by: "💬",
-      time: "--",
-      additional_info: "--",
-      actions: "💬 Mark Done | On Hold | Reschedule",
-    },
-    {
-      id: 6,
-      activity: "#6",
-      date_time: "05 Apr 2026",
-      status: "Upcoming",
-      completed_date: "--",
-      supervision_by: "💬",
-      time: "--",
-      additional_info: "--",
-      actions: "💬 Mark Done | On Hold | Reschedule",
-    },
-  ];
+  const [frequencyExceptionsData, setFrequencyExceptionsData] = useState([]);
+
+  console.log("frequencyExceptionsData", frequencyExceptionsData);
+  console.log("pmScheduleData", pmScheduleData);
 
   /**
    * 🔹 Initial API call to fetch master asset types
    */
   useEffect(() => {
-    if (branch?.currentBranch?.client_uuid) {
-      dispatch(
-        actionMasterAssetType({
-          client_uuid: branch.currentBranch.client_uuid,
-        })
+    if (pmScheduleData?.assets !== null && pmScheduleData?.assets.length > 0) {
+      let currentAsset = pmScheduleData?.assets.find(
+        (obj) => obj?.asset_id === pmScheduleData?.selected_asset_id
       );
-    }
-  }, [branch?.currentBranch]);
-
-  /**
-   * 🔹 Fetch asset-type-wise list when asset type changes
-   */
-  useEffect(() => {
-    if (branch?.currentBranch?.uuid && rosterData?.asset_type) {
-      dispatch(
-        actionAssetTypeWiseList({
-          branch_uuid: branch.currentBranch.uuid,
-          asset_type: rosterData.asset_type,
-        })
-      );
-    }
-  }, [branch?.currentBranch, rosterData?.asset_type]);
-
-  /**
-   * 🔹 Handle Master Asset Type Response
-   */
-  useEffect(() => {
-    if (!masterAssetType) return;
-    dispatch(resetMasterAssetTypeResponse());
-
-    if (masterAssetType?.result === true) {
-      setAssetTypeMasterOption(masterAssetType?.response ?? []);
-      if (masterAssetType?.response?.length > 0) {
-        const firstAsset = masterAssetType.response[0];
-        setValue("asset_type", firstAsset?.id);
-        const updated = { ...rosterData, asset_type: firstAsset?.name };
-        dispatch(actionRosterData(updated));
+      console.log("Current Asset", currentAsset);
+      if (currentAsset && currentAsset !== null) {
+        setFrequencyExceptionsData(currentAsset?.frequency_exceptions);
       } else {
-        console.log("here we are ");
-      }
-    } else {
-      setAssetTypeMasterOption([]);
-      switch (masterAssetType?.status) {
-        case UNAUTHORIZED:
-          logout();
-          break;
-        case ERROR:
-          break;
-        case SERVER_ERROR:
-          toast.dismiss();
-          showSnackbar({
-            message: masterAssetType?.message,
-            severity: "error",
-          });
-          break;
-        default:
-          break;
+        setFrequencyExceptionsData([]);
       }
     }
-  }, [masterAssetType]);
-
-  /**
-   * 🔹 Handle Asset Type Wise List Response
-   */
-  useEffect(() => {
-    if (!assetTypeWiseList) return;
-    dispatch(resetAssetTypeWiseListResponse());
-
-    if (assetTypeWiseList?.result === true) {
-      const data = assetTypeWiseList?.response ?? [];
-      setAssetTypeWiseListOptions(data);
-      setAssetTypeWiseListOriginalData(data);
-    } else {
-      setAssetTypeWiseListOptions([]);
-      setAssetTypeWiseListOriginalData([]);
-      switch (assetTypeWiseList?.status) {
-        case UNAUTHORIZED:
-          logout();
-          break;
-        case SERVER_ERROR:
-          toast.dismiss();
-          showSnackbar({
-            message: assetTypeWiseList?.message,
-            severity: "error",
-          });
-          break;
-        default:
-          break;
-      }
-    }
-  }, [assetTypeWiseList]);
-
-  /**
-   * 🔹 Filter search results
-   */
-  useEffect(() => {
-    if (searchQuery.trim().length > 0) {
-      const filtered =
-        assetTypeWiseListOriginalData?.filter(
-          (item) =>
-            item?.asset_description
-              ?.toLowerCase()
-              ?.includes(searchQuery.toLowerCase()) ||
-            item?.type?.toLowerCase()?.includes(searchQuery.toLowerCase())
-        ) ?? [];
-      setAssetTypeWiseListOptions(filtered);
-    } else {
-      setAssetTypeWiseListOptions(assetTypeWiseListOriginalData ?? []);
-    }
-  }, [searchQuery]);
-
-  // ✅ Search input handler
-  const handleSearchQueryChange = (event) => {
-    setSearchQuery(event.target.value);
-  };
-
-  const onSubmit = () => {};
-
-  // Handle save schedule
-  const handleSaveSchedule = () => {
-    setLoading(true);
-
-    // Create a single object with all the data
-    const scheduleData = {
-      // PM Activity Details
-      pm_activity_details: {
-        title: pmScheduleData?.pm_details?.pm_activity_title || "N/A",
-        frequency: pmScheduleData?.pm_details?.frequency || "N/A",
-        schedule_start_date:
-          pmScheduleData?.pm_details?.schedule_start_date || "N/A",
-        status: pmScheduleData?.pm_details?.status || "N/A",
-        is_active: pmScheduleData?.is_active || false,
-      },
-
-      // Asset Information
-      asset_info: {
-        asset_type: pmScheduleData?.asset_type || "N/A",
-        selected_assets_count: pmScheduleData?.assets?.length || 0,
-        selected_assets:
-          pmScheduleData?.assets?.map((asset) => ({
-            asset_id: asset.asset_id,
-            asset_type: asset.asset_type,
-            asset_description: asset.asset_description,
-          })) || [],
-      },
-
-      // Schedule Data
-      schedule_data: {
-        frequency_exceptions_count:
-          pmScheduleData?.frequency_exceptions?.length || 0,
-        frequency_exceptions:
-          pmScheduleData?.frequency_exceptions?.map((exception, index) => ({
-            sequence: index + 1,
-            title: exception.title,
-            date: exception.date,
-            formatted_date: formatDisplayDate(exception.date),
-          })) || [],
-
-        // Generated dates summary
-        date_range:
-          pmScheduleData?.frequency_exceptions?.length > 0
-            ? {
-                start_date: formatDisplayDate(
-                  pmScheduleData.frequency_exceptions[0]?.date
-                ),
-                end_date: formatDisplayDate(
-                  pmScheduleData.frequency_exceptions[
-                    pmScheduleData.frequency_exceptions.length - 1
-                  ]?.date
-                ),
-                total_activities: pmScheduleData.frequency_exceptions.length,
-              }
-            : null,
-      },
-    };
-
-    // Console the complete object
-    console.log("PM ACTIVITY SCHEDULE - COMPLETE DATA:", scheduleData);
-
-    // Simulate API call
-    //  setTimeout(() => {
-    // setLoading(false);
-    //showSnackbar({
-    //  message: "PM Activity Schedule saved successfully!",
-    // severity: "success",
-    //});
-
-    //if (onSave) {
-    // onSave();
-    //}
-    //}, 1500);
-  };
+  }, [pmScheduleData?.assets]);
 
   // Format date for display (from "05-Nov-2025" to "05 Nov 2025")
   const formatDisplayDate = (dateString) => {
     if (!dateString) return "N/A";
     return dateString.replace("-", " ").replace("-", " ");
   };
-
-  // Get selected asset names
-  const selectedAssetNames = (pmScheduleData?.assets || []).map(
-    (asset) => asset.asset_description || "N/A"
-  );
 
   return (
     <Box>
@@ -458,7 +370,7 @@ export default function PMActivityPreviewSetUp({ onBack, onSave }) {
                 PM Activity Title
               </Typography>
               <Typography fontSize={16} fontWeight={500}>
-                {pmScheduleData?.pm_details?.pm_activity_title || "N/A"}
+                {pmScheduleData?.pm_details?.title || "N/A"}
               </Typography>
             </Grid>
             <Grid size={{ xs: 12, sm: 12, md: 2 }}>
@@ -523,7 +435,7 @@ export default function PMActivityPreviewSetUp({ onBack, onSave }) {
                     Assets in this PM Activity
                   </Typography>
                   <Typography fontSize={16} fontWeight={600}>
-                    ( {selectedAssetNames.length} )
+                    ( {pmScheduleData?.assets.length} )
                   </Typography>
                 </Stack>
               </Grid>
@@ -532,27 +444,47 @@ export default function PMActivityPreviewSetUp({ onBack, onSave }) {
                 <Box
                   sx={{
                     borderRadius: "16px",
-                    padding: "24px",
-
                     minHeight: "80px",
                     display: "flex",
                     flexWrap: "wrap",
-                    gap: 1,
+                    gap: 2,
+                    my: 1,
                     alignItems: "flex-start",
                   }}
                 >
-                  {selectedAssetNames.length > 0 ? (
-                    selectedAssetNames.map((asset, i) => (
-                      <Chip
-                        key={i}
-                        label={asset}
+                  {pmScheduleData?.assets.length > 0 ? (
+                    pmScheduleData?.assets.map((asset, i) => (
+                      <Stack
                         sx={{
-                          bgcolor: "#f6f1ff",
-                          color: "#6f42c1",
+                          background:
+                            pmScheduleData?.selected_asset_id ===
+                            asset?.asset_id
+                              ? theme.palette.primary[600]
+                              : theme.palette.common.white,
+                          border:
+                            pmScheduleData?.selected_asset_id ===
+                            asset?.asset_id
+                              ? "none"
+                              : `1px solid ${theme.palette.grey[500]}`,
+                          color:
+                            pmScheduleData?.selected_asset_id ===
+                            asset?.asset_id
+                              ? theme.palette.common.white
+                              : theme.palette.grey[500],
                           borderRadius: "8px",
-                          fontWeight: 500,
+                          padding: "8px 16px",
+                          cursor: "pointer",
                         }}
-                      />
+                        onClick={() => {
+                          let pmData = Object.assign({}, pmScheduleData);
+                          pmData.selected_asset_id = asset?.asset_id;
+                          dispatch(actionPMScheduleData(pmData));
+                        }}
+                      >
+                        <TypographyComponent fontSize={14} fontWeight={400}>
+                          {asset?.asset_description}
+                        </TypographyComponent>
+                      </Stack>
                     ))
                   ) : (
                     <Typography color="text.secondary">
@@ -565,46 +497,66 @@ export default function PMActivityPreviewSetUp({ onBack, onSave }) {
           </Grid>
         </Grid>
 
-        <Divider sx={{ my: 3 }} />
+        <Stack>
+          <Typography fontSize={16} fontWeight={600} mb={2}>
+            {pmScheduleData?.selected_asset_id
+              ? // Find the selected asset and get its description
+                pmScheduleData.assets.find(
+                  (asset) => asset.asset_id === pmScheduleData.selected_asset_id
+                )?.asset_description + " PM Activity Schedule"
+              : "PM Activity Schedule"}
+          </Typography>
+        </Stack>
 
         {/* Frequency Exceptions */}
-        <Box sx={{ height: "330px", width: "100%" }}>
-          <DataGrid
-            sx={{
-              backgroundColor: "white",
-              overflowX: "auto",
-              border: "none",
-              borderBottom: ` 1px solid ${theme.palette.grey[300]}`,
-              borderRadius: "1px",
-              minWidth: "max-content",
-              "& .MuiDataGrid-virtualScroller": {
-                overflowX: "auto !important", // enable horizontal scroll
-              },
-              // header container
-              "& .MuiDataGrid-columnHeaders": {
-                backgroundColor: theme.palette.grey[50],
-              },
+        {frequencyExceptionsData &&
+        frequencyExceptionsData !== null &&
+        frequencyExceptionsData.length > 0 ? (
+          <Box sx={{ height: "330px", width: "100%" }}>
+            <DataGrid
+              sx={{
+                backgroundColor: "white",
+                overflowX: "auto",
+                border: `1px solid ${theme.palette.grey[300]}`,
+                borderRadius: "16px",
+                minWidth: "max-content",
+                "& .MuiDataGrid-virtualScroller": {
+                  overflowX: "auto !important", // enable horizontal scroll
+                },
+                // header container
+                "& .MuiDataGrid-columnHeaders": {
+                  backgroundColor: theme.palette.grey[50],
+                },
 
-              // every header cell
-              "& .MuiDataGrid-columnHeader": {
-                backgroundColor: theme.palette.grey[50],
-                fontWeight: "bold",
-              },
+                // every header cell
+                "& .MuiDataGrid-columnHeader": {
+                  backgroundColor: theme.palette.grey[50],
+                  fontWeight: "bold",
+                },
 
-              // header text
-              "& .MuiDataGrid-columnHeaderTitle": {
-                fontWeight: "bold",
-              },
-            }}
-            rows={rows}
-            columns={columns}
-            disableRowSelectionOnClick
-            hideFooter
-          />
-        </Box>
+                // header text
+                "& .MuiDataGrid-columnHeaderTitle": {
+                  fontWeight: "bold",
+                },
+              }}
+              rows={frequencyExceptionsData}
+              columns={columns}
+              disableRowSelectionOnClick
+              hideFooter
+            />
+          </Box>
+        ) : (
+          <Stack sx={{ height: 480 }}>
+            <EmptyContent
+              imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND}
+              title={"No Frequency Exceptions Found"}
+              subTitle={""}
+            />
+          </Stack>
+        )}
       </Card>
 
-      <Divider sx={{ m: 2 }} />
+      {/* <Divider sx={{ m: 2 }} />
 
       <Stack
         direction="row"
@@ -642,14 +594,15 @@ export default function PMActivityPreviewSetUp({ onBack, onSave }) {
           onClick={handleSaveSchedule}
           disabled={loading}
         >
-          {/* {loading ? (
-            <CircularProgress size={18} sx={{ color: "white" }} />
-          ) : (
-            "Save Schedule"
-          )} */}
           Save Schedule
         </Button>
-      </Stack>
+      </Stack> */}
+      <ReschedulePopup
+        open={rescheduleOpen}
+        onClose={handleRescheduleClose}
+        selectedActivity={selectedActivity}
+        onConfirm={handleRescheduleConfirm}
+      />
     </Box>
   );
 }

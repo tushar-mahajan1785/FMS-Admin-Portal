@@ -177,12 +177,12 @@ export const getPmActivityFrequencyArray = [
         name: 'Monthly'
     },
     {
-        id: '3 Month',
-        name: '3 Month'
+        id: 'Quarterly',
+        name: 'Quarterly'
     },
     {
-        id: '6 Month',
-        name: '6 Month'
+        id: 'Half Yearly',
+        name: 'Half Yearly'
     },
     {
         id: 'Yearly',

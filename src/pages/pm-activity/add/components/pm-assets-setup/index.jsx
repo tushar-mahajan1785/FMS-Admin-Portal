@@ -18,7 +18,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useFormContext } from "react-hook-form";
 import toast from "react-hot-toast";
 import SearchIcon from "../../../../../assets/icons/SearchIcon";
 import TypographyComponent from "../../../../../components/custom-typography";
@@ -53,12 +53,12 @@ import CalendarIcon from "../../../../../assets/icons/CalendarIcon";
 import DatePickerWrapper from "../../../../../components/datapicker-wrapper";
 import moment from "moment";
 import ChevronDownIcon from "../../../../../assets/icons/ChevronDown";
-import { actionPMScheduleData } from "../../../../../store/pm-activity";
-import { getObjectById } from "../../../../../utils";
 import {
   actionDeleteSelectedAsset,
-  resetPmScheduleSelectedAssetResponse,
+  actionPMScheduleData,
+  actionPMScheduleList,
 } from "../../../../../store/pm-activity";
+import { getObjectById } from "../../../../../utils";
 
 export default function PMActivityAssetSetUp({ onNext, onBack }) {
   const theme = useTheme();
@@ -67,21 +67,28 @@ export default function PMActivityAssetSetUp({ onNext, onBack }) {
   const { showSnackbar } = useSnackbar();
   const branch = useBranch();
 
+  // const {
+  //   control,
+  //   setValue,
+  //   handleSubmit,
+  //   getValues,
+  //   reset,
+  //   formState: { errors },
+  // } = useForm({
+  //   defaultValues: {
+  //     pm_activity_title: "",
+  //     frequency: "",
+  //     status: "",
+  //     schedule_start_date: "",
+  //   },
+  // });
+
   const {
-    control,
     setValue,
-    handleSubmit,
-    getValues,
+    control,
     reset,
     formState: { errors },
-  } = useForm({
-    defaultValues: {
-      pm_activity_title: "",
-      frequency: "",
-      status: "",
-      schedule_start_date: "",
-    },
-  });
+  } = useFormContext();
 
   //  States
   const [searchQuery, setSearchQuery] = useState("");
@@ -102,7 +109,7 @@ export default function PMActivityAssetSetUp({ onNext, onBack }) {
   //Redux Store
   const { masterAssetType } = useSelector((state) => state.AssetStore);
   const { assetTypeWiseList } = useSelector((state) => state.rosterStore);
-  const { pmScheduleData, deleteSelectedAsset } = useSelector(
+  const { pmScheduleData, deletePmActivity } = useSelector(
     (state) => state.PmActivityStore
   );
 
@@ -121,35 +128,35 @@ export default function PMActivityAssetSetUp({ onNext, onBack }) {
   }, [branch?.currentBranch]);
 
   useEffect(() => {
-    if (deleteSelectedAsset && deleteSelectedAsset !== null) {
-      dispatch(resetPmScheduleSelectedAssetResponse());
-      if (deleteSelectedAsset?.result === true) {
+    if (deletePmActivity && deletePmActivity !== null) {
+      dispatch(resetPmActivityScheduleDeleteResponse());
+      if (deletePmActivity?.result === true) {
         showSnackbar({
-          message: deleteSelectedAsset?.message,
+          message: deletePmActivity?.message,
           severity: "success",
         });
         dispatch(
-          actionConfigureShiftList({
+          actionPMScheduleList({
             branch_uuid: branch?.currentBranch?.uuid,
           })
         );
       } else {
-        switch (deleteSelectedAsset?.status) {
+        switch (deletePmActivity?.status) {
           case UNAUTHORIZED:
             logout();
             break;
           case ERROR:
-            dispatch(resetPmScheduleSelectedAssetResponse());
+            dispatch(resetPmActivityScheduleDeleteResponse());
             toast.dismiss();
             showSnackbar({
-              message: deleteSelectedAsset?.message,
+              message: deletePmActivity?.message,
               severity: "error",
             });
             break;
           case SERVER_ERROR:
             toast.dismiss();
             showSnackbar({
-              message: deleteSelectedAsset?.message,
+              message: deletePmActivity?.message,
               severity: "error",
             });
             break;
@@ -158,7 +165,7 @@ export default function PMActivityAssetSetUp({ onNext, onBack }) {
         }
       }
     }
-  }, [deleteSelectedAsset]);
+  }, [deletePmActivity]);
 
   /**
    * 🔹 Fetch asset-type-wise list when asset type changes
@@ -265,204 +272,6 @@ export default function PMActivityAssetSetUp({ onNext, onBack }) {
   //Search input handler
   const handleSearchQueryChange = (event) => {
     setSearchQuery(event.target.value);
-  };
-
-  const onSubmit = (data) => {
-    setLoading(true);
-
-    let pmData = Object.assign({}, pmScheduleData);
-    pmData.pm_details = data;
-
-    // Add validation before generating dates
-    if (data && data.frequency && data.schedule_start_date) {
-      pmData.frequency_exceptions = generateFrequencyDates(
-        data.frequency,
-        data.schedule_start_date
-      );
-    } else {
-      console.error("Missing frequency or start date in data:", data);
-      pmData.frequency_exceptions = [];
-    }
-
-    pmData.is_active = 1; // Set to 1 for preview step
-
-    // Dispatch the data to Redux store
-    dispatch(actionPMScheduleData(pmData));
-
-    // Simulate API call delay
-    setTimeout(() => {
-      setLoading(false);
-      // Navigate to preview
-      if (onNext) {
-        onNext();
-      }
-    }, 1000);
-  };
-
-  // Function to generate dates based on frequency
-  const generateFrequencyDates = (frequency, startDate) => {
-    console.log("Generating dates for:", { frequency, startDate });
-
-    // Validate inputs
-    if (!frequency || !startDate) {
-      console.error("Missing frequency or startDate:", {
-        frequency,
-        startDate,
-      });
-      return [];
-    }
-
-    const dates = [];
-
-    try {
-      // Parse date from DD/MM/YYYY format
-      const dateParts = startDate.split("/");
-      if (dateParts.length !== 3) {
-        console.error(
-          "Invalid date format. Expected DD/MM/YYYY, got:",
-          startDate
-        );
-        return [];
-      }
-      const [day, month, year] = dateParts.map(Number);
-      const start = new Date(year, month - 1, day);
-
-      if (isNaN(start.getTime())) {
-        console.error("Invalid start date:", startDate);
-        return [];
-      }
-
-      // Normalize frequency string for case-insensitive matching
-      const normalizedFrequency = frequency.toLowerCase().trim();
-
-      // Handle different frequency types
-      if (
-        normalizedFrequency.includes("month") &&
-        !normalizedFrequency.includes("3") &&
-        !normalizedFrequency.includes("6")
-      ) {
-        // Monthly frequency - generate for 12 months (1 year)
-        for (let i = 0; i < 12; i++) {
-          const newDate = new Date(start);
-          newDate.setMonth(start.getMonth() + i);
-
-          // Handle edge case where day doesn't exist in target month
-          if (newDate.getDate() !== day) {
-            newDate.setDate(0); // Last day of previous month
-          }
-
-          dates.push(createActivityObject(i + 1, newDate));
-        }
-      } else if (normalizedFrequency.includes("3 month")) {
-        // 3 Month frequency - generate for 4 quarters (1 year)
-        for (let i = 0; i < 4; i++) {
-          const newDate = new Date(start);
-          newDate.setMonth(start.getMonth() + i * 3);
-
-          if (newDate.getDate() !== day) {
-            newDate.setDate(0);
-          }
-
-          dates.push(createActivityObject(i + 1, newDate));
-        }
-      } else if (normalizedFrequency.includes("6 month")) {
-        // 6 Month frequency - generate for 2 half-years (1 year)
-        for (let i = 0; i < 2; i++) {
-          const newDate = new Date(start);
-          newDate.setMonth(start.getMonth() + i * 6);
-
-          if (newDate.getDate() !== day) {
-            newDate.setDate(0);
-          }
-
-          dates.push(createActivityObject(i + 1, newDate));
-        }
-      } else if (
-        normalizedFrequency.includes("year") ||
-        normalizedFrequency.includes("1 year")
-      ) {
-        // Yearly frequency - generate for 1 year
-        const oneYearDate = new Date(start);
-        oneYearDate.setFullYear(start.getFullYear() + 1);
-
-        if (oneYearDate.getDate() !== day) {
-          oneYearDate.setDate(0);
-        }
-
-        dates.push(createActivityObject(1, oneYearDate));
-      } else if (normalizedFrequency.includes("week")) {
-        // Weekly frequency - generate 52 weeks (1 year)
-        for (let i = 0; i < 52; i++) {
-          const newDate = new Date(start);
-          newDate.setDate(start.getDate() + i * 7);
-          dates.push(createActivityObject(i + 1, newDate));
-        }
-      } else {
-        console.warn("Unknown frequency:", frequency);
-        dates.push(createActivityObject(1, start));
-      }
-    } catch (error) {
-      console.error("Error generating frequency dates:", error);
-      return [];
-    }
-
-    console.log("Generated dates:", dates);
-    return dates;
-  };
-
-  // Helper function to create activity object with proper title and date format
-  const createActivityObject = (index, date) => {
-    const ordinal = getOrdinalSuffix(index);
-    const formattedDate = formatDate(date);
-
-    return {
-      title: `${index}${ordinal} Activity Date`,
-      date: formattedDate,
-    };
-  };
-
-  // Helper function to get ordinal suffix (1st, 2nd, 3rd, 4th, etc.)
-  const getOrdinalSuffix = (number) => {
-    const lastDigit = number % 10;
-    const lastTwoDigits = number % 100;
-
-    if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
-      return "th";
-    }
-
-    switch (lastDigit) {
-      case 1:
-        return "st";
-      case 2:
-        return "nd";
-      case 3:
-        return "rd";
-      default:
-        return "th";
-    }
-  };
-
-  // Helper function to format date as "05-Nov-2025"
-  const formatDate = (date) => {
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = date.toLocaleString("en", { month: "short" });
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
-  };
-
-  // Handle reset form
-  const handleReset = () => {
-    reset();
-    dispatch(
-      actionPMScheduleData({
-        assets: [],
-        asset_type: "",
-        pm_details: {},
-        frequency_exceptions: [],
-        is_active: 0,
-      })
-    );
-    setSearchQuery("");
   };
 
   return (
@@ -652,6 +461,7 @@ export default function PMActivityAssetSetUp({ onNext, onBack }) {
                                   asset_id: asset.id,
                                   asset_type: asset.type,
                                   asset_description: asset.asset_description,
+                                  frequency_exceptions: [], // Initialize empty frequency exceptions
                                 });
                               }
                             } else {
@@ -801,7 +611,7 @@ export default function PMActivityAssetSetUp({ onNext, onBack }) {
                               // Step 2: Call backend delete API only if asset has uuid
                               if (asset?.uuid) {
                                 const response = await dispatch(
-                                  actionDeleteSelectedAsset({
+                                  actionDeletePmActivity({
                                     uuid: asset.uuid,
                                   })
                                 );
@@ -881,232 +691,231 @@ export default function PMActivityAssetSetUp({ onNext, onBack }) {
             }}
           >
             <CardContent sx={{ p: 2 }}>
-              <form
+              {/* <form
                 noValidate
                 autoComplete="off"
                 onSubmit={handleSubmit(onSubmit)}
-              >
-                <DatePickerWrapper>
-                  <Grid container sx={{ gap: "18px" }}>
-                    {/* PM Activity Title */}
-                    <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
-                      <Controller
-                        name="pm_activity_title"
-                        control={control}
-                        rules={{
-                          required: "PM Activity Title is required",
-                          maxLength: {
-                            value: 255,
-                            message: "Maximum length is 255 characters",
-                          },
-                        }}
-                        render={({ field }) => (
-                          <CustomTextField
-                            fullWidth
-                            value={field?.value || ""}
-                            label={
-                              <FormLabel
-                                label="PM Activity Title"
-                                fontSize={14}
-                                fontWeight={500}
-                                required={true}
-                              />
-                            }
-                            placeholder="Enter activity title"
-                            onChange={(e) => field.onChange(e)}
-                            inputProps={{ maxLength: 255 }}
-                            error={Boolean(errors.pm_activity_title)}
-                            {...(errors.pm_activity_title && {
-                              helperText: errors.pm_activity_title.message,
-                            })}
-                          />
-                        )}
-                      />
-                    </Grid>
-                    {/* Frequency */}
-                    <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
-                      <Controller
-                        name="frequency"
-                        control={control}
-                        rules={{
-                          required: "Frequency is required",
-                        }}
-                        render={({ field }) => (
-                          <CustomTextField
-                            select
-                            fullWidth
-                            value={field?.value || ""}
-                            label={
-                              <FormLabel label="Frequency" required={true} />
-                            }
-                            placeholder="Select frequency"
-                            onChange={(e) => field.onChange(e)}
-                            error={Boolean(errors.frequency)}
-                            {...(errors.frequency && {
-                              helperText: errors.frequency.message,
-                            })}
-                            SelectProps={{
-                              displayEmpty: true,
-                              IconComponent: ChevronDownIcon,
-                              MenuProps: {
-                                PaperProps: {
-                                  style: {
-                                    maxHeight: 220, // Set your desired max height
-                                    scrollbarWidth: "thin",
-                                  },
-                                },
-                              },
-                            }}
-                          >
-                            <MenuItem value="" disabled>
-                              <em>Select Frequency</em>
-                            </MenuItem>
-
-                            {getPmActivityFrequencyArray &&
-                              getPmActivityFrequencyArray.map((option) => (
-                                <MenuItem
-                                  key={option?.name}
-                                  value={option?.name}
-                                  sx={{
-                                    whiteSpace: "normal",
-                                    wordBreak: "break-word",
-                                    maxWidth: 300,
-                                    display: "-webkit-box",
-                                    WebkitLineClamp: 2,
-                                    WebkitBoxOrient: "vertical",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                  }}
-                                >
-                                  {option?.name}
-                                </MenuItem>
-                              ))}
-                          </CustomTextField>
-                        )}
-                      />
-                    </Grid>
-                    {/* Schedule Start Date */}
-                    <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
-                      <Controller
-                        name="schedule_start_date"
-                        control={control}
-                        rules={{ required: "Date is required" }}
-                        render={({ field }) => (
-                          <DatePicker
-                            id="schedule_start_date"
-                            customInput={
-                              <CustomTextField
-                                size="small"
-                                label={
-                                  <FormLabel
-                                    label="schedule start date"
-                                    required={true}
-                                  />
-                                }
-                                fullWidth
-                                placeholder="DD/MM/YYYY"
-                                InputProps={{
-                                  endAdornment: (
-                                    <InputAdornment position="start">
-                                      <IconButton
-                                        edge="start"
-                                        onMouseDown={(e) => e.preventDefault()}
-                                      >
-                                        <CalendarIcon />
-                                      </IconButton>
-                                    </InputAdornment>
-                                  ),
-                                }}
-                                error={Boolean(errors.schedule_start_date)}
-                                {...(errors.schedule_start_date && {
-                                  helperText:
-                                    errors.schedule_start_date.message,
-                                })}
-                              />
-                            }
-                            value={field.value}
-                            selected={
-                              field?.value
-                                ? moment(field.value, "DD/MM/YYYY").toDate()
-                                : null
-                            }
-                            showYearDropdown={true}
-                            onChange={(date) => {
-                              const formattedDate =
-                                moment(date).format("DD/MM/YYYY");
-                              field.onChange(formattedDate);
-                            }}
-                          />
-                        )}
-                      />
-                    </Grid>
-                    {/* Status */}
-                    <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
-                      <Controller
-                        name="status"
-                        control={control}
-                        rules={{ required: "Status is required" }}
-                        render={({ field }) => (
-                          <CustomTextField
-                            select
-                            fullWidth
-                            value={field?.value || ""}
-                            label={<FormLabel label="Status" required={true} />}
-                            placeholder="Select status"
-                            onChange={(e) => field.onChange(e)}
-                            error={Boolean(errors.status)}
-                            {...(errors.status && {
-                              helperText: errors.status.message,
-                            })}
-                            SelectProps={{
-                              displayEmpty: true,
-                              IconComponent: ChevronDownIcon,
-                              MenuProps: {
-                                PaperProps: {
-                                  style: {
-                                    maxHeight: 220, // Set your desired max height
-                                    scrollbarWidth: "thin",
-                                  },
-                                },
-                              },
-                            }}
-                          >
-                            <MenuItem value="" disabled>
-                              <em>Select Status</em>
-                            </MenuItem>
-
-                            {masterPmActivityStatusOptions &&
-                              masterPmActivityStatusOptions.map((option) => (
-                                <MenuItem
-                                  key={option?.name}
-                                  value={option?.name}
-                                  sx={{
-                                    whiteSpace: "normal",
-                                    wordBreak: "break-word",
-                                    maxWidth: 300,
-                                    display: "-webkit-box",
-                                    WebkitLineClamp: 2,
-                                    WebkitBoxOrient: "vertical",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                  }}
-                                >
-                                  {option?.name}
-                                </MenuItem>
-                              ))}
-                          </CustomTextField>
-                        )}
-                      />
-                    </Grid>
+              > */}
+              <DatePickerWrapper>
+                <Grid container sx={{ gap: "18px" }}>
+                  {/* PM Activity Title */}
+                  <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
+                    <Controller
+                      name="pm_activity_title"
+                      control={control}
+                      rules={{
+                        required: "PM Activity Title is required",
+                        maxLength: {
+                          value: 255,
+                          message: "Maximum length is 255 characters",
+                        },
+                      }}
+                      render={({ field }) => (
+                        <CustomTextField
+                          fullWidth
+                          value={field?.value || ""}
+                          label={
+                            <FormLabel
+                              label="PM Activity Title"
+                              fontSize={14}
+                              fontWeight={500}
+                              required={true}
+                            />
+                          }
+                          placeholder="Enter activity title"
+                          onChange={(e) => field.onChange(e)}
+                          inputProps={{ maxLength: 255 }}
+                          error={Boolean(errors.pm_activity_title)}
+                          {...(errors.pm_activity_title && {
+                            helperText: errors.pm_activity_title.message,
+                          })}
+                        />
+                      )}
+                    />
                   </Grid>
-                </DatePickerWrapper>
-              </form>
+                  {/* Frequency */}
+                  <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
+                    <Controller
+                      name="frequency"
+                      control={control}
+                      rules={{
+                        required: "Frequency is required",
+                      }}
+                      render={({ field }) => (
+                        <CustomTextField
+                          select
+                          fullWidth
+                          value={field?.value || ""}
+                          label={
+                            <FormLabel label="Frequency" required={true} />
+                          }
+                          placeholder="Select frequency"
+                          onChange={(e) => field.onChange(e)}
+                          error={Boolean(errors.frequency)}
+                          {...(errors.frequency && {
+                            helperText: errors.frequency.message,
+                          })}
+                          SelectProps={{
+                            displayEmpty: true,
+                            IconComponent: ChevronDownIcon,
+                            MenuProps: {
+                              PaperProps: {
+                                style: {
+                                  maxHeight: 220, // Set your desired max height
+                                  scrollbarWidth: "thin",
+                                },
+                              },
+                            },
+                          }}
+                        >
+                          <MenuItem value="" disabled>
+                            <em>Select Frequency</em>
+                          </MenuItem>
+
+                          {getPmActivityFrequencyArray &&
+                            getPmActivityFrequencyArray.map((option) => (
+                              <MenuItem
+                                key={option?.name}
+                                value={option?.name}
+                                sx={{
+                                  whiteSpace: "normal",
+                                  wordBreak: "break-word",
+                                  maxWidth: 300,
+                                  display: "-webkit-box",
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: "vertical",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                }}
+                              >
+                                {option?.name}
+                              </MenuItem>
+                            ))}
+                        </CustomTextField>
+                      )}
+                    />
+                  </Grid>
+                  {/* Schedule Start Date */}
+                  <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
+                    <Controller
+                      name="schedule_start_date"
+                      control={control}
+                      rules={{ required: "Schedule Start Date is required" }}
+                      render={({ field }) => (
+                        <DatePicker
+                          id="schedule_start_date"
+                          customInput={
+                            <CustomTextField
+                              size="small"
+                              label={
+                                <FormLabel
+                                  label="Schedule Start Date"
+                                  required={true}
+                                />
+                              }
+                              fullWidth
+                              placeholder="DD/MM/YYYY"
+                              InputProps={{
+                                endAdornment: (
+                                  <InputAdornment position="start">
+                                    <IconButton
+                                      edge="start"
+                                      onMouseDown={(e) => e.preventDefault()}
+                                    >
+                                      <CalendarIcon />
+                                    </IconButton>
+                                  </InputAdornment>
+                                ),
+                              }}
+                              error={Boolean(errors.schedule_start_date)}
+                              {...(errors.schedule_start_date && {
+                                helperText: errors.schedule_start_date.message,
+                              })}
+                            />
+                          }
+                          value={field.value}
+                          selected={
+                            field?.value
+                              ? moment(field.value, "DD/MM/YYYY").toDate()
+                              : null
+                          }
+                          showYearDropdown={true}
+                          onChange={(date) => {
+                            const formattedDate =
+                              moment(date).format("DD/MM/YYYY");
+                            field.onChange(formattedDate);
+                          }}
+                        />
+                      )}
+                    />
+                  </Grid>
+                  {/* Status */}
+                  <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
+                    <Controller
+                      name="status"
+                      control={control}
+                      rules={{ required: "Status is required" }}
+                      render={({ field }) => (
+                        <CustomTextField
+                          select
+                          fullWidth
+                          value={field?.value || ""}
+                          label={<FormLabel label="Status" required={true} />}
+                          placeholder="Select status"
+                          onChange={(e) => field.onChange(e)}
+                          error={Boolean(errors.status)}
+                          {...(errors.status && {
+                            helperText: errors.status.message,
+                          })}
+                          SelectProps={{
+                            displayEmpty: true,
+                            IconComponent: ChevronDownIcon,
+                            MenuProps: {
+                              PaperProps: {
+                                style: {
+                                  maxHeight: 220, // Set your desired max height
+                                  scrollbarWidth: "thin",
+                                },
+                              },
+                            },
+                          }}
+                        >
+                          <MenuItem value="" disabled>
+                            <em>Select Status</em>
+                          </MenuItem>
+
+                          {masterPmActivityStatusOptions &&
+                            masterPmActivityStatusOptions.map((option) => (
+                              <MenuItem
+                                key={option?.name}
+                                value={option?.name}
+                                sx={{
+                                  whiteSpace: "normal",
+                                  wordBreak: "break-word",
+                                  maxWidth: 300,
+                                  display: "-webkit-box",
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: "vertical",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                }}
+                              >
+                                {option?.name}
+                              </MenuItem>
+                            ))}
+                        </CustomTextField>
+                      )}
+                    />
+                  </Grid>
+                </Grid>
+              </DatePickerWrapper>
+              {/* </form> */}
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
-      <Divider sx={{ m: 2 }} />
+      {/* <Divider sx={{ m: 2 }} />
       <Stack
         direction="row"
         justifyContent="space-between"
@@ -1152,7 +961,7 @@ export default function PMActivityAssetSetUp({ onNext, onBack }) {
             "Preview"
           )}
         </Button>
-      </Stack>
+      </Stack> */}
     </Box>
   );
 }

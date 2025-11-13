@@ -55,12 +55,14 @@ import {
   actionMasterAssetType,
   resetMasterAssetTypeResponse,
 } from "../../store/asset";
+import { useBranch } from "../../hooks/useBranch";
 
 export default function PmActivity() {
   const theme = useTheme();
   const dispatch = useDispatch();
   const { logout } = useAuth();
   const { showSnackbar } = useSnackbar();
+  const branch = useBranch();
 
   // store
   const { pmScheduleList } = useSelector((state) => state.PmActivityStore);
@@ -69,10 +71,12 @@ export default function PmActivity() {
   const [pmScheduleActivityData, setPmScheduleActivityData] = useState([]);
   const [originalPmActivityScheduleData, setOriginalPmActivityScheduleData] =
     useState([]);
+
+  const [upcomingSchedules, setUpcomingSchedules] = useState([]);
   const [loadingList, setLoadingList] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const [selectedPriority, setSelectedPriority] = useState("");
+  const [selectedFrequency, setSelectedFrequency] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedAssetTypes, setSelectedAssetTypes] = useState("");
   const [masterAssetTypeOptions, setMasterAssetTypeOptions] = useState([]);
@@ -80,18 +84,11 @@ export default function PmActivity() {
   const [masterPmActivityScheduleOptions] = useState(
     getMasterPMActivitySchedule
   );
+  const [selectedUpcomingPmSchedule, setSelectedUpcomingPmSchedule] =
+    useState("");
 
   const [openAddTicket, setOpenAddTicket] = useState(false);
   const { masterAssetType } = useSelector((state) => state.AssetStore);
-
-  const upcomingSchedules = [
-    { id: 1, date: "11 Nov 2025", title: "Electrical system PM schedule" },
-    { id: 2, date: "16 Nov 2025", title: "Plumbing system PM schedule" },
-    { id: 3, date: "23 Nov 2025", title: "Fire safety PM schedule" },
-    { id: 4, date: "24 Nov 2025", title: "Emergency safety PM schedule" },
-    { id: 5, date: "24 Nov 2025", title: "Electrical safety PM schedule" },
-    { id: 6, date: "24 Nov 2025", title: "Plumbing safety PM schedule" },
-  ];
 
   const columns = [
     {
@@ -288,203 +285,212 @@ export default function PmActivity() {
   useEffect(() => {
     if (pmScheduleList && pmScheduleList !== null) {
       dispatch(resetPmScheduleListResponse());
+      console.log(
+        "pmScheduleList*******************************************",
+        pmScheduleList
+      );
       if (pmScheduleList?.result === true) {
-        setPmScheduleActivityData(pmScheduleList?.response?.data);
-        setOriginalPmActivityScheduleData(pmScheduleList?.response?.data);
-        let objData = pmScheduleList?.response?.counts;
+        setPmScheduleActivityData(pmScheduleList?.response?.pm_schedule_list);
+        setOriginalPmActivityScheduleData(
+          pmScheduleList?.response?.pm_schedule_list
+        );
+
+        setUpcomingSchedules(pmScheduleList?.response?.upcoming_schedule_list);
+
+        let objData = pmScheduleList?.response;
         setGetArrPmActivityCounts((prevArr) =>
           prevArr.map((item) => ({
             ...item,
             value: objData[item.key] !== undefined ? objData[item.key] : 0,
           }))
         );
-        setTotal(pmScheduleList?.response?.counts?.total_tickets);
+        setTotal(pmScheduleList?.response?.total_pm_schedules);
         setLoadingList(false);
       } else {
-        setLoadingList(false);
-        setPmScheduleActivityData([
-          {
-            id: 1,
-            title: "Electrical System PM Schedule",
-            assets: [
-              "CTPT Check Meter",
-              "ISO-G-1 Panel",
-              "Power Factor Panel",
-              "VFD Main Panel",
-            ],
-            start_date: "23/09/2025",
-            frequency: "Quarterly",
-            status: "Overdue",
-          },
-          {
-            id: 2,
-            title: "Plumbing System PM Schedule",
-            assets: [
-              "CTPT Check Meter",
-              "Pump Control Panel",
-              "Booster Pump Panel",
-            ],
-            start_date: "23/09/2025",
-            frequency: "Monthly",
-            status: "Completed",
-          },
-          {
-            id: 3,
-            title: "Elevator PM Schedule",
-            assets: [
-              "ISO-G-1 Panel",
-              "ATS Control Panel",
-              "Soft Starter Panel",
-              "VFD Bypass Panel",
-            ],
-            start_date: "23/09/2025",
-            frequency: "Weekly",
-            status: "Active",
-          },
-          {
-            id: 4,
-            title: "Fire Safety System PM Schedule",
-            assets: ["Conventional Fire Panel", "Sprinkler Control Panel"],
-            start_date: "23/09/2025",
-            frequency: "Yearly",
-            status: "Active",
-          },
-          {
-            id: 5,
-            title: "Lighting System PM Schedule",
-            assets: ["ISO-G-1 Panel", "CTPT Check Meter"],
-            start_date: "23/09/2025",
-            frequency: "Monthly",
-            status: "Active",
-          },
-          {
-            id: 6,
-            title: "HVAC System PM Schedule",
-            assets: [
-              "Chiller Control Panel",
-              "AHU Control Panel",
-              "Cooling Tower Panel",
-            ],
-            start_date: "23/09/2025",
-            frequency: "Weekly",
-            status: "Overdue",
-          },
-          {
-            id: 7,
-            title: "Security System PM Schedule",
-            assets: ["CCTV Control Panel", "Access Control Panel"],
-            start_date: "23/09/2025",
-            frequency: "Yearly",
-            status: "Completed",
-          },
-          {
-            id: 8,
-            title: "Water Treatment PM Schedule",
-            assets: [
-              "PLC Control Panel",
-              "BMS Control Panel",
-              "Main Distribution Board",
-            ],
-            start_date: "23/09/2025",
-            frequency: "Monthly",
-            status: "Active",
-          },
-          {
-            id: 9,
-            title: "Generator PM Schedule",
-            assets: [
-              "DG Control Panel",
-              "DG Sync Panel",
-              "ATS Control Panel",
-              "Power Factor Panel",
-            ],
-            start_date: "23/09/2025",
-            frequency: "Weekly",
-            status: "Active",
-          },
-          {
-            id: 10,
-            title: "Pump System PM Schedule",
-            assets: [
-              "Jockey Pump Panel",
-              "Booster Pump Panel",
-              "Fire Pump Panel",
-            ],
-            start_date: "23/09/2025",
-            frequency: "Yearly",
-            status: "Completed",
-          },
-          {
-            id: 11,
-            title: "HVAC System PM Schedule",
-            assets: [
-              "Chiller Control Panel",
-              "AHU Control Panel",
-              "Cooling Tower Panel",
-            ],
-            start_date: "23/09/2025",
-            frequency: "Weekly",
-            status: "Overdue",
-          },
-          {
-            id: 12,
-            title: "Security System PM Schedule",
-            assets: ["CCTV Control Panel", "Access Control Panel"],
-            start_date: "23/09/2025",
-            frequency: "Yearly",
-            status: "Completed",
-          },
-          {
-            id: 13,
-            title: "Water Treatment PM Schedule",
-            assets: [
-              "PLC Control Panel",
-              "BMS Control Panel",
-              "Main Distribution Board",
-            ],
-            start_date: "23/09/2025",
-            frequency: "Monthly",
-            status: "Active",
-          },
-          {
-            id: 14,
-            title: "Generator PM Schedule",
-            assets: [
-              "DG Control Panel",
-              "DG Sync Panel",
-              "ATS Control Panel",
-              "Power Factor Panel",
-            ],
-            start_date: "23/09/2025",
-            frequency: "Weekly",
-            status: "Active",
-          },
-          {
-            id: 15,
-            title: "Pump System PM Schedule",
-            assets: [
-              "Jockey Pump Panel",
-              "Booster Pump Panel",
-              "Fire Pump Panel",
-            ],
-            start_date: "23/09/2025",
-            frequency: "Yearly",
-            status: "Completed",
-          },
-        ]);
+        // setLoadingList(false);
+        // setPmScheduleActivityData([
+        //   {
+        //     id: 1,
+        //     title: "Electrical System PM Schedule",
+        //     assets: [
+        //       "CTPT Check Meter",
+        //       "ISO-G-1 Panel",
+        //       "Power Factor Panel",
+        //       "VFD Main Panel",
+        //     ],
+        //     start_date: "23/09/2025",
+        //     frequency: "Quarterly",
+        //     status: "Overdue",
+        //   },
+        //   {
+        //     id: 2,
+        //     title: "Plumbing System PM Schedule",
+        //     assets: [
+        //       "CTPT Check Meter",
+        //       "Pump Control Panel",
+        //       "Booster Pump Panel",
+        //     ],
+        //     start_date: "23/09/2025",
+        //     frequency: "Monthly",
+        //     status: "Completed",
+        //   },
+        //   {
+        //     id: 3,
+        //     title: "Elevator PM Schedule",
+        //     assets: [
+        //       "ISO-G-1 Panel",
+        //       "ATS Control Panel",
+        //       "Soft Starter Panel",
+        //       "VFD Bypass Panel",
+        //     ],
+        //     start_date: "23/09/2025",
+        //     frequency: "Weekly",
+        //     status: "Active",
+        //   },
+        //   {
+        //     id: 4,
+        //     title: "Fire Safety System PM Schedule",
+        //     assets: ["Conventional Fire Panel", "Sprinkler Control Panel"],
+        //     start_date: "23/09/2025",
+        //     frequency: "Yearly",
+        //     status: "Active",
+        //   },
+        //   {
+        //     id: 5,
+        //     title: "Lighting System PM Schedule",
+        //     assets: ["ISO-G-1 Panel", "CTPT Check Meter"],
+        //     start_date: "23/09/2025",
+        //     frequency: "Monthly",
+        //     status: "Active",
+        //   },
+        //   {
+        //     id: 6,
+        //     title: "HVAC System PM Schedule",
+        //     assets: [
+        //       "Chiller Control Panel",
+        //       "AHU Control Panel",
+        //       "Cooling Tower Panel",
+        //     ],
+        //     start_date: "23/09/2025",
+        //     frequency: "Weekly",
+        //     status: "Overdue",
+        //   },
+        //   {
+        //     id: 7,
+        //     title: "Security System PM Schedule",
+        //     assets: ["CCTV Control Panel", "Access Control Panel"],
+        //     start_date: "23/09/2025",
+        //     frequency: "Yearly",
+        //     status: "Completed",
+        //   },
+        //   {
+        //     id: 8,
+        //     title: "Water Treatment PM Schedule",
+        //     assets: [
+        //       "PLC Control Panel",
+        //       "BMS Control Panel",
+        //       "Main Distribution Board",
+        //     ],
+        //     start_date: "23/09/2025",
+        //     frequency: "Monthly",
+        //     status: "Active",
+        //   },
+        //   {
+        //     id: 9,
+        //     title: "Generator PM Schedule",
+        //     assets: [
+        //       "DG Control Panel",
+        //       "DG Sync Panel",
+        //       "ATS Control Panel",
+        //       "Power Factor Panel",
+        //     ],
+        //     start_date: "23/09/2025",
+        //     frequency: "Weekly",
+        //     status: "Active",
+        //   },
+        //   {
+        //     id: 10,
+        //     title: "Pump System PM Schedule",
+        //     assets: [
+        //       "Jockey Pump Panel",
+        //       "Booster Pump Panel",
+        //       "Fire Pump Panel",
+        //     ],
+        //     start_date: "23/09/2025",
+        //     frequency: "Yearly",
+        //     status: "Completed",
+        //   },
+        //   {
+        //     id: 11,
+        //     title: "HVAC System PM Schedule",
+        //     assets: [
+        //       "Chiller Control Panel",
+        //       "AHU Control Panel",
+        //       "Cooling Tower Panel",
+        //     ],
+        //     start_date: "23/09/2025",
+        //     frequency: "Weekly",
+        //     status: "Overdue",
+        //   },
+        //   {
+        //     id: 12,
+        //     title: "Security System PM Schedule",
+        //     assets: ["CCTV Control Panel", "Access Control Panel"],
+        //     start_date: "23/09/2025",
+        //     frequency: "Yearly",
+        //     status: "Completed",
+        //   },
+        //   {
+        //     id: 13,
+        //     title: "Water Treatment PM Schedule",
+        //     assets: [
+        //       "PLC Control Panel",
+        //       "BMS Control Panel",
+        //       "Main Distribution Board",
+        //     ],
+        //     start_date: "23/09/2025",
+        //     frequency: "Monthly",
+        //     status: "Active",
+        //   },
+        //   {
+        //     id: 14,
+        //     title: "Generator PM Schedule",
+        //     assets: [
+        //       "DG Control Panel",
+        //       "DG Sync Panel",
+        //       "ATS Control Panel",
+        //       "Power Factor Panel",
+        //     ],
+        //     start_date: "23/09/2025",
+        //     frequency: "Weekly",
+        //     status: "Active",
+        //   },
+        //   {
+        //     id: 15,
+        //     title: "Pump System PM Schedule",
+        //     assets: [
+        //       "Jockey Pump Panel",
+        //       "Booster Pump Panel",
+        //       "Fire Pump Panel",
+        //     ],
+        //     start_date: "23/09/2025",
+        //     frequency: "Yearly",
+        //     status: "Completed",
+        //   },
+        // ]);
 
-        setTotal(100);
+        // setTotal(100);
         // setGetArrPmActivityCounts(null);
-        // setPmScheduleActivityData;
-        // [];
-        // setOriginalPmActivityScheduleData;
-        // [];
+        setPmScheduleActivityData([]);
+        setOriginalPmActivityScheduleData([]);
+        setUpcomingSchedules([]);
+
         let objData = {
-          total_tickets: 0,
-          open_tickets: 0,
-          overdue_tickets: 0,
-          on_hold_tickets: 0,
-          closed_tickets: 0,
+          total_pm_schedules: 0,
+          active_pm_schedule: 0,
+          completed_pm_schedule: 0,
+          overdue_pm_schedule: 0,
+          upcoming_pm_schedule: 0,
         };
         setGetArrPmActivityCounts((prevArr) =>
           prevArr.map((item) => ({
@@ -513,7 +519,7 @@ export default function PmActivity() {
   }, [pmScheduleList]);
 
   /**
-   * Ticket list API Call on change of Page
+   *  list API Call on change of Page
    */
   useEffect(() => {
     if (page !== null) {
@@ -521,17 +527,25 @@ export default function PmActivity() {
         actionPMScheduleList({
           page: page,
           limit: LIST_LIMIT,
-          // priority: selectedPriority,
           status: selectedStatus,
           asset_type: selectedAssetTypes,
+          branch_uuid: branch?.currentBranch?.uuid,
+          frequency: selectedFrequency,
+          upcoming_filter: selectedUpcomingPmSchedule,
         })
       );
     }
-  }, [page, selectedStatus, selectedAssetTypes]);
+  }, [
+    page,
+    selectedStatus,
+    selectedAssetTypes,
+    selectedFrequency,
+    selectedUpcomingPmSchedule,
+  ]);
 
-  //Keep this ONCE only
-
-  //API for Asset Type
+  /**
+   * Asset Type
+   */
   useEffect(() => {
     if (masterAssetType && masterAssetType !== null) {
       dispatch(resetMasterAssetTypeResponse());
@@ -560,7 +574,7 @@ export default function PmActivity() {
   }, [masterAssetType]);
 
   /**
-   * Filter the setting list
+   * Filter the PM Activity list
    */
   useEffect(() => {
     if (searchQuery && searchQuery.trim().length > 0) {
@@ -883,9 +897,9 @@ export default function PmActivity() {
                   select
                   fullWidth
                   sx={{ width: 150 }}
-                  value={selectedPriority}
+                  value={selectedFrequency}
                   onChange={(event) => {
-                    setSelectedPriority(event.target.value);
+                    setSelectedFrequency(event.target.value);
                   }}
                   SelectProps={{
                     displayEmpty: true,
@@ -1032,6 +1046,10 @@ export default function PmActivity() {
                       <Select
                         defaultValue="This Month"
                         size="small"
+                        value={selectedUpcomingPmSchedule}
+                        onChange={(event) => {
+                          setSelectedUpcomingPmSchedule(event.target.value);
+                        }}
                         sx={{
                           borderRadius: 2,
                           fontSize: 14,

@@ -4,6 +4,7 @@ import { getErrorResponse } from "../../utils";
 import {
   API_PM_ACTIVITY_LIST,
   API_SELECTED_ASSET_REMOVE,
+  API_PM_ACTIVITY_ADD,
 } from "../../common/api/constants";
 
 export const defaultPMScheduleData = {
@@ -15,6 +16,19 @@ export const defaultPMScheduleData = {
 
 export const actionPMScheduleList = createAsyncThunk(
   "pm-activity/actionPMScheduleList",
+  async (params) => {
+    try {
+      const response = await axiosApi.post(API_PM_ACTIVITY_LIST, params);
+
+      return response.status !== 200 ? getErrorResponse() : response.data;
+    } catch (error) {
+      return error;
+    }
+  }
+);
+
+export const actionPMScheduleAdd = createAsyncThunk(
+  "pm-activity/actionPMScheduleAdd",
   async (params) => {
     try {
       const response = await axiosApi.post(API_PM_ACTIVITY_LIST, params);
@@ -52,6 +66,7 @@ export const PmActivityStore = createSlice({
     pmScheduleList: null,
     pmScheduleData: null,
     deleteSelectedAsset: null,
+    pmScheduleAdd: null,
   },
 
   reducers: {
@@ -64,6 +79,9 @@ export const PmActivityStore = createSlice({
     resetPmScheduleSelectedAssetResponse: (state) => {
       state.deleteSelectedAsset = null;
     },
+    resetPmScheduleAddAssetResponse: (state) => {
+      state.pmScheduleAdd = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -75,6 +93,9 @@ export const PmActivityStore = createSlice({
       })
       .addCase(actionDeleteSelectedAsset.fulfilled, (state, action) => {
         state.deleteSelectedAsset = action.payload;
+      })
+      .addCase(actionPMScheduleAdd.fulfilled, (state, action) => {
+        state.pmScheduleAdd = action.payload;
       });
   },
 });
@@ -83,6 +104,7 @@ export const {
   resetPmScheduleListResponse,
   resetPmScheduleDataResponse,
   resetPmScheduleSelectedAssetResponse,
+  resetPmScheduleAddAssetResponse,
 } = PmActivityStore.actions;
 
 export default PmActivityStore.reducer;
