@@ -6,7 +6,7 @@ import ChevronDownIcon from '../../assets/icons/ChevronDown';
 import { useSelector } from 'react-redux';
 import { ERROR, SERVER_ERROR, UNAUTHORIZED } from '../../constants';
 
-export default function CountryCodeSelect({ control, name, rules }) {
+export default function CountryCodeSelect({ control, name, rules, disabled = false }) {
     const theme = useTheme();
 
     //Stores
@@ -57,6 +57,7 @@ export default function CountryCodeSelect({ control, name, rules }) {
                 return (
                     <TextField
                         select
+                        disabled={disabled}
                         value={safeValue}
                         onChange={e => ccField.onChange(e.target.value)}
                         size="small"

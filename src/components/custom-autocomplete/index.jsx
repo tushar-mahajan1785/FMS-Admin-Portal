@@ -5,7 +5,7 @@ import FormLabel from '../form-label';
 import ChevronDownIcon from '../../assets/icons/ChevronDown';
 import TypographyComponent from '../custom-typography';
 
-const CustomAutocomplete = forwardRef(({ options, label, error, helperText, value, onChange, displayName1, displayName2, ...rest }, ref) => {
+const CustomAutocomplete = forwardRef(({ options, is_required = false, label, error, helperText, value, onChange, displayName1, displayName2, ...rest }, ref) => {
     const theme = useTheme();
 
     // Helper function to get the correct option label based on available keys
@@ -33,7 +33,7 @@ const CustomAutocomplete = forwardRef(({ options, label, error, helperText, valu
             renderInput={(params) => (
                 <CustomTextField
                     {...params}
-                    label={<FormLabel label={label} required={false} />}
+                    label={<FormLabel label={label} required={is_required} />}
                     error={error}
                     placeholder={`Select ${label}`}
                     helperText={helperText}

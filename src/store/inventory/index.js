@@ -1,9 +1,9 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
-import { axiosApi } from "../../common/api"
+import { axiosApi, MULTIPART_HEADER } from "../../common/api"
 import { getErrorResponse } from "../../utils";
 import {
     API_INVENTORY_LIST, API_INVENTORY_ADD, API_INVENTORY_DETAIL, API_INVENTORY_DELETE,
-    API_INVENTORY_CATEGORY, API_INVENTORY_CATEGORY_ADD, API_INVENTORY_CATEGORY_DETAILS, API_INVENTORY_CATEGORY_DELETE
+    API_INVENTORY_CATEGORY, API_INVENTORY_CATEGORY_ADD, API_INVENTORY_CATEGORY_DETAILS, API_INVENTORY_CATEGORY_DELETE, API_GET_UNIT_LIST
 } from "../../common/api/constants";
 
 export const actionInventoryList = createAsyncThunk('inventory/actionInventoryList', async (params) => {
@@ -18,7 +18,7 @@ export const actionInventoryList = createAsyncThunk('inventory/actionInventoryLi
 
 export const actionAddInventory = createAsyncThunk('inventory/actionAddInventory', async (params) => {
     try {
-        const response = await axiosApi.post(API_INVENTORY_ADD, params)
+        const response = await axiosApi.post(API_INVENTORY_ADD, params, MULTIPART_HEADER)
 
         return response.status !== 200 ? getErrorResponse() : response.data
     } catch (error) {
@@ -82,6 +82,15 @@ export const actionDeleteInventoryCategory = createAsyncThunk('inventory/actionD
         return error
     }
 })
+export const actionGetUnitMaster = createAsyncThunk('inventory/actionGetUnitMaster', async () => {
+    try {
+        const response = await axiosApi.get(API_GET_UNIT_LIST)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
 
 export const inventoryStore = createSlice({
     name: 'inventory',
@@ -94,6 +103,7 @@ export const inventoryStore = createSlice({
         addInventoryCategory: null,
         getInventoryCategoryDetails: null,
         deleteInventoryCategory: null,
+        getUnitMaster: null
     },
 
     reducers: {
@@ -120,6 +130,9 @@ export const inventoryStore = createSlice({
         },
         resetDeleteInventoryCategoryResponse: (state) => {
             state.deleteInventoryCategory = null
+        },
+        resetGetUnitMasterResponse: (state) => {
+            state.getUnitMaster = null
         },
     },
     extraReducers: builder => {
@@ -148,6 +161,9 @@ export const inventoryStore = createSlice({
             .addCase(actionDeleteInventoryCategory.fulfilled, (state, action) => {
                 state.deleteInventoryCategory = action.payload
             })
+            .addCase(actionGetUnitMaster.fulfilled, (state, action) => {
+                state.getUnitMaster = action.payload
+            })
     }
 })
 
@@ -159,7 +175,8 @@ export const {
     resetInventoryCategoryListResponse,
     resetAddInventoryCategoryResponse,
     resetGetInventoryCategoryDetailsResponse,
-    resetDeleteInventoryCategoryResponse
+    resetDeleteInventoryCategoryResponse,
+    resetGetUnitMasterResponse
 } =
     inventoryStore.actions
 

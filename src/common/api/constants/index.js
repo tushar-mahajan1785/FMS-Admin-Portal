@@ -291,6 +291,8 @@ export const API_INVENTORY_CATEGORY_DELETE = `${BASE}/inventory/category/remove`
 
 export const API_INVENTORY_CATEGORY_DETAILS = `${BASE}/inventory/category/details`
 
+export const API_GET_UNIT_LIST = `${BASE}/unit/list`
+
 //PM ACTIVITY
 
 export const API_PM_ACTIVITY_LIST = `${BASE}/pm-activity/list`
