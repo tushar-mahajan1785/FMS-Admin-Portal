@@ -496,7 +496,7 @@ export default function AddInventory({ open, handleClose, type, details }) {
                     size={48}
                     icon={<BoxPlusIcon stroke={theme.palette.primary[600]} size={20} />}
                     title={`${type == 'add' ? 'Add New Inventory Item' : 'Edit Inventory Item'}`}
-                    subtitle="Enter details for the new inventory item"
+                    subtitle={`${type == 'add' ? 'Enter details for the new inventory item' : 'Edit details for this inventory item'}`}
                     actions={[
                         <IconButton
                             onClick={handleClose}
@@ -1083,7 +1083,7 @@ export default function AddInventory({ open, handleClose, type, details }) {
                         variant='contained'
                         disabled={loading}
                     >
-                        {loading ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'Add Item'}
+                        {loading ? <CircularProgress size={18} sx={{ color: 'white' }} /> : (type == 'add' ? 'Add Item' : 'Save Changes')}
                     </Button>
                 </Stack>
             </Stack >
