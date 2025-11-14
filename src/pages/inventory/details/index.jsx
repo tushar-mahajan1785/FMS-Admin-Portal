@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useTheme } from '@emotion/react'
-import { Box, Button, CircularProgress, Divider, Drawer, Grid, IconButton, Stack, Tooltip } from '@mui/material'
+import { Box, Button, CircularProgress, Divider, Drawer, Grid, IconButton, InputAdornment, Stack, Tooltip } from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import FormHeader from '../../../components/form-header'
 import CloseIcon from '../../../assets/icons/CloseIcon'
@@ -26,6 +26,9 @@ import { useSnackbar } from '../../../hooks/useSnackbar'
 import AlertPopup from '../../../components/alert-confirm'
 import { useBranch } from '../../../hooks/useBranch'
 import AlertCircleIcon from '../../../assets/icons/AlertCircleIcon'
+import DatePicker from 'react-datepicker'
+import CustomTextField from '../../../components/text-field'
+import DatePickerWrapper from '../../../components/datapicker-wrapper'
 
 export const InventoryDetails = ({ open, handleClose, detail }) => {
     const dispatch = useDispatch()
@@ -47,6 +50,8 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
     const [openViewDeleteInventoryPopup, setOpenViewDeleteInventoryPopup] = useState(false)
     const [viewLoadingDelete, setViewLoadingDelete] = useState(false)
     const [viewInventoryData, setViewInventoryData] = useState(null)
+    const [selectedStartDate, setSelectedStartDate] = useState(null)
+    const [selectedEndDate, setSelectedEndDate] = useState(null)
 
     const columns = [
         {
@@ -176,6 +181,8 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
         if (open === true) {
             setViewLoadingDelete(false)
             console.log('detail', detail)
+            setSelectedStartDate(moment().startOf('month').format('DD/MM/YYYY'))
+            setSelectedEndDate(moment().format('DD/MM/YYYY'))
             dispatch(actionGetInventoryDetails({
                 uuid: detail?.uuid
             }))
@@ -249,22 +256,48 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
             setTotal(0)
             setPage(1)
             setViewInventoryData(null)
+            setSelectedStartDate(null)
+            setSelectedEndDate(null)
         }
-
     }, [open])
 
     useEffect(() => {
         if (selectedFilter !== 'Overview' && branch?.currentBranch?.uuid !== null && page && page !== null) {
+            if (!selectedStartDate || !selectedEndDate) return;
+
+            const start = moment(selectedStartDate, "DD/MM/YYYY");
+            const end = moment(selectedEndDate, "DD/MM/YYYY");
+
+            // ❗ Show toast if start > end
+            if (start.isAfter(end)) {
+                showSnackbar({
+                    message: "Start date cannot be greater than end date.",
+                    severity: "error",
+                });
+                return;
+            }
+
+            // ❗ Show toast if end < start (optional - same as above)
+            if (end.isBefore(start)) {
+                showSnackbar({
+                    message: "End date cannot be smaller than start date.",
+                    severity: "error",
+                });
+                return;
+            }
+
             dispatch(actionGetInventoryTransactionHistory({
                 type: selectedFilter,
                 inventory_uuid: detail?.uuid,
                 branch_uuid: branch?.currentBranch?.uuid,
                 page: page,
-                limit: LIST_LIMIT
+                limit: LIST_LIMIT,
+                start_date: moment(selectedStartDate, "DD/MM/YYYY").format('YYYY-MM-DD'),
+                end_date: moment(selectedEndDate, "DD/MM/YYYY").format('YYYY-MM-DD')
             }))
         }
 
-    }, [branch?.currentBranch?.uuid, selectedFilter, page])
+    }, [branch?.currentBranch?.uuid, selectedFilter, page, selectedStartDate, selectedEndDate])
 
     /**
         * useEffect
@@ -564,45 +597,127 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                             />
                         </Grid>
                     </Grid>
-                    <Box
-                        sx={{
-                            borderRadius: "16px",
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: 2,
-                            alignItems: "flex-start"
-                        }}
-                    >
+                    <Stack sx={{ flexDirection: { xs: 'column', sm: 'column', md: 'row' }, rowGap: 1.5, justifyContent: 'space-between' }}>
+                        <Box
+                            sx={{
+                                borderRadius: "16px",
+                                display: "flex",
+                                flexWrap: "wrap",
+                                gap: 2,
+                                alignItems: "flex-start"
+                            }}
+                        >
+                            {
+                                filterJson && filterJson.length > 0 && filterJson?.map((filter, index) => (
+                                    <Stack
+                                        key={index}
+                                        sx={{
+                                            background:
+                                                selectedFilter === filter ? theme.palette.primary[600] : theme.palette.common.white,
+                                            border: selectedFilter ===
+                                                filter
+                                                ? "none"
+                                                : `1px solid ${theme.palette.grey[500]}`,
+                                            color: selectedFilter ===
+                                                filter
+                                                ? theme.palette.common.white
+                                                : theme.palette.grey[700],
+                                            borderRadius: "8px",
+                                            padding: "8px 16px",
+                                            cursor: "pointer",
+                                        }}
+                                        onClick={() => {
+                                            setSelectedFilter(filter);
+                                        }}
+                                    >
+                                        <TypographyComponent fontSize={14} fontWeight={400}>
+                                            {filter}
+                                        </TypographyComponent>
+                                    </Stack>
+                                ))
+                            }
+                        </Box>
                         {
-                            filterJson && filterJson.length > 0 && filterJson?.map((filter, index) => (
-                                <Stack
-                                    key={index}
-                                    sx={{
-                                        background:
-                                            selectedFilter === filter ? theme.palette.primary[600] : theme.palette.common.white,
-                                        border: selectedFilter ===
-                                            filter
-                                            ? "none"
-                                            : `1px solid ${theme.palette.grey[500]}`,
-                                        color: selectedFilter ===
-                                            filter
-                                            ? theme.palette.common.white
-                                            : theme.palette.grey[700],
-                                        borderRadius: "8px",
-                                        padding: "8px 16px",
-                                        cursor: "pointer",
-                                    }}
-                                    onClick={() => {
-                                        setSelectedFilter(filter);
-                                    }}
-                                >
-                                    <TypographyComponent fontSize={14} fontWeight={400}>
-                                        {filter}
-                                    </TypographyComponent>
-                                </Stack>
-                            ))
+                            selectedFilter !== 'Overview' ?
+                                <Box>
+                                    <DatePickerWrapper>
+                                        <Stack sx={{ flexDirection: 'row', gap: 2 }}>
+                                            <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 0.5, border: `1px solid ${theme.palette.grey[400]}`, borderRadius: '6px', p: 0.5 }}>
+                                                <TypographyComponent fontSize={14}>START&nbsp;DATE</TypographyComponent>
+                                                <DatePicker
+                                                    id='start_date'
+                                                    placeholderText='Start Date'
+                                                    customInput={
+                                                        <CustomTextField
+                                                            size='small'
+                                                            fullWidth
+                                                            sx={{ width: '145px' }}
+                                                            InputProps={{
+                                                                startAdornment: (
+                                                                    <InputAdornment position='start'>
+                                                                        <IconButton
+                                                                            edge='start'
+                                                                            onMouseDown={e => e.preventDefault()}
+                                                                        >
+                                                                            <CalendarIcon />
+                                                                        </IconButton>
+                                                                    </InputAdornment>
+                                                                )
+                                                            }}
+                                                        />
+                                                    }
+                                                    value={selectedStartDate}
+                                                    selected={selectedStartDate ? moment(selectedStartDate, 'DD/MM/YYYY').toDate() : null}
+                                                    showYearDropdown={true}
+                                                    onChange={date => {
+                                                        const formattedDate = moment(date).format('DD/MM/YYYY')
+                                                        setSelectedStartDate(formattedDate)
+                                                    }}
+                                                />
+                                            </Stack>
+                                            <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 0.5, border: `1px solid ${theme.palette.grey[400]}`, borderRadius: '6px', p: 0.5 }}>
+                                                <TypographyComponent fontSize={14}>END&nbsp;DATE</TypographyComponent>
+                                                <DatePicker
+                                                    id='end_date'
+                                                    placeholderText='End Date'
+                                                    customInput={
+                                                        <CustomTextField
+                                                            size='small'
+                                                            fullWidth
+                                                            sx={{ width: '145px', p: 0 }}
+                                                            InputProps={{
+                                                                startAdornment: (
+                                                                    <InputAdornment position='start'>
+                                                                        <IconButton
+                                                                            edge='start'
+                                                                            onMouseDown={e => e.preventDefault()}
+                                                                        >
+                                                                            <CalendarIcon />
+                                                                        </IconButton>
+                                                                    </InputAdornment>
+                                                                )
+                                                            }}
+                                                        />
+                                                    }
+                                                    value={selectedEndDate}
+                                                    selected={selectedEndDate ? moment(selectedEndDate, 'DD/MM/YYYY').toDate() : null}
+                                                    minDate={selectedEndDate ? moment(selectedEndDate, 'DD/MM/YYYY').add(1, 'days').toDate() : null}
+                                                    showYearDropdown={true}
+                                                    onChange={date => {
+                                                        const formattedDate = moment(date).format('DD/MM/YYYY')
+                                                        setSelectedEndDate(formattedDate)
+                                                    }}
+                                                />
+                                            </Stack>
+
+
+                                        </Stack>
+                                    </DatePickerWrapper>
+                                </Box>
+                                : <></>
                         }
-                    </Box>
+
+                    </Stack>
                     {
                         selectedFilter === 'Overview' ?
                             <Grid container spacing={2} sx={{ height: 390 }}>
@@ -683,7 +798,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                             </Grid>
                             :
                             <React.Fragment>
-                                <SectionHeader sx={{ mt: 0, mb: 0, px: 1, pt: 1 }} title={'Complete Transaction History'} show_progress={false} />
+                                <SectionHeader sx={{ mt: 0, mb: 0, px: 1 }} title={'Complete Transaction History'} show_progress={false} />
                                 <Stack sx={{ border: `1px solid ${theme.palette.grey[300]}`, borderRadius: '8px', pb: 1.5, marginTop: '-28px' }}>
                                     {transactionHistoryData && transactionHistoryData !== null && transactionHistoryData.length > 0 ? (
                                         <ServerSideListComponents
