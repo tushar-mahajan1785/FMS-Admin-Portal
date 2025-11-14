@@ -293,6 +293,8 @@ export const API_INVENTORY_CATEGORY_DETAILS = `${BASE}/inventory/category/detail
 
 export const API_GET_UNIT_LIST = `${BASE}/unit/list`
 
+export const API_GET_INVENTORY_TRANSACTION_HISTORY = `${BASE}/inventory/transaction/history`
+
 //PM ACTIVITY
 
 export const API_PM_ACTIVITY_LIST = `${BASE}/pm-activity/list`

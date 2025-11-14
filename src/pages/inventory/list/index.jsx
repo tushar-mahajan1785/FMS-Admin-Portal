@@ -103,7 +103,7 @@ export default function InventoryList() {
     const [total, setTotal] = useState(0);
     const [openAddInventoryPopup, setOpenAddInventoryPopup] = useState(false);
     const [openViewInventoryPopup, setOpenViewInventoryPopup] = useState(false);
-    // const [inventoryData, setInventoryData] = useState(null);
+    const [inventoryData, setInventoryData] = useState(null);
     const [arrRecentlyAddedItems, setArrRecentlyAddedItems] = useState([{
         id: 1,
         item_id: 'INV-000121',
@@ -240,6 +240,23 @@ export default function InventoryList() {
             renderCell: (params) => {
                 return (
                     <Stack sx={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center', gap: 2, height: '100%' }}>
+                        {
+                            hasPermission('INVENTORY_VIEW') ?
+                                <Box sx={{ display: "flex", alignItems: "center", height: '100%' }}>
+                                    <Tooltip title="Details" followCursor placement="top">
+                                        <IconButton
+                                            onClick={() => {
+                                                setInventoryData(params?.row)
+                                                setOpenViewInventoryPopup(true)
+                                            }}
+                                        >
+                                            <EyeIcon stroke={'#181D27'} />
+                                        </IconButton>
+                                    </Tooltip>
+                                </Box>
+                                :
+                                <></>
+                        }
                         <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.info[500]}`, background: theme.palette.info[50], borderRadius: '6px', padding: '5px 8px', cursor: 'pointer' }}>
                             <BoxIcon stroke={theme.palette.info[700]} />
                             <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.info[700] }}>
@@ -252,23 +269,7 @@ export default function InventoryList() {
                                 Restock
                             </TypographyComponent>
                         </Stack>
-                        {
-                            hasPermission('INVENTORY_VIEW') ?
-                                <Box sx={{ display: "flex", alignItems: "center", height: '100%' }}>
-                                    <Tooltip title="Details" followCursor placement="top">
-                                        <IconButton
-                                            onClick={() => {
-                                                // setInventoryData(params?.row)
-                                                setOpenViewInventoryPopup(true)
-                                            }}
-                                        >
-                                            <EyeIcon stroke={'#181D27'} />
-                                        </IconButton>
-                                    </Tooltip>
-                                </Box>
-                                :
-                                <></>
-                        }
+
                     </Stack>
                 );
             },
@@ -334,14 +335,16 @@ export default function InventoryList() {
 
     // Initial Render
     useEffect(() => {
-        if (branch?.currentBranch?.client_uuid && branch?.currentBranch?.client_uuid !== null) {
+        if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && page && page !== null) {
             dispatch(actionInventoryList({
-                client_uuid: branch?.currentBranch?.client_uuid,
-                status: selectedStatus
+                status: selectedStatus,
+                branch_uuid: branch?.currentBranch?.uuid,
+                page: page,
+                limit: LIST_LIMIT
             }))
         }
 
-    }, [branch?.currentBranch?.client_uuid, selectedStatus])
+    }, [branch?.currentBranch?.uuid, selectedStatus, page])
 
     //handle search query
     const handleSearchQueryChange = event => {
@@ -703,17 +706,21 @@ export default function InventoryList() {
                     setOpenAddInventoryPopup(false)
                     if (data == 'save') {
                         dispatch(actionInventoryList({
-                            client_uuid: branch?.currentBranch?.client_uuid,
-                            status: selectedStatus
+                            status: selectedStatus,
+                            branch_uuid: branch?.currentBranch?.uuid,
+                            page: page,
+                            limit: LIST_LIMIT
                         }))
                     }
                 }}
             />
             <InventoryDetails
                 open={openViewInventoryPopup}
-                handleClose={() => [
+                detail={inventoryData}
+                handleClose={() => {
                     setOpenViewInventoryPopup(false)
-                ]}
+                    setInventoryData(null)
+                }}
             />
         </React.Fragment>
     )

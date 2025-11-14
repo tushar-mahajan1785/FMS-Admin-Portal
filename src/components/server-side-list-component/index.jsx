@@ -4,7 +4,7 @@ import { Box, Button, useTheme } from "@mui/material";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
-export default function ServerSideListComponents({ columns, rows, total, page, onPageChange, pageSize, isCheckbox, onChange, height = 580 }) {
+export default function ServerSideListComponents({ columns, rows, total, page, onPageChange, pageSize, isCheckbox, onChange, height = 580, borderRadius = '1px' }) {
     const theme = useTheme()
     const totalPages = Math.ceil(total / pageSize);
 
@@ -42,7 +42,7 @@ export default function ServerSideListComponents({ columns, rows, total, page, o
                         overflowX: 'auto',
                         border: 'none',
                         borderBottom: ` 1px solid ${theme.palette.grey[300]}`,
-                        borderRadius: '1px',
+                        borderRadius: borderRadius,
                         minWidth: 'max-content',
                         "& .MuiDataGrid-virtualScroller": {
                             overflowX: "auto !important", // enable horizontal scroll

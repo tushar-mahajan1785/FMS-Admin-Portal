@@ -3,7 +3,7 @@ import { axiosApi, MULTIPART_HEADER } from "../../common/api"
 import { getErrorResponse } from "../../utils";
 import {
     API_INVENTORY_LIST, API_INVENTORY_ADD, API_INVENTORY_DETAIL, API_INVENTORY_DELETE,
-    API_INVENTORY_CATEGORY, API_INVENTORY_CATEGORY_ADD, API_INVENTORY_CATEGORY_DETAILS, API_INVENTORY_CATEGORY_DELETE, API_GET_UNIT_LIST
+    API_INVENTORY_CATEGORY, API_INVENTORY_CATEGORY_ADD, API_INVENTORY_CATEGORY_DETAILS, API_INVENTORY_CATEGORY_DELETE, API_GET_UNIT_LIST, API_GET_INVENTORY_TRANSACTION_HISTORY
 } from "../../common/api/constants";
 
 export const actionInventoryList = createAsyncThunk('inventory/actionInventoryList', async (params) => {
@@ -91,6 +91,15 @@ export const actionGetUnitMaster = createAsyncThunk('inventory/actionGetUnitMast
         return error
     }
 })
+export const actionGetInventoryTransactionHistory = createAsyncThunk('inventory/actionGetInventoryTransactionHistory', async (params) => {
+    try {
+        const response = await axiosApi.post(API_GET_INVENTORY_TRANSACTION_HISTORY, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
 
 export const inventoryStore = createSlice({
     name: 'inventory',
@@ -103,7 +112,8 @@ export const inventoryStore = createSlice({
         addInventoryCategory: null,
         getInventoryCategoryDetails: null,
         deleteInventoryCategory: null,
-        getUnitMaster: null
+        getUnitMaster: null,
+        getInventoryTransactionHistory: null
     },
 
     reducers: {
@@ -133,6 +143,9 @@ export const inventoryStore = createSlice({
         },
         resetGetUnitMasterResponse: (state) => {
             state.getUnitMaster = null
+        },
+        resetGetInventoryTransactionHistoryResponse: (state) => {
+            state.getInventoryTransactionHistory = null
         },
     },
     extraReducers: builder => {
@@ -164,6 +177,9 @@ export const inventoryStore = createSlice({
             .addCase(actionGetUnitMaster.fulfilled, (state, action) => {
                 state.getUnitMaster = action.payload
             })
+            .addCase(actionGetInventoryTransactionHistory.fulfilled, (state, action) => {
+                state.getInventoryTransactionHistory = action.payload
+            })
     }
 })
 
@@ -176,7 +192,8 @@ export const {
     resetAddInventoryCategoryResponse,
     resetGetInventoryCategoryDetailsResponse,
     resetDeleteInventoryCategoryResponse,
-    resetGetUnitMasterResponse
+    resetGetUnitMasterResponse,
+    resetGetInventoryTransactionHistoryResponse
 } =
     inventoryStore.actions
 

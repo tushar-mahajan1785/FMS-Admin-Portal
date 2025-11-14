@@ -1106,7 +1106,7 @@ export const ViewTicket = ({ open, handleClose, detail }) => {
           </Grid>
 
         </Stack >
-        <Divider sx={{ m: 2 }} />
+        <Divider sx={{ mt: 2 }} />
         <Stack sx={{ p: 2 }} flexDirection={'row'} justifyContent={'space-between'} gap={2}>
           <Stack flexDirection={'row'} sx={{ columnGap: 1 }}>
             {

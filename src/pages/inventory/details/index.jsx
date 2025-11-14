@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useTheme } from '@emotion/react'
-import { Box, Chip, Divider, Drawer, Grid, IconButton, Stack, Tooltip } from '@mui/material'
-import { useEffect, useState } from 'react'
+import { Box, Button, CircularProgress, Divider, Drawer, Grid, IconButton, Stack, Tooltip } from '@mui/material'
+import React, { useEffect, useState } from 'react'
 import FormHeader from '../../../components/form-header'
 import CloseIcon from '../../../assets/icons/CloseIcon'
 import TotalPMIcon from '../../../assets/icons/TotalPMIcon'
@@ -14,39 +15,38 @@ import StairDownIcon from '../../../assets/icons/StairDownIcon'
 import moment from 'moment'
 import SectionHeader from '../../../components/section-header'
 import EditCircleIcon from '../../../assets/icons/EditCircleIcon'
-import { IMAGES_SCREEN_NO_DATA, LIST_LIMIT } from '../../../constants'
+import { ERROR, IMAGES_SCREEN_NO_DATA, LIST_LIMIT, SERVER_ERROR, UNAUTHORIZED } from '../../../constants'
 import ServerSideListComponents from '../../../components/server-side-list-component'
 import EmptyContent from '../../../components/empty_content'
 import AlertTriangleIcon from '../../../assets/icons/AlertTriangleIcon'
+import FieldBox from '../../../components/field-box'
+import { useDispatch, useSelector } from 'react-redux'
+import { actionDeleteInventory, actionGetInventoryDetails, actionGetInventoryTransactionHistory, resetDeleteInventoryResponse, resetGetInventoryDetailsResponse, resetGetInventoryTransactionHistoryResponse } from '../../../store/inventory'
+import { useSnackbar } from '../../../hooks/useSnackbar'
+import AlertPopup from '../../../components/alert-confirm'
+import { useBranch } from '../../../hooks/useBranch'
+import AlertCircleIcon from '../../../assets/icons/AlertCircleIcon'
 
 export const InventoryDetails = ({ open, handleClose, detail }) => {
+    const dispatch = useDispatch()
     const theme = useTheme()
-    const { hasPermission } = useAuth()
+    const { showSnackbar } = useSnackbar()
+    const { logout, hasPermission } = useAuth()
+    const branch = useBranch()
 
+    //Stores
+    const { getInventoryDetails, getInventoryTransactionHistory, deleteInventory } = useSelector(state => state.inventoryStore)
+
+    //States
     const [filterJson] = useState(["Overview", "Complete History", "Consumption History", "Restock History"]);
     const [selectedFilter, setSelectedFilter] = useState("Overview");
-    const [inventoryDetailsData] = useState({
-        "item_name": "R-22 Refrigerant Gas",
-        "category": "Chemicals",
-        "description": "cdddddddddddddd",
-        "initial_quantity": "100",
-        "minimum_quantity": "120",
-        "critical_quantity": "101",
-        "unit": "Kilograms",
-        "storage_location": "asdfvgb",
-        "contact_country_code": "+91",
-        "contact": "9876543222",
-        "email": "vijay+4@mail.com",
-        "supplier_name": 27,
-        "restocked_quantity": "50",
-        "consumed_quantity": "30",
-        "status": "Out Of Stock",
-        "last_restocked_date": "2025-04-01",
-        "image_url": "https://fms-super-admin.interdev.in/fms/ticket/10/10_1762840033061.jpg"
-    })
+    const [inventoryDetailsData, setInventoryDetailsData] = useState(null)
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
     const [transactionHistoryData, setTransactionHistoryData] = useState([])
+    const [openViewDeleteInventoryPopup, setOpenViewDeleteInventoryPopup] = useState(false)
+    const [viewLoadingDelete, setViewLoadingDelete] = useState(false)
+    const [viewInventoryData, setViewInventoryData] = useState(null)
 
     const columns = [
         {
@@ -118,23 +118,30 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                         sx={{
                             justifyContent: 'flex-start', // Align to start for better wrapping
                             flexDirection: 'row',
-                            gap: 0.5, // ⭐ This creates space between chips
+                            alignItems: 'center',
+                            gap: 0.7, // ⭐ This creates space between chips
                             flexWrap: 'wrap', // ⭐ This allows files to wrap to the next line
-                            maxHeight: '100%',
-                            overflowY: 'auto', // Optional: adds a scrollbar if files are numerous
+                            height: '100%',
+                            // overflowY: 'auto', // Optional: adds a scrollbar if files are numerous
                             p: 0.5
                         }}
                     >
                         {
                             params?.row?.files && params.row.files.length > 0 ?
                                 params.row.files.map((file, index) => {
-                                    const fileName = file.split("/").pop();
+
                                     return (
-                                        <Chip
-                                            key={index}
-                                            label={fileName}
-                                            size="small"
-                                        />
+                                        <React.Fragment>
+                                            <TypographyComponent
+                                                fontSize={14}
+                                                fontWeight={400}
+                                                sx={{ cursor: 'pointer', color: theme.palette.primary[600], textDecoration: 'underline', borderRight: index + 1 < params.row.files.length ? `1.5px solid ${theme.palette.grey[900]}` : 'none', paddingRight: 0.7 }}
+                                                onClick={() => {
+                                                    window.open(file?.image_url, '_blank')
+                                                }}
+                                            >{file?.file_name}
+                                            </TypographyComponent>
+                                        </React.Fragment>
                                     )
                                 })
                                 :
@@ -165,11 +172,15 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
         //     }
     ];
 
-
     useEffect(() => {
         if (open === true) {
+            setViewLoadingDelete(false)
             console.log('detail', detail)
-            setTotal(10)
+            dispatch(actionGetInventoryDetails({
+                uuid: detail?.uuid
+            }))
+            //-----development purpose-----
+            setTotal(20)
             setTransactionHistoryData([{
                 id: 1,
                 date: '2024-06-10 22:01:01',
@@ -178,22 +189,180 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                 invoice_no: 'INV-8788',
                 stock_after: '200 Kilograms',
                 additional_info: "Restocked via purchase order PO-4523",
-                files: ["https://fms-super-admin.interdev.in/fms/ticket/10/10_1762840033061.jpg", "https://fms-super-admin.interdev.in/fms/ticket/8/8_1763011390575.jpg"]
+                files: [
+                    {
+                        "id": 22,
+                        "image_url": "https://fms-super-admin.interdev.in/fms/ticket/8/8_1762780539544.jpg",
+                        "file_name": "8_1762780539544.jpg"
+                    },
+                    {
+                        "id": 21,
+                        "image_url": "https://fms-super-admin.interdev.in/fms/ticket/8/8_1763011390575.jpg",
+                        "file_name": "8_1763011390575.jpg"
+                    },
+                    {
+                        "id": 20,
+                        "image_url": "https://fms-super-admin.interdev.in/fms/ticket/10/10_1762840033061.jpg",
+                        "file_name": "10_1762840033061.jpg"
+                    }
+                ]
             },
-
             {
-                id: 1,
+                id: 2,
                 date: '2024-06-10 09:01:01',
                 supplier: 'Cooltech Sipplies',
                 quantity: '50 Kilograms',
                 invoice_no: 'INV-8788',
                 stock_after: '200 Kilograms',
                 additional_info: "Restocked via purchase order PO-4523",
-                files: ["https://fms-super-admin.interdev.in/fms/ticket/10/10_1762840033061.jpg"]
+                files: [{
+                    "id": 20,
+                    "image_url": "https://fms-super-admin.interdev.in/fms/ticket/10/10_1762840033061.jpg",
+                    "file_name": "10_1762840033061.jpg"
+                }]
             }])
+            setInventoryDetailsData({
+                "item_name": "R-22 Refrigerant Gas",
+                "category": "Chemicals",
+                "description": "cdddddddddddddd",
+                "initial_quantity": "100",
+                "minimum_quantity": "120",
+                "critical_quantity": "101",
+                "unit": "Kilograms",
+                "storage_location": "asdfvgb",
+                "contact_country_code": "+91",
+                "contact": "9876543222",
+                "email": "vijay+4@mail.com",
+                "supplier_name": 27,
+                "restocked_quantity": "50",
+                "consumed_quantity": "30",
+                "status": "Out Of Stock",
+                "last_restocked_date": "2025-04-01",
+                "image_url": "https://fms-super-admin.interdev.in/fms/ticket/10/10_1762840033061.jpg"
+            })
+            //---------------------------
+        }
+        return () => {
+            setInventoryDetailsData(null)
+            setViewLoadingDelete(false)
+            setTransactionHistoryData([])
+            setTotal(0)
+            setPage(1)
+            setViewInventoryData(null)
         }
 
     }, [open])
+
+    useEffect(() => {
+        if (selectedFilter !== 'Overview' && branch?.currentBranch?.uuid !== null && page && page !== null) {
+            dispatch(actionGetInventoryTransactionHistory({
+                type: selectedFilter,
+                inventory_uuid: detail?.uuid,
+                branch_uuid: branch?.currentBranch?.uuid,
+                page: page,
+                limit: LIST_LIMIT
+            }))
+        }
+
+    }, [branch?.currentBranch?.uuid, selectedFilter, page])
+
+    /**
+        * useEffect
+        * @dependency : getInventoryDetails
+        * @type : HANDLE API RESULT
+        * @description : Handle the result of inventory details API
+        */
+    useEffect(() => {
+        if (getInventoryDetails && getInventoryDetails !== null) {
+            dispatch(resetGetInventoryDetailsResponse())
+            if (getInventoryDetails?.result === true) {
+                setInventoryDetailsData(getInventoryDetails?.response)
+            } else {
+                // setInventoryDetailsData(null)
+                switch (getInventoryDetails?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetGetInventoryDetailsResponse())
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: getInventoryDetails?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [getInventoryDetails])
+
+    /**
+        * useEffect
+        * @dependency : getInventoryTransactionHistory
+        * @type : HANDLE API RESULT
+        * @description : Handle the result of inventory transaction history API
+        */
+    useEffect(() => {
+        if (getInventoryTransactionHistory && getInventoryTransactionHistory !== null) {
+            dispatch(resetGetInventoryTransactionHistoryResponse())
+            if (getInventoryTransactionHistory?.result === true) {
+                setTransactionHistoryData(getInventoryTransactionHistory?.response.data)
+                setTotal(getInventoryTransactionHistory?.response?.total_records)
+            } else {
+                // setTransactionHistoryData(null)
+                // setTotal(0)
+                switch (getInventoryTransactionHistory?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetGetInventoryTransactionHistoryResponse())
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: getInventoryTransactionHistory?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [getInventoryTransactionHistory])
+
+    /**
+     * useEffect
+     * @dependency : deleteInventory
+     * @type : HANDLE API RESULT
+     * @description : Handle the result of delete inventory API
+     */
+    useEffect(() => {
+        if (deleteInventory && deleteInventory !== null) {
+            dispatch(resetDeleteInventoryResponse())
+            if (deleteInventory?.result === true) {
+                setOpenViewDeleteInventoryPopup(false)
+                setViewLoadingDelete(false)
+                setViewInventoryData(null)
+                showSnackbar({ message: deleteInventory?.message, severity: "success" })
+                handleClose('delete')
+            } else {
+                setViewLoadingDelete(false)
+                switch (deleteInventory?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetDeleteInventoryResponse())
+                        showSnackbar({ message: deleteInventory?.message, severity: "error" })
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: deleteInventory?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [deleteInventory])
+
 
     // Component to render each info tile
     const InfoTile = ({ title, value, subtext, icon, iconBgColor }) => {
@@ -229,7 +398,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                 </Box>
 
                 {/* Main Value */}
-                <TypographyComponent fontSize={32} fontWeight={400} sx={{ fontWeight: 'bold', color: title === 'Current Stock' ? '#673ab7' : 'text.primary' }}>
+                <TypographyComponent fontSize={32} fontWeight={500} sx={{ color: title === 'Current Stock' ? '#673ab7' : 'text.primary' }}>
                     {value}
                 </TypographyComponent>
 
@@ -298,6 +467,13 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                                             // }
                                             // setViewTicketData(objData)
                                             // setOpenViewDeleteTicketPopup(true)
+                                            let objData = {
+                                                uuid: inventoryDetailsData?.inventory_uuid,
+                                                title: `Delete Inventory`,
+                                                text: `Are you sure you want to delete this inventory? This action cannot be undone.`
+                                            }
+                                            setViewInventoryData(objData)
+                                            setOpenViewDeleteInventoryPopup(true)
                                         }}
                                     >
                                         <DeleteIcon />
@@ -326,8 +502,6 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                     }}
                 >
                     <Grid container spacing={2} sx={{ width: '100%' }}>
-
-                        {/* 1. Image Card (Takes 2 grid units) */}
                         <Grid size={{ xs: 12, sm: 4, md: 2.4 }}>
                             <Stack sx={{
                                 height: '100%',
@@ -353,8 +527,6 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                                 }
                             </Stack>
                         </Grid>
-
-                        {/* 2. Current Stock Tile (Takes 2 grid units) */}
                         <Grid size={{ xs: 12, sm: 4, md: 2.4 }}>
                             <InfoTile
                                 title="Current Stock"
@@ -364,8 +536,6 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                                 iconBgColor={theme.palette.primary[100]}
                             />
                         </Grid>
-
-                        {/* 3. Total Restocked Tile (Takes 2.5 grid units) */}
                         <Grid size={{ xs: 12, sm: 4, md: 2.4 }}>
                             <InfoTile
                                 title="Total Restocked"
@@ -375,8 +545,6 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                                 iconBgColor={theme.palette.success[100]}
                             />
                         </Grid>
-
-                        {/* 4. Total Consumed Tile (Takes 2.5 grid units) */}
                         <Grid size={{ xs: 12, sm: 4, md: 2.4 }}>
                             <InfoTile
                                 title="Total Consumed"
@@ -386,8 +554,6 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                                 iconBgColor={theme.palette.warning[100]}
                             />
                         </Grid>
-
-                        {/* 5. Last Restocked Tile (Takes 2 grid units) */}
                         <Grid size={{ xs: 12, sm: 4, md: 2.4 }}>
                             <InfoTile
                                 title="Last Restocked"
@@ -437,60 +603,197 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                             ))
                         }
                     </Box>
-                    <Stack sx={{ border: `1px solid ${theme.palette.grey[300]}`, borderRadius: '8px', pb: 1.5 }}>
-                        <SectionHeader sx={{ mt: 0, mb: 0, px: 1, pt: 1 }} title={'Complete Transaction History'} show_progress={false} />
-                        {transactionHistoryData && transactionHistoryData !== null && transactionHistoryData.length > 0 ? (
-                            <ServerSideListComponents
-                                height={300}
-                                rows={transactionHistoryData}
-                                columns={columns}
-                                isCheckbox={false}
-                                total={total}
-                                page={page}
-                                onPageChange={setPage}
-                                pageSize={LIST_LIMIT}
-                            />
-                        ) : (
-                            <Stack sx={{ height: 300 }}>
-                                <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Transaction History Found'} subTitle={''} />
-                            </Stack>
-                        )}
-                    </Stack>
-                    <Stack sx={{ border: `1px solid ${theme.palette.warning[600]}`, alignItems: 'center', borderRadius: '8px', flexDirection: 'row', justifyContent: 'space-between', padding: '16px', background: theme.palette.warning[100] }}>
-                        <Stack sx={{ flexDirection: 'row', gap: 1 }}>
-                            <Box
-                                sx={{
-                                    backgroundColor: theme.palette.warning[600],
-                                    borderRadius: '6px',
-                                    padding: '12px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                }}
-                            >
-                                <AlertTriangleIcon stroke={theme.palette.common.white} size={22} />
-                            </Box>
-                            <Stack>
-                                <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.warning[700] }}>
-                                    Low Stock Alert
-                                </TypographyComponent>
-                                <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.warning[600] }}>
-                                    Current stock (8 kg) is below the minimum level (15 kg). Consider restocking soon to avoid stockouts.
-                                </TypographyComponent>
-                            </Stack>
-                        </Stack>
-                        <Stack>
-                            <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', background: theme.palette.warning[600], borderRadius: '6px', padding: '8px 12px', cursor: 'pointer' }}>
-                                <BoxPlusIcon stroke={theme.palette.common.white} size={22} />
-                                <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.common.white }}>
-                                    Restock
-                                </TypographyComponent>
-                            </Stack>
-                        </Stack>
+                    {
+                        selectedFilter === 'Overview' ?
+                            <Grid container spacing={2} sx={{ height: 390 }}>
+                                <Grid size={{ xs: 12, sm: 12, md: 12, lg: 6, xl: 6 }} >
+                                    <SectionHeader sx={{ mt: 0, mb: 0, px: 1, pt: 1 }} title={'Basic Information'} show_progress={false} />
+                                    <Stack sx={{ border: `1px solid ${theme.palette.grey[300]}`, borderRadius: '8px', pb: 1.5, marginTop: '-5px' }}>
+                                        <Grid container>
+                                            {/* Item ID */}
+                                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 4 }}>
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Item ID" value={inventoryDetailsData?.item_id && inventoryDetailsData?.item_id !== null ? inventoryDetailsData?.item_id : ''} />
+                                            </Grid>
+                                            {/* Item Name */}
+                                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 4 }}>
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Item Name" value={inventoryDetailsData?.item_name && inventoryDetailsData?.item_name !== null ? inventoryDetailsData?.item_name : ''} />
+                                            </Grid>
+                                            {/* Category */}
+                                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 4 }}>
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Category" value={inventoryDetailsData?.category && inventoryDetailsData?.category !== null ? inventoryDetailsData?.category : ''} />
+                                            </Grid>
+                                            <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }} >
+                                                <Stack sx={{ borderBottom: `1px solid ${theme.palette.grey[300]}`, mx: 2 }}></Stack>
+                                            </Grid>
+                                            {/* Description */}
+                                            <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Description" value={inventoryDetailsData?.description && inventoryDetailsData?.description !== null ? inventoryDetailsData?.description : ''} />
+                                            </Grid>
+                                            <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }} >
+                                                <Stack sx={{ borderBottom: `1px solid ${theme.palette.grey[300]}`, mx: 2 }}></Stack>
+                                            </Grid>
+                                            {/* Storage Location */}
+                                            <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Storage Location" value={inventoryDetailsData?.storage_location && inventoryDetailsData?.storage_location !== null ? inventoryDetailsData?.storage_location : ''} />
+                                            </Grid>
+                                        </Grid>
+                                    </Stack>
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 12, md: 12, lg: 6, xl: 6 }}>
+                                    <SectionHeader sx={{ mt: 0, mb: 0, px: 1, pt: 1 }} title={'Vendor Information'} show_progress={false} />
+                                    <Stack sx={{ border: `1px solid ${theme.palette.grey[300]}`, borderRadius: '8px', pb: 1.5, marginTop: '-5px' }}>
+                                        <Grid container>
+                                            {/* Name */}
+                                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 4 }}>
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Name" value={inventoryDetailsData?.supplier_name && inventoryDetailsData?.supplier_name !== null ? inventoryDetailsData?.supplier_name : ''} />
+                                            </Grid>
+                                            {/* Email */}
+                                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 4 }}>
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Email" value={inventoryDetailsData?.email && inventoryDetailsData?.email !== null ? inventoryDetailsData?.email : ''} />
+                                            </Grid>
+                                            {/* Contact */}
+                                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 4 }}>
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Contact" value={inventoryDetailsData?.contact && inventoryDetailsData?.contact !== null ? inventoryDetailsData?.contact : ''} />
+                                            </Grid>
+                                            <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }} >
+                                                <Stack sx={{ borderBottom: `1px solid ${theme.palette.grey[300]}`, mx: 2 }}></Stack>
+                                            </Grid>
+                                            {/* Total Restocked */}
+                                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 4 }}>
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Total Restocked" value={inventoryDetailsData?.total_restocked && inventoryDetailsData?.total_restocked !== null ? inventoryDetailsData?.total_restocked : ''} />
+                                            </Grid>
+                                            {/* Total Consumed */}
+                                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 8, xl: 8 }}>
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Total Consumed" value={inventoryDetailsData?.total_consumed && inventoryDetailsData?.total_consumed !== null ? inventoryDetailsData?.total_consumed : ''} />
+                                            </Grid>
+                                            <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }} >
+                                                <Stack sx={{ borderBottom: `1px solid ${theme.palette.grey[300]}`, mx: 2 }}></Stack>
+                                            </Grid>
+                                            {/* Added On */}
+                                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 4 }}>
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Added On" value={inventoryDetailsData?.added_on && inventoryDetailsData?.added_on !== null ? inventoryDetailsData?.added_on : ''} />
+                                            </Grid>
+                                            {/* Added By */}
+                                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 8, xl: 8 }}>
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Added By" value={inventoryDetailsData?.added_by && inventoryDetailsData?.added_by !== null ? inventoryDetailsData?.added_by : ''} />
+                                            </Grid>
+                                        </Grid>
+                                    </Stack>
+                                </Grid>
+                            </Grid>
+                            :
+                            <React.Fragment>
+                                <SectionHeader sx={{ mt: 0, mb: 0, px: 1, pt: 1 }} title={'Complete Transaction History'} show_progress={false} />
+                                <Stack sx={{ border: `1px solid ${theme.palette.grey[300]}`, borderRadius: '8px', pb: 1.5, marginTop: '-28px' }}>
+                                    {transactionHistoryData && transactionHistoryData !== null && transactionHistoryData.length > 0 ? (
+                                        <ServerSideListComponents
+                                            height={275}
+                                            borderRadius='8px'
+                                            rows={transactionHistoryData}
+                                            columns={columns}
+                                            isCheckbox={false}
+                                            total={total}
+                                            page={page}
+                                            onPageChange={setPage}
+                                            pageSize={LIST_LIMIT}
+                                        />
+                                    ) : (
+                                        <Stack sx={{ height: 275 }}>
+                                            <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Transaction History Found'} subTitle={''} />
+                                        </Stack>
+                                    )}
+                                </Stack>
+                            </React.Fragment>
+                    }
 
-                    </Stack>
+                    {
+                        inventoryDetailsData?.initial_quantity !== null && inventoryDetailsData?.minimum_quantity && Number(inventoryDetailsData?.initial_quantity) < Number(inventoryDetailsData?.minimum_quantity) ?
+                            <Stack sx={{ border: `1px solid ${theme.palette.warning[600]}`, alignItems: 'center', borderRadius: '8px', flexDirection: 'row', justifyContent: 'space-between', padding: '16px', background: theme.palette.warning[100] }}>
+                                <Stack sx={{ flexDirection: 'row', gap: 1 }}>
+                                    <Box
+                                        sx={{
+                                            backgroundColor: theme.palette.warning[600],
+                                            borderRadius: '6px',
+                                            padding: '12px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}
+                                    >
+                                        <AlertTriangleIcon stroke={theme.palette.common.white} size={22} />
+                                    </Box>
+                                    <Stack>
+                                        <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.warning[700] }}>
+                                            Low Stock Alert
+                                        </TypographyComponent>
+                                        <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.warning[600] }}>
+                                            Current stock ({Number(inventoryDetailsData?.initial_quantity)} {inventoryDetailsData?.unit}) is below the minimum level ({Number(inventoryDetailsData?.minimum_quantity)} {inventoryDetailsData?.unit}). Consider restocking soon to avoid stockouts.
+                                        </TypographyComponent>
+                                    </Stack>
+                                </Stack>
+                                <Stack>
+                                    <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', background: theme.palette.warning[600], borderRadius: '6px', padding: '8px 12px', cursor: 'pointer' }}>
+                                        <BoxPlusIcon stroke={theme.palette.common.white} size={22} />
+                                        <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.common.white }}>
+                                            Restock
+                                        </TypographyComponent>
+                                    </Stack>
+                                </Stack>
+
+                            </Stack>
+                            :
+                            <></>
+                    }
                 </Stack>
             </Stack>
+            <Divider sx={{ mt: 2 }} />
+            <Stack sx={{ p: 2 }} flexDirection={'row'} justifyContent={'space-between'} gap={2}>
+                <Stack flexDirection={'row'} sx={{ columnGap: 1 }}>
+
+                </Stack>
+                <Stack>
+                    <Button
+                        sx={{ textTransform: "capitalize", px: 6, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, borderColor: theme.palette.primary[600] }}
+                        onClick={() => {
+                            handleClose()
+                        }}
+                        variant='contained'
+                    >
+                        Close
+                    </Button>
+                </Stack>
+                {/* </Stack> */}
+
+            </Stack>
+            {
+                openViewDeleteInventoryPopup &&
+                <AlertPopup
+                    open={openViewDeleteInventoryPopup}
+                    icon={<AlertCircleIcon sx={{ color: theme.palette.error[600] }} fontSize="inherit" />}
+                    color={theme.palette.error[600]}
+                    objData={viewInventoryData}
+                    actionButtons={[
+                        <Button key="cancel" color="secondary" variant="outlined" sx={{ width: '100%', color: theme.palette.grey[800], textTransform: 'capitalize' }} onClick={() => {
+                            setOpenViewDeleteInventoryPopup(false)
+                        }}>
+                            Cancel
+                        </Button >
+                        ,
+                        <Button key="delete" variant="contained" sx={{ width: '100%', textTransform: 'capitalize', background: theme.palette.error[600], color: theme.palette.common.white }} disabled={viewLoadingDelete} onClick={() => {
+
+                            if (viewInventoryData?.uuid && viewInventoryData?.uuid !== null) {
+                                setViewLoadingDelete(true)
+                                dispatch(actionDeleteInventory({
+                                    uuid: viewInventoryData?.uuid
+                                }))
+                            }
+                        }}>
+                            {viewLoadingDelete ? <CircularProgress size={20} color="white" /> : 'Delete'}
+                        </Button>
+                    ]
+                    }
+                />
+            }
         </Drawer >
     )
 }
