@@ -1059,7 +1059,7 @@ export default function AddInventory({ open, handleClose, type, details }) {
                                     </Stack>
                                 </Stack>
                             </Grid>
-                        </Grid >
+                        </Grid>
                     </form >
                 </Stack >
                 <Divider sx={{ m: 2 }} />

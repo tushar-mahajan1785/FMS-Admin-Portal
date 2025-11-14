@@ -30,6 +30,7 @@ import DatePicker from 'react-datepicker'
 import CustomTextField from '../../../components/text-field'
 import DatePickerWrapper from '../../../components/datapicker-wrapper'
 import AddInventory from '../add'
+import { RestockInventory } from '../restock'
 
 export const InventoryDetails = ({ open, handleClose, detail }) => {
     const dispatch = useDispatch()
@@ -54,6 +55,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
     const [selectedStartDate, setSelectedStartDate] = useState(null)
     const [selectedEndDate, setSelectedEndDate] = useState(null)
     const [openEditInventoryPopup, setOpenEditInventoryPopup] = useState(false);
+    const [openRestockInventoryPopup, setOpenRestockInventoryPopup] = useState(false);
 
     const columns = [
         {
@@ -249,7 +251,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                 "consumed_quantity": "30",
                 "status": "Out Of Stock",
                 "last_restocked_date": "2025-04-01",
-                "image_url": "https://fms-super-admin.interdev.in/fms/ticket/10/10_1762840033061.jpg"
+                "image_url": "https://fms-super-admin.interdev.in/fms/ticket/8/8_1763011390575.jpg"
             })
             //---------------------------
         }
@@ -479,7 +481,11 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                                 Record Usage
                             </TypographyComponent>
                         </Stack>
-                        <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.grey[700]}`, background: theme.palette.common.white, borderRadius: '6px', padding: '8px 12px', cursor: 'pointer' }}>
+                        <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.grey[700]}`, background: theme.palette.common.white, borderRadius: '6px', padding: '8px 12px', cursor: 'pointer' }}
+                            onClick={() => {
+                                setOpenRestockInventoryPopup(true)
+                            }}
+                        >
                             <BoxPlusIcon stroke={theme.palette.grey[700]} size={22} />
                             <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.grey[700] }}>
                                 Restock
@@ -855,7 +861,11 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                                     </Stack>
                                 </Stack>
                                 <Stack>
-                                    <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', background: theme.palette.warning[600], borderRadius: '6px', padding: '8px 12px', cursor: 'pointer' }}>
+                                    <Stack
+                                        onClick={() => {
+                                            setOpenRestockInventoryPopup(true)
+                                        }}
+                                        sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', background: theme.palette.warning[600], borderRadius: '6px', padding: '8px 12px', cursor: 'pointer' }}>
                                         <BoxPlusIcon stroke={theme.palette.common.white} size={22} />
                                         <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.common.white }}>
                                             Restock
@@ -927,6 +937,17 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                         dispatch(actionGetInventoryDetails({
                             uuid: detail?.uuid
                         }))
+                    }
+                }}
+            />
+            <RestockInventory
+                open={openRestockInventoryPopup}
+                handleClose={(data) => {
+                    setOpenRestockInventoryPopup(false)
+                    if (data == 'save') {
+                        // dispatch(actionGetInventoryDetails({
+                        //     uuid: detail?.uuid
+                        // }))
                     }
                 }}
             />

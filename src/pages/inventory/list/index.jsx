@@ -26,6 +26,7 @@ import { useBranch } from '../../../hooks/useBranch';
 import { useSnackbar } from '../../../hooks/useSnackbar';
 import AddInventory from '../add';
 import { InventoryDetails } from '../details';
+import { RestockInventory } from '../restock';
 
 export default function InventoryList() {
     const theme = useTheme()
@@ -42,6 +43,7 @@ export default function InventoryList() {
     const [selectedStatus, setSelectedStatus] = useState('')
     const [masterInventoryStockStatusOptions] = useState(getInventoryStockStatus)
     const [searchQuery, setSearchQuery] = useState('')
+    const [openRestockInventoryPopup, setOpenRestockInventoryPopup] = useState(false);
     const [inventoryListData, setInventoryListData] = useState([{
         id: 1,
         item_id: 'INV-000121',
@@ -263,7 +265,11 @@ export default function InventoryList() {
                                 Record Usage
                             </TypographyComponent>
                         </Stack>
-                        <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.primary[600]}`, background: theme.palette.common.white, borderRadius: '6px', padding: '5px 8px', cursor: 'pointer' }}>
+                        <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.primary[600]}`, background: theme.palette.common.white, borderRadius: '6px', padding: '5px 8px', cursor: 'pointer' }}
+                            onClick={() => {
+                                setOpenRestockInventoryPopup(true)
+                            }}
+                        >
                             <BoxPlusIcon stroke={theme.palette.primary[500]} />
                             <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.primary[600] }}>
                                 Restock
@@ -720,6 +726,17 @@ export default function InventoryList() {
                 handleClose={() => {
                     setOpenViewInventoryPopup(false)
                     setInventoryData(null)
+                }}
+            />
+            <RestockInventory
+                open={openRestockInventoryPopup}
+                handleClose={(data) => {
+                    setOpenRestockInventoryPopup(false)
+                    if (data == 'save') {
+                        // dispatch(actionGetInventoryDetails({
+                        //     uuid: detail?.uuid
+                        // }))
+                    }
                 }}
             />
         </React.Fragment>
