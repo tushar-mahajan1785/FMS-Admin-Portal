@@ -39,7 +39,7 @@ import { actionAddInventory, actionGetUnitMaster, actionInventoryCategoryList, r
 import CustomAutocomplete from "../../../components/custom-autocomplete";
 import { _ } from "lodash";
 
-export default function AddInventory({ open, handleClose, type }) {
+export default function AddInventory({ open, handleClose, type, details }) {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout } = useAuth()
@@ -69,6 +69,7 @@ export default function AddInventory({ open, handleClose, type }) {
         formState: { errors }
     } = useForm({
         defaultValues: {
+            item_id: '',
             item_name: '',
             category: '',
             description: '',
@@ -111,7 +112,7 @@ export default function AddInventory({ open, handleClose, type }) {
      */
     useEffect(() => {
         if (open === true) {
-            if (type === 'edit') {
+            if (type === 'edit' && details !== null) {
                 let editFileUrl = "https://fms-super-admin.interdev.in/fms/ticket/8/8_1763011390575.jpg"
                 const fileName = editFileUrl.split("/").pop();
                 setArrUploadedFile({
@@ -120,6 +121,19 @@ export default function AddInventory({ open, handleClose, type }) {
                     name: fileName,
                     image_url: editFileUrl,
                 });
+                setValue('item_id', details?.item_id && details?.item_id !== null ? details?.item_id : '')
+                setValue('item_name', details?.item_name && details?.item_name !== null ? details?.item_name : '')
+                setValue('category', details?.category && details?.category !== null ? details?.category : '')
+                setValue('description', details?.description && details?.description !== null ? details?.description : '')
+                setValue('initial_quantity', details?.initial_quantity && details?.initial_quantity !== null ? details?.initial_quantity : '')
+                setValue('minimum_quantity', details?.minimum_quantity && details?.minimum_quantity !== null ? details?.minimum_quantity : '')
+                setValue('critical_quantity', details?.critical_quantity && details?.critical_quantity !== null ? details?.critical_quantity : '')
+                setValue('storage_location', details?.storage_location && details?.storage_location !== null ? details?.storage_location : '')
+                setValue('unit', details?.unit && details?.unit !== null ? details?.unit : '')
+                setValue('supplier_name', details?.supplier_name && details?.supplier_name !== null ? details?.supplier_name : '')
+                setValue('contact', details?.contact && details?.contact !== null ? details?.contact : '')
+                setValue('email', details?.email && details?.email !== null ? details?.email : '')
+
             }
 
 
@@ -445,6 +459,10 @@ export default function AddInventory({ open, handleClose, type }) {
             supplier_country_code: data?.contact_country_code && data?.contact_country_code !== null ? data?.contact_country_code : null,
             supplier_email: data?.email && data?.email !== null ? data?.email : null
         }
+
+        if (type == 'edit') {
+            objData.uuid = details?.uuid
+        }
         const files = [];
         if (arrUploadedFile && arrUploadedFile !== null) {
             if (arrUploadedFile?.is_new === 1) {
@@ -461,8 +479,6 @@ export default function AddInventory({ open, handleClose, type }) {
         setLoading(true)
         const formData = getFormData(objData, files);
         dispatch(actionAddInventory(formData))
-
-
     };
 
     return (
@@ -479,7 +495,7 @@ export default function AddInventory({ open, handleClose, type }) {
                     color={theme.palette.primary[600]}
                     size={48}
                     icon={<BoxPlusIcon stroke={theme.palette.primary[600]} size={20} />}
-                    title="Add New Inventory Item"
+                    title={`${type == 'add' ? 'Add New Inventory Item' : 'Edit Inventory Item'}`}
                     subtitle="Enter details for the new inventory item"
                     actions={[
                         <IconButton
@@ -511,7 +527,32 @@ export default function AddInventory({ open, handleClose, type }) {
                                     <SectionHeader title="Basic Information" show_progress={0} />
                                     <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}`, p: 3, marginTop: '-4px' }}>
                                         <Grid container spacing={'24px'}>
-                                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6, xl: 6 }}>
+                                            {
+                                                type === 'edit' ?
+                                                    <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4, xl: 4 }}>
+                                                        <Controller
+                                                            name='item_id'
+                                                            control={control}
+                                                            render={({ field }) => (
+                                                                <CustomTextField
+                                                                    fullWidth
+                                                                    disabled
+                                                                    placeholder={'Item ID'}
+                                                                    value={field?.value}
+                                                                    label={<FormLabel label='Item ID' required={true} />}
+                                                                    onChange={field.onChange}
+                                                                    inputProps={{ maxLength: 255 }}
+                                                                    error={Boolean(errors.item_id)}
+                                                                    {...(errors.item_id && { helperText: errors.item_id.message })}
+                                                                />
+                                                            )}
+                                                        />
+                                                    </Grid>
+                                                    :
+                                                    <></>
+                                            }
+
+                                            <Grid size={{ xs: 12, sm: 6, md: type == 'edit' ? 4 : 6, lg: type == 'edit' ? 4 : 6, xl: type == 'edit' ? 4 : 6 }}>
                                                 <Controller
                                                     name='item_name'
                                                     control={control}
@@ -536,7 +577,7 @@ export default function AddInventory({ open, handleClose, type }) {
                                                     )}
                                                 />
                                             </Grid>
-                                            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6, xl: 6 }}>
+                                            <Grid size={{ xs: 12, sm: 6, md: type == 'edit' ? 4 : 6, lg: type == 'edit' ? 4 : 6, xl: type == 'edit' ? 4 : 6 }}>
                                                 <Controller
                                                     name='category'
                                                     control={control}
@@ -892,7 +933,7 @@ export default function AddInventory({ open, handleClose, type }) {
                                         </Grid>
                                     </Stack>
                                 </Stack>
-                            </Grid>
+                            </Grid >
                             <Grid size={{ xs: 12, sm: 12, md: 12, lg: 4, xl: 4 }}>
                                 <Stack>
                                     <SectionHeader title="Upload Files" show_progress={0} sx={{ marginTop: 2 }} />
@@ -1018,9 +1059,9 @@ export default function AddInventory({ open, handleClose, type }) {
                                     </Stack>
                                 </Stack>
                             </Grid>
-                        </Grid>
-                    </form>
-                </Stack>
+                        </Grid >
+                    </form >
+                </Stack >
                 <Divider sx={{ m: 2 }} />
                 <Stack sx={{ px: 2, pb: 2 }} flexDirection={'row'} justifyContent={'flex-end'} gap={2}>
                     <Button
@@ -1045,7 +1086,7 @@ export default function AddInventory({ open, handleClose, type }) {
                         {loading ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'Add Item'}
                     </Button>
                 </Stack>
-            </Stack>
+            </Stack >
         </Drawer >
     );
 }

@@ -29,6 +29,7 @@ import AlertCircleIcon from '../../../assets/icons/AlertCircleIcon'
 import DatePicker from 'react-datepicker'
 import CustomTextField from '../../../components/text-field'
 import DatePickerWrapper from '../../../components/datapicker-wrapper'
+import AddInventory from '../add'
 
 export const InventoryDetails = ({ open, handleClose, detail }) => {
     const dispatch = useDispatch()
@@ -52,6 +53,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
     const [viewInventoryData, setViewInventoryData] = useState(null)
     const [selectedStartDate, setSelectedStartDate] = useState(null)
     const [selectedEndDate, setSelectedEndDate] = useState(null)
+    const [openEditInventoryPopup, setOpenEditInventoryPopup] = useState(false);
 
     const columns = [
         {
@@ -229,6 +231,8 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                 }]
             }])
             setInventoryDetailsData({
+                "uuid": "tyyg7687878787878",
+                "item_id": "INV-98989",
                 "item_name": "R-22 Refrigerant Gas",
                 "category": "Chemicals",
                 "description": "cdddddddddddddd",
@@ -481,7 +485,11 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                                 Restock
                             </TypographyComponent>
                         </Stack>
-                        <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.grey[700]}`, background: theme.palette.common.white, borderRadius: '6px', padding: '8px 12px', cursor: 'pointer' }}>
+                        <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.grey[700]}`, background: theme.palette.common.white, borderRadius: '6px', padding: '8px 12px', cursor: 'pointer' }}
+                            onClick={() => {
+                                setOpenEditInventoryPopup(true)
+                            }}
+                        >
                             <EditCircleIcon stroke={theme.palette.grey[700]} size={22} />
                             <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.grey[700] }}>
                                 Edit Item
@@ -909,6 +917,19 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                     }
                 />
             }
+            <AddInventory
+                open={openEditInventoryPopup}
+                type={'edit'}
+                details={inventoryDetailsData}
+                handleClose={(data) => {
+                    setOpenEditInventoryPopup(false)
+                    if (data == 'save') {
+                        dispatch(actionGetInventoryDetails({
+                            uuid: detail?.uuid
+                        }))
+                    }
+                }}
+            />
         </Drawer >
     )
 }
