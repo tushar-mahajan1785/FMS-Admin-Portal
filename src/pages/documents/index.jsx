@@ -7,8 +7,8 @@ export default function Documents() {
     return (
         <Routes>
             <Route index element={<DocumentsList />} />
+            <Route path="/view/:uuid/categories-details/:documentCategoryUuid" element={<CategoriesDetails />} />
             <Route path="/view/:uuid" element={<ViewDocument />} />
-            <Route path="/categories-details/:document_category_uuid" element={<CategoriesDetails />} />
         </Routes>
     );
 }

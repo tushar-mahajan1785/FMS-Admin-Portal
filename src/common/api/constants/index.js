@@ -312,6 +312,10 @@ export const API_DELETE_DOCUMENTS_CATEGORIES = `${BASE}/document-category/remove
 
 export const API_DOCUMENTS_CATEGORIES_DETAILS = `${BASE}/document-category/details`
 
-export const API_UPLOAD_DOCUMENTS_CATEGORIES = `${BASE}/document-category/upload`
+export const API_UPLOAD_DOCUMENTS_CATEGORIES = `${BASE}/document/add`
 
-export const API_UPLOAD_DOCUMENTS_CATEGORIES_LIST = `${BASE}/document-category/details`
+export const API_UPLOAD_DOCUMENTS_CATEGORIES_LIST = `${BASE}/document/list`
+
+export const API_UPLOAD_DOCUMENTS_CATEGORIES_DELETE = `${BASE}/document/remove`
+
+export const API_UPLOAD_DOCUMENTS_CATEGORIES_ARCHIVE = `${BASE}/document/archive`

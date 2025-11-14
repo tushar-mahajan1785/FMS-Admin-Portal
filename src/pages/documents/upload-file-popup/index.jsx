@@ -14,6 +14,7 @@ import {
     MenuItem,
     Tabs,
     Tab,
+    CircularProgress,
 } from "@mui/material";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -31,7 +32,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../../../hooks/useAuth";
 import { useBranch } from "../../../hooks/useBranch";
 import { ERROR, SERVER_ERROR, UNAUTHORIZED } from "../../../constants";
-import { getFormData } from "../../../utils";
+import { compressFile, getFormData } from "../../../utils";
 
 export default function UploadFilePopup({ open, objData, handleClose }) {
     const theme = useTheme()
@@ -44,6 +45,7 @@ export default function UploadFilePopup({ open, objData, handleClose }) {
         control,
         handleSubmit,
         reset,
+        setValue,
         formState: { errors }
     } = useForm({
         defaultValues: {
@@ -59,12 +61,7 @@ export default function UploadFilePopup({ open, objData, handleClose }) {
     const inputRef = useRef();
 
     // store
-    const { uploadDocumentCategories } = useSelector(state => state.AssetStore)
-
-    const existingFileOption = [
-        { image_url: '/assets/person1.png' },
-        { image_url: '/assets/person2.png' },
-    ]
+    const { uploadDocumentCategories } = useSelector(state => state.documentStore)
     const [loading, setLoading] = useState(false)
     const [selectedTab, setSelectedTab] = useState("new");
     const [uploadedFiles, setUploadedFiles] = useState(null)
@@ -90,15 +87,18 @@ export default function UploadFilePopup({ open, objData, handleClose }) {
     };
 
     /**
-     * Set selected file to state after validation
-     * @param {*} event 
-     * @returns 
-     */
+ * Set selected file to state after validation
+ * @param {*} event 
+ * @returns 
+ */
     const handleFileChange = (event) => {
         const selectedFiles = Array.from(event.target.files);
         if (selectedFiles.length === 0) return;
 
         const file = selectedFiles[0]; // take only the first file
+
+        // Convert to MB with label
+        const sizeInMB = `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
 
         if (!isValidExtension(file.name)) {
             showSnackbar({ message: `File "${file.name}" has an invalid file type.`, severity: "error" });
@@ -112,26 +112,46 @@ export default function UploadFilePopup({ open, objData, handleClose }) {
             return;
         }
 
-        // Replace the old file with the new one
-        setUploadedFiles({ file, is_new: 1, name: file.name });
+        setUploadedFiles({
+            file,
+            is_new: 1,
+            name: file.name,
+            size_in_mb: sizeInMB
+        });
+
+        setValue('new_file_name', file.name);
 
         event.target.value = null;
     };
 
-    //handle drag drop function
+    // handle drag drop
     const handleDrop = (e) => {
         e.preventDefault();
         const file = e.dataTransfer.files[0];
+
         if (file) {
+
+            // Convert to MB with label
+            const sizeInMB = `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
+
             if (!isValidExtension(file.name)) {
-                showSnackbar({ message: ` File "${file.name}" has an invalid file type.`, severity: "error" });
+                showSnackbar({ message: `File "${file.name}" has an invalid file type.`, severity: "error" });
                 return;
             }
+
             if (file.size > MAX_FILE_SIZE) {
                 showSnackbar({ message: `File "${file.name}" exceeds the 50MB size limit.`, severity: "error" });
                 return;
             }
-            setUploadedFiles({ file, is_new: 1, name: file.name });
+
+            setUploadedFiles({
+                file,
+                is_new: 1,
+                name: file.name,
+                size_in_mb: sizeInMB
+            });
+
+            setValue('new_file_name', file.name);
         }
     };
 
@@ -177,26 +197,31 @@ export default function UploadFilePopup({ open, objData, handleClose }) {
     }, [uploadDocumentCategories])
 
     // handle submit function
-    const onSubmit = data => {
-        let updated = Object.assign({}, data)
-        if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null) {
-            updated.branch_uuid = branch?.currentBranch?.uuid
-        }
-        if(objData?.document_category_uuid && objData?.document_category_uuid !== null && objData?.document_group_uuid && objData?.document_group_uuid !== null){
-            updated.document_category_uuid = objData?.document_category_uuid
-            updated.document_group_uuid = objData?.document_group_uuid
-        }
+    const onSubmit = async (data) => {
+        let updated = {
+            branch_uuid: branch?.currentBranch?.uuid,
+            document_group_uuid: objData?.document_group_uuid ?? null,
+            document_category_uuid: objData?.document_category_uuid ?? null,
+            file_name: selectedTab === "new" ? data?.new_file_name ?? data?.existing_file_name ?? null : data?.existing_file_name ?? null,
+            file_size: uploadedFiles?.size_in_mb ?? null,
+            notes: selectedTab === "new" ? data?.new_file_notes ?? data?.existing_file_notes ?? null : data?.existing_file_notes ?? null,
+        };
+
         const files = [];
-        if (uploadedFiles && uploadedFiles instanceof File) {
+        if (uploadedFiles && uploadedFiles.is_new === 1) {
+            const compressedFile = await compressFile(uploadedFiles.file);
             files.push({
-                title: 'upload_file',
-                data: uploadedFiles
+                title: "upload_file",
+                data: compressedFile,
             });
         }
-        setLoading(true)
+
+        setLoading(true);
+
         const formData = getFormData(updated, files);
-        dispatch(actionUploadDocumentCategories(formData))
-    }
+        dispatch(actionUploadDocumentCategories(formData));
+    };
+
 
     return (
         <BootstrapDialog
@@ -236,6 +261,7 @@ export default function UploadFilePopup({ open, objData, handleClose }) {
                 </Stack>
                 <IconButton
                     onClick={() => {
+                        reset()
                         handleClose()
                     }}
                 >
@@ -289,20 +315,14 @@ export default function UploadFilePopup({ open, objData, handleClose }) {
                                     <Controller
                                         name="new_file_name"
                                         control={control}
-                                        rules={{
-                                            maxLength: {
-                                                value: 255,
-                                                message: "Maximum length is 255 characters",
-                                            },
-                                        }}
                                         render={({ field }) => (
                                             <CustomTextField
                                                 fullWidth
                                                 value={field?.value}
                                                 label={<FormLabel label="File Name" required={false} />}
+                                                disabled
                                                 onChange={(e) => field.onChange(e)}
                                                 placeholder="Enter file name"
-                                                inputProps={{ maxLength: 255 }}
                                                 error={Boolean(errors.new_file_name)}
                                                 {...(errors.new_file_name && {
                                                     helperText: errors.new_file_name.message,
@@ -405,11 +425,11 @@ export default function UploadFilePopup({ open, objData, handleClose }) {
                                                 <MenuItem value="" disabled>
                                                     <em>Select existing file</em>
                                                 </MenuItem>
-                                                {existingFileOption &&
-                                                    existingFileOption.map((option) => (
+                                                {objData?.document_list !== null && objData?.document_list?.length > 0 &&
+                                                    objData?.document_list?.map((option) => (
                                                         <MenuItem
-                                                            key={option?.name}
-                                                            value={option?.name}
+                                                            key={option?.file_name}
+                                                            value={option?.file_name}
                                                             sx={{
                                                                 whiteSpace: "normal",
                                                                 wordBreak: "break-word",
@@ -421,7 +441,7 @@ export default function UploadFilePopup({ open, objData, handleClose }) {
                                                                 textOverflow: "ellipsis",
                                                             }}
                                                         >
-                                                            {option?.image_url}
+                                                            {option?.file_name}
                                                         </MenuItem>
                                                     ))}
                                             </CustomTextField>
@@ -455,25 +475,24 @@ export default function UploadFilePopup({ open, objData, handleClose }) {
                                     />
 
                                     {/* Drag & Drop */}
-                                    <Box
-                                        sx={{
-                                            border: `1px dashed ${theme.palette.primary.main}`,
-                                            borderRadius: "12px",
-                                            p: 2,
-                                            textAlign: "center",
-                                            color: theme.palette.primary.main,
-                                            cursor: "pointer",
-                                            bgcolor: theme.palette.primary[100],
-                                        }}
-                                    >
-                                        Drag & Drop file(s) to upload or{" "}
-                                        <Typography
-                                            component="span"
-                                            sx={{ color: theme.palette.primary.main, fontWeight: 600 }}
-                                        >
-                                            Browse
-                                        </Typography>
-                                    </Box>
+                                    <SectionHeader title="Upload Files" show_progress={0} sx={{ marginTop: 2 }} />
+                                    <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}`, p: 2, marginTop: '-4px', pb: 2 }}>
+                                        <Stack onClick={handleTriggerInput} onDrop={handleDrop}
+                                            onDragOver={handleDragOver}
+                                            sx={{ cursor: 'pointer', border: `1px dashed ${theme.palette.primary[600]}`, borderRadius: '8px', background: theme.palette.primary[100], p: '16px', flexDirection: 'row', justifyContent: 'center' }}>
+                                            <input
+                                                hidden
+                                                accept=".jpg,.jpeg,.png,.xlsx,.csv,.pdf,.docx"
+                                                type="file"
+                                                multiple
+                                                ref={inputRef}
+                                                onChange={handleFileChange}
+                                            />
+                                            <TypographyComponent fontSize={14} fontWeight={400} sx={{ mr: 1 }}>Drag & Drop file(s) to upload or </TypographyComponent>
+                                            <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.primary[600], textDecoration: 'underline' }}>Browse</TypographyComponent>
+                                        </Stack>
+
+                                    </Stack>
                                 </Stack>
                             </Grid>
                         )}

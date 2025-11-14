@@ -1,10 +1,10 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Box, Button, Card, CardContent, Chip, IconButton, Stack, Tooltip, useTheme } from "@mui/material";
+import { Box, Button, Card, CardContent, Chip, CircularProgress, IconButton, Stack, Tooltip, useTheme } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import { useNavigate, useParams } from "react-router-dom";
 import TypographyComponent from "../../../components/custom-typography";
-import { actionUploadDocumentCategoriesList, resetUploadDocumentCategoriesListResponse } from "../../../store/documents";
+import { actionUploadDocumentCategoriesList, resetUploadDocumentCategoriesListResponse, actionDeleteUploadDocumentCategories, resetDeleteUploadDocumentCategoriesResponse, actionUploadDocumentCategoriesArchive, resetUploadDocumentCategoriesArchiveResponse } from "../../../store/documents";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../../../hooks/useAuth";
 import { useBranch } from "../../../hooks/useBranch";
@@ -17,7 +17,8 @@ import DownloadIcon from "../../../assets/icons/DownloadIcon";
 import ArchiveIcon from "../../../assets/icons/ArchiveIcon";
 import EyeIcon from "../../../assets/icons/EyeIcon";
 import DeleteIcon from "../../../assets/icons/DeleteIcon";
-import ColoredSvgIcon from "../../../components/colored-svg-icon";
+import AlertPopup from "../../../components/alert-confirm";
+import AlertCircleIcon from "../../../assets/icons/AlertCircleIcon";
 
 export default function CategoriesDetails() {
     const theme = useTheme()
@@ -26,46 +27,24 @@ export default function CategoriesDetails() {
     const branch = useBranch()
     const { showSnackbar } = useSnackbar()
     const navigate = useNavigate()
-    const { uuid } = useParams()
+    const { documentCategoryUuid, uuid } = useParams()
 
     //Stores
-    const { uploadDocumentCategoriesList } = useSelector(state => state.documentStore)
+    const { uploadDocumentCategoriesList, deleteUploadDocumentCategories, uploadDocumentCategoriesArchive } = useSelector(state => state.documentStore)
 
     // state
-    const [uploadDocumentDetails, setUploadDocumentDetails] = useState({
-        "id": 1,
-        "document_category_uuid": "g3byyjmesdnc6aRw36Ijy8bNUBRcCEAxPX74",
-        "document_group_uuid": "cBTVlicJ1pUEBro8G0DBdIG4FwBJ0x0gNiMi",
-        "title": "Emergency Operating Procedures",
-        "background_color": "theme.palette.error[50]",
-        "border_color": "theme.palette.error[600]",
-        "icon_background": "theme.palette.common.white",
-        "icon_color": "theme.palette.error[600]",
-        "image_url": "https://fms-super-admin.interdev.in/fms/icon/1/1_1763033726124.svg",
-        "assets": ["Frezzer Cooling"],
-        "asset_type": "Cooling",
-        "short_name": "EOP",
-        "document_list":
-            [
-                {
-                    "id": 1,
-                    "file_name": "1_1763012215109.png",
-                    "version": "VERSION-SERIES",
-                    "uploaded_by": "UPLOADED-USER-NAME",
-                    "upload_date": "1 NOV 2025",
-                    "file_size": "2.4 MB",
-                    "notes": "NOTES-ADDED",
-                    "file_url": "https://fms-super-admin.interdev.in/fms/icon/1/1_1763012215109.png"
-                }
-            ]
-    })
+    const [uploadDocumentDetails, setUploadDocumentDetails] = useState(null)
     const [openUploadFilePopup, setOpenUploadFilePopup] = useState(false)
+    const [openDeleteDocumentPopup, setOpenDeleteDocumentPopup] = useState(false)
+    const [loadingDelete, setLoadingDelete] = useState(false)
+    const [currentUploadDocumentData, setCurrentUploadDocumentData] = useState(null)
 
     // initial render
     useEffect(() => {
-        if (uuid && uuid !== null) {
+        if (documentCategoryUuid && documentCategoryUuid !== null && uuid && uuid !== null) {
             dispatch(actionUploadDocumentCategoriesList({
-                document_category_uuid: uuid,
+                document_category_uuid: documentCategoryUuid,
+                document_group_uuid: uuid,
                 branch_uuid: branch?.currentBranch?.uuid
             }))
         }
@@ -101,6 +80,82 @@ export default function CategoriesDetails() {
         }
     }, [uploadDocumentCategoriesList])
 
+    /**
+        * useEffect
+        * @dependency : deleteUploadDocumentCategories
+        * @type : HANDLE API RESULT
+        * @description : Handle the result of delete Upload Document Categories API
+        */
+    useEffect(() => {
+        if (deleteUploadDocumentCategories && deleteUploadDocumentCategories !== null) {
+            dispatch(resetDeleteUploadDocumentCategoriesResponse())
+            if (deleteUploadDocumentCategories?.result === true) {
+                setOpenDeleteDocumentPopup(false)
+                setLoadingDelete(false)
+                showSnackbar({ message: deleteUploadDocumentCategories?.message, severity: "success" })
+                dispatch(actionUploadDocumentCategoriesList({
+                    document_category_uuid: documentCategoryUuid,
+                    document_group_uuid: uuid,
+                    branch_uuid: branch?.currentBranch?.uuid
+                }))
+            } else {
+                setLoadingDelete(false)
+                switch (deleteUploadDocumentCategories?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetDeleteUploadDocumentCategoriesResponse())
+                        showSnackbar({ message: deleteUploadDocumentCategories?.message, severity: "error" })
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: deleteUploadDocumentCategories?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [deleteUploadDocumentCategories])
+
+    /**
+        * useEffect
+        * @dependency : uploadDocumentCategoriesArchive
+        * @type : HANDLE API RESULT
+        * @description : Handle the result of upload Document Categories Archive API
+        */
+    useEffect(() => {
+        if (uploadDocumentCategoriesArchive && uploadDocumentCategoriesArchive !== null) {
+            dispatch(resetUploadDocumentCategoriesArchiveResponse())
+            if (uploadDocumentCategoriesArchive?.result === true) {
+                setOpenDeleteDocumentPopup(false)
+                setLoadingDelete(false)
+                showSnackbar({ message: uploadDocumentCategoriesArchive?.message, severity: "success" })
+                dispatch(actionUploadDocumentCategoriesList({
+                    document_category_uuid: documentCategoryUuid,
+                    document_group_uuid: uuid,
+                    branch_uuid: branch?.currentBranch?.uuid
+                }))
+            } else {
+                setLoadingDelete(false)
+                switch (uploadDocumentCategoriesArchive?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetUploadDocumentCategoriesArchiveResponse())
+                        showSnackbar({ message: uploadDocumentCategoriesArchive?.message, severity: "error" })
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: uploadDocumentCategoriesArchive?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [uploadDocumentCategoriesArchive])
+
     const handleDownload = async (url) => {
         const response = await fetch(url);
         const blob = await response.blob();
@@ -119,7 +174,30 @@ export default function CategoriesDetails() {
         {
             flex: 0.02,
             field: 'file_name',
-            headerName: 'File Name'
+            headerName: 'File Name',
+            renderCell: (params) => {
+                const fileName = params?.row?.file_name || "";
+                const ext = fileName.split('.').pop().toLowerCase();
+
+                let iconPath = "/asset/pdf-file.png"; // default
+
+                if (ext === "jpg" || ext === "jpeg" || ext === "png") {
+                    iconPath = "/assets/jpg-file.png";
+                } else if (ext === "pdf") {
+                    iconPath = "/assets/pdf-file.png";
+                }
+
+                return (
+                    <Stack direction="row" spacing={1} alignItems="center" my={2}>
+                        <img
+                            src={iconPath}
+                            alt="file icon"
+                            style={{ width: 24, height: 24 }}
+                        />
+                        <TypographyComponent fontSize={14} fontWeight={400} sx={{ my: 'auto' }}>{fileName}</TypographyComponent>
+                    </Stack>
+                );
+            }
         },
         {
             flex: 0.02,
@@ -185,6 +263,14 @@ export default function CategoriesDetails() {
                                 variant="outlined"
                                 sx={{ border: `1px solid ${theme.palette.primary[700]}`, borderRadius: '8px' }}
                                 onClick={() => {
+                                    let details = {
+                                        uuid: params?.row?.uuid,
+                                        title: `Archive Document`,
+                                        text: `Are you sure you want to archive this document? This action cannot be undone.`,
+                                        type: 'Archive'
+                                    }
+                                    setCurrentUploadDocumentData(details)
+                                    setOpenDeleteDocumentPopup(true)
 
                                 }}
                             >
@@ -197,7 +283,14 @@ export default function CategoriesDetails() {
                                 variant="outlined"
                                 sx={{ border: `1px solid ${theme.palette.error[600]}`, borderRadius: '8px' }}
                                 onClick={() => {
-
+                                    let details = {
+                                        uuid: params?.row?.uuid,
+                                        title: `Delete Document`,
+                                        text: `Are you sure you want to delete this document? This action cannot be undone.`,
+                                        type: 'Delete'
+                                    }
+                                    setCurrentUploadDocumentData(details)
+                                    setOpenDeleteDocumentPopup(true)
                                 }}
                             >
                                 <DeleteIcon stroke={'#D92D20'} />
@@ -247,8 +340,8 @@ export default function CategoriesDetails() {
                     borderRadius: '16px',
                     padding: '8px',
                     gap: '6px',
-                    border: `1px solid ${resolveThemeColor(uploadDocumentDetails.border_color, theme)}`,
-                    backgroundColor: resolveThemeColor(uploadDocumentDetails.background_color, theme),
+                    border: `1px solid ${resolveThemeColor(uploadDocumentDetails?.border_color, theme)}`,
+                    backgroundColor: resolveThemeColor(uploadDocumentDetails?.background_color, theme),
                     mt: 4
                 }}>
                 <CardContent>
@@ -259,16 +352,13 @@ export default function CategoriesDetails() {
                                     height: 64,
                                     width: 64,
                                     borderRadius: "8px",
-                                    backgroundColor: resolveThemeColor(uploadDocumentDetails.icon_background, theme),
+                                    backgroundColor: resolveThemeColor(uploadDocumentDetails?.icon_background, theme),
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
                                 }}
                             >
-                                <ColoredSvgIcon
-                                    svgUrl={uploadDocumentDetails.image_url}
-                                    fillColor={resolveThemeColor(uploadDocumentDetails.icon_color, theme)}
-                                />
+                                <img alt={""} src={uploadDocumentDetails?.image_url} />
                             </Box>
                             <Stack flexDirection={'column'} rowGap={1} my={'auto'}>
                                 <Stack flexDirection={'row'} columnGap={2}>
@@ -345,10 +435,47 @@ export default function CategoriesDetails() {
             <UploadFilePopup
                 open={openUploadFilePopup}
                 objData={uploadDocumentDetails}
-                handleClose={() => {
+                handleClose={(data) => {
+                    if (data && data !== null && data === 'save') {
+                        dispatch(actionUploadDocumentCategoriesList({
+                            document_category_uuid: documentCategoryUuid,
+                            document_group_uuid: uuid,
+                            branch_uuid: branch?.currentBranch?.uuid
+                        }))
+                    }
                     setOpenUploadFilePopup(false)
                 }}
             />
+            {
+                openDeleteDocumentPopup &&
+                <AlertPopup
+                    open={openDeleteDocumentPopup}
+                    icon={<AlertCircleIcon sx={{ color: theme.palette.error[600] }} fontSize="inherit" />}
+                    color={theme.palette.error[600]}
+                    objData={currentUploadDocumentData}
+                    actionButtons={[
+                        <Button key="cancel" color="secondary" variant="outlined" sx={{ width: '100%', color: theme.palette.grey[800], textTransform: 'capitalize' }} onClick={() => {
+                            setOpenDeleteDocumentPopup(false)
+                        }}>
+                            Cancel
+                        </Button >
+                        ,
+                        <Button key="delete" variant="contained" sx={{ width: '100%', textTransform: 'capitalize', background: theme.palette.error[600], color: theme.palette.common.white }} disabled={loadingDelete} onClick={() => {
+                            setLoadingDelete(true)
+                            if (currentUploadDocumentData?.uuid && currentUploadDocumentData?.uuid !== null && currentUploadDocumentData?.type === 'Delete') {
+                                dispatch(actionDeleteUploadDocumentCategories({
+                                    uuid: currentUploadDocumentData?.uuid
+                                }))
+                            } else if (currentUploadDocumentData?.uuid && currentUploadDocumentData?.uuid !== null && currentUploadDocumentData?.type === 'Archive') {
+                                dispatch(actionUploadDocumentCategoriesArchive({ uuid: currentUploadDocumentData?.uuid }))
+                            }
+                        }}>
+                            {loadingDelete ? <CircularProgress size={20} color="white" /> : currentUploadDocumentData?.type}
+                        </Button>
+                    ]
+                    }
+                />
+            }
         </React.Fragment>
     )
 }

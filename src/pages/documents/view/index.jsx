@@ -214,7 +214,7 @@ export default function ViewDocument() {
                                             border: `1px solid ${resolveThemeColor(cat.icon_color, theme)}`
                                         }}
                                         onClick={() => {
-                                            navigate(`/documents/categories-details/${cat?.document_category_uuid}`)
+                                            navigate(`categories-details/${cat?.document_category_uuid}`)
                                         }}
                                     >
                                         View All
