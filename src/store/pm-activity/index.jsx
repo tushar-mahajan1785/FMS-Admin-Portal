@@ -10,7 +10,6 @@ import {
 export const defaultPMScheduleData = {
   is_active: 0,
   asset_type: "",
-  role_type_id: "",
   frequency_exceptions: "",
 };
 
@@ -31,7 +30,7 @@ export const actionPMScheduleAdd = createAsyncThunk(
   "pm-activity/actionPMScheduleAdd",
   async (params) => {
     try {
-      const response = await axiosApi.post(API_PM_ACTIVITY_LIST, params);
+      const response = await axiosApi.post(API_PM_ACTIVITY_ADD, params);
 
       return response.status !== 200 ? getErrorResponse() : response.data;
     } catch (error) {

@@ -40,7 +40,6 @@ import {
   resetMasterAssetTypeResponse,
 } from "../../../../../store/asset";
 import {
-  actionRosterData,
   actionAssetTypeWiseList,
   resetAssetTypeWiseListResponse,
 } from "../../../../../store/roster";
@@ -67,22 +66,6 @@ export default function PMActivityAssetSetUp({ onNext, onBack }) {
   const { showSnackbar } = useSnackbar();
   const branch = useBranch();
 
-  // const {
-  //   control,
-  //   setValue,
-  //   handleSubmit,
-  //   getValues,
-  //   reset,
-  //   formState: { errors },
-  // } = useForm({
-  //   defaultValues: {
-  //     pm_activity_title: "",
-  //     frequency: "",
-  //     status: "",
-  //     schedule_start_date: "",
-  //   },
-  // });
-
   const {
     setValue,
     control,
@@ -96,15 +79,6 @@ export default function PMActivityAssetSetUp({ onNext, onBack }) {
   const [assetTypeWiseListOptions, setAssetTypeWiseListOptions] = useState([]);
   const [assetTypeWiseListOriginalData, setAssetTypeWiseListOriginalData] =
     useState([]);
-  const [masterPmActivityScheduleOptions] = useState(
-    getMasterPMActivitySchedule
-  );
-  const [masterPmActivityStatusOptions] = useState(getMasterPMActivityStatus);
-
-  //States
-  const [loading, setLoading] = useState(false);
-  const [activeStep, setActiveStep] = useState(0);
-  const steps = ["Select Asset", "Select Employees & Confirm"];
 
   //Redux Store
   const { masterAssetType } = useSelector((state) => state.AssetStore);
@@ -324,10 +298,6 @@ export default function PMActivityAssetSetUp({ onNext, onBack }) {
                       }
                       onChange={(event) => {
                         field.onChange(event);
-                        console.log(
-                          "------pmScheduleData-------",
-                          pmScheduleData
-                        );
                         let objData = Object.assign({}, pmScheduleData);
                         let objCurrent = getObjectById(
                           assetTypeMasterOption,
@@ -461,6 +431,7 @@ export default function PMActivityAssetSetUp({ onNext, onBack }) {
                                   asset_id: asset.id,
                                   asset_type: asset.type,
                                   asset_description: asset.asset_description,
+                                  location: asset.location,
                                   frequency_exceptions: [], // Initialize empty frequency exceptions
                                 });
                               }
@@ -884,8 +855,8 @@ export default function PMActivityAssetSetUp({ onNext, onBack }) {
                             <em>Select Status</em>
                           </MenuItem>
 
-                          {masterPmActivityStatusOptions &&
-                            masterPmActivityStatusOptions.map((option) => (
+                          {getMasterPMActivityStatus &&
+                            getMasterPMActivityStatus.map((option) => (
                               <MenuItem
                                 key={option?.name}
                                 value={option?.name}

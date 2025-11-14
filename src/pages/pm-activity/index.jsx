@@ -56,6 +56,7 @@ import {
   resetMasterAssetTypeResponse,
 } from "../../store/asset";
 import { useBranch } from "../../hooks/useBranch";
+import EyeIcon from "../../assets/icons/EyeIcon";
 
 export default function PmActivity() {
   const theme = useTheme();
@@ -96,79 +97,37 @@ export default function PmActivity() {
       field: "title",
       headerName: "Title",
     },
+
     {
-      flex: 0.7,
+      flex: 0.4,
       field: "assets",
       headerName: "Assets",
       renderCell: (params) => {
-        // Check if 'assets' is a string or array
-        let assets = params?.row?.assets;
-        if (!assets) return "-";
-
-        // Convert string (comma-separated or bracketed) to array if needed
-        if (typeof assets === "string") {
-          assets = assets
-            .replace(/[\[\]]/g, "") // remove brackets if any
-            .split(",")
-            .map((a) => a.trim())
-            .filter((a) => a.length > 0);
-        }
-
-        // If only 1 or 2 assets, show them all
-        if (assets.length <= 2) {
-          return (
-            <Stack direction="row" spacing={1}>
-              {assets.map((asset, idx) => (
-                <Chip
-                  key={idx}
-                  label={asset}
-                  sx={{
-                    bgcolor: "#F9F4FF",
-                    color: "#7E57C2",
-                    fontWeight: 500,
-                    fontSize: "13px",
-                    borderRadius: "16px",
-                  }}
-                />
-              ))}
-            </Stack>
-          );
-        }
-
-        // If more than 2 assets, show first 2 + "+N"
-        const remainingCount = assets.length - 2;
-        const visibleAssets = assets.slice(0, 2);
-
         return (
-          <Stack direction="row" spacing={1}>
-            {visibleAssets.map((asset, idx) => (
-              <Chip
-                key={idx}
-                label={asset}
-                sx={{
-                  bgcolor: "#F9F4FF",
-                  color: "#7E57C2",
-                  fontWeight: 500,
-                  fontSize: "13px",
-                  borderRadius: "16px",
-                }}
-              />
-            ))}
+          <Stack
+            sx={{ flexDirection: "row", alignItems: "center", height: "100%" }}
+          >
             <Chip
-              label={`+${remainingCount}`}
+              label={params?.row?.assets}
+              size="small"
               sx={{
-                bgcolor: "#F9F4FF",
-                color: "#7E57C2",
-                fontWeight: 600,
-                fontSize: "13px",
-                borderRadius: "16px",
+                bgcolor: theme.palette.primary[50],
+                color: theme.palette.primary[600],
+                fontWeight: 500,
+                px: "4px",
+                py: "8px",
+                borderRadius: 0,
               }}
             />
+            <Tooltip followCursor placement="top" title={params?.row?.assets}>
+              <IconButton>
+                <EyeIcon stroke="#717680" />
+              </IconButton>
+            </Tooltip>
           </Stack>
         );
       },
     },
-    ,
     {
       flex: 0.2,
       field: "start_date",
@@ -1087,46 +1046,49 @@ export default function PmActivity() {
                   </Stack>
 
                   <Stack sx={{ gap: 2, marginTop: 1 }}>
-                    {upcomingSchedules.map((item, index) => (
-                      <Box key={item.id}>
-                        <Box
-                          sx={{
-                            bgcolor: "#F9F4FF",
-                            borderRadius: 1,
-                            p: 0.5,
-                            display: "inline-block",
-                            width: "100%",
-                          }}
-                        >
-                          <Stack sx={{ width: "100%" }}>
-                            <Typography
-                              fontSize={13}
-                              color={theme.palette.grey[800]}
-                              fontWeight={600}
-                              height={40}
-                              p={1}
-                              width={380}
-                            >
-                              {item.date}
-                            </Typography>
-                          </Stack>
+                    {upcomingSchedules &&
+                      upcomingSchedules !== null &&
+                      upcomingSchedules?.length > 0 &&
+                      upcomingSchedules?.map((item, index) => (
+                        <Box key={item.id}>
+                          <Box
+                            sx={{
+                              bgcolor: "#F9F4FF",
+                              borderRadius: 1,
+                              p: 0.5,
+                              display: "inline-block",
+                              width: "100%",
+                            }}
+                          >
+                            <Stack sx={{ width: "100%" }}>
+                              <Typography
+                                fontSize={13}
+                                color={theme.palette.grey[800]}
+                                fontWeight={600}
+                                height={40}
+                                p={1}
+                                width={380}
+                              >
+                                {item.date}
+                              </Typography>
+                            </Stack>
+                          </Box>
+                          <Typography
+                            mt={0.5}
+                            fontSize={14}
+                            color={theme.palette.grey[800]}
+                            fontWeight={500}
+                            width={320}
+                            height={40}
+                            p={1}
+                          >
+                            {item.title}
+                          </Typography>
+                          {index !== upcomingSchedules.length - 1 && (
+                            <Divider sx={{ gap: 2, mt: 1 }} />
+                          )}
                         </Box>
-                        <Typography
-                          mt={0.5}
-                          fontSize={14}
-                          color={theme.palette.grey[800]}
-                          fontWeight={500}
-                          width={320}
-                          height={40}
-                          p={1}
-                        >
-                          {item.title}
-                        </Typography>
-                        {index !== upcomingSchedules.length - 1 && (
-                          <Divider sx={{ gap: 2, mt: 1 }} />
-                        )}
-                      </Box>
-                    ))}
+                      ))}
                   </Stack>
                 </Stack>
               </Card>

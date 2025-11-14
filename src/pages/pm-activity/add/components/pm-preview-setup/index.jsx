@@ -57,8 +57,11 @@ import { getFormattedDuration } from "../../../../../utils";
 import EyeIcon from "../../../../../assets/icons/EyeIcon";
 import PmUserCircleIcon from "../../../../../assets/icons/PmUserCircleIcon";
 import PmEditReschedulerIcon from "../../../../../assets/icons/PMEditReshedulerIcon";
-import ReschedulePopup from "../edit-rechedule";
-import { actionPMScheduleData } from "../../../../../store/pm-activity";
+import ReschedulePopup from "../edit-reschedule";
+import {
+  actionPMScheduleData,
+  resetPmScheduleDataResponse,
+} from "../../../../../store/pm-activity";
 
 export default function PMActivityPreviewSetUp() {
   const theme = useTheme();
@@ -82,41 +85,24 @@ export default function PMActivityPreviewSetUp() {
     },
   });
 
-  // ✅ States
-  const [searchQuery, setSearchQuery] = useState("");
-  const [assetTypeMasterOption, setAssetTypeMasterOption] = useState([]);
-  const [assetTypeWiseListOptions, setAssetTypeWiseListOptions] = useState([]);
-  const [assetTypeWiseListOriginalData, setAssetTypeWiseListOriginalData] =
-    useState([]);
-  const [loading, setLoading] = useState(false);
-
   const { pmScheduleData } = useSelector((state) => state.PmActivityStore);
 
   // Inside your PMActivityPreviewSetUp component, add this state:
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
 
-  // console.log("-----pmScheduleData--------", pmScheduleData);
-
   // Add these functions inside your component:
   const handleRescheduleClick = (activity) => {
-    setSelectedActivity(activity);
-    setRescheduleOpen(true);
-  };
-
-  const handleRescheduleConfirm = (rescheduleData) => {
-    console.log("Reschedule data:", rescheduleData);
-    // Add your reschedule logic here
-    toast.success(
-      `Activity #${rescheduleData.activityId} rescheduled successfully`
+    let pmData = Object.assign({}, pmScheduleData);
+    let currentAssetData = pmScheduleData?.assets.find(
+      (obj) => obj?.asset_id === pmScheduleData?.selected_asset_id
     );
-    setRescheduleOpen(false);
-    setSelectedActivity(null);
-  };
-
-  const handleRescheduleClose = () => {
-    setRescheduleOpen(false);
-    setSelectedActivity(null);
+    let activityData = {
+      ...currentAssetData,
+      frequency_data: activity,
+    };
+    setSelectedActivity(activityData);
+    setRescheduleOpen(true);
   };
 
   const columns = [
@@ -311,31 +297,45 @@ export default function PMActivityPreviewSetUp() {
 
   const [frequencyExceptionsData, setFrequencyExceptionsData] = useState([]);
 
-  console.log("frequencyExceptionsData", frequencyExceptionsData);
-  console.log("pmScheduleData", pmScheduleData);
-
   /**
    * 🔹 Initial API call to fetch master asset types
    */
+  // useEffect(() => {
+  //   if (pmScheduleData?.assets !== null && pmScheduleData?.assets.length > 0) {
+  //     let currentAsset = pmScheduleData?.assets.find(
+  //       (obj) => obj?.asset_id === pmScheduleData?.selected_asset_id
+  //     );
+  //     if (currentAsset && currentAsset !== null) {
+  //       setFrequencyExceptionsData(currentAsset?.frequency_exceptions);
+  //     } else {
+  //       setFrequencyExceptionsData([]);
+  //     }
+  //   }
+  // }, [pmScheduleData?.assets]);
+
   useEffect(() => {
-    if (pmScheduleData?.assets !== null && pmScheduleData?.assets.length > 0) {
-      let currentAsset = pmScheduleData?.assets.find(
-        (obj) => obj?.asset_id === pmScheduleData?.selected_asset_id
-      );
-      console.log("Current Asset", currentAsset);
-      if (currentAsset && currentAsset !== null) {
-        setFrequencyExceptionsData(currentAsset?.frequency_exceptions);
-      } else {
-        setFrequencyExceptionsData([]);
+    if (pmScheduleData?.is_active == 1) {
+      if (
+        pmScheduleData?.assets &&
+        pmScheduleData?.assets !== null &&
+        pmScheduleData?.assets.length > 0
+      ) {
       }
+      setFrequencyExceptionsData(
+        pmScheduleData?.assets[0]?.frequency_exceptions
+      );
+    } else {
+      setFrequencyExceptionsData([]);
     }
-  }, [pmScheduleData?.assets]);
+  }, [pmScheduleData?.is_active]);
 
   // Format date for display (from "05-Nov-2025" to "05 Nov 2025")
   const formatDisplayDate = (dateString) => {
     if (!dateString) return "N/A";
     return dateString.replace("-", " ").replace("-", " ");
   };
+
+  console.log("---------pmScheduleData---------", pmScheduleData);
 
   return (
     <Box>
@@ -476,8 +476,19 @@ export default function PMActivityPreviewSetUp() {
                           cursor: "pointer",
                         }}
                         onClick={() => {
+                          console.log("Asseet::", asset);
                           let pmData = Object.assign({}, pmScheduleData);
                           pmData.selected_asset_id = asset?.asset_id;
+                          let currentAssetIndex = pmData.assets.findIndex(
+                            (obj) => obj?.asset_id === asset?.asset_id
+                          );
+                          if (currentAssetIndex > -1) {
+                            setFrequencyExceptionsData(
+                              pmData.assets[currentAssetIndex]
+                                .frequency_exceptions
+                            );
+                          }
+
                           dispatch(actionPMScheduleData(pmData));
                         }}
                       >
@@ -599,9 +610,49 @@ export default function PMActivityPreviewSetUp() {
       </Stack> */}
       <ReschedulePopup
         open={rescheduleOpen}
-        onClose={handleRescheduleClose}
         selectedActivity={selectedActivity}
-        onConfirm={handleRescheduleConfirm}
+        handleClose={(data, type) => {
+          setRescheduleOpen(false);
+          if (type == "save") {
+            console.log("DATAAAAA RESCSHDULE:", data);
+            // console.log("selectedActivity:", selectedActivity);
+            let objData = Object.assign({}, selectedActivity);
+            let objFrequencyData = Object.assign({}, objData?.frequency_data);
+            objFrequencyData.date =
+              data.new_date && data.new_date !== null
+                ? moment(data.new_date, "DD/MM/YYYY").format("YYYY-MM-DD")
+                : null;
+            objFrequencyData.reason_for_reschedule = data.reason_for_reschedule;
+            console.log("-------objFrequencyData--@@@@@@---", objFrequencyData);
+            objData.frequency_data = objFrequencyData;
+
+            // setSelectedActivity(objData);
+            let frequencies = Object.assign([], frequencyExceptionsData);
+            let currentIndex = frequencyExceptionsData.findIndex(
+              (obj) => obj?.title === objFrequencyData?.title
+            );
+            if (currentIndex > -1) {
+              frequencies[currentIndex] = objFrequencyData;
+              setFrequencyExceptionsData(frequencies);
+              let pmData = Object.assign({}, pmScheduleData);
+              let assets = Object.assign([], pmData?.assets);
+              let currentAssetIndex = assets.findIndex(
+                (obj) => obj?.asset_id === pmData?.selected_asset_id
+              );
+              let currentAssetData = Object.assign(
+                {},
+                assets[currentAssetIndex]
+              );
+              currentAssetData.frequency_exceptions = frequencies;
+              assets[currentAssetIndex] = currentAssetData;
+              pmData.assets = assets;
+              console.log("-------&&&&&&&&&&&&&&-----", pmData);
+              dispatch(actionPMScheduleData(pmData));
+            }
+
+            // resetPmScheduleDataResponse();
+          }
+        }}
       />
     </Box>
   );

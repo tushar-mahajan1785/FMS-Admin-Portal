@@ -217,12 +217,6 @@ export default function AddPMSchedule({ open, handleClose }) {
   const handleBack = () => {
     setActiveStep(0);
   };
-
-  // const onStep1Submit = (data) => {
-  //   console.log("✅ Step 1 valid:=============", data);
-  //   // setActiveStep(1);
-  // };
-
   // Helper function to format date as "2025-11-05"
   const formatDate = (date) => {
     const year = date.getFullYear();
@@ -262,7 +256,7 @@ export default function AddPMSchedule({ open, handleClose }) {
       title: `${index}${ordinal} Activity Date`,
       date: formattedDate,
       status: "Upcoming",
-      completed_date: formattedDate,
+      completed_date: "",
       supervision_by: "",
       time: "",
       additional_info: "",
@@ -270,10 +264,7 @@ export default function AddPMSchedule({ open, handleClose }) {
   };
 
   // Function to generate dates based on frequency
-  // Function to generate dates based on frequency
   const generateFrequencyDates = (frequency, startDate) => {
-    console.log("Generating dates for:", { frequency, startDate });
-
     // Validate inputs
     if (!frequency || !startDate) {
       console.error("Missing frequency or startDate:", {
@@ -384,14 +375,11 @@ export default function AddPMSchedule({ open, handleClose }) {
       return [];
     }
 
-    console.log("Generated dates:", dates);
     return dates;
   };
 
   const onStep1Submit = (data) => {
     // setLoading(true);
-
-    console.log("------data-------", data);
 
     let pmData = Object.assign({}, pmScheduleData);
     let objData = {
@@ -430,17 +418,12 @@ export default function AddPMSchedule({ open, handleClose }) {
 
     pmData.is_active = 1; // Set to 1 for preview step
     pmData.selected_asset_id = pmData?.assets[0]?.asset_id || 0;
-    console.log("----pmData-------", pmData);
     // Dispatch the data to Redux store
     dispatch(actionPMScheduleData(pmData));
     setActiveStep(1);
-
-    // Log the final object to console
-    console.log("PM Activity Data with Separate Dates for Each Asset:", pmData);
   };
 
   const getStepContent = (step) => {
-    console.log("------step------", step);
     switch (step) {
       case 0:
         return (
@@ -466,6 +449,8 @@ export default function AddPMSchedule({ open, handleClose }) {
     }
   };
 
+  console.log("----pmScheduleData--MAIN--", pmScheduleData);
+
   useEffect(() => {
     if (open === true) {
       // Reset to first step when drawer opens
@@ -484,15 +469,19 @@ export default function AddPMSchedule({ open, handleClose }) {
       );
     }
 
-    return () => {};
+    return () => {
+      let pmData = Object.assign({}, pmScheduleData);
+      pmData.is_active = 0;
+      pmData.pm_details = null;
+      pmData.assets = [];
+      pmData.selected_asset_id = null;
+      dispatch(actionPMScheduleData(pmData));
+    };
   }, [open]);
 
   // Handle save schedule
   const handleSaveSchedule = () => {
     setLoading(false);
-
-    // Console the complete object
-    console.log("PM ACTIVITY SCHEDULE - COMPLETE DATA:", pmScheduleData);
 
     let objData = {
       branch_uuid: branch?.currentBranch?.uuid,
@@ -619,7 +608,7 @@ export default function AddPMSchedule({ open, handleClose }) {
                   variant="outlined"
                   onClick={handleBack}
                 >
-                  Back
+                  Reset
                 </Button>
                 <Button
                   sx={{
@@ -639,7 +628,7 @@ export default function AddPMSchedule({ open, handleClose }) {
                   {loading ? (
                     <CircularProgress size={18} sx={{ color: "white" }} />
                   ) : (
-                    "Save Schedule"
+                    "Preview"
                   )}
                 </Button>
               </Stack>
