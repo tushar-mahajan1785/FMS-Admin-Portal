@@ -208,6 +208,7 @@ export default function ViewDocument() {
                                     <Button
                                         variant="outlined"
                                         startIcon={<EyeIcon size={16} stroke={resolveThemeColor(cat.icon_color, theme)} />}
+                                        disabled={cat?.total_document <= 0}
                                         sx={{
                                             textTransform: "none",
                                             color: resolveThemeColor(cat.icon_color, theme),
