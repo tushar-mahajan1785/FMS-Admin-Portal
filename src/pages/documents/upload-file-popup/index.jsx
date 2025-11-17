@@ -320,7 +320,6 @@ export default function UploadFilePopup({ open, objData, handleClose }) {
                                                 fullWidth
                                                 value={field?.value}
                                                 label={<FormLabel label="File Name" required={false} />}
-                                                disabled
                                                 onChange={(e) => field.onChange(e)}
                                                 placeholder="Enter file name"
                                                 error={Boolean(errors.new_file_name)}
