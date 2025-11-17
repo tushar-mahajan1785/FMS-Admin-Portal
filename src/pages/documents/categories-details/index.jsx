@@ -98,6 +98,9 @@ export default function CategoriesDetails() {
                     document_group_uuid: uuid,
                     branch_uuid: branch?.currentBranch?.uuid
                 }))
+                if (currentUploadDocumentData?.uuid || currentUploadDocumentData?.uuid === '' || currentUploadDocumentData?.uuid === null) {
+                    navigate(`/documents/view/${uuid}`)
+                }
             } else {
                 setLoadingDelete(false)
                 switch (deleteUploadDocumentCategories?.status) {
@@ -234,7 +237,7 @@ export default function CategoriesDetails() {
                     <Stack sx={{ flexDirection: 'row', alignItems: "center", height: '100%', columnGap: 2 }}>
                         <Box sx={{ display: "flex", alignItems: "center", height: '100%' }}>
                             <Tooltip title="View File" followCursor placement="top">
-                                {/* open ticket details */}
+                                {/* open documents details */}
                                 <Button
                                     variant="outlined"
                                     startIcon={<EyeIcon stroke={'#6941C6'} />}
@@ -248,7 +251,7 @@ export default function CategoriesDetails() {
                             </Tooltip>
                         </Box>
                         <Tooltip title="Download File" followCursor placement="top">
-                            {/* open ticket details */}
+                            {/* download documents */}
                             <IconButton
                                 variant="outlined"
                                 sx={{ border: `1px solid ${theme.palette.primary[700]}`, borderRadius: '8px' }}
@@ -257,28 +260,31 @@ export default function CategoriesDetails() {
                                 <DownloadIcon stroke={'#6941C6'} />
                             </IconButton>
                         </Tooltip>
-                        <Tooltip title="Archive File" followCursor placement="top">
-                            {/* open ticket details */}
-                            <IconButton
-                                variant="outlined"
-                                sx={{ border: `1px solid ${theme.palette.primary[700]}`, borderRadius: '8px' }}
-                                onClick={() => {
-                                    let details = {
-                                        uuid: params?.row?.uuid,
-                                        title: `Archive Document`,
-                                        text: `Are you sure you want to archive this document? This action cannot be undone.`,
-                                        type: 'Archive'
-                                    }
-                                    setCurrentUploadDocumentData(details)
-                                    setOpenDeleteDocumentPopup(true)
+                        {
+                            uploadDocumentDetails?.short_name !== 'Archive' &&
+                            <Tooltip title="Archive File" followCursor placement="top">
+                                {/* archive Documents */}
+                                <IconButton
+                                    variant="outlined"
+                                    sx={{ border: `1px solid ${theme.palette.primary[700]}`, borderRadius: '8px' }}
+                                    onClick={() => {
+                                        let details = {
+                                            uuid: params?.row?.uuid,
+                                            title: `Archive Document`,
+                                            text: `Are you sure you want to archive this document? This action cannot be undone.`,
+                                            type: 'Archive'
+                                        }
+                                        setCurrentUploadDocumentData(details)
+                                        setOpenDeleteDocumentPopup(true)
 
-                                }}
-                            >
-                                <ArchiveIcon stroke={'#6941C6'} />
-                            </IconButton>
-                        </Tooltip>
+                                    }}
+                                >
+                                    <ArchiveIcon stroke={'#6941C6'} />
+                                </IconButton>
+                            </Tooltip>
+                        }
                         <Tooltip title="Delete File" followCursor placement="top">
-                            {/* open ticket details */}
+                            {/* delete Documents */}
                             <IconButton
                                 variant="outlined"
                                 sx={{ border: `1px solid ${theme.palette.error[600]}`, borderRadius: '8px' }}
