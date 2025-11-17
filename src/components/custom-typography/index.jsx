@@ -34,8 +34,8 @@ const fontSizeMap = {
     },
     "32": {
         "default": "26px",
-        "sm": "28px",
-        "md": "30px",
+        "sm": "26px",
+        "md": "28px",
         "lg": "32px",
         "xl": "32px"
     },

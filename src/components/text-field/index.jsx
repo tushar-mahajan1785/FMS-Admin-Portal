@@ -195,6 +195,20 @@ const TextFieldStyled = styled(TextField)(({ theme }) => ({
       fontSize: '1.6rem !important',
     },
   },
+
+  // Fix grey hover BG for filled variant
+  '& .MuiFilledInput-root': {
+    backgroundColor: theme.palette.common.white,
+    '&:hover': {
+      backgroundColor: theme.palette.common.white,
+    },
+    '&.Mui-focused': {
+      backgroundColor: theme.palette.common.white,
+    },
+    '&.Mui-disabled': {
+      backgroundColor: `${theme.palette.grey[100]} !important`,
+    },
+  },
 }))
 
 const CustomTextField = forwardRef((props, ref) => {

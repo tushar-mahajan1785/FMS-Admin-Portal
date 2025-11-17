@@ -17,7 +17,8 @@ export default function FormHeader({
   message,
   centerSection,
   rightSection,
-  currentStatus
+  currentStatus,
+  need_responsive = 0
 }) {
   const theme = useTheme();
 
@@ -54,12 +55,13 @@ export default function FormHeader({
   }
 
   return (
-    <Box
+    <Stack
       sx={{
         backgroundColor: "white",
         p: 2,
-        display: "flex",
-        alignItems: "center",
+        rowGap: 1,
+        flexDirection: need_responsive == 0 ? 'row' : { sm: 'column', md: 'row' },
+        alignItems: need_responsive == 0 ? "center" : '',
         justifyContent: "space-between",
       }}
     >
@@ -128,6 +130,6 @@ export default function FormHeader({
           </Box>
         ))}
       </Stack>
-    </Box>
+    </Stack>
   );
 }

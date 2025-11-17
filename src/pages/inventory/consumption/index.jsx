@@ -1,8 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useTheme } from '@emotion/react'
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import CloseIcon from '../../../assets/icons/CloseIcon'
-import { Button, CircularProgress, Divider, Drawer, Grid, IconButton, InputAdornment, List, ListItem, ListItemText, MenuItem, Stack } from '@mui/material'
+import { Box, Button, CircularProgress, Divider, Drawer, Grid, IconButton, InputAdornment, MenuItem, Stack, Tooltip } from '@mui/material'
 import FormHeader from '../../../components/form-header'
 import BoxPlusIcon from '../../../assets/icons/BoxPlusIcon'
 import { Controller, useForm } from 'react-hook-form'
@@ -15,8 +15,7 @@ import FieldBox from '../../../components/field-box'
 import CustomAutocomplete from '../../../components/custom-autocomplete'
 import { useDispatch, useSelector } from 'react-redux'
 import { ERROR, SERVER_ERROR, UNAUTHORIZED } from '../../../constants'
-import { actionVendorMasterList, resetVendorMasterListResponse } from '../../../store/vendor'
-import { actionInventoryRestockSave, resetGetUnitMasterResponse, resetInventoryRestockSaveResponse } from '../../../store/inventory'
+import { actionInventoryConsumptionSave, resetGetUnitMasterResponse, resetInventoryConsumptionSaveResponse } from '../../../store/inventory'
 import { useAuth } from '../../../hooks/useAuth'
 import { useSnackbar } from '../../../hooks/useSnackbar'
 import { useBranch } from '../../../hooks/useBranch'
@@ -24,38 +23,51 @@ import moment from 'moment'
 import CalendarIcon from '../../../assets/icons/CalendarIcon'
 import DatePicker from 'react-datepicker'
 import DatePickerWrapper from '../../../components/datapicker-wrapper'
-import DeleteIcon from '../../../assets/icons/DeleteIcon'
-import FileIcon from '../../../assets/icons/FileIcon'
-import _ from 'lodash'
 import { compressFile, getCurrentStatusColor, getCurrentStockValue, getFormData, getObjectById } from '../../../utils'
 import CustomChip from '../../../components/custom-chip'
+import AlertTriangleIcon from '../../../assets/icons/AlertTriangleIcon'
+import { actionAssetCustodianList, resetAssetCustodianListResponse } from '../../../store/asset'
+import { actionGetTicketMaster, resetGetTicketMasterResponse } from '../../../store/tickets'
+import { RestockInventory } from '../restock'
 
-export const RestockInventory = ({ open, handleClose, restockData }) => {
+export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout } = useAuth()
     const { showSnackbar } = useSnackbar()
     const branch = useBranch()
-    const inputRef = useRef();
-
-    const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'xlsx', 'csv', 'pdf', 'docx'];
-    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
-
-    // Trigger file dialog
-    const handleTriggerInput = () => {
-        inputRef.current.click();
-    };
 
     //Stores
-    const { vendorMasterList } = useSelector(state => state.vendorStore)
-    const { getUnitMaster, inventoryRestockSave } = useSelector(state => state.inventoryStore)
+    const { assetCustodianList } = useSelector(state => state.AssetStore)
+    const { getTicketMaster } = useSelector(state => state.ticketsStore)
+    const { getUnitMaster, inventoryConsumptionSave } = useSelector(state => state.inventoryStore)
 
     //States
     const [loading, setLoading] = useState(false)
     const [inventoryRestockDetailsData, setInventoryRestockDetailsData] = useState(null)
     const [masterUnitOptions, setMasterUnitOptions] = useState([])
-    const [supervisorMasterOptions, setSupervisorMasterOptions] = useState([])
+    const [usedByMasterOptions, setUsedByMasterOptions] = useState([])
+    const [ticketNoMasterOptions, setTicketNoMasterOptions] = useState([
+        {
+            id: 1,
+            name: 'TKT-1762774588309'
+        },
+        {
+            id: 2,
+            name: 'TKT-1762776726257'
+        },
+        {
+            id: 3,
+            name: 'TICKET-11222'
+        },
+        {
+            id: 4,
+            name: 'TICKET-11223'
+        },
+    ])
     const [arrUploadedFiles, setArrUploadedFiles] = useState([])
+    const [openRestockInventoryPopup, setOpenRestockInventoryPopup] = useState(false);
+    const [showLowStockMessage, setShowLowStockMessage] = useState(1)
 
     const {
         control,
@@ -66,20 +78,20 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
         formState: { errors }
     } = useForm({
         defaultValues: {
-            added_quantity: '',
+            used_quantity: '',
             minimum_quantity: '',
             critical_quantity: '',
             unit: '',
-            supplier_name: '',
-            invoice_no: '',
-            restock_date: '',
+            used_by: '',
+            ticket_no: '',
+            consumption_date: '',
             additional_notes: ''
         }
     });
 
-    //watchers
-    const watchSupplier = watch('supplier_name')
-    const watchAddedQuantity = watch('added_quantity')
+    //watcher
+    const watchSupplier = watch('used_by')
+    const watchAddedQuantity = watch('used_quantity')
 
     useEffect(() => {
         if (open === true) {
@@ -98,15 +110,16 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
             //     "contact_country_code": "+91",
             //     "contact": "9876543222",
             //     "email": "vijay+4@mail.com",
-            //     "supplier_name": 27,
+            //     "used_by": 27,
             //     "restocked_quantity": "50",
             //     "consumed_quantity": "30",
             //     "status": "Out Of Stock",
             //     "last_restocked_date": "2025-04-01",
             //     "image_url": "https://fms-super-admin.interdev.in/fms/client/1/branch/1/ticket/12/12_1763123256318.jpg"
             // })
-            if (restockData && restockData !== null) {
-                setInventoryRestockDetailsData(restockData)
+
+            if (consumeData && consumeData !== null) {
+                setInventoryRestockDetailsData(consumeData)
             } else {
                 setInventoryRestockDetailsData(null)
             }
@@ -115,7 +128,11 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
             // }))
             //-----development purpose-----
             //for testing purpose only
-            dispatch(actionVendorMasterList({
+            dispatch(actionAssetCustodianList({
+                client_id: branch?.currentBranch?.client_id,
+                branch_uuid: branch?.currentBranch?.uuid
+            }))
+            dispatch(actionGetTicketMaster({
                 client_id: branch?.currentBranch?.client_id,
                 branch_uuid: branch?.currentBranch?.uuid
             }))
@@ -141,85 +158,18 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
             reset()
             setInventoryRestockDetailsData(null)
             setArrUploadedFiles([])
+            setShowLowStockMessage(1)
         }
-    }, [open, restockData])
+    }, [open, consumeData])
 
     useEffect(() => {
         if (inventoryRestockDetailsData && inventoryRestockDetailsData !== null) {
             setValue('minimum_quantity', inventoryRestockDetailsData?.minimum_quantity)
             setValue('unit', inventoryRestockDetailsData?.unit)
             setValue('critical_quantity', inventoryRestockDetailsData?.critical_quantity)
-            setValue('supplier_name', inventoryRestockDetailsData?.supplier_name)
         }
 
     }, [inventoryRestockDetailsData])
-
-    //handle delete function
-    const handleDelete = (index) => {
-        const newFiles = [...arrUploadedFiles];
-        newFiles.splice(index, 1);
-        setArrUploadedFiles(newFiles);
-    };
-
-    /**
-     * Check if the selected files extension is valid or not
-     * @param {*} fileName 
-     * @returns 
-     */
-    const isValidExtension = (fileName) => {
-        const ext = fileName.split('.').pop().toLowerCase();
-        return ALLOWED_EXTENSIONS.includes(ext);
-    };
-
-    //handle file change function
-    const handleFileChange = (event) => {
-        const selectedFiles = Array.from(event.target.files);
-        let filesToAdd = [];
-        for (let file of selectedFiles) {
-            if (!isValidExtension(file.name)) {
-                showSnackbar({ message: `File "${file.name}" has an invalid file type.`, severity: "error" });
-                continue;
-            }
-            if (file.size > MAX_FILE_SIZE) {
-                showSnackbar({ message: `File "${file.name}" exceeds the 50MB size limit.`, severity: "error" });
-                continue;
-            }
-            // Add is_new anf file name key here
-            filesToAdd.push({ file, is_new: 1, name: file?.name });
-        }
-        if (filesToAdd.length > 0) {
-            setArrUploadedFiles((prev) => [...prev, ...filesToAdd]);
-        }
-        event.target.value = null;
-    };
-
-    //handle drag drop function
-    const handleDrop = (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        const droppedFiles = Array.from(event.dataTransfer.files);
-        let filesToAdd = [];
-        for (let file of droppedFiles) {
-            if (!isValidExtension(file.name)) {
-                showSnackbar({ message: `File "${file.name}" has an invalid file type.`, severity: "error" });
-                continue;
-            }
-            if (file.size > MAX_FILE_SIZE) {
-                showSnackbar({ message: `File "${file.name}" exceeds the 50MB size limit.`, severity: "error" });
-                continue;
-            }
-            filesToAdd.push({ file, is_new: 1 });
-        }
-        if (filesToAdd.length > 0) {
-            setArrUploadedFiles((prev) => [...prev, ...filesToAdd]);
-        }
-    };
-
-    //handle drag over
-    const handleDragOver = (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-    };
 
     /**
        * useEffect
@@ -250,128 +200,158 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
             }
         }
     }, [getUnitMaster])
+    /**
+       * useEffect
+       * @dependency : getTicketMaster
+       * @type : HANDLE API RESULT
+       * @description : Handle the result of ticket master API
+       */
+    useEffect(() => {
+        if (getTicketMaster && getTicketMaster !== null) {
+            dispatch(resetGetTicketMasterResponse())
+            if (getTicketMaster?.result === true) {
+                setTicketNoMasterOptions(getTicketMaster?.response)
+            } else {
+                // setTicketNoMasterOptions([])
+                switch (getTicketMaster?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetGetTicketMasterResponse())
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: getTicketMaster?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [getTicketMaster])
 
     /**
        * useEffect
-       * @dependency : vendorMasterList
+       * @dependency : assetCustodianList
        * @type : HANDLE API RESULT
-       * @description : Handle the result of vendor Master List API
+       * @description : Handle the result of custodian List API
        */
     useEffect(() => {
-        if (vendorMasterList && vendorMasterList !== null) {
-            dispatch(resetVendorMasterListResponse())
-            if (vendorMasterList?.result === true) {
-                // setSupervisorMasterOptions(vendorMasterList?.response)
-                let data = [
-                    {
-                        "id": 30,
-                        "name": "TSA Technologies",
-                        "primary_contact_name": "Vijay Patil",
-                        "primary_contact_no": "U2FsdGVkX19vzhb7C71e1kog/pqdsepXrsj1KCkt4eA=",
-                        "primary_contact_email": "U2FsdGVkX1//Zj9k1PxUyR09FgCXVOdqs7tpvnnuDfGJmqa0xIRqg61nBK31y39S",
-                        "primary_contact_country_code": "+91"
-                    },
-                    {
-                        "id": 29,
-                        "name": "Jio India",
-                        "primary_contact_name": "Rahul Pawar",
-                        "primary_contact_no": "U2FsdGVkX19DwxKeFI7M6YApCEULM+uPMaN0+oMzHGM=",
-                        "primary_contact_email": "U2FsdGVkX18oUEDIJg/l99utABZy1zQ79GTUKJurL6k=",
-                        "primary_contact_country_code": "+91"
-                    },
-                    {
-                        "id": 28,
-                        "name": "VI Private Limited",
-                        "primary_contact_name": "Sarthak Chavan",
-                        "primary_contact_no": "U2FsdGVkX19vzhb7C71e1kog/pqdsepXrsj1KCkt4eA=",
-                        "primary_contact_email": "U2FsdGVkX1//Zj9k1PxUyR09FgCXVOdqs7tpvnnuDfGJmqa0xIRqg61nBK31y39S",
-                        "primary_contact_country_code": "+91"
-                    },
-                    {
-                        "id": 27,
-                        "name": "Vodafone India Pvt Ltd",
-                        "primary_contact_name": "Gauri More",
-                        "primary_contact_no": "U2FsdGVkX19vzhb7C71e1kog/pqdsepXrsj1KCkt4eA=",
-                        "primary_contact_email": "U2FsdGVkX1//Zj9k1PxUyR09FgCXVOdqs7tpvnnuDfGJmqa0xIRqg61nBK31y39S",
-                        "primary_contact_country_code": "+91"
-                    },
-                    {
-                        "id": 1,
-                        "name": "Lorem Ips1",
-                        "primary_contact_name": "Akash Pawar",
-                        "primary_contact_no": "U2FsdGVkX19vzhb7C71e1kog/pqdsepXrsj1KCkt4eA=",
-                        "primary_contact_email": "U2FsdGVkX1//Zj9k1PxUyR09FgCXVOdqs7tpvnnuDfGJmqa0xIRqg61nBK31y39S",
-                        "primary_contact_country_code": "+91"
-                    }
-                ]
-                setSupervisorMasterOptions(data)
+        if (assetCustodianList && assetCustodianList !== null) {
+            dispatch(resetAssetCustodianListResponse())
+            if (assetCustodianList?.result === true) {
+                setUsedByMasterOptions(assetCustodianList?.response)
+                // let data = [
+                //     {
+                //         "id": 30,
+                //         "name": "TSA Technologies",
+                //         "primary_contact_name": "Vijay Patil",
+                //         "primary_contact_no": "U2FsdGVkX19vzhb7C71e1kog/pqdsepXrsj1KCkt4eA=",
+                //         "primary_contact_email": "U2FsdGVkX1//Zj9k1PxUyR09FgCXVOdqs7tpvnnuDfGJmqa0xIRqg61nBK31y39S",
+                //         "primary_contact_country_code": "+91"
+                //     },
+                //     {
+                //         "id": 29,
+                //         "name": "Jio India",
+                //         "primary_contact_name": "Rahul Pawar",
+                //         "primary_contact_no": "U2FsdGVkX19DwxKeFI7M6YApCEULM+uPMaN0+oMzHGM=",
+                //         "primary_contact_email": "U2FsdGVkX18oUEDIJg/l99utABZy1zQ79GTUKJurL6k=",
+                //         "primary_contact_country_code": "+91"
+                //     },
+                //     {
+                //         "id": 28,
+                //         "name": "VI Private Limited",
+                //         "primary_contact_name": "Sarthak Chavan",
+                //         "primary_contact_no": "U2FsdGVkX19vzhb7C71e1kog/pqdsepXrsj1KCkt4eA=",
+                //         "primary_contact_email": "U2FsdGVkX1//Zj9k1PxUyR09FgCXVOdqs7tpvnnuDfGJmqa0xIRqg61nBK31y39S",
+                //         "primary_contact_country_code": "+91"
+                //     },
+                //     {
+                //         "id": 27,
+                //         "name": "Vodafone India Pvt Ltd",
+                //         "primary_contact_name": "Gauri More",
+                //         "primary_contact_no": "U2FsdGVkX19vzhb7C71e1kog/pqdsepXrsj1KCkt4eA=",
+                //         "primary_contact_email": "U2FsdGVkX1//Zj9k1PxUyR09FgCXVOdqs7tpvnnuDfGJmqa0xIRqg61nBK31y39S",
+                //         "primary_contact_country_code": "+91"
+                //     },
+                //     {
+                //         "id": 1,
+                //         "name": "Lorem Ips1",
+                //         "primary_contact_name": "Akash Pawar",
+                //         "primary_contact_no": "U2FsdGVkX19vzhb7C71e1kog/pqdsepXrsj1KCkt4eA=",
+                //         "primary_contact_email": "U2FsdGVkX1//Zj9k1PxUyR09FgCXVOdqs7tpvnnuDfGJmqa0xIRqg61nBK31y39S",
+                //         "primary_contact_country_code": "+91"
+                //     }
+                // ]
+                // setUsedByMasterOptions(data)
             } else {
-                setSupervisorMasterOptions([])
-                switch (vendorMasterList?.status) {
+                setUsedByMasterOptions([])
+                switch (assetCustodianList?.status) {
                     case UNAUTHORIZED:
                         logout()
                         break
                     case ERROR:
-                        dispatch(resetVendorMasterListResponse())
+                        dispatch(resetAssetCustodianListResponse())
                         break
                     case SERVER_ERROR:
-                        showSnackbar({ message: vendorMasterList?.message, severity: "error" })
+                        showSnackbar({ message: assetCustodianList?.message, severity: "error" })
                         break
                     default:
                         break
                 }
             }
         }
-    }, [vendorMasterList])
+    }, [assetCustodianList])
 
     /**
      * useEffect
-     * @dependency : inventoryRestockSave
+     * @dependency : inventoryConsumptionSave
      * @type : HANDLE API RESULT
-     * @description : Handle the result of inventory restock save API
+     * @description : Handle the result of inventory consumption save API
      */
     useEffect(() => {
-        if (inventoryRestockSave && inventoryRestockSave !== null) {
-            dispatch(resetInventoryRestockSaveResponse())
-            if (inventoryRestockSave?.result === true) {
+        if (inventoryConsumptionSave && inventoryConsumptionSave !== null) {
+            dispatch(resetInventoryConsumptionSaveResponse())
+            if (inventoryConsumptionSave?.result === true) {
                 handleClose('save')
                 reset()
                 setLoading(false)
-                showSnackbar({ message: inventoryRestockSave?.message, severity: "success" })
+                showSnackbar({ message: inventoryConsumptionSave?.message, severity: "success" })
             } else {
                 setLoading(false)
-                switch (inventoryRestockSave?.status) {
+                switch (inventoryConsumptionSave?.status) {
                     case UNAUTHORIZED:
                         logout()
                         break
                     case ERROR:
-                        dispatch(resetInventoryRestockSaveResponse())
-                        showSnackbar({ message: inventoryRestockSave?.message, severity: "error" })
+                        dispatch(resetInventoryConsumptionSaveResponse())
+                        showSnackbar({ message: inventoryConsumptionSave?.message, severity: "error" })
                         break
                     case SERVER_ERROR:
-                        showSnackbar({ message: inventoryRestockSave?.message, severity: "error" })
+                        showSnackbar({ message: inventoryConsumptionSave?.message, severity: "error" })
                         break
                     default:
                         break
                 }
             }
         }
-    }, [inventoryRestockSave])
+    }, [inventoryConsumptionSave])
 
 
     const onSubmit = async (data) => {
-        let currentSupplier = getObjectById(supervisorMasterOptions, watchSupplier)
+        let currentSupplier = getObjectById(usedByMasterOptions, watchSupplier)
         let objData = {
             branch_uuid: branch?.currentBranch?.uuid,
             inventory_uuid: inventoryRestockDetailsData?.uuid && inventoryRestockDetailsData?.uuid !== null ? inventoryRestockDetailsData?.uuid : null,
-            added_quantity: data?.added_quantity && data?.added_quantity !== null ? data?.added_quantity : null,
+            used_quantity: data?.used_quantity && data?.used_quantity !== null ? data?.used_quantity : null,
             minimum_quantity: data?.minimum_quantity && data?.minimum_quantity !== null ? data?.minimum_quantity : null,
             critical_quantity: data?.critical_quantity && data?.critical_quantity !== null ? data?.critical_quantity : null,
             unit: data?.unit && data?.unit !== null ? data?.unit : null,
-            supplier_name: currentSupplier ? currentSupplier?.name : null,
-            invoice_no: data?.invoice_no && data?.invoice_no !== null ? data?.invoice_no : null,
-            restock_date: data?.restock_date && data?.restock_date !== null ? moment(data.restock_date, 'DD MMM YYYY').format('YYYY-MM-DD') : null,
-            additional_notes: data?.additional_notes && data?.additional_notes !== null ? data?.additional_notes : null
+            used_by: currentSupplier ? currentSupplier?.name : null,
+            ticket_no: data?.ticket_no && data?.ticket_no !== null ? data?.ticket_no : null,
+            consumption_date: data?.consumption_date && data?.consumption_date !== null ? moment(data.consumption_date, 'DD MMM YYYY').format('YYYY-MM-DD') : null,
+            additional_notes: data?.additional_notes && data?.additional_notes !== null ? data?.additional_notes : null,
+            used_for: data?.used_for && data?.used_for !== null ? data?.used_for : null
         }
         const files = [];
         let hasNewFiles = arrUploadedFiles.filter(obj => obj?.is_new === 1)
@@ -392,7 +372,7 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
         const formData = getFormData(objData, files);
 
         setLoading(true)
-        dispatch(actionInventoryRestockSave(formData))
+        dispatch(actionInventoryConsumptionSave(formData))
     }
 
     return (
@@ -408,9 +388,10 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                 <FormHeader
                     color={theme.palette.primary[600]}
                     size={48}
+                    need_responsive={0}
                     icon={<BoxPlusIcon stroke={theme.palette.primary[600]} size={20} />}
-                    title={`Restock Inventory`}
-                    subtitle={`Add stock to existing inventory item`}
+                    title={`Record Consumption`}
+                    subtitle={`Track inventory usage and update stock levels`}
                     actions={[
                         <IconButton
                             onClick={handleClose}
@@ -434,6 +415,65 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                         }
                     }}
                 >
+                    {
+                        showLowStockMessage == 1 && inventoryRestockDetailsData?.initial_quantity !== null && inventoryRestockDetailsData?.minimum_quantity && Number(inventoryRestockDetailsData?.initial_quantity) < Number(inventoryRestockDetailsData?.minimum_quantity) ?
+                            <Stack sx={{ border: `1px solid ${theme.palette.warning[600]}`, alignItems: 'center', borderRadius: '8px', flexDirection: 'row', justifyContent: 'space-between', padding: '16px', background: theme.palette.warning[100] }}>
+                                <Stack sx={{ flexDirection: 'row', gap: 1 }}>
+                                    <Box
+                                        sx={{
+                                            backgroundColor: theme.palette.warning[600],
+                                            borderRadius: '6px',
+                                            padding: '12px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}
+                                    >
+                                        <AlertTriangleIcon stroke={theme.palette.common.white} size={22} />
+                                    </Box>
+                                    <Stack>
+                                        <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.warning[700] }}>
+                                            Low Stock Alert
+                                        </TypographyComponent>
+                                        <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.warning[600] }}>
+                                            Current stock ({Number(inventoryRestockDetailsData?.initial_quantity)} {inventoryRestockDetailsData?.unit}) is below the minimum level ({Number(inventoryRestockDetailsData?.minimum_quantity)} {inventoryRestockDetailsData?.unit}). Consider restocking soon to avoid stockouts.
+                                        </TypographyComponent>
+                                    </Stack>
+                                </Stack>
+                                <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                                    <Stack
+                                        onClick={() => {
+                                            setOpenRestockInventoryPopup(true)
+                                        }}
+                                        sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', background: theme.palette.warning[600], borderRadius: '6px', padding: '8px 12px', cursor: 'pointer' }}>
+                                        <BoxPlusIcon stroke={theme.palette.common.white} size={22} />
+                                        <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.common.white }}>
+                                            Restock
+                                        </TypographyComponent>
+                                    </Stack>
+                                    <Stack>
+                                        <Tooltip title="Hide Message" followCursor placement="top">
+                                            <IconButton
+                                                variant="outlined"
+                                                color='primary'
+                                                sx={{
+                                                    background: theme.palette.warning[600], borderRadius: '6px', padding: '12px 12px',
+                                                    '&:hover': { backgroundColor: theme.palette.warning[500] },
+                                                }}
+                                                onClick={() => {
+                                                    setShowLowStockMessage(0)
+                                                }}
+                                            >
+                                                <CloseIcon size={16} stroke='white' />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </Stack>
+                                </Stack>
+
+                            </Stack>
+                            :
+                            <></>
+                    }
                     <form noValidate autoComplete='off'
                         onSubmit={handleSubmit(onSubmit)}
                     >
@@ -452,7 +492,7 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                                             borderRadius: "3px",
                                         },
                                     }}>
-                                        <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', mt: 0, mb: 0, px: 1, pt: 1 }}>
+                                        <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', mt: 1, mb: 0, pt: 1 }}>
                                             <SectionHeader sx={{}} title={'Basic Information'} show_progress={false} />
                                             {
                                                 inventoryRestockDetailsData?.status && inventoryRestockDetailsData?.status !== null ?
@@ -496,17 +536,19 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                                             </Grid>
                                         </Stack>
                                         <SectionHeader title="Stock Information" show_progress={0} sx={{ marginTop: 2.5 }} />
-                                        <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}`, p: 3, marginTop: '-4px' }}>
+                                        <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}`, p: '20px', marginTop: '-4px', pb: 3.2 }}>
                                             <Grid container spacing={'24px'}>
                                                 <Grid size={{ xs: 12, sm: 6, md: 6, lg: 3, xl: 3 }}>
                                                     <Controller
-                                                        name='added_quantity'
+                                                        name='used_quantity'
                                                         control={control}
                                                         rules={{
-                                                            required: 'Added Quantity is required',
+                                                            required: 'Used Quantity is required',
                                                             validate: (value) => {
-                                                                if (Number(value) < 0 || Number(value) == 0) {
-                                                                    return 'Added Quantity should be greater than 0'
+                                                                if (Number(value) > Number(inventoryRestockDetailsData?.initial_quantity)) {
+                                                                    return 'Used Quantity should be less than or equal Current Stock'
+                                                                } else if (Number(value) < 0 || Number(value) == 0) {
+                                                                    return 'Used Quantity should be greater than 0'
                                                                 }
                                                             },
                                                             maxLength: {
@@ -517,16 +559,16 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                                                         render={({ field }) => (
                                                             <CustomTextField
                                                                 fullWidth
-                                                                placeholder={'Added Quantity'}
+                                                                placeholder={'Used Quantity'}
                                                                 value={field?.value}
-                                                                label={<FormLabel label='Added Quantity' required={true} />}
+                                                                label={<FormLabel label='Used Quantity' required={true} />}
                                                                 onChange={(e) => {
                                                                     const numberOnly = e.target.value.replace(/[^0-9]/g, '')
                                                                     field.onChange(numberOnly)
                                                                 }}
                                                                 inputProps={{ maxLength: 255 }}
-                                                                error={Boolean(errors.added_quantity)}
-                                                                {...(errors.added_quantity && { helperText: errors.added_quantity.message })}
+                                                                error={Boolean(errors.used_quantity)}
+                                                                {...(errors.used_quantity && { helperText: errors.used_quantity.message })}
                                                             />
                                                         )}
                                                     />
@@ -647,32 +689,99 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                                                     <Stack sx={{ borderBottom: `1px solid ${theme.palette.grey[300]}` }}></Stack>
                                                 </Grid>
                                                 <Grid size={{ xs: 12, sm: 4, md: 4, lg: 4, xl: 4 }}>
-                                                    <Controller
-                                                        name='supplier_name'
+                                                    {/* <Controller
+                                                        name='used_by'
                                                         control={control}
                                                         rules={{
-                                                            required: 'Please select Supplier Name',
+                                                            required: 'Please select Used By'
+                                                        }}
+                                                        render={({ field }) => (
+                                                            <CustomTextField
+                                                                select
+                                                                fullWidth
+                                                                value={field?.value}
+                                                                label={<FormLabel label='Used By' required={true} />}
+                                                                onChange={field?.onChange}
+                                                                SelectProps={{
+                                                                    displayEmpty: true,
+                                                                    IconComponent: ChevronDownIcon,
+                                                                    MenuProps: {
+                                                                        PaperProps: {
+                                                                            style: {
+                                                                                maxHeight: 220, // Set your desired max height
+                                                                                scrollbarWidth: 'thin'
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }}
+
+                                                                error={Boolean(errors.asset_custodian)}
+                                                                {...(errors.asset_custodian && { helperText: errors.asset_custodian.message })}
+                                                            >
+                                                                <MenuItem value='' disabled>
+                                                                    Select Used By
+                                                                </MenuItem>
+                                                                {usedByMasterOptions &&
+                                                                    usedByMasterOptions.map(option => (
+                                                                        <MenuItem
+                                                                            key={option?.id}
+                                                                            value={option?.id}
+                                                                            sx={{
+                                                                                whiteSpace: 'normal',        // allow wrapping
+                                                                                wordBreak: 'break-word',     // break long words if needed
+                                                                                maxWidth: 300,               // control dropdown width
+                                                                                display: '-webkit-box',
+                                                                                WebkitLineClamp: 2,          // limit to 2 lines
+                                                                                WebkitBoxOrient: 'vertical',
+                                                                                overflow: 'hidden',
+                                                                                textOverflow: 'ellipsis'
+                                                                            }}
+                                                                        >
+                                                                            {option?.name}
+                                                                        </MenuItem>
+                                                                    ))}
+                                                            </CustomTextField>
+                                                        )}
+                                                    /> */}
+                                                    <Controller
+                                                        name='used_by'
+                                                        control={control}
+                                                        rules={{
+                                                            required: 'Please select Used By',
                                                         }}
                                                         render={({ field }) => (
                                                             <CustomAutocomplete
                                                                 {...field}
-                                                                label="Supplier Name"
+                                                                label="Used By"
                                                                 is_required={true}
-                                                                displayName1="primary_contact_name"
-                                                                displayName2="name"
-                                                                options={supervisorMasterOptions}
-                                                                error={Boolean(errors.supplier_name)}
-                                                                helperText={errors.supplier_name?.message}
+                                                                displayName1="name"
+                                                                options={usedByMasterOptions}
+                                                                error={Boolean(errors.used_by)}
+                                                                helperText={errors.used_by?.message}
                                                             />
                                                         )}
                                                     />
                                                 </Grid>
                                                 <Grid size={{ xs: 12, sm: 4, md: 4, lg: 4, xl: 4 }}>
                                                     <Controller
-                                                        name='invoice_no'
+                                                        name='ticket_no'
+                                                        control={control}
+                                                        render={({ field }) => (
+                                                            <CustomAutocomplete
+                                                                {...field}
+                                                                label="Ticket No"
+                                                                is_required={false}
+                                                                displayName1="name"
+                                                                options={ticketNoMasterOptions}
+                                                                error={Boolean(errors.ticket_no)}
+                                                                helperText={errors.ticket_no?.message}
+                                                            />
+                                                        )}
+                                                    />
+                                                    {/* <Controller
+                                                        name='ticket_no'
                                                         control={control}
                                                         rules={{
-                                                            required: 'Invoice/Reference Number is required',
                                                             maxLength: {
                                                                 value: 255,
                                                                 message: 'Maximum length is 255 characters'
@@ -681,32 +790,32 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                                                         render={({ field }) => (
                                                             <CustomTextField
                                                                 fullWidth
-                                                                placeholder={'Invoice/Reference Number'}
+                                                                placeholder={'Ticket Number'}
                                                                 value={field?.value}
-                                                                label={<FormLabel label='Invoice / Reference Number' required={true} />}
+                                                                label={<FormLabel label='Ticket Number' required={false} />}
                                                                 onChange={field.onChange}
                                                                 inputProps={{ maxLength: 255 }}
-                                                                error={Boolean(errors.invoice_no)}
-                                                                {...(errors.invoice_no && { helperText: errors.invoice_no.message })}
+                                                                error={Boolean(errors.ticket_no)}
+                                                                {...(errors.ticket_no && { helperText: errors.ticket_no.message })}
                                                             />
                                                         )}
-                                                    />
+                                                    /> */}
                                                 </Grid>
                                                 <Grid size={{ xs: 12, sm: 4, md: 4, lg: 4, xl: 4 }}>
                                                     <Controller
-                                                        name='restock_date'
+                                                        name='consumption_date'
                                                         control={control}
                                                         rules={{
-                                                            required: 'Restock Date is required',
+                                                            required: 'Consumption Date is required',
                                                         }}
                                                         render={({ field }) => (
                                                             <DatePicker
-                                                                id='restock_date'
-                                                                placeholderText='Restock Date'
+                                                                id='consumption_date'
+                                                                placeholderText='Consumption Date'
                                                                 customInput={
                                                                     <CustomTextField
                                                                         size='small'
-                                                                        label={<FormLabel label='Restock Date' required={true} />}
+                                                                        label={<FormLabel label='Consumption Date' required={true} />}
                                                                         fullWidth
                                                                         InputProps={{
                                                                             startAdornment: (
@@ -720,8 +829,8 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                                                                                 </InputAdornment>
                                                                             )
                                                                         }}
-                                                                        error={Boolean(errors.restock_date)}
-                                                                        {...(errors.restock_date && { helperText: errors.restock_date.message })}
+                                                                        error={Boolean(errors.consumption_date)}
+                                                                        {...(errors.consumption_date && { helperText: errors.consumption_date.message })}
                                                                     />
                                                                 }
                                                                 value={field.value}
@@ -738,13 +847,40 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                                                 <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }} >
                                                     <Stack sx={{ borderBottom: `1px solid ${theme.palette.grey[300]}` }}></Stack>
                                                 </Grid>
+                                                {/* Used for (Purpose) */}
+                                                <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 6 }}>
+                                                    <Controller
+                                                        name='used_for'
+                                                        control={control}
+                                                        rules={{
+                                                            required: 'Used for is required',
+                                                            maxLength: {
+                                                                value: 255,
+                                                                message: 'Maximum length is 255 characters'
+                                                            },
+                                                        }}
+                                                        render={({ field }) => (
+                                                            <CustomTextField
+                                                                fullWidth
+                                                                multiline
+                                                                inputProps={{ maxLength: 255 }}
+                                                                minRows={3}
+                                                                placeholder={'Any purpose to use the stock'}
+                                                                value={field?.value}
+                                                                label={<FormLabel label='Used for (Purpose)' required={true} />}
+                                                                onChange={field.onChange}
+                                                                error={Boolean(errors.used_for)}
+                                                                {...(errors.used_for && { helperText: errors.used_for.message })}
+                                                            />
+                                                        )}
+                                                    />
+                                                </Grid>
                                                 {/* Additional Notes */}
                                                 <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 6 }}>
                                                     <Controller
                                                         name='additional_notes'
                                                         control={control}
                                                         rules={{
-                                                            required: 'Additional Notes is required',
                                                             maxLength: {
                                                                 value: 255,
                                                                 message: 'Maximum length is 255 characters'
@@ -758,63 +894,13 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                                                                 minRows={3}
                                                                 placeholder={'Any additional information about restock'}
                                                                 value={field?.value}
-                                                                label={<FormLabel label='Additional Notes' required={true} />}
+                                                                label={<FormLabel label='Additional Notes' required={false} />}
                                                                 onChange={field.onChange}
                                                                 error={Boolean(errors.additional_notes)}
                                                                 {...(errors.additional_notes && { helperText: errors.additional_notes.message })}
                                                             />
                                                         )}
                                                     />
-                                                </Grid>
-                                                <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 6 }}>
-                                                    <FormLabel label='Attachments' required={false} />
-                                                    <Stack onClick={handleTriggerInput} onDrop={handleDrop}
-                                                        onDragOver={handleDragOver}
-                                                        sx={{ mt: 1, cursor: 'pointer', border: `1px dashed ${theme.palette.primary[600]}`, borderRadius: '8px', background: theme.palette.primary[100], p: '16px', flexDirection: 'row', justifyContent: 'center' }}>
-                                                        <input
-                                                            hidden
-                                                            accept=".jpg,.jpeg,.png,.xlsx,.csv,.pdf,.docx"
-                                                            type="file"
-                                                            multiple
-                                                            ref={inputRef}
-                                                            onChange={handleFileChange}
-                                                        />
-                                                        <TypographyComponent fontSize={14} fontWeight={400} sx={{ mr: 1 }}>Drag & Drop file(s) to upload or </TypographyComponent>
-                                                        <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.primary[600], textDecoration: 'underline' }}>Browse</TypographyComponent>
-                                                    </Stack>
-                                                    <List>
-                                                        {arrUploadedFiles && arrUploadedFiles !== null && arrUploadedFiles.length > 0 ?
-                                                            arrUploadedFiles.map((file, idx) => (
-                                                                <React.Fragment key={file.name}>
-                                                                    <ListItem
-                                                                        sx={{ mb: '-8px' }}
-                                                                        secondaryAction={
-                                                                            <>
-                                                                                <IconButton
-                                                                                    edge="end"
-                                                                                    aria-label="delete"
-                                                                                    onClick={() => handleDelete(idx)}
-                                                                                >
-                                                                                    <DeleteIcon />
-                                                                                </IconButton>
-                                                                            </>
-                                                                        }
-                                                                    >
-                                                                        <FileIcon sx={{ mr: 1 }} />
-                                                                        <ListItemText
-                                                                            primary={
-                                                                                <TypographyComponent fontSize={14} fontWeight={500} sx={{ textDecoration: 'underline' }}>
-                                                                                    {file?.name && file?.name !== null ? _.truncate(file?.name, { length: 25 }) : ''}
-                                                                                </TypographyComponent>
-                                                                            }
-                                                                        />
-                                                                    </ListItem>
-                                                                </React.Fragment>
-                                                            ))
-                                                            :
-                                                            <></>
-                                                        }
-                                                    </List>
                                                 </Grid>
                                             </Grid>
                                         </Stack>
@@ -823,7 +909,7 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                                 <Grid size={{ xs: 12, sm: 12, md: 12, lg: 3.5, xl: 3.5 }}>
                                     <Stack>
                                         <SectionHeader title="Stock Summary" show_progress={0} sx={{ marginTop: 2 }} />
-                                        <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}`, p: 2, marginTop: '-4px', pb: 0 }}>
+                                        <Stack sx={{ borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}`, p: '20px', marginTop: '-4px', pb: 0 }}>
                                             <Stack
                                                 sx={{
                                                     height: '395px',
@@ -849,10 +935,10 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                                                     <></>
                                                 }
                                             </Stack>
-                                            <Stack spacing={1.5} sx={{ width: '100%', my: 2 }}>
-                                                <Stack sx={{ padding: '12px', borderRadius: '8px', border: getCurrentStockValue('Restock', watchAddedQuantity, inventoryRestockDetailsData?.initial_quantity) < inventoryRestockDetailsData?.minimum_quantity ? `1px solid ${theme.palette.error[500]}` : `1px solid ${theme.palette.success[500]}`, background: getCurrentStockValue('Restock', watchAddedQuantity, inventoryRestockDetailsData?.initial_quantity) < inventoryRestockDetailsData?.minimum_quantity ? theme.palette.error[50] : theme.palette.success[50] }}>
+                                            <Stack spacing={2.5} sx={{ width: '100%', my: 2.5 }}>
+                                                <Stack sx={{ padding: '12px', borderRadius: '8px', border: getCurrentStockValue('Consumption', watchAddedQuantity, inventoryRestockDetailsData?.initial_quantity) < inventoryRestockDetailsData?.minimum_quantity ? `1px solid ${theme.palette.error[500]}` : `1px solid ${theme.palette.success[500]}`, background: getCurrentStockValue('Consumption', watchAddedQuantity, inventoryRestockDetailsData?.initial_quantity) < inventoryRestockDetailsData?.minimum_quantity ? theme.palette.error[50] : theme.palette.success[50] }}>
                                                     <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>Current Stock</TypographyComponent>
-                                                    <TypographyComponent fontSize={24} fontWeight={500} sx={{ color: theme.palette.grey[900] }}>{getCurrentStockValue('Restock', watchAddedQuantity, inventoryRestockDetailsData?.initial_quantity)} {inventoryRestockDetailsData?.unit}</TypographyComponent>
+                                                    <TypographyComponent fontSize={24} fontWeight={500} sx={{ color: theme.palette.grey[900] }}>{getCurrentStockValue('Consumption', watchAddedQuantity, inventoryRestockDetailsData?.initial_quantity)} {inventoryRestockDetailsData?.unit}</TypographyComponent>
                                                 </Stack>
                                                 <Stack sx={{ padding: '12px', borderRadius: '8px', border: `1px solid ${theme.palette.grey[500]}` }}>
                                                     <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>Minimum Stock</TypographyComponent>
@@ -865,6 +951,7 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                             </Grid>
                         </DatePickerWrapper>
                     </form>
+                    {/* low alert */}
                 </Stack>
                 <Divider sx={{ m: 2 }} />
                 <Stack sx={{ px: 2, pb: 2 }} flexDirection={'row'} justifyContent={'flex-end'} gap={2}>
@@ -891,6 +978,17 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                     </Button>
                 </Stack>
             </Stack>
+            <RestockInventory
+                open={openRestockInventoryPopup}
+                handleClose={(data) => {
+                    setOpenRestockInventoryPopup(false)
+                    if (data == 'save') {
+                        // dispatch(actionGetInventoryDetails({
+                        //     uuid: detail?.uuid
+                        // }))
+                    }
+                }}
+            />
         </Drawer >
     )
 }

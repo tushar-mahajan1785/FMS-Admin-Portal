@@ -1,6 +1,8 @@
 import CryptoJS from "crypto-js";
 import { CRYPTO_SECRET_KEY } from "../common/api/constants";
 import imageCompression from 'browser-image-compression';
+import CustomChip from "../components/custom-chip";
+import React from "react";
 
 /**
  *Function  Handle Server Error
@@ -205,6 +207,56 @@ export const getFormattedDuration = (startDate, endDate) => {
   }
 
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")} Hrs`;
+}
+
+/**
+ * function to get Current Stock value as per type
+ */
+export const getCurrentStockValue = (type, current, initial) => {
+  let total_quantity = initial && initial !== null && Number(initial) > 0 ? initial : 0
+  let changed_quantity = current && current !== null && Number(current) > 0 ? current : 0
+  if (type == 'Restock') {
+    total_quantity = Number(changed_quantity) + Number(total_quantity)
+  }
+  if (type == 'Consumption') {
+    total_quantity = Number(total_quantity) - Number(changed_quantity)
+  }
+  return total_quantity
+}
+
+/**
+ * Function to get Current Status Color
+ * @param {} status 
+ * @returns 
+ */
+export const getCurrentStatusColor = (status) => {
+  let color = 'primary'
+  switch (status) {
+    case 'Open':
+      color = 'primary'//'#6941C6'
+      break
+    case 'Re Open':
+      color = 'info'//'#039BE5'
+      break
+    case 'Closed':
+    case 'Good Stock':
+      color = 'success'//'#039855'
+      break
+    case 'On Hold':
+    case 'Low Stock':
+      color = 'warning'//#FEC84B'
+      break
+    case 'Rejected':
+    case 'Out Of Stock':
+      color = 'error'//'#D32F2F'
+      break
+    case 'Overdue':
+      color = 'warning'//'#F79009'
+      break
+    default:
+      color = 'primary'
+  }
+  return color
 }
 
 

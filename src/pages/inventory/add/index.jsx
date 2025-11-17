@@ -671,6 +671,11 @@ export default function AddInventory({ open, handleClose, type, details }) {
                                                     control={control}
                                                     rules={{
                                                         required: 'Initial Quantity is required',
+                                                        validate: (value) => {
+                                                            if (Number(value) < 0 || Number(value) == 0) {
+                                                                return 'Initial Quantity should be greater than 0'
+                                                            }
+                                                        },
                                                         maxLength: {
                                                             value: 255,
                                                             message: 'Maximum length is 255 characters'
@@ -683,7 +688,10 @@ export default function AddInventory({ open, handleClose, type, details }) {
                                                             placeholder={'Initial Quantity'}
                                                             value={field?.value}
                                                             label={<FormLabel label='Initial Quantity' required={true} />}
-                                                            onChange={field.onChange}
+                                                            onChange={(e) => {
+                                                                const numberOnly = e.target.value.replace(/[^0-9]/g, '')
+                                                                field.onChange(numberOnly)
+                                                            }}
                                                             inputProps={{ maxLength: 255 }}
                                                             error={Boolean(errors.initial_quantity)}
                                                             {...(errors.initial_quantity && { helperText: errors.initial_quantity.message })}
@@ -750,6 +758,11 @@ export default function AddInventory({ open, handleClose, type, details }) {
                                                     control={control}
                                                     rules={{
                                                         required: 'Minimum Quantity is required',
+                                                        validate: (value) => {
+                                                            if (Number(value) < 0 || Number(value) == 0) {
+                                                                return 'Minimum Quantity should be greater than 0'
+                                                            }
+                                                        },
                                                         maxLength: {
                                                             value: 255,
                                                             message: 'Maximum length is 255 characters'
@@ -761,7 +774,10 @@ export default function AddInventory({ open, handleClose, type, details }) {
                                                             placeholder={'Minimum Quantity'}
                                                             value={field?.value}
                                                             label={<FormLabel label='Minimum Quantity' required={true} />}
-                                                            onChange={field.onChange}
+                                                            onChange={(e) => {
+                                                                const numberOnly = e.target.value.replace(/[^0-9]/g, '')
+                                                                field.onChange(numberOnly)
+                                                            }}
                                                             inputProps={{ maxLength: 255 }}
                                                             error={Boolean(errors.minimum_quantity)}
                                                             {...(errors.minimum_quantity && { helperText: errors.minimum_quantity.message })}
@@ -775,6 +791,11 @@ export default function AddInventory({ open, handleClose, type, details }) {
                                                     control={control}
                                                     rules={{
                                                         required: 'Critical Quantity is required',
+                                                        validate: (value) => {
+                                                            if (Number(value) <= Number(watchMinimumQuantity)) {
+                                                                return 'Critical Quantity should be greater than Minimum Quantity'
+                                                            }
+                                                        },
                                                         maxLength: {
                                                             value: 255,
                                                             message: 'Maximum length is 255 characters'
@@ -786,7 +807,10 @@ export default function AddInventory({ open, handleClose, type, details }) {
                                                             placeholder={'Critical Quantity'}
                                                             value={field?.value}
                                                             label={<FormLabel label='Critical Quantity' required={true} />}
-                                                            onChange={field.onChange}
+                                                            onChange={(e) => {
+                                                                const numberOnly = e.target.value.replace(/[^0-9]/g, '')
+                                                                field.onChange(numberOnly)
+                                                            }}
                                                             inputProps={{ maxLength: 255 }}
                                                             error={Boolean(errors.critical_quantity)}
                                                             {...(errors.critical_quantity && { helperText: errors.critical_quantity.message })}
@@ -949,9 +973,6 @@ export default function AddInventory({ open, handleClose, type, details }) {
                                                 flexDirection: 'column',
                                                 alignItems: 'center',
                                                 justifyContent: arrUploadedFile ? 'flex-start' : 'center',
-                                                // backgroundImage: arrUploadedFile?.file && arrUploadedFile?.file.type.startsWith("image/")
-                                                //     ? `url(${URL.createObjectURL(arrUploadedFile.file)})`
-                                                //     : undefined,
                                                 backgroundImage: arrUploadedFile?.file && arrUploadedFile?.file.type.startsWith("image/")
                                                     ? `url(${URL.createObjectURL(arrUploadedFile.file)})`
                                                     : arrUploadedFile?.image_url

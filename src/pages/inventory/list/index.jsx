@@ -27,6 +27,7 @@ import { useSnackbar } from '../../../hooks/useSnackbar';
 import AddInventory from '../add';
 import { InventoryDetails } from '../details';
 import { RestockInventory } from '../restock';
+import { InventoryConsumption } from '../consumption';
 
 export default function InventoryList() {
     const theme = useTheme()
@@ -44,60 +45,103 @@ export default function InventoryList() {
     const [masterInventoryStockStatusOptions] = useState(getInventoryStockStatus)
     const [searchQuery, setSearchQuery] = useState('')
     const [openRestockInventoryPopup, setOpenRestockInventoryPopup] = useState(false);
+    const [openConsumptionInventoryPopup, setOpenConsumptionInventoryPopup] = useState(false);
     const [inventoryListData, setInventoryListData] = useState([{
         id: 1,
         item_id: 'INV-000121',
-        name: 'Air filter 16X16',
+        item_name: 'Air filter 16X16',
+        category: "Chemicals",
+        storage_location: "Shivaji nagar, Pune",
         initial_quantity: 16,
         minimum_quantity: 5,
+        supplier_name: 'abc',
+        supplier_id: 27,
+        critical_quantity: "101",
+        unit: "Kilograms",
         stock_status: 'Low Stock',
-        updated_on: '2024-06-10 22:03:90'
+        updated_on: '2024-06-10 22:03:90',
+        image_url: "https://fms-super-admin.interdev.in/fms/ticket/8/8_1763011390575.jpg"
     },
     {
         id: 2,
         item_id: 'INV-000122',
-        name: 'Compressor Oil (1L)',
+        item_name: 'Compressor Oil (1L)',
+        category: "Chemicals",
+        storage_location: "Shivaji nagar, Pune",
         initial_quantity: 8,
         minimum_quantity: 20,
+        supplier_name: 'abc',
+        supplier_id: 27,
+        critical_quantity: "101",
+        unit: "Kilograms",
         stock_status: 'Out Of Stock',
-        updated_on: '2024-06-10 21:09:12'
+        updated_on: '2024-06-10 21:09:12',
+        image_url: "https://fms-super-admin.interdev.in/fms/client/1/branch/1/ticket/12/12_1763123256318.jpg"
     },
     {
         id: 3,
         item_id: 'INV-000123',
-        name: 'Drain Pump Kit',
+        item_name: 'Drain Pump Kit',
+        category: "Chemicals",
+        storage_location: "Shivaji nagar, Pune",
         initial_quantity: 44,
         minimum_quantity: 20,
+        supplier_name: 'abc',
+        supplier_id: 27,
+        critical_quantity: "101",
+        unit: "Kilograms",
         stock_status: 'Good Stock',
-        updated_on: '2024-06-10 09:02:12'
+        updated_on: '2024-06-10 09:02:12',
+        image_url: "https://fms-super-admin.interdev.in/fms/ticket/8/8_1763011390575.jpg"
     }
     ])
     const [originalInventoryListData, setOriginalInventoryListData] = useState([{
         id: 1,
         item_id: 'INV-000121',
-        name: 'Air filter 16X16',
+        item_name: 'Air filter 16X16',
+        category: "Chemicals",
+        storage_location: "Shivaji nagar, Pune",
         initial_quantity: 16,
         minimum_quantity: 5,
+        supplier_name: 'abc',
+        supplier_id: 27,
+        critical_quantity: "101",
+        unit: "Kilograms",
         stock_status: 'Low Stock',
-        updated_on: '2024-06-10 22:03:90'
+        updated_on: '2024-06-10 22:03:90',
+        image_url: "https://fms-super-admin.interdev.in/fms/ticket/8/8_1763011390575.jpg"
     },
     {
         id: 2,
         item_id: 'INV-000122',
-        name: 'Compressor Oil (1L)',
+        item_name: 'Compressor Oil (1L)',
+        category: "Chemicals",
+        storage_location: "Shivaji nagar, Pune",
         initial_quantity: 8,
         minimum_quantity: 20,
+        supplier_name: 'abc',
+        supplier_id: 27,
+        critical_quantity: "101",
+        unit: "Kilograms",
         stock_status: 'Out Of Stock',
-        updated_on: '2024-06-10 21:09:12'
+        updated_on: '2024-06-10 21:09:12',
+        image_url: "https://fms-super-admin.interdev.in/fms/client/1/branch/1/ticket/12/12_1763123256318.jpg"
     },
     {
         id: 3,
         item_id: 'INV-000123',
-        name: 'Drain Pump Kit',
+        item_name: 'Drain Pump Kit',
+        category: "Chemicals",
+        storage_location: "Shivaji nagar, Pune",
         initial_quantity: 44,
         minimum_quantity: 20,
+        supplier_name: 'abc',
+        supplier_id: 27,
+        critical_quantity: "101",
+        unit: "Kilograms",
         stock_status: 'Good Stock',
-        updated_on: '2024-06-10 09:02:12'
+        updated_on: '2024-06-10 09:02:12',
+        image_url: "https://fms-super-admin.interdev.in/fms/ticket/8/8_1763011390575.jpg"
     }
     ])
     const [loadingList, setLoadingList] = useState(false)
@@ -109,7 +153,7 @@ export default function InventoryList() {
     const [arrRecentlyAddedItems, setArrRecentlyAddedItems] = useState([{
         id: 1,
         item_id: 'INV-000121',
-        name: 'Air filter 16X16',
+        item_name: 'Air filter 16X16',
         initial_quantity: 16,
         minimum_quantity: 5,
         stock_status: 'In Stock',
@@ -118,7 +162,7 @@ export default function InventoryList() {
     {
         id: 2,
         item_id: 'INV-000122',
-        name: 'Compressor Oil (1L)',
+        item_name: 'Compressor Oil (1L)',
         initial_quantity: 8,
         minimum_quantity: 20,
         stock_status: 'In Stock',
@@ -127,7 +171,7 @@ export default function InventoryList() {
     {
         id: 3,
         item_id: 'INV-000123',
-        name: 'Drain Pump (1L)',
+        item_name: 'Drain Pump (1L)',
         initial_quantity: 8,
         minimum_quantity: 20,
         stock_status: 'In Stock',
@@ -136,7 +180,7 @@ export default function InventoryList() {
     {
         id: 4,
         item_id: 'INV-000123',
-        name: 'Drain Pump 2333 (1L)',
+        item_name: 'Drain Pump 2333 (1L)',
         initial_quantity: 8,
         minimum_quantity: 20,
         stock_status: 'In Stock',
@@ -170,7 +214,7 @@ export default function InventoryList() {
         },
         {
             flex: 0.11,
-            field: 'name',
+            field: 'item_name',
             headerName: 'Name / Description'
         },
         {
@@ -259,7 +303,12 @@ export default function InventoryList() {
                                 :
                                 <></>
                         }
-                        <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.info[500]}`, background: theme.palette.info[50], borderRadius: '6px', padding: '5px 8px', cursor: 'pointer' }}>
+                        <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.info[500]}`, background: theme.palette.info[50], borderRadius: '6px', padding: '5px 8px', cursor: 'pointer' }}
+                            onClick={() => {
+                                setInventoryData(params?.row)
+                                setOpenConsumptionInventoryPopup(true)
+                            }}
+                        >
                             <BoxIcon stroke={theme.palette.info[700]} />
                             <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.info[700] }}>
                                 Record Usage
@@ -267,6 +316,7 @@ export default function InventoryList() {
                         </Stack>
                         <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.primary[600]}`, background: theme.palette.common.white, borderRadius: '6px', padding: '5px 8px', cursor: 'pointer' }}
                             onClick={() => {
+                                setInventoryData(params?.row)
                                 setOpenRestockInventoryPopup(true)
                             }}
                         >
@@ -367,7 +417,7 @@ export default function InventoryList() {
                 var filteredData = originalInventoryListData.filter(
                     item =>
                         (item?.item_id && item?.item_id.toLowerCase().includes(searchQuery.trim().toLowerCase())) ||
-                        (item?.name && item?.name.toLowerCase().includes(searchQuery.trim().toLowerCase())) ||
+                        (item?.item_name && item?.item_name.toLowerCase().includes(searchQuery.trim().toLowerCase())) ||
                         (item?.stock_status && item?.stock_status.toLowerCase().includes(searchQuery.trim().toLowerCase()))
                 )
 
@@ -384,7 +434,7 @@ export default function InventoryList() {
 
     return (
         <React.Fragment>
-            <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Stack sx={{ flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between' }}>
                 <MyBreadcrumbs />
                 {
                     hasPermission('INVENTORY_ADD') ?
@@ -490,7 +540,7 @@ export default function InventoryList() {
             <Grid container spacing={3} sx={{ mt: 3 }}>
                 <Grid size={{ xs: 12, sm: 12, md: 9, lg: 9, xl: 9 }}>
                     <Stack sx={{ border: `1px solid ${theme.palette.grey[300]}`, background: theme.palette.common.white, borderRadius: '8px', pb: 2 }}>
-                        <Stack sx={{ flexDirection: 'row', background: theme.palette.common.white, width: '100%', justifyContent: 'space-between', alignItems: 'center', borderRadius: '8px', py: 1 }}>
+                        <Stack sx={{ flexDirection: { xs: 'column', sm: 'row' }, background: theme.palette.common.white, width: '100%', justifyContent: 'space-between', alignItems: { xs: 'start', sm: 'center' }, borderRadius: '8px', py: 1 }}>
                             <Stack sx={{ flexDirection: 'row', columnGap: 1, height: '100%', padding: '15px' }}>
                                 <Stack>
                                     <TypographyComponent fontSize={18} fontWeight={500} sx={{ color: theme.palette.grey[700] }}>Inventory List</TypographyComponent>
@@ -501,7 +551,7 @@ export default function InventoryList() {
                                     sx={{ bgcolor: theme.palette.primary[50], color: theme.palette.primary[600], fontSize: 14, fontWeight: 500 }}
                                 />
                             </Stack>
-                            <Stack sx={{ paddingRight: '15px', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                            <Stack sx={{ paddingRight: '15px', flexDirection: 'row', alignItems: 'center', gap: 1, marginLeft: 1 }}>
                                 <SearchInput
                                     id="search-inventory"
                                     placeholder="Search Inventory"
@@ -609,7 +659,7 @@ export default function InventoryList() {
                                                             {item?.item_id && item?.item_id !== null ? item?.item_id : ''}
                                                         </TypographyComponent>
                                                         <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>
-                                                            {item?.name && item?.name !== null ? item?.name : ''}
+                                                            {item?.item_name && item?.item_name !== null ? item?.item_name : ''}
                                                         </TypographyComponent>
                                                     </Grid>
                                                     <Grid size={{ xs: 3.5, sm: 3.5, md: 3.5, lg: 3.5, xl: 3.5 }}>
@@ -668,7 +718,7 @@ export default function InventoryList() {
                                                             {item?.item_id && item?.item_id !== null ? item?.item_id : ''}
                                                         </TypographyComponent>
                                                         <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>
-                                                            {item?.name && item?.name !== null ? item?.name : ''}
+                                                            {item?.item_name && item?.item_name !== null ? item?.item_name : ''}
                                                         </TypographyComponent>
                                                     </Grid>
                                                     <Grid size={{ xs: 3.5, sm: 3.5, md: 3.5, lg: 3.5, xl: 3.5 }}>
@@ -730,12 +780,33 @@ export default function InventoryList() {
             />
             <RestockInventory
                 open={openRestockInventoryPopup}
+                restockData={inventoryData}
                 handleClose={(data) => {
                     setOpenRestockInventoryPopup(false)
+                    setInventoryData(null)
                     if (data == 'save') {
-                        // dispatch(actionGetInventoryDetails({
-                        //     uuid: detail?.uuid
-                        // }))
+                        dispatch(actionInventoryList({
+                            status: selectedStatus,
+                            branch_uuid: branch?.currentBranch?.uuid,
+                            page: page,
+                            limit: LIST_LIMIT
+                        }))
+                    }
+                }}
+            />
+            <InventoryConsumption
+                open={openConsumptionInventoryPopup}
+                consumeData={inventoryData}
+                handleClose={(data) => {
+                    setOpenConsumptionInventoryPopup(false)
+                    setInventoryData(null)
+                    if (data == 'save') {
+                        dispatch(actionInventoryList({
+                            status: selectedStatus,
+                            branch_uuid: branch?.currentBranch?.uuid,
+                            page: page,
+                            limit: LIST_LIMIT
+                        }))
                     }
                 }}
             />

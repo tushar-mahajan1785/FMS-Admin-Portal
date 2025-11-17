@@ -3,7 +3,8 @@ import { axiosApi, MULTIPART_HEADER } from "../../common/api"
 import { getErrorResponse } from "../../utils";
 import {
     API_INVENTORY_LIST, API_INVENTORY_ADD, API_INVENTORY_DETAIL, API_INVENTORY_DELETE,
-    API_INVENTORY_CATEGORY, API_INVENTORY_CATEGORY_ADD, API_INVENTORY_CATEGORY_DETAILS, API_INVENTORY_CATEGORY_DELETE, API_GET_UNIT_LIST, API_GET_INVENTORY_TRANSACTION_HISTORY
+    API_INVENTORY_CATEGORY, API_INVENTORY_CATEGORY_ADD, API_INVENTORY_CATEGORY_DETAILS, API_INVENTORY_CATEGORY_DELETE, API_GET_UNIT_LIST, API_GET_INVENTORY_TRANSACTION_HISTORY,
+    API_INVENTORY_RESTOCK_SAVE, API_INVENTORY_CONSUMPTION_SAVE
 } from "../../common/api/constants";
 
 export const actionInventoryList = createAsyncThunk('inventory/actionInventoryList', async (params) => {
@@ -100,6 +101,24 @@ export const actionGetInventoryTransactionHistory = createAsyncThunk('inventory/
         return error
     }
 })
+export const actionInventoryRestockSave = createAsyncThunk('inventory/actionInventoryRestockSave', async (params) => {
+    try {
+        const response = await axiosApi.post(API_INVENTORY_RESTOCK_SAVE, params, MULTIPART_HEADER)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+export const actionInventoryConsumptionSave = createAsyncThunk('inventory/actionInventoryConsumptionSave', async (params) => {
+    try {
+        const response = await axiosApi.post(API_INVENTORY_CONSUMPTION_SAVE, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
 
 export const inventoryStore = createSlice({
     name: 'inventory',
@@ -113,7 +132,9 @@ export const inventoryStore = createSlice({
         getInventoryCategoryDetails: null,
         deleteInventoryCategory: null,
         getUnitMaster: null,
-        getInventoryTransactionHistory: null
+        getInventoryTransactionHistory: null,
+        inventoryRestockSave: null,
+        inventoryConsumptionSave: null
     },
 
     reducers: {
@@ -146,6 +167,12 @@ export const inventoryStore = createSlice({
         },
         resetGetInventoryTransactionHistoryResponse: (state) => {
             state.getInventoryTransactionHistory = null
+        },
+        resetInventoryRestockSaveResponse: (state) => {
+            state.inventoryRestockSave = null
+        },
+        resetInventoryConsumptionSaveResponse: (state) => {
+            state.inventoryConsumptionSave = null
         },
     },
     extraReducers: builder => {
@@ -180,6 +207,12 @@ export const inventoryStore = createSlice({
             .addCase(actionGetInventoryTransactionHistory.fulfilled, (state, action) => {
                 state.getInventoryTransactionHistory = action.payload
             })
+            .addCase(actionInventoryRestockSave.fulfilled, (state, action) => {
+                state.inventoryRestockSave = action.payload
+            })
+            .addCase(actionInventoryConsumptionSave.fulfilled, (state, action) => {
+                state.inventoryConsumptionSave = action.payload
+            })
     }
 })
 
@@ -193,7 +226,9 @@ export const {
     resetGetInventoryCategoryDetailsResponse,
     resetDeleteInventoryCategoryResponse,
     resetGetUnitMasterResponse,
-    resetGetInventoryTransactionHistoryResponse
+    resetGetInventoryTransactionHistoryResponse,
+    resetInventoryRestockSaveResponse,
+    resetInventoryConsumptionSaveResponse
 } =
     inventoryStore.actions
 
