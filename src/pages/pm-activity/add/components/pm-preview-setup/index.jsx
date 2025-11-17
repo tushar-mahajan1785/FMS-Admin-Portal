@@ -2,90 +2,34 @@
 import React, { useEffect, useState } from "react";
 import {
   Box,
-  Button,
   Card,
-  CardContent,
-  Chip,
-  CircularProgress,
   Divider,
   Grid,
   IconButton,
-  InputAdornment,
-  List,
-  ListItem,
-  MenuItem,
   Stack,
-  Tooltip,
   Typography,
   useTheme,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
-import { Controller, useForm } from "react-hook-form";
-import toast from "react-hot-toast";
-import SearchIcon from "../../../../../assets/icons/SearchIcon";
 import TypographyComponent from "../../../../../components/custom-typography";
-import { AntSwitch, SearchInput } from "../../../../../components/common";
-import CustomTextField from "../../../../../components/text-field";
-import FormLabel from "../../../../../components/form-label";
 import EmptyContent from "../../../../../components/empty_content";
 
-import {
-  ERROR,
-  IMAGES_SCREEN_NO_DATA,
-  SERVER_ERROR,
-  UNAUTHORIZED,
-} from "../../../../../constants";
-import {
-  actionMasterAssetType,
-  resetMasterAssetTypeResponse,
-} from "../../../../../store/asset";
-import {
-  actionRosterData,
-  actionAssetTypeWiseList,
-  resetAssetTypeWiseListResponse,
-} from "../../../../../store/roster";
-import { useAuth } from "../../../../../hooks/useAuth";
-import { useBranch } from "../../../../../hooks/useBranch";
-import { useSnackbar } from "../../../../../hooks/useSnackbar";
-import DeleteIcon from "../../../../../assets/icons/DeleteIcon";
-import DatePicker from "react-datepicker";
-import EditIcon from "../../../../../assets/icons/EditIcon";
+import { IMAGES_SCREEN_NO_DATA } from "../../../../../constants";
+
 import { DataGrid } from "@mui/x-data-grid";
 import CustomChip from "../../../../../components/custom-chip";
 import moment from "moment/moment";
 import { getFormattedDuration } from "../../../../../utils";
-import EyeIcon from "../../../../../assets/icons/EyeIcon";
 import PmUserCircleIcon from "../../../../../assets/icons/PmUserCircleIcon";
 import PmEditReschedulerIcon from "../../../../../assets/icons/PMEditReshedulerIcon";
 import ReschedulePopup from "../edit-reschedule";
-import {
-  actionPMScheduleData,
-  resetPmScheduleDataResponse,
-} from "../../../../../store/pm-activity";
+import { actionPMScheduleData } from "../../../../../store/pm-activity";
 
 export default function PMActivityPreviewSetUp() {
   const theme = useTheme();
   const dispatch = useDispatch();
-  const { logout } = useAuth();
 
-  const branch = useBranch();
-
-  const {
-    control,
-    setValue,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm({
-    defaultValues: {
-      pm_activity_title: "",
-      frequency: "",
-      status: "",
-      schedule_start_date: "",
-    },
-  });
-
-  const { pmScheduleData } = useSelector((state) => state.PmActivityStore);
+  const { pmScheduleData } = useSelector((state) => state.pmActivityStore);
 
   // Inside your PMActivityPreviewSetUp component, add this state:
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
@@ -93,14 +37,15 @@ export default function PMActivityPreviewSetUp() {
 
   // Add these functions inside your component:
   const handleRescheduleClick = (activity) => {
-    let pmData = Object.assign({}, pmScheduleData);
     let currentAssetData = pmScheduleData?.assets.find(
       (obj) => obj?.asset_id === pmScheduleData?.selected_asset_id
     );
     let activityData = {
       ...currentAssetData,
       frequency_data: activity,
+      type: "reschedule",
     };
+
     setSelectedActivity(activityData);
     setRescheduleOpen(true);
   };
@@ -209,7 +154,7 @@ export default function PMActivityPreviewSetUp() {
       headerName: "Supervision By",
       description: "This column has a value getter and is not sortable.",
       sortable: false,
-      renderCell: (params) => {
+      renderCell: () => {
         return (
           <React.Fragment>
             <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
@@ -297,22 +242,6 @@ export default function PMActivityPreviewSetUp() {
 
   const [frequencyExceptionsData, setFrequencyExceptionsData] = useState([]);
 
-  /**
-   * 🔹 Initial API call to fetch master asset types
-   */
-  // useEffect(() => {
-  //   if (pmScheduleData?.assets !== null && pmScheduleData?.assets.length > 0) {
-  //     let currentAsset = pmScheduleData?.assets.find(
-  //       (obj) => obj?.asset_id === pmScheduleData?.selected_asset_id
-  //     );
-  //     if (currentAsset && currentAsset !== null) {
-  //       setFrequencyExceptionsData(currentAsset?.frequency_exceptions);
-  //     } else {
-  //       setFrequencyExceptionsData([]);
-  //     }
-  //   }
-  // }, [pmScheduleData?.assets]);
-
   useEffect(() => {
     if (pmScheduleData?.is_active == 1) {
       if (
@@ -320,10 +249,10 @@ export default function PMActivityPreviewSetUp() {
         pmScheduleData?.assets !== null &&
         pmScheduleData?.assets.length > 0
       ) {
+        setFrequencyExceptionsData(
+          pmScheduleData?.assets[0]?.frequency_exceptions
+        );
       }
-      setFrequencyExceptionsData(
-        pmScheduleData?.assets[0]?.frequency_exceptions
-      );
     } else {
       setFrequencyExceptionsData([]);
     }
@@ -453,7 +382,7 @@ export default function PMActivityPreviewSetUp() {
                   }}
                 >
                   {pmScheduleData?.assets.length > 0 ? (
-                    pmScheduleData?.assets.map((asset, i) => (
+                    pmScheduleData?.assets.map((asset) => (
                       <Stack
                         sx={{
                           background:
@@ -567,47 +496,6 @@ export default function PMActivityPreviewSetUp() {
         )}
       </Card>
 
-      {/* <Divider sx={{ m: 2 }} />
-
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        sx={{ p: 3 }}
-      >
-        <Button
-          sx={{
-            textTransform: "capitalize",
-            px: 6,
-            borderColor: `${theme.palette.grey[300]}`,
-            color: `${theme.palette.grey[700]}`,
-            borderRadius: "8px",
-            fontSize: 16,
-            fontWeight: 600,
-          }}
-          variant="outlined"
-          onClick={onBack}
-        >
-          Back
-        </Button>
-        <Button
-          sx={{
-            textTransform: "capitalize",
-            px: 6,
-            borderRadius: "8px",
-            backgroundColor: theme.palette.primary[600],
-            color: theme.palette.common.white,
-            fontSize: 16,
-            fontWeight: 600,
-            borderColor: theme.palette.primary[600],
-          }}
-          variant="contained"
-          onClick={handleSaveSchedule}
-          disabled={loading}
-        >
-          Save Schedule
-        </Button>
-      </Stack> */}
       <ReschedulePopup
         open={rescheduleOpen}
         selectedActivity={selectedActivity}
@@ -649,8 +537,6 @@ export default function PMActivityPreviewSetUp() {
               console.log("-------&&&&&&&&&&&&&&-----", pmData);
               dispatch(actionPMScheduleData(pmData));
             }
-
-            // resetPmScheduleDataResponse();
           }
         }}
       />

@@ -17,17 +17,11 @@ import {
   Avatar,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import CustomTextField from "../../../components/text-field";
 import FormLabel from "../../../components/form-label";
-import {
-  ERROR,
-  getPriorityArray,
-  SERVER_ERROR,
-  UNAUTHORIZED,
-} from "../../../constants";
+import { ERROR, SERVER_ERROR, UNAUTHORIZED } from "../../../constants";
 import { useDispatch, useSelector } from "react-redux";
-import toast from "react-hot-toast";
 import FormHeader from "../../../components/form-header";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import { useAuth } from "../../../hooks/useAuth";
@@ -40,7 +34,6 @@ import PMActivityAssetSetUp from "./components/pm-assets-setup";
 import {
   actionPMScheduleAdd,
   actionPMScheduleData,
-  actionPMScheduleList,
   resetPmScheduleAddAssetResponse,
 } from "../../../store/pm-activity";
 import PMActivityPreviewSetUp from "./components/pm-preview-setup";
@@ -53,8 +46,8 @@ export default function AddPMSchedule({ open, handleClose }) {
   const { showSnackbar } = useSnackbar();
 
   //Stores
-  const { pmScheduleData, pmScheduleAdd, deletePmActivity } = useSelector(
-    (state) => state.PmActivityStore
+  const { pmScheduleData, pmScheduleAdd } = useSelector(
+    (state) => state.pmActivityStore
   );
 
   const methods = useForm({
@@ -67,7 +60,7 @@ export default function AddPMSchedule({ open, handleClose }) {
     },
   });
 
-  const { handleSubmit, getValues, reset } = methods;
+  const { handleSubmit, reset } = methods;
 
   //States
   const [loading, setLoading] = useState(false);
@@ -110,103 +103,6 @@ export default function AddPMSchedule({ open, handleClose }) {
       }
     }
   }, [pmScheduleAdd]);
-
-  //Delete PM Activity
-
-  // useEffect(() => {
-  //   if (
-  //     useEffect(() => {
-  //       if (deletePmActivity && deletePmActivity !== null) {
-  //         dispatch(resetPmActivityScheduleDeleteResponse());
-  //         if (deletePmActivity?.result === true) {
-  //           setOpenViewDeleteVendorPopup(false);
-  //           setViewLoadingDelete(false);
-  //           showSnackbar({
-  //             message: deletePmActivity?.message,
-  //             severity: "success",
-  //           });
-
-  //           handleClose("delete");
-  //           dispatch(
-  //             actionPMScheduleList({
-  //               branch_uuid: branch?.currentBranch?.uuid,
-  //               page: page,
-  //               limit: LIST_LIMIT,
-  //             })
-  //           );
-  //         } else {
-  //           setViewLoadingDelete(false);
-  //           switch (deletePmActivity?.status) {
-  //             case UNAUTHORIZED:
-  //               logout();
-  //               break;
-  //             case ERROR:
-  //               dispatch(resetPmActivityScheduleDeleteResponse());
-  //               toast.dismiss();
-  //               showSnackbar({
-  //                 message: deletePmActivity?.message,
-  //                 severity: "error",
-  //               });
-  //               break;
-  //             case SERVER_ERROR:
-  //               toast.dismiss();
-  //               showSnackbar({
-  //                 message: deletePmActivity?.message,
-  //                 severity: "error",
-  //               });
-  //               break;
-  //             default:
-  //               break;
-  //           }
-  //         }
-  //       }
-  //     }, [deletePmActivity]) &&
-  //     deletePmActivity !== null
-  //   ) {
-  //     dispatch(resetPmActivityScheduleDeleteResponse());
-  //     if (deletePmActivity?.result === true) {
-  //       setOpenViewDeleteVendorPopup(false);
-  //       setViewLoadingDelete(false);
-  //       showSnackbar({
-  //         message: deletePmActivity?.message,
-  //         severity: "success",
-  //       });
-
-  //       handleClose("delete");
-  //       dispatch(
-  //         actionPMScheduleList({
-  //           branch_uuid: branch?.currentBranch?.uuid,
-  //           page: page,
-  //           limit: LIST_LIMIT,
-  //         })
-  //       );
-  //     } else {
-  //       setViewLoadingDelete(false);
-  //       switch (deletePmActivity?.status) {
-  //         case UNAUTHORIZED:
-  //           logout();
-  //           break;
-  //         case ERROR:
-  //           dispatch(resetPmActivityScheduleDeleteResponse());
-  //           toast.dismiss();
-  //           showSnackbar({
-  //             message: deletePmActivity?.message,
-  //             severity: "error",
-  //           });
-  //           break;
-  //         case SERVER_ERROR:
-  //           toast.dismiss();
-  //           showSnackbar({
-  //             message: deletePmActivity?.message,
-  //             severity: "error",
-  //           });
-  //           break;
-  //         default:
-  //           break;
-  //       }
-  //     }
-  //   }
-  // }, [deletePmActivity]);
 
   // Handle next step (go to preview)
   const handleNext = () => {

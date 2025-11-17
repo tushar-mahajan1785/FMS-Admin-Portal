@@ -18,7 +18,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
-import { Controller, useForm, useFormContext } from "react-hook-form";
+import { Controller, useFormContext } from "react-hook-form";
 import toast from "react-hot-toast";
 import SearchIcon from "../../../../../assets/icons/SearchIcon";
 import TypographyComponent from "../../../../../components/custom-typography";
@@ -31,7 +31,6 @@ import {
   IMAGES_SCREEN_NO_DATA,
   SERVER_ERROR,
   UNAUTHORIZED,
-  getMasterPMActivitySchedule,
   getMasterPMActivityStatus,
   getPmActivityFrequencyArray,
 } from "../../../../../constants";
@@ -52,14 +51,14 @@ import CalendarIcon from "../../../../../assets/icons/CalendarIcon";
 import DatePickerWrapper from "../../../../../components/datapicker-wrapper";
 import moment from "moment";
 import ChevronDownIcon from "../../../../../assets/icons/ChevronDown";
-import {
-  actionDeleteSelectedAsset,
-  actionPMScheduleData,
-  actionPMScheduleList,
-} from "../../../../../store/pm-activity";
+import { actionPMScheduleData } from "../../../../../store/pm-activity";
 import { getObjectById } from "../../../../../utils";
 
-export default function PMActivityAssetSetUp({ onNext, onBack }) {
+export default function PMActivityAssetSetUp() {
+  /**
+   * 🔹 Hooks & Store Access
+   * @description : Accessing theme, dispatch, auth, snackbar, branch and form context
+   */
   const theme = useTheme();
   const dispatch = useDispatch();
   const { logout } = useAuth();
@@ -73,19 +72,23 @@ export default function PMActivityAssetSetUp({ onNext, onBack }) {
     formState: { errors },
   } = useFormContext();
 
-  //  States
+  /**
+   * 🔹 Local States
+   * @description : Local states for search query, asset type options and asset list
+   */
   const [searchQuery, setSearchQuery] = useState("");
   const [assetTypeMasterOption, setAssetTypeMasterOption] = useState([]);
   const [assetTypeWiseListOptions, setAssetTypeWiseListOptions] = useState([]);
   const [assetTypeWiseListOriginalData, setAssetTypeWiseListOriginalData] =
     useState([]);
 
-  //Redux Store
+  /**
+   * 🔹 Redux Store Access
+   *  @description : Accessing master asset type and asset type wise list from Redux store
+   */
   const { masterAssetType } = useSelector((state) => state.AssetStore);
   const { assetTypeWiseList } = useSelector((state) => state.rosterStore);
-  const { pmScheduleData, deletePmActivity } = useSelector(
-    (state) => state.PmActivityStore
-  );
+  const { pmScheduleData } = useSelector((state) => state.pmActivityStore);
 
   /**
    * 🔹 Initial API call to fetch master asset types
@@ -100,46 +103,6 @@ export default function PMActivityAssetSetUp({ onNext, onBack }) {
       );
     }
   }, [branch?.currentBranch]);
-
-  useEffect(() => {
-    if (deletePmActivity && deletePmActivity !== null) {
-      dispatch(resetPmActivityScheduleDeleteResponse());
-      if (deletePmActivity?.result === true) {
-        showSnackbar({
-          message: deletePmActivity?.message,
-          severity: "success",
-        });
-        dispatch(
-          actionPMScheduleList({
-            branch_uuid: branch?.currentBranch?.uuid,
-          })
-        );
-      } else {
-        switch (deletePmActivity?.status) {
-          case UNAUTHORIZED:
-            logout();
-            break;
-          case ERROR:
-            dispatch(resetPmActivityScheduleDeleteResponse());
-            toast.dismiss();
-            showSnackbar({
-              message: deletePmActivity?.message,
-              severity: "error",
-            });
-            break;
-          case SERVER_ERROR:
-            toast.dismiss();
-            showSnackbar({
-              message: deletePmActivity?.message,
-              severity: "error",
-            });
-            break;
-          default:
-            break;
-        }
-      }
-    }
-  }, [deletePmActivity]);
 
   /**
    * 🔹 Fetch asset-type-wise list when asset type changes
@@ -243,7 +206,10 @@ export default function PMActivityAssetSetUp({ onNext, onBack }) {
     }
   }, [searchQuery]);
 
-  //Search input handler
+  /**
+   * 🔹 Handlers
+   * @description : Handlers for search input changes
+   */
   const handleSearchQueryChange = (event) => {
     setSearchQuery(event.target.value);
   };
@@ -561,60 +527,16 @@ export default function PMActivityAssetSetUp({ onNext, onBack }) {
                       >
                         <IconButton
                           color="error"
-                          onClick={async () => {
-                            try {
-                              // Step 1: Update local data immediately
-                              const updated = { ...pmScheduleData };
-                              const updatedAssets = (
-                                updated.assets ?? []
-                              ).filter(
-                                (a) =>
-                                  !(
-                                    a.asset_id === asset.asset_id &&
-                                    a.asset_type === asset.asset_type &&
-                                    a.asset_description ===
-                                      asset.asset_description
-                                  )
-                              );
-                              updated.assets = updatedAssets;
-                              dispatch(actionPMScheduleData(updated));
-
-                              // Step 2: Call backend delete API only if asset has uuid
-                              if (asset?.uuid) {
-                                const response = await dispatch(
-                                  actionDeletePmActivity({
-                                    uuid: asset.uuid,
-                                  })
-                                );
-
-                                if (response?.payload?.success) {
-                                  showSnackbar({
-                                    message:
-                                      "Asset deleted successfully from server",
-                                    severity: "success",
-                                  });
-                                } else {
-                                  showSnackbar({
-                                    message:
-                                      "Failed to delete asset from server",
-                                    severity: "error",
-                                  });
-                                }
-                              } else {
-                                showSnackbar({
-                                  message:
-                                    "Selected asset removed successfully (unsaved item)",
-                                  severity: "success",
-                                });
-                              }
-                            } catch (error) {
-                              console.error("Error deleting asset:", error);
-                              showSnackbar({
-                                message:
-                                  "Something went wrong while deleting asset",
-                                severity: "error",
-                              });
-                            }
+                          onClick={() => {
+                            const updated = { ...pmScheduleData };
+                            updated.assets = (updated.assets ?? []).filter(
+                              (item) =>
+                                !(
+                                  item.asset_id === asset.asset_id &&
+                                  item.asset_type === asset.asset_type
+                                )
+                            );
+                            dispatch(actionPMScheduleData(updated));
                           }}
                         >
                           <DeleteIcon fontSize="medium" />
@@ -885,54 +807,6 @@ export default function PMActivityAssetSetUp({ onNext, onBack }) {
           </Card>
         </Grid>
       </Grid>
-
-      {/* <Divider sx={{ m: 2 }} />
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        sx={{ p: 3 }}
-      >
-        <Button
-          sx={{
-            textTransform: "capitalize",
-            px: 6,
-            borderColor: `${theme.palette.grey[300]}`,
-            color: `${theme.palette.grey[700]}`,
-            borderRadius: "8px",
-            fontSize: 16,
-            fontWeight: 600,
-          }}
-          onClick={handleReset}
-          variant="outlined"
-        >
-          Reset
-        </Button>
-        <Button
-          sx={{
-            textTransform: "capitalize",
-            px: 6,
-            borderRadius: "8px",
-            backgroundColor: theme.palette.primary[600],
-            color: theme.palette.common.white,
-            fontSize: 16,
-            fontWeight: 600,
-            borderColor: theme.palette.primary[600],
-          }}
-          onClick={() => {
-            handleSubmit(onSubmit)();
-          }}
-          variant="contained"
-          disabled={loading}
-          type="submit"
-        >
-          {loading ? (
-            <CircularProgress size={18} sx={{ color: "white" }} />
-          ) : (
-            "Preview"
-          )}
-        </Button>
-      </Stack> */}
     </Box>
   );
 }

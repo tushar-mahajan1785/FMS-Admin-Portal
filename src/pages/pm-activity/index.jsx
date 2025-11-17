@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   Chip,
+  CircularProgress,
   Divider,
   Grid,
   IconButton,
@@ -14,7 +15,6 @@ import {
   Stack,
   Tooltip,
   Typography,
-  useMediaQuery,
   useTheme,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
@@ -31,7 +31,6 @@ import {
 } from "../../constants";
 import EmptyContent from "../../components/empty_content";
 import FullScreenLoader from "../../components/fullscreen-loader";
-import TypographyComponent from "../../components/custom-typography";
 import { useAuth } from "../../hooks/useAuth";
 import { useDispatch, useSelector } from "react-redux";
 import { useSnackbar } from "../../hooks/useSnackbar";
@@ -50,6 +49,8 @@ import AddPMSchedule from "./add";
 import {
   actionPMScheduleList,
   resetPmScheduleListResponse,
+  actionDeletePmActivity,
+  resetDeletePmActivityResponse,
 } from "../../store/pm-activity";
 import {
   actionMasterAssetType,
@@ -57,22 +58,35 @@ import {
 } from "../../store/asset";
 import { useBranch } from "../../hooks/useBranch";
 import EyeIcon from "../../assets/icons/EyeIcon";
+import AlertPopup from "../../components/alert-confirm";
+import AlertCircleIcon from "../../assets/icons/AlertCircleIcon";
+import PMActivityDetails from "./view";
+import TypographyComponent from "../../components/custom-typography";
 
 export default function PmActivity() {
+  /** Hooks **/
   const theme = useTheme();
   const dispatch = useDispatch();
   const { logout } = useAuth();
   const { showSnackbar } = useSnackbar();
   const branch = useBranch();
 
-  // store
-  const { pmScheduleList } = useSelector((state) => state.PmActivityStore);
+  /** Redux Store **/
+  const { pmScheduleList, deletePmActivity } = useSelector(
+    (state) => state.pmActivityStore
+  );
 
+  /** States **/
   const [searchQuery, setSearchQuery] = useState("");
   const [pmScheduleActivityData, setPmScheduleActivityData] = useState([]);
   const [originalPmActivityScheduleData, setOriginalPmActivityScheduleData] =
     useState([]);
 
+  /**
+   * upcomingSchedules
+   * @type {Array}
+   * @description : State to store upcoming PM Schedules
+   */
   const [upcomingSchedules, setUpcomingSchedules] = useState([]);
   const [loadingList, setLoadingList] = useState(false);
   const [page, setPage] = useState(1);
@@ -82,15 +96,27 @@ export default function PmActivity() {
   const [selectedAssetTypes, setSelectedAssetTypes] = useState("");
   const [masterAssetTypeOptions, setMasterAssetTypeOptions] = useState([]);
   const [masterPmActivityStatusOptions] = useState(getMasterPMActivityStatus);
-  const [masterPmActivityScheduleOptions] = useState(
-    getMasterPMActivitySchedule
-  );
   const [selectedUpcomingPmSchedule, setSelectedUpcomingPmSchedule] =
     useState("");
-
   const [openAddTicket, setOpenAddTicket] = useState(false);
+  const [openDeletePmActivityPopup, setOpenDeletePmActivityPopup] =
+    useState(false);
+  const [selectedPmActivityData, setSelectedPmActivityData] = useState(null);
+  const [loadingDeletePmActivity, setLoadingDeletePmActivity] = useState(false);
+  const [openPmActivityDetails, setOpenPmActivityDetails] = useState(false);
+
+  /**
+   * masterAssetType
+   * @type {Object}
+   * @description : Redux store to get master asset type list
+   */
   const { masterAssetType } = useSelector((state) => state.AssetStore);
 
+  /**
+   * columns
+   * @type {Array}
+   * @description : Columns for PM Activity Data Grid
+   */
   const columns = [
     {
       flex: 0.5,
@@ -108,7 +134,7 @@ export default function PmActivity() {
             sx={{ flexDirection: "row", alignItems: "center", height: "100%" }}
           >
             <Chip
-              label={params?.row?.assets}
+              label={`${params?.row?.assets.length} Assets`}
               size="small"
               sx={{
                 bgcolor: theme.palette.primary[50],
@@ -170,17 +196,23 @@ export default function PmActivity() {
       sortable: false,
       field: "",
       headerName: "Action",
-      renderCell: () => {
+      renderCell: (params) => {
         return (
           <React.Fragment>
             <Box sx={{ display: "flex", alignItems: "center" }}>
               <Tooltip title="Delete" followCursor placement="top">
                 {/* Delete Pm Activity  */}
                 <IconButton
-                // onClick={() => {
-                //   // setEmployeeData(params.row)
-                //   // setOpenEmployeeDetailsPopup(true)
-                // }}
+                  onClick={() => {
+                    console.log("params row data", params);
+                    let details = {
+                      uuid: params?.row?.uuid,
+                      title: "Delete PM Activity",
+                      text: " Are you sure you want to delete this PM Activity? This action cannot be undone.",
+                    };
+                    setSelectedPmActivityData(details);
+                    setOpenDeletePmActivityPopup(true);
+                  }}
                 >
                   <DeleteIcon stroke={"#181D27"} />
                 </IconButton>
@@ -192,6 +224,7 @@ export default function PmActivity() {
     },
   ];
 
+  /** PM Activity Counts Cards Data */
   const [getArrPMActivityCounts, setGetArrPmActivityCounts] = useState([
     {
       labelTop: "Total",
@@ -236,6 +269,37 @@ export default function PmActivity() {
   ]);
 
   /**
+   * handleRowClick
+   * @type : EVENT HANDLER
+   * @description : Handle row click in data grid
+   */
+  const handleRowClick = (params) => {
+    const rowId = params?.id;
+    console.log("Row clicked with ID:", rowId);
+    let details = pmScheduleActivityData.find((item) => item.id === rowId);
+    details = { ...details, uuid: params?.row?.uuid };
+
+    setOpenPmActivityDetails(true);
+    setPmScheduleActivityData(details);
+  };
+
+  /**
+   * useEffect
+   * @dependency : branch?.currentBranch
+   * @type : API CALL
+   * @description : Get Asset Type List API Call
+   */
+  useEffect(() => {
+    if (branch?.currentBranch?.client_uuid) {
+      dispatch(
+        actionMasterAssetType({
+          client_uuid: branch.currentBranch.client_uuid,
+        })
+      );
+    }
+  }, [branch?.currentBranch]);
+
+  /**
    * useEffect
    * @dependency : pmScheduleList
    * @type : HANDLE API RESULT;
@@ -244,10 +308,7 @@ export default function PmActivity() {
   useEffect(() => {
     if (pmScheduleList && pmScheduleList !== null) {
       dispatch(resetPmScheduleListResponse());
-      console.log(
-        "pmScheduleList*******************************************",
-        pmScheduleList
-      );
+
       if (pmScheduleList?.result === true) {
         setPmScheduleActivityData(pmScheduleList?.response?.pm_schedule_list);
         setOriginalPmActivityScheduleData(
@@ -478,7 +539,10 @@ export default function PmActivity() {
   }, [pmScheduleList]);
 
   /**
-   *  list API Call on change of Page
+   * useEffect
+   * @dependency : page, selectedStatus, selectedAssetTypes, selectedFrequency, selectedUpcomingPmSchedule
+   * @type : API CALL
+   * @description : Get PM Schedule List API Call
    */
   useEffect(() => {
     if (page !== null) {
@@ -503,7 +567,10 @@ export default function PmActivity() {
   ]);
 
   /**
-   * Asset Type
+   * useEffect
+   * @dependency : masterAssetType
+   * @type : HANDLE API RESULT;
+   * @description : Handle the result of Master Asset Type API
    */
   useEffect(() => {
     if (masterAssetType && masterAssetType !== null) {
@@ -533,7 +600,59 @@ export default function PmActivity() {
   }, [masterAssetType]);
 
   /**
-   * Filter the PM Activity list
+   * useEffect
+   * @dependency : deletePmActivity
+   * @type : HANDLE API RESULT;
+   * @description : Handle the result of Delete PM Activity API
+   */
+  useEffect(() => {
+    if (deletePmActivity && deletePmActivity !== null) {
+      dispatch(resetDeletePmActivityResponse());
+      if (deletePmActivity?.result === true) {
+        showSnackbar({
+          message: deletePmActivity?.message,
+          severity: "success",
+        });
+        dispatch(
+          actionPMScheduleList({
+            page: page,
+            limit: LIST_LIMIT,
+            status: selectedStatus,
+            asset_type: selectedAssetTypes,
+            branch_uuid: branch?.currentBranch?.uuid,
+            frequency: selectedFrequency,
+            upcoming_filter: selectedUpcomingPmSchedule,
+          })
+        );
+        setOpenDeletePmActivityPopup(false);
+        setLoadingDeletePmActivity(false);
+      } else {
+        setLoadingDeletePmActivity(false);
+        switch (deletePmActivity?.status) {
+          case UNAUTHORIZED:
+            logout();
+            break;
+          case ERROR:
+            dispatch(resetDeletePmActivityResponse());
+            break;
+          case SERVER_ERROR:
+            showSnackbar({
+              message: deletePmActivity?.message,
+              severity: "error",
+            });
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }, [deletePmActivity]);
+
+  /**
+   * useEffect
+   * @dependency : searchQuery
+   * @type : FILTER DATA
+   * @description : Filter PM Schedule Data on search query
    */
   useEffect(() => {
     if (searchQuery && searchQuery.trim().length > 0) {
@@ -577,7 +696,13 @@ export default function PmActivity() {
     }
   }, [searchQuery]);
 
-  // handle search function
+  /**
+   * handleSearchQueryChange
+   * @type : EVENT HANDLER
+   * @description : Handle search query change
+   * @param {object} event - Event object
+   * @return {void}
+   */
   const handleSearchQueryChange = (event) => {
     const value = event.target.value;
     setSearchQuery(value);
@@ -953,6 +1078,7 @@ export default function PmActivity() {
                 total={total}
                 page={page}
                 onPageChange={setPage}
+                onRowClick={handleRowClick}
                 pageSize={LIST_LIMIT}
                 onChange={(selectedIds) => {
                   console.log("Selected row IDs in EmployeeList:", selectedIds);
@@ -1100,6 +1226,98 @@ export default function PmActivity() {
         open={openAddTicket}
         handleClose={() => {
           setOpenAddTicket(false);
+          dispatch(
+            actionPMScheduleList({
+              page: page,
+              limit: LIST_LIMIT,
+              status: selectedStatus,
+              asset_type: selectedAssetTypes,
+              branch_uuid: branch?.currentBranch?.uuid,
+              frequency: selectedFrequency,
+              upcoming_filter: selectedUpcomingPmSchedule,
+            })
+          );
+        }}
+      />
+
+      {openDeletePmActivityPopup && (
+        <AlertPopup
+          open={openDeletePmActivityPopup}
+          icon={
+            <AlertCircleIcon
+              sx={{ color: theme.palette.error[600] }}
+              fontSize="inherit"
+            />
+          }
+          color={theme.palette.error[600]}
+          objData={selectedPmActivityData}
+          actionButtons={[
+            <Button
+              key="cancel"
+              color="secondary"
+              variant="outlined"
+              sx={{
+                width: "100%",
+                color: theme.palette.grey[800],
+                textTransform: "capitalize",
+              }}
+              onClick={() => {
+                setOpenDeletePmActivityPopup(false);
+              }}
+            >
+              Cancel
+            </Button>,
+            <Button
+              key="delete"
+              variant="contained"
+              sx={{
+                width: "100%",
+                textTransform: "capitalize",
+                background: theme.palette.error[600],
+                color: theme.palette.common.white,
+              }}
+              disabled={loadingDeletePmActivity}
+              onClick={() => {
+                setLoadingDeletePmActivity(true);
+                console.log("selectedPmActivityData", selectedPmActivityData);
+                if (
+                  selectedPmActivityData?.uuid &&
+                  selectedPmActivityData?.uuid !== null
+                ) {
+                  dispatch(
+                    actionDeletePmActivity({
+                      uuid: selectedPmActivityData?.uuid,
+                    })
+                  );
+                }
+              }}
+            >
+              {loadingDeletePmActivity ? (
+                <CircularProgress size={20} color="white" />
+              ) : (
+                "Delete"
+              )}
+            </Button>,
+          ]}
+        />
+      )}
+
+      <PMActivityDetails
+        open={openPmActivityDetails}
+        objData={pmScheduleActivityData}
+        handleClose={() => {
+          setOpenPmActivityDetails(false);
+          dispatch(
+            actionPMScheduleList({
+              page: page,
+              limit: LIST_LIMIT,
+              status: selectedStatus,
+              asset_type: selectedAssetTypes,
+              branch_uuid: branch?.currentBranch?.uuid,
+              frequency: selectedFrequency,
+              upcoming_filter: selectedUpcomingPmSchedule,
+            })
+          );
         }}
       />
     </React.Fragment>
