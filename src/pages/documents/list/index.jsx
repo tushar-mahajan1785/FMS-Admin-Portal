@@ -134,7 +134,7 @@ export default function DocumentsList() {
                                         {/* open ticket details */}
                                         <Button
                                             variant="outlined"
-                                            startIcon={<EyeIcon stroke={'#6941C6'} />}
+                                            startIcon={<EyeIcon stroke={theme.palette.primary[700]} />}
                                             sx={{ border: `1px solid ${theme.palette.primary[700]}`, borderRadius: '8px', color: theme.palette.primary[700] }}
                                             onClick={() => {
                                                 navigate(`/documents/view/${params?.row?.uuid}`)
@@ -161,7 +161,7 @@ export default function DocumentsList() {
                                             setOpenAddDocumentGroupPopup(true)
                                         }}
                                     >
-                                        <EditCircleIcon stroke={'#6941C6'} />
+                                        <EditCircleIcon stroke={theme.palette.primary[700]} />
                                     </IconButton>
                                 </Tooltip>
                                 :

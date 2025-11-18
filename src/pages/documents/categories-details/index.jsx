@@ -240,7 +240,7 @@ export default function CategoriesDetails() {
                                 {/* open documents details */}
                                 <Button
                                     variant="outlined"
-                                    startIcon={<EyeIcon stroke={'#6941C6'} />}
+                                    startIcon={<EyeIcon stroke={theme.palette.primary[700]} />}
                                     sx={{ border: `1px solid ${theme.palette.primary[700]}`, borderRadius: '8px', color: theme.palette.primary[700] }}
                                     onClick={() => {
                                         window.open(params?.row?.file_url, '_blank')
@@ -257,7 +257,7 @@ export default function CategoriesDetails() {
                                 sx={{ border: `1px solid ${theme.palette.primary[700]}`, borderRadius: '8px' }}
                                 onClick={() => handleDownload(params?.row?.file_url)}
                             >
-                                <DownloadIcon stroke={'#6941C6'} />
+                                <DownloadIcon stroke={theme.palette.primary[700]} />
                             </IconButton>
                         </Tooltip>
                         {
@@ -279,7 +279,7 @@ export default function CategoriesDetails() {
 
                                     }}
                                 >
-                                    <ArchiveIcon stroke={'#6941C6'} />
+                                    <ArchiveIcon stroke={theme.palette.primary[700]} />
                                 </IconButton>
                             </Tooltip>
                         }
@@ -299,7 +299,7 @@ export default function CategoriesDetails() {
                                     setOpenDeleteDocumentPopup(true)
                                 }}
                             >
-                                <DeleteIcon stroke={'#D92D20'} />
+                                <DeleteIcon stroke={theme.palette.error[600]} />
                             </IconButton>
                         </Tooltip>
                     </Stack>
