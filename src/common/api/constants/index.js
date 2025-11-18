@@ -285,13 +285,13 @@ export const API_INVENTORY_DETAIL = `${BASE}/inventory/details`
 
 export const API_INVENTORY_DELETE = `${BASE}/inventory/remove`
 
-export const API_INVENTORY_CATEGORY = `${BASE}/inventory/category/list`
+export const API_INVENTORY_CATEGORY = `${BASE}/inventory-category/list`
 
-export const API_INVENTORY_CATEGORY_ADD = `${BASE}/inventory/category/add`
+export const API_INVENTORY_CATEGORY_ADD = `${BASE}/inventory-category/add-or-edit`
 
-export const API_INVENTORY_CATEGORY_DELETE = `${BASE}/inventory/category/remove`
+export const API_INVENTORY_CATEGORY_DELETE = `${BASE}/inventory-category/remove`
 
-export const API_INVENTORY_CATEGORY_DETAILS = `${BASE}/inventory/category/details`
+export const API_INVENTORY_CATEGORY_DETAILS = `${BASE}/inventory-category/details`
 
 export const API_GET_UNIT_LIST = `${BASE}/unit/list`
 
