@@ -25,7 +25,7 @@ export const sideMenuItems = [
     title: "PM Activity",
     path: "/pm-activity",
     icon: ClientsIcon,
-    permission: "EMPLOYEE",
+    permission: "PM_ACTIVITY",
   },
   {
     group: "Inventory Management",
