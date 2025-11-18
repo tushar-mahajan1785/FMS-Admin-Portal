@@ -325,3 +325,5 @@ export const API_UPLOAD_DOCUMENTS_CATEGORIES_LIST = `${BASE}/document/list`
 export const API_UPLOAD_DOCUMENTS_CATEGORIES_DELETE = `${BASE}/document/remove`
 
 export const API_UPLOAD_DOCUMENTS_CATEGORIES_ARCHIVE = `${BASE}/document/archive`
+
+export const API_UPLOAD_DOCUMENTS_CATEGORIES_RESTORE = `${BASE}/document/restore`

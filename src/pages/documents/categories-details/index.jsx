@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import { useNavigate, useParams } from "react-router-dom";
 import TypographyComponent from "../../../components/custom-typography";
-import { actionUploadDocumentCategoriesList, resetUploadDocumentCategoriesListResponse, actionDeleteUploadDocumentCategories, resetDeleteUploadDocumentCategoriesResponse, actionUploadDocumentCategoriesArchive, resetUploadDocumentCategoriesArchiveResponse } from "../../../store/documents";
+import { actionUploadDocumentCategoriesList, resetUploadDocumentCategoriesListResponse, actionDeleteUploadDocumentCategories, resetDeleteUploadDocumentCategoriesResponse, actionUploadDocumentCategoriesArchive, resetUploadDocumentCategoriesArchiveResponse, actionUploadDocumentCategoriesRestore, resetUploadDocumentCategoriesRestoreResponse } from "../../../store/documents";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../../../hooks/useAuth";
 import { useBranch } from "../../../hooks/useBranch";
@@ -19,6 +19,7 @@ import EyeIcon from "../../../assets/icons/EyeIcon";
 import DeleteIcon from "../../../assets/icons/DeleteIcon";
 import AlertPopup from "../../../components/alert-confirm";
 import AlertCircleIcon from "../../../assets/icons/AlertCircleIcon";
+import AutorenewIcon from '@mui/icons-material/Autorenew';
 
 export default function CategoriesDetails() {
     const theme = useTheme()
@@ -30,7 +31,7 @@ export default function CategoriesDetails() {
     const { documentCategoryUuid, uuid } = useParams()
 
     //Stores
-    const { uploadDocumentCategoriesList, deleteUploadDocumentCategories, uploadDocumentCategoriesArchive } = useSelector(state => state.documentStore)
+    const { uploadDocumentCategoriesList, deleteUploadDocumentCategories, uploadDocumentCategoriesArchive, uploadDocumentCategoriesRestore } = useSelector(state => state.documentStore)
 
     // state
     const [uploadDocumentDetails, setUploadDocumentDetails] = useState(null)
@@ -159,6 +160,44 @@ export default function CategoriesDetails() {
         }
     }, [uploadDocumentCategoriesArchive])
 
+    /**
+        * useEffect
+        * @dependency : uploadDocumentCategoriesRestore
+        * @type : HANDLE API RESULT
+        * @description : Handle the result of upload Document Categories Restore API
+        */
+    useEffect(() => {
+        if (uploadDocumentCategoriesRestore && uploadDocumentCategoriesRestore !== null) {
+            dispatch(resetUploadDocumentCategoriesRestoreResponse())
+            if (uploadDocumentCategoriesRestore?.result === true) {
+                setOpenDeleteDocumentPopup(false)
+                setLoadingDelete(false)
+                showSnackbar({ message: uploadDocumentCategoriesRestore?.message, severity: "success" })
+                dispatch(actionUploadDocumentCategoriesList({
+                    document_category_uuid: documentCategoryUuid,
+                    document_group_uuid: uuid,
+                    branch_uuid: branch?.currentBranch?.uuid
+                }))
+            } else {
+                setLoadingDelete(false)
+                switch (uploadDocumentCategoriesRestore?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetUploadDocumentCategoriesRestoreResponse())
+                        showSnackbar({ message: uploadDocumentCategoriesRestore?.message, severity: "error" })
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: uploadDocumentCategoriesRestore?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [uploadDocumentCategoriesRestore])
+
     const handleDownload = async (url) => {
         const response = await fetch(url);
         const blob = await response.blob();
@@ -270,6 +309,7 @@ export default function CategoriesDetails() {
                                     onClick={() => {
                                         let details = {
                                             uuid: params?.row?.uuid,
+                                            branch_uuid: branch?.currentBranch?.uuid,
                                             title: `Archive Document`,
                                             text: `Are you sure you want to archive this document? This action cannot be undone.`,
                                             type: 'Archive'
@@ -280,6 +320,29 @@ export default function CategoriesDetails() {
                                     }}
                                 >
                                     <ArchiveIcon stroke={theme.palette.primary[700]} />
+                                </IconButton>
+                            </Tooltip>
+                        }
+                        {
+                            uploadDocumentDetails?.short_name === 'Archive' &&
+                            <Tooltip title="Restore File" followCursor placement="top">
+                                {/* archive Documents */}
+                                <IconButton
+                                    variant="outlined"
+                                    sx={{ border: `1px solid ${theme.palette.primary[700]}`, borderRadius: '8px' }}
+                                    onClick={() => {
+                                        let details = {
+                                            uuid: params?.row?.uuid,
+                                            title: `Restore Document`,
+                                            text: `Are you sure you want to restore this document? This action cannot be undone.`,
+                                            type: 'Restore'
+                                        }
+                                        setCurrentUploadDocumentData(details)
+                                        setOpenDeleteDocumentPopup(true)
+
+                                    }}
+                                >
+                                    <AutorenewIcon fontSize={'small'} sx={{ color: theme.palette.primary[700] }} />
                                 </IconButton>
                             </Tooltip>
                         }
@@ -394,25 +457,28 @@ export default function CategoriesDetails() {
                                 </Stack>
                             </Stack>
                         </Stack>
-                        <Button
-                            startIcon={<DownloadIcon stroke={theme.palette.common.white} />}
-                            sx={{
-                                textTransform: "capitalize",
-                                px: 6,
-                                borderRadius: '8px',
-                                backgroundColor: theme.palette.primary[600],
-                                color: theme.palette.common.white,
-                                fontSize: 16,
-                                fontWeight: 600,
-                                borderColor: theme.palette.primary[600]
-                            }}
-                            onClick={() => {
-                                setOpenUploadFilePopup(true)
-                            }}
-                            variant="contained"
-                        >
-                            Upload New File
-                        </Button>
+                        {
+                            uploadDocumentDetails?.short_name !== 'Archive' &&
+                            <Button
+                                startIcon={<DownloadIcon stroke={theme.palette.common.white} />}
+                                sx={{
+                                    textTransform: "capitalize",
+                                    px: 6,
+                                    borderRadius: '8px',
+                                    backgroundColor: theme.palette.primary[600],
+                                    color: theme.palette.common.white,
+                                    fontSize: 16,
+                                    fontWeight: 600,
+                                    borderColor: theme.palette.primary[600]
+                                }}
+                                onClick={() => {
+                                    setOpenUploadFilePopup(true)
+                                }}
+                                variant="contained"
+                            >
+                                Upload New File
+                            </Button>
+                        }
                     </Stack>
                 </CardContent>
             </Card>
@@ -472,8 +538,12 @@ export default function CategoriesDetails() {
                                 dispatch(actionDeleteUploadDocumentCategories({
                                     uuid: currentUploadDocumentData?.uuid
                                 }))
-                            } else if (currentUploadDocumentData?.uuid && currentUploadDocumentData?.uuid !== null && currentUploadDocumentData?.type === 'Archive') {
-                                dispatch(actionUploadDocumentCategoriesArchive({ uuid: currentUploadDocumentData?.uuid }))
+                            } else if (currentUploadDocumentData?.uuid && currentUploadDocumentData?.uuid !== null && currentUploadDocumentData?.branch_uuid && currentUploadDocumentData?.branch_uuid !== null && currentUploadDocumentData?.type === 'Archive') {
+                                dispatch(actionUploadDocumentCategoriesArchive({ uuid: currentUploadDocumentData?.uuid, branch_uuid: currentUploadDocumentData?.branch_uuid }))
+                            } else if (currentUploadDocumentData?.uuid && currentUploadDocumentData?.uuid !== null && currentUploadDocumentData?.type === 'Restore') {
+                                dispatch(actionUploadDocumentCategoriesRestore({
+                                    uuid: currentUploadDocumentData?.uuid
+                                }))
                             }
                         }}>
                             {loadingDelete ? <CircularProgress size={20} color="white" /> : currentUploadDocumentData?.type}

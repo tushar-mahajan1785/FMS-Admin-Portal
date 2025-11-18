@@ -220,24 +220,27 @@ export default function ViewDocument() {
                                     >
                                         View All
                                     </Button>
-                                    <Button
-                                        variant="outlined"
-                                        startIcon={<UploadIcon size={16} />}
-                                        sx={{
-                                            textTransform: "none",
-                                            border: `1px solid ${theme.palette.grey[900]}`,
-                                            color: theme.palette.grey[900],
-                                            background: theme.palette.common.white
-                                        }}
-                                        onClick={() => {
-                                            let objData = Object.assign({}, cat)
-                                            objData.document_group_uuid = uuid
-                                            setCurrentDocumentData(objData)
-                                            setOpenUploadFilePopup(true)
-                                        }}
-                                    >
-                                        Upload File
-                                    </Button>
+                                    {
+                                        cat.short_name !== 'Archive' &&
+                                        <Button
+                                            variant="outlined"
+                                            startIcon={<UploadIcon size={16} />}
+                                            sx={{
+                                                textTransform: "none",
+                                                border: `1px solid ${theme.palette.grey[900]}`,
+                                                color: theme.palette.grey[900],
+                                                background: theme.palette.common.white
+                                            }}
+                                            onClick={() => {
+                                                let objData = Object.assign({}, cat)
+                                                objData.document_group_uuid = uuid
+                                                setCurrentDocumentData(objData)
+                                                setOpenUploadFilePopup(true)
+                                            }}
+                                        >
+                                            Upload File
+                                        </Button>
+                                    }
                                 </Stack>
                             </Card>
                         </Grid>
