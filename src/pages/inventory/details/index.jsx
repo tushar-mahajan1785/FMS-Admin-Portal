@@ -31,6 +31,8 @@ import CustomTextField from '../../../components/text-field'
 import DatePickerWrapper from '../../../components/datapicker-wrapper'
 import AddInventory from '../add'
 import { RestockInventory } from '../restock'
+import { InventoryConsumption } from '../consumption'
+import FullScreenLoader from '../../../components/fullscreen-loader'
 
 export const InventoryDetails = ({ open, handleClose, detail }) => {
     const dispatch = useDispatch()
@@ -56,6 +58,9 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
     const [selectedEndDate, setSelectedEndDate] = useState(null)
     const [openEditInventoryPopup, setOpenEditInventoryPopup] = useState(false);
     const [openRestockInventoryPopup, setOpenRestockInventoryPopup] = useState(false);
+    const [openConsumptionInventoryPopup, setOpenConsumptionInventoryPopup] = useState(false);
+    const [showLowStockMessage, setShowLowStockMessage] = useState(1)
+    const [loadingList, setLoadingList] = useState(0)
 
     const columns = [
         {
@@ -240,7 +245,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                 "description": "cdddddddddddddd",
                 "initial_quantity": "100",
                 "minimum_quantity": "120",
-                "critical_quantity": "101",
+                "critical_quantity": "125",
                 "unit": "Kilograms",
                 "storage_location": "asdfvgb",
                 "contact_country_code": "+91",
@@ -264,6 +269,8 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
             setViewInventoryData(null)
             setSelectedStartDate(null)
             setSelectedEndDate(null)
+            setShowLowStockMessage(1)
+            setLoadingList(false)
         }
     }, [open])
 
@@ -291,7 +298,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                 });
                 return;
             }
-
+            setLoadingList(true)
             dispatch(actionGetInventoryTransactionHistory({
                 type: selectedFilter,
                 inventory_uuid: detail?.uuid,
@@ -345,11 +352,13 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
         if (getInventoryTransactionHistory && getInventoryTransactionHistory !== null) {
             dispatch(resetGetInventoryTransactionHistoryResponse())
             if (getInventoryTransactionHistory?.result === true) {
+                setLoadingList(false)
                 setTransactionHistoryData(getInventoryTransactionHistory?.response.data)
                 setTotal(getInventoryTransactionHistory?.response?.total_records)
             } else {
                 // setTransactionHistoryData(null)
                 // setTotal(0)
+                setLoadingList(false)
                 switch (getInventoryTransactionHistory?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -474,8 +483,13 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                             <CloseIcon size={16} />
                         </IconButton>
                     ]}
-                    rightSection={<Stack flexDirection={'row'} gap={2} sx={{ mx: 3, alignItems: 'center' }}>
-                        <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.grey[700]}`, background: theme.palette.common.white, borderRadius: '6px', padding: '8px 12px', cursor: 'pointer' }}>
+                    need_responsive={1}
+                    rightSection={<Stack flexDirection={{ xs: 'row', sm: 'row' }} gap={{ xs: 1, sm: 2 }} sx={{ mx: 3, alignItems: 'center' }}>
+                        <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.grey[700]}`, background: theme.palette.common.white, borderRadius: '6px', padding: '8px 12px', cursor: 'pointer' }}
+                            onClick={() => {
+                                setOpenConsumptionInventoryPopup(true)
+                            }}
+                        >
                             <BoxIcon stroke={theme.palette.grey[700]} size={22} />
                             <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.grey[700] }}>
                                 Record Usage
@@ -548,10 +562,69 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                         }
                     }}
                 >
+                    {
+                        showLowStockMessage == 1 && inventoryDetailsData?.initial_quantity !== null && inventoryDetailsData?.minimum_quantity && Number(inventoryDetailsData?.initial_quantity) < Number(inventoryDetailsData?.minimum_quantity) ?
+                            <Stack sx={{ border: `1px solid ${theme.palette.warning[600]}`, alignItems: 'center', borderRadius: '8px', flexDirection: 'row', justifyContent: 'space-between', padding: '16px', background: theme.palette.warning[100] }}>
+                                <Stack sx={{ flexDirection: 'row', gap: 1 }}>
+                                    <Box
+                                        sx={{
+                                            backgroundColor: theme.palette.warning[600],
+                                            borderRadius: '6px',
+                                            padding: '12px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}
+                                    >
+                                        <AlertTriangleIcon stroke={theme.palette.common.white} size={22} />
+                                    </Box>
+                                    <Stack>
+                                        <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.warning[700] }}>
+                                            Low Stock Alert
+                                        </TypographyComponent>
+                                        <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.warning[600] }}>
+                                            Current stock ({Number(inventoryDetailsData?.initial_quantity)} {inventoryDetailsData?.unit}) is below the minimum level ({Number(inventoryDetailsData?.minimum_quantity)} {inventoryDetailsData?.unit}). Consider restocking soon to avoid stockouts.
+                                        </TypographyComponent>
+                                    </Stack>
+                                </Stack>
+                                <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                                    <Stack
+                                        onClick={() => {
+                                            setOpenRestockInventoryPopup(true)
+                                        }}
+                                        sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', background: theme.palette.warning[600], borderRadius: '6px', padding: '8px 12px', cursor: 'pointer' }}>
+                                        <BoxPlusIcon stroke={theme.palette.common.white} size={22} />
+                                        <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.common.white }}>
+                                            Restock
+                                        </TypographyComponent>
+                                    </Stack>
+                                    <Stack>
+                                        <Tooltip title="Hide Message" followCursor placement="top">
+                                            <IconButton
+                                                variant="outlined"
+                                                color='primary'
+                                                sx={{
+                                                    background: theme.palette.warning[600], borderRadius: '6px', padding: '12px 12px',
+                                                    '&:hover': { backgroundColor: theme.palette.warning[500] },
+                                                }}
+                                                onClick={() => {
+                                                    setShowLowStockMessage(0)
+                                                }}
+                                            >
+                                                <CloseIcon size={16} stroke='white' />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </Stack>
+                                </Stack>
+
+                            </Stack>
+                            :
+                            <></>
+                    }
                     <Grid container spacing={2} sx={{ width: '100%' }}>
                         <Grid size={{ xs: 12, sm: 4, md: 2.4 }}>
                             <Stack sx={{
-                                height: '100%',
+                                height: { xs: '200px', sm: '100%' },
                                 display: 'flex',
                                 flexDirection: 'column',
                                 justifyContent: 'space-between',
@@ -641,6 +714,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                                             cursor: "pointer",
                                         }}
                                         onClick={() => {
+                                            setPage(1)
                                             setSelectedFilter(filter);
                                         }}
                                     >
@@ -734,7 +808,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                     </Stack>
                     {
                         selectedFilter === 'Overview' ?
-                            <Grid container spacing={2} sx={{ height: 390 }}>
+                            <Grid container spacing={2} sx={{ height: { md: 'auto', lg: 390 } }}>
                                 <Grid size={{ xs: 12, sm: 12, md: 12, lg: 6, xl: 6 }} >
                                     <SectionHeader sx={{ mt: 0, mb: 0, px: 1, pt: 1 }} title={'Basic Information'} show_progress={false} />
                                     <Stack sx={{ border: `1px solid ${theme.palette.grey[300]}`, borderRadius: '8px', pb: 1.5, marginTop: '-5px' }}>
@@ -814,7 +888,11 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                             <React.Fragment>
                                 <SectionHeader sx={{ mt: 0, mb: 0, px: 1 }} title={'Complete Transaction History'} show_progress={false} />
                                 <Stack sx={{ border: `1px solid ${theme.palette.grey[300]}`, borderRadius: '8px', pb: 1.5, marginTop: '-28px' }}>
-                                    {transactionHistoryData && transactionHistoryData !== null && transactionHistoryData.length > 0 ? (
+                                    {loadingList ? (
+                                        <Stack sx={{ alignItems: 'center', minHeight: 275, justifyContent: 'center' }}>
+                                            <CircularProgress sx={{ color: theme.palette.grey[900] }} />
+                                        </Stack>
+                                    ) : transactionHistoryData && transactionHistoryData !== null && transactionHistoryData.length > 0 ? (
                                         <ServerSideListComponents
                                             height={275}
                                             borderRadius='8px'
@@ -834,49 +912,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                                 </Stack>
                             </React.Fragment>
                     }
-
-                    {
-                        inventoryDetailsData?.initial_quantity !== null && inventoryDetailsData?.minimum_quantity && Number(inventoryDetailsData?.initial_quantity) < Number(inventoryDetailsData?.minimum_quantity) ?
-                            <Stack sx={{ border: `1px solid ${theme.palette.warning[600]}`, alignItems: 'center', borderRadius: '8px', flexDirection: 'row', justifyContent: 'space-between', padding: '16px', background: theme.palette.warning[100] }}>
-                                <Stack sx={{ flexDirection: 'row', gap: 1 }}>
-                                    <Box
-                                        sx={{
-                                            backgroundColor: theme.palette.warning[600],
-                                            borderRadius: '6px',
-                                            padding: '12px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}
-                                    >
-                                        <AlertTriangleIcon stroke={theme.palette.common.white} size={22} />
-                                    </Box>
-                                    <Stack>
-                                        <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.warning[700] }}>
-                                            Low Stock Alert
-                                        </TypographyComponent>
-                                        <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.warning[600] }}>
-                                            Current stock ({Number(inventoryDetailsData?.initial_quantity)} {inventoryDetailsData?.unit}) is below the minimum level ({Number(inventoryDetailsData?.minimum_quantity)} {inventoryDetailsData?.unit}). Consider restocking soon to avoid stockouts.
-                                        </TypographyComponent>
-                                    </Stack>
-                                </Stack>
-                                <Stack>
-                                    <Stack
-                                        onClick={() => {
-                                            setOpenRestockInventoryPopup(true)
-                                        }}
-                                        sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', background: theme.palette.warning[600], borderRadius: '6px', padding: '8px 12px', cursor: 'pointer' }}>
-                                        <BoxPlusIcon stroke={theme.palette.common.white} size={22} />
-                                        <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.common.white }}>
-                                            Restock
-                                        </TypographyComponent>
-                                    </Stack>
-                                </Stack>
-
-                            </Stack>
-                            :
-                            <></>
-                    }
+                    {/* low alert */}
                 </Stack>
             </Stack>
             <Divider sx={{ mt: 2 }} />
@@ -942,12 +978,25 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
             />
             <RestockInventory
                 open={openRestockInventoryPopup}
+                restockData={inventoryDetailsData}
                 handleClose={(data) => {
                     setOpenRestockInventoryPopup(false)
                     if (data == 'save') {
-                        // dispatch(actionGetInventoryDetails({
-                        //     uuid: detail?.uuid
-                        // }))
+                        dispatch(actionGetInventoryDetails({
+                            uuid: detail?.uuid
+                        }))
+                    }
+                }}
+            />
+            <InventoryConsumption
+                open={openConsumptionInventoryPopup}
+                consumeData={inventoryDetailsData}
+                handleClose={(data) => {
+                    setOpenConsumptionInventoryPopup(false)
+                    if (data == 'save') {
+                        dispatch(actionGetInventoryDetails({
+                            uuid: detail?.uuid
+                        }))
                     }
                 }}
             />

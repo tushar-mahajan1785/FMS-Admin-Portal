@@ -14,7 +14,8 @@ import {
     API_TICKET_VENDOR_CONTACT_UPDATE,
     API_TICKET_ADD_UPDATE,
     API_DELETE_TICKET_UPDATE,
-    API_DELETE_TICKET_UPDATE_FILE
+    API_DELETE_TICKET_UPDATE_FILE,
+    API_GET_TICKET_MASTER
 } from "../../common/api/constants";
 
 export const actionGetTicketCounts = createAsyncThunk('tickets/actionGetTicketCounts', async (params) => {
@@ -139,6 +140,15 @@ export const actionTicketUpdateFileDelete = createAsyncThunk('asset/actionTicket
         return error
     }
 })
+export const actionGetTicketMaster = createAsyncThunk('asset/actionGetTicketMaster', async (params) => {
+    try {
+        const response = await axiosApi.post(API_GET_TICKET_MASTER, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
 
 export const ticketsStore = createSlice({
     name: 'tickets',
@@ -155,7 +165,8 @@ export const ticketsStore = createSlice({
         ticketVendorContactsUpdate: null,
         ticketAddUpdate: null,
         ticketUpdateDelete: null,
-        ticketUpdateFileDelete: null
+        ticketUpdateFileDelete: null,
+        getTicketMaster: null
     },
 
     reducers: {
@@ -197,6 +208,9 @@ export const ticketsStore = createSlice({
         },
         resetTicketUpdateFileDeleteResponse: (state) => {
             state.ticketUpdateFileDelete = null
+        },
+        resetGetTicketMasterResponse: (state) => {
+            state.getTicketMaster = null
         },
     },
     extraReducers: builder => {
@@ -240,6 +254,9 @@ export const ticketsStore = createSlice({
             .addCase(actionTicketUpdateFileDelete.fulfilled, (state, action) => {
                 state.ticketUpdateFileDelete = action.payload
             })
+            .addCase(actionGetTicketMaster.fulfilled, (state, action) => {
+                state.getTicketMaster = action.payload
+            })
     }
 })
 
@@ -256,7 +273,8 @@ export const {
     resetTicketVendorContactsUpdateResponse,
     resetTicketAddUpdateResponse,
     resetTicketUpdateDeleteResponse,
-    resetTicketUpdateFileDeleteResponse
+    resetTicketUpdateFileDeleteResponse,
+    resetGetTicketMasterResponse
 } =
     ticketsStore.actions
 

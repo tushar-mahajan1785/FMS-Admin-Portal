@@ -265,6 +265,8 @@ export const API_DELETE_TICKET_UPDATE = `${BASE}/ticket/remove-history`
 
 export const API_DELETE_TICKET_UPDATE_FILE = `${BASE}/ticket/remove-history-media`
 
+export const API_GET_TICKET_MASTER = `${BASE}/ticket/master/list`
+
 // documents
 export const API_DOCUMENTS_LIST = `${BASE}/document-group/list`
 
@@ -294,6 +296,10 @@ export const API_INVENTORY_CATEGORY_DETAILS = `${BASE}/inventory/category/detail
 export const API_GET_UNIT_LIST = `${BASE}/unit/list`
 
 export const API_GET_INVENTORY_TRANSACTION_HISTORY = `${BASE}/inventory/transaction/history`
+
+export const API_INVENTORY_RESTOCK_SAVE = `${BASE}/inventory/restock/save`
+
+export const API_INVENTORY_CONSUMPTION_SAVE = `${BASE}/inventory/consumption/save`
 
 //PM ACTIVITY
 
