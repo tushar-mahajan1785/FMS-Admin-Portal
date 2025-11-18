@@ -446,7 +446,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                 </Box>
 
                 {/* Main Value */}
-                <TypographyComponent fontSize={32} fontWeight={500} sx={{ color: title === 'Current Stock' ? '#673ab7' : 'text.primary' }}>
+                <TypographyComponent fontSize={32} fontWeight={500} sx={{ color: title === 'Current Stock' ? theme.palette.primary[600] : 'text.primary' }}>
                     {value}
                 </TypographyComponent>
 
