@@ -7,6 +7,7 @@ import {
   API_PM_ACTIVITY_ADD,
   API_PM_ACTIVITY_DETAILS,
   API_PM_ACTIVITY_MARK_DONE,
+  API_PM_ACTIVITY_VIEW_REPORT
 } from "../../common/api/constants";
 
 export const defaultPMScheduleData = {
@@ -90,6 +91,17 @@ export const actionPMScheduleMarkDone = createAsyncThunk(
   }
 );
 
+export const actionPMActivityViewReport = createAsyncThunk("pm-activity/actionPMActivityViewReport",async (params) => {
+    try {
+      const response = await axiosApi.post(API_PM_ACTIVITY_VIEW_REPORT,params);
+
+      return response.status !== 200 ? getErrorResponse() : response.data;
+    } catch (error) {
+      return error;
+    }
+  }
+);
+
 export const pmActivityStore = createSlice({
   name: "pm-activity",
   initialState: {
@@ -99,6 +111,7 @@ export const pmActivityStore = createSlice({
     pmScheduleAdd: null,
     pmScheduleDetails: null,
     pmScheduleMarkDone: null,
+    pmActivityViewReport: null
   },
 
   reducers: {
@@ -120,6 +133,9 @@ export const pmActivityStore = createSlice({
     resetPmScheduleMarkDoneResponse: (state) => {
       state.pmScheduleMarkDone = null;
     },
+    resetPmActivityViewReportResponse: (state) => {
+      state.pmActivityViewReport = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -140,7 +156,10 @@ export const pmActivityStore = createSlice({
       })
       .addCase(actionPMScheduleMarkDone.fulfilled, (state, action) => {
         state.pmScheduleMarkDone = action.payload;
-      });
+      })
+      .addCase(actionPMActivityViewReport.fulfilled, (state, action) => {
+        state.pmActivityViewReport = action.payload;
+      })
   },
 });
 
@@ -151,6 +170,7 @@ export const {
   resetPmScheduleAddAssetResponse,
   resetPmScheduleDetailsResponse,
   resetPmScheduleMarkDoneResponse,
+  resetPmActivityViewReportResponse
 } = pmActivityStore.actions;
 
 export default pmActivityStore.reducer;

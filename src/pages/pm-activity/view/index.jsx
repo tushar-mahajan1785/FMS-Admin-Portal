@@ -43,6 +43,7 @@ import PmActivityMarkAsDone from "../../../assets/icons/PMActivityMarkAsDone";
 import PMActivityEdit from "../edit";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import ReportAnalyticsIcon from "../../../assets/icons/ReportAnalyticsIcon";
+import PMActivityViewReport from "./components/view-report";
 
 export default function PMActivityDetails({ open, objData, handleClose }) {
   const theme = useTheme();
@@ -55,6 +56,8 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
   );
 
   // Inside your PMActivityPreviewSetUp component, add this state:
+  const [openPmActivityViewReportPopup,setOpenPmActivityViewReportPopup]=useState(false)
+  const [selectedActivityReport,setSelectedActivityReport]=useState(null)
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [pmScheduleActivityDetails, setPmScheduleActivityDetails] =
@@ -390,7 +393,10 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
                     padding: "5px 8px",
                     cursor: "pointer",
                   }}
-                  onClick={console.log("Click view report")}
+                  onClick={()=>{
+                    setOpenPmActivityViewReportPopup(true)
+                    setSelectedActivityReport(params?.row)
+                  }}
                 >
                   <ReportAnalyticsIcon stroke={"#101828"} />
                   <TypographyComponent
@@ -801,6 +807,13 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
         open={openEditPmSchedule}
         handleClose={() => {
           setOpenEditPmSchedule(false);
+        }}
+      />
+      <PMActivityViewReport
+        open={openPmActivityViewReportPopup}
+        objData={selectedActivityReport}
+        handleClose={()=>{
+          setOpenPmActivityViewReportPopup(false)
         }}
       />
     </React.Fragment>
