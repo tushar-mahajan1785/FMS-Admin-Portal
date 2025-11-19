@@ -30,6 +30,12 @@ const CustomAutocomplete = forwardRef(({ options, is_required = false, label, er
             isOptionEqualToValue={isOptionEqualToValue}
             disableClearable
             popupIcon={<ChevronDownIcon />}
+            ListboxProps={{
+                style: {
+                    maxHeight: '250px',
+                    overflowY: 'auto'
+                }
+            }}
             renderInput={(params) => (
                 <CustomTextField
                     {...params}
