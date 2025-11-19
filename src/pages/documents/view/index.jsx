@@ -177,7 +177,18 @@ export default function ViewDocument() {
                                             justifyContent: "center",
                                         }}
                                     >
-                                        <img alt={""} src={cat?.image_url} />
+                                        <img
+                                            alt={""}
+                                            src={
+                                                cat?.image_url
+                                                    ? cat.image_url
+                                                    : cat?.short_name === "Archive"
+                                                        ? "/assets/archive.png"
+                                                        : cat?.short_name === "Miscellaneous"
+                                                            ? "/assets/file-question-02.png"
+                                                            : "" // optional fallback
+                                            }
+                                        />
                                     </Box>
                                     <Box>
                                         <TypographyComponent fontSize={16} fontWeight={500}>
