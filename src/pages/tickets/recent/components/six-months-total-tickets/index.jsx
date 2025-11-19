@@ -96,7 +96,7 @@ export const SixMonthsTotalTicketChart = () => {
                 right: 20,
             },
         },
-        colors: ["#7E57C2"],
+        colors: [`${theme.palette.primary[600]}`],
         tooltip: {
             theme: theme.palette.mode,
             y: {

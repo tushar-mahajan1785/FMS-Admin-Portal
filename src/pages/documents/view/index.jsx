@@ -177,7 +177,18 @@ export default function ViewDocument() {
                                             justifyContent: "center",
                                         }}
                                     >
-                                        <img alt={""} src={cat?.image_url} />
+                                        <img
+                                            alt={""}
+                                            src={
+                                                cat?.image_url
+                                                    ? cat.image_url
+                                                    : cat?.short_name === "Archive"
+                                                        ? "/assets/archive.png"
+                                                        : cat?.short_name === "Miscellaneous"
+                                                            ? "/assets/file-question-02.png"
+                                                            : "" // optional fallback
+                                            }
+                                        />
                                     </Box>
                                     <Box>
                                         <TypographyComponent fontSize={16} fontWeight={500}>
@@ -220,24 +231,27 @@ export default function ViewDocument() {
                                     >
                                         View All
                                     </Button>
-                                    <Button
-                                        variant="outlined"
-                                        startIcon={<UploadIcon size={16} />}
-                                        sx={{
-                                            textTransform: "none",
-                                            border: `1px solid ${theme.palette.grey[900]}`,
-                                            color: theme.palette.grey[900],
-                                            background: theme.palette.common.white
-                                        }}
-                                        onClick={() => {
-                                            let objData = Object.assign({}, cat)
-                                            objData.document_group_uuid = uuid
-                                            setCurrentDocumentData(objData)
-                                            setOpenUploadFilePopup(true)
-                                        }}
-                                    >
-                                        Upload File
-                                    </Button>
+                                    {
+                                        cat.short_name !== 'Archive' &&
+                                        <Button
+                                            variant="outlined"
+                                            startIcon={<UploadIcon size={16} />}
+                                            sx={{
+                                                textTransform: "none",
+                                                border: `1px solid ${theme.palette.grey[900]}`,
+                                                color: theme.palette.grey[900],
+                                                background: theme.palette.common.white
+                                            }}
+                                            onClick={() => {
+                                                let objData = Object.assign({}, cat)
+                                                objData.document_group_uuid = uuid
+                                                setCurrentDocumentData(objData)
+                                                setOpenUploadFilePopup(true)
+                                            }}
+                                        >
+                                            Upload File
+                                        </Button>
+                                    }
                                 </Stack>
                             </Card>
                         </Grid>

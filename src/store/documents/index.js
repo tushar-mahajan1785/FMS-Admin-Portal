@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 import { axiosApi, MULTIPART_HEADER } from "../../common/api"
 import { getErrorResponse } from "../../utils";
-import { API_DOCUMENTS_LIST, API_ADD_DOCUMENTS_GROUP, API_DELETE_DOCUMENTS_GROUP, API_DOCUMENTS_GROUP_DETAILS, API_DOCUMENTS_CATEGORIES_DETAILS, API_UPLOAD_DOCUMENTS_CATEGORIES, API_UPLOAD_DOCUMENTS_CATEGORIES_LIST, API_UPLOAD_DOCUMENTS_CATEGORIES_DELETE, API_UPLOAD_DOCUMENTS_CATEGORIES_ARCHIVE } from "../../common/api/constants";
+import { API_DOCUMENTS_LIST, API_ADD_DOCUMENTS_GROUP, API_DELETE_DOCUMENTS_GROUP, API_DOCUMENTS_GROUP_DETAILS, API_DOCUMENTS_CATEGORIES_DETAILS, API_UPLOAD_DOCUMENTS_CATEGORIES, API_UPLOAD_DOCUMENTS_CATEGORIES_LIST, API_UPLOAD_DOCUMENTS_CATEGORIES_DELETE, API_UPLOAD_DOCUMENTS_CATEGORIES_ARCHIVE,API_UPLOAD_DOCUMENTS_CATEGORIES_RESTORE } from "../../common/api/constants";
 
 export const actionDocumentList = createAsyncThunk('documents/actionDocumentList', async (params) => {
     try {
@@ -93,6 +93,16 @@ export const actionUploadDocumentCategoriesArchive = createAsyncThunk('documents
     }
 })
 
+export const actionUploadDocumentCategoriesRestore = createAsyncThunk('documents/actionUploadDocumentCategoriesRestore', async (params) => {
+    try {
+        const response = await axiosApi.post(API_UPLOAD_DOCUMENTS_CATEGORIES_RESTORE, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+
 export const documentStore = createSlice({
     name: 'documents',
     initialState: {
@@ -104,7 +114,8 @@ export const documentStore = createSlice({
         uploadDocumentCategories: null,
         uploadDocumentCategoriesList: null,
         deleteUploadDocumentCategories: null,
-        uploadDocumentCategoriesArchive: null
+        uploadDocumentCategoriesArchive: null,
+        uploadDocumentCategoriesRestore: null
     },
 
     reducers: {
@@ -134,6 +145,9 @@ export const documentStore = createSlice({
         },
         resetUploadDocumentCategoriesArchiveResponse: (state) => {
             state.uploadDocumentCategoriesArchive = null
+        },
+        resetUploadDocumentCategoriesRestoreResponse: (state) => {
+            state.uploadDocumentCategoriesRestore = null
         },
     },
     extraReducers: builder => {
@@ -165,6 +179,9 @@ export const documentStore = createSlice({
             .addCase(actionUploadDocumentCategoriesArchive.fulfilled, (state, action) => {
                 state.uploadDocumentCategoriesArchive = action.payload
             })
+            .addCase(actionUploadDocumentCategoriesRestore.fulfilled, (state, action) => {
+                state.uploadDocumentCategoriesRestore = action.payload
+            })
     }
 })
 
@@ -177,7 +194,8 @@ export const {
     resetUploadDocumentCategoriesResponse,
     resetUploadDocumentCategoriesListResponse,
     resetDeleteUploadDocumentCategoriesResponse,
-    resetUploadDocumentCategoriesArchiveResponse
+    resetUploadDocumentCategoriesArchiveResponse,
+    resetUploadDocumentCategoriesRestoreResponse
 } =
     documentStore.actions
 

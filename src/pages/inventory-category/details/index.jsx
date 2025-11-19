@@ -23,16 +23,17 @@ import { useAuth } from "../../../hooks/useAuth";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import FieldBox from "../../../components/field-box";
 import ClientsIcon from "../../../assets/icons/ClientsIcon";
-import TypographyComponent from "../../../components/custom-typography";
-import AddInventory from "../../inventory/add";
 import { actionDeleteInventoryCategory, actionGetInventoryCategoryDetails, actionInventoryCategoryList, resetDeleteInventoryCategoryResponse, resetGetInventoryCategoryDetailsResponse } from "../../../store/inventory";
 import AddInventoryCategory from "../add";
+import { useBranch } from "../../../hooks/useBranch";
+import TypographyComponent from "../../../components/custom-typography";
 
 export default function InventoryCategoryDetails({ open, objData, handleClose }) {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout, hasPermission } = useAuth()
     const { showSnackbar } = useSnackbar()
+    const branch = useBranch()
 
     //Stores
     const { getInventoryCategoryDetails, deleteInventoryCategory } = useSelector(state => state.inventoryStore)
@@ -42,13 +43,8 @@ export default function InventoryCategoryDetails({ open, objData, handleClose })
     const [viewLoadingDelete, setViewLoadingDelete] = useState(false)
     const [openViewEditInventoryCategoryPopup, setOpenViewEditInventoryCategoryPopup] = useState(false)
     const [viewInventoryCategoryData, setViewInventoryCategoryData] = useState(null)
-    const [inventoryCategoryDetailData, setInventoryCategoryDetailData] = useState({
-        "id": 1,
-        "name": "TATA",
-        "description": "TATA Group",
-        "status": "Active"
-    })
     const [loadingInventoryCategoryDetail, setLoadingInventoryCategoryDetail] = useState(false)
+    const [inventoryCategoryDetailData, setInventoryCategoryDetailData] = useState(null)
 
     /**
      * Initial Render
@@ -60,17 +56,17 @@ export default function InventoryCategoryDetails({ open, objData, handleClose })
             setViewLoadingDelete(false)
             if (objData && objData !== null) {
                 setLoadingInventoryCategoryDetail(true)
-                dispatch(actionGetInventoryCategoryDetails({ id: objData?.id }))
+                dispatch(actionGetInventoryCategoryDetails({ uuid: objData?.uuid }))
             }
         }
     }, [open])
 
     /**
-     * useEffect
-     * @dependency : getInventoryCategoryDetails
-     * @type : HANDLE API RESULT
-     * @description : Handle the result of Inventory Category details API
-     */
+   * useEffect
+   * @dependency : getInventoryCategoryDetails
+   * @type : HANDLE API RESULT
+   * @description : Handle the result of Inventory Category details API
+   */
     useEffect(() => {
         if (getInventoryCategoryDetails && getInventoryCategoryDetails !== null) {
             dispatch(resetGetInventoryCategoryDetailsResponse())
@@ -79,7 +75,7 @@ export default function InventoryCategoryDetails({ open, objData, handleClose })
                 setInventoryCategoryDetailData(getInventoryCategoryDetails?.response)
             } else {
                 setLoadingInventoryCategoryDetail(false)
-                // setInventoryCategoryDetailData(null)
+                setInventoryCategoryDetailData(null)
                 switch (getInventoryCategoryDetails?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -111,7 +107,8 @@ export default function InventoryCategoryDetails({ open, objData, handleClose })
                 setOpenViewDeleteInventoryCategoryPopup(false)
                 setViewLoadingDelete(false)
                 showSnackbar({ message: deleteInventoryCategory?.message, severity: "success" })
-                dispatch(actionInventoryCategoryList())
+                dispatch(actionGetInventoryCategoryDetails({ uuid: objData?.uuid }))
+                dispatch(actionInventoryCategoryList({ branch_uuid: branch?.currentBranch?.uuid }))
                 handleClose('delete')
             } else {
                 setViewLoadingDelete(false)
@@ -156,7 +153,7 @@ export default function InventoryCategoryDetails({ open, objData, handleClose })
                                     <IconButton
                                         onClick={() => {
                                             let details = {
-                                                id: inventoryCategoryDetailData.id,
+                                                uuid: inventoryCategoryDetailData.uuid,
                                                 title: `Delete Category`,
                                                 text: `Are you sure you want to delete this category? This action cannot be undone.`
                                             }
@@ -207,7 +204,7 @@ export default function InventoryCategoryDetails({ open, objData, handleClose })
                             <Grid container spacing={'2px'} sx={{ backgroundColor: theme.palette.primary[25], borderRadius: '16px', padding: '10px', marginBottom: 2 }}>
                                 {/* Name */}
                                 <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
-                                    <FieldBox label="Name" value={inventoryCategoryDetailData?.name && inventoryCategoryDetailData?.name !== null ? inventoryCategoryDetailData?.name : ''} />
+                                    <FieldBox label="Name" value={inventoryCategoryDetailData?.title && inventoryCategoryDetailData?.title !== null ? inventoryCategoryDetailData?.title : ''} />
                                 </Grid>
                                 {/* Description */}
                                 <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
@@ -239,8 +236,8 @@ export default function InventoryCategoryDetails({ open, objData, handleClose })
                 objData={viewInventoryCategoryData}
                 handleClose={(data) => {
                     if (data && data !== null && data === 'save') {
-                        dispatch(actionGetInventoryCategoryDetails({ id: objData?.id }))
-                        dispatch(actionInventoryCategoryList())
+                        dispatch(actionGetInventoryCategoryDetails({ uuid: objData?.uuid }))
+                        dispatch(actionInventoryCategoryList({ branch_uuid: branch?.currentBranch?.uuid }))
                     }
                     setOpenViewEditInventoryCategoryPopup(false)
                     setViewInventoryCategoryData(null)
@@ -260,9 +257,9 @@ export default function InventoryCategoryDetails({ open, objData, handleClose })
                     ,
                     <Button key='delete' variant="contained" sx={{ width: '100%', textTransform: 'capitalize', background: theme.palette.error[600], color: theme.palette.common.white }} disabled={viewLoadingDelete} onClick={() => {
                         setViewLoadingDelete(true)
-                        if (inventoryCategoryDetailData?.id && inventoryCategoryDetailData?.id !== null) {
+                        if (inventoryCategoryDetailData?.uuid && inventoryCategoryDetailData?.uuid !== null) {
                             dispatch(actionDeleteInventoryCategory({
-                                id: inventoryCategoryDetailData?.id
+                                uuid: inventoryCategoryDetailData?.uuid
                             }))
                         }
                     }}>

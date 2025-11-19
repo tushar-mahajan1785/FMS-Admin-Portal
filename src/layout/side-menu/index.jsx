@@ -25,7 +25,7 @@ export const sideMenuItems = [
     title: "PM Activity",
     path: "/pm-activity",
     icon: ClientsIcon,
-    permission: "EMPLOYEE",
+    permission: "PM_ACTIVITY",
   },
   {
     group: "Inventory Management",
@@ -83,16 +83,22 @@ export const sideMenuItems = [
       },
     ],
   },
-  {
-    title: "Documents",
-    path: "/documents",
+    {
+    group: "Documents",
     icon: ReportsIcon,
-    permission: "DOCUMENT",
-  },
-  {
-    title: "Document Categories",
-    path: "/document-categories",
-    icon: ReportsIcon,
-    permission: "DOCUMENT_CATEGORIES",
-  },
+    items: [
+      {
+        title: "Documents",
+        path: "/documents",
+        icon: CircleIcon,
+        permission: "DOCUMENT",
+      },
+      {
+        title: "Document Categories",
+        path: "/document-categories",
+        icon: CircleIcon,
+        permission: "DOCUMENT_CATEGORIES",
+      }
+    ],
+  }
 ];

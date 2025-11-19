@@ -146,7 +146,7 @@ const routes = [
   {
     path: "/pm-activity",
     element: <PmActivity />,
-    permission: "EMPLOYEE",
+    permission: "PM_ACTIVITY",
     protected: true,
   },
   {
