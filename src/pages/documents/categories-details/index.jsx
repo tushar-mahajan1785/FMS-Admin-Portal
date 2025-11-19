@@ -70,6 +70,9 @@ export default function CategoriesDetails() {
                         break
                     case ERROR:
                         dispatch(resetUploadDocumentCategoriesListResponse())
+                        if (currentUploadDocumentData?.uuid || currentUploadDocumentData?.uuid === '' || currentUploadDocumentData?.uuid === null) {
+                            navigate(`/documents/view/${uuid}`)
+                        }
                         break
                     case SERVER_ERROR:
                         showSnackbar({ message: uploadDocumentCategoriesList?.message, severity: "error" })
