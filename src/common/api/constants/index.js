@@ -311,6 +311,8 @@ export const API_PM_ACTIVITY_ADD = `${BASE}/pm-activity/add`
 
 export const API_PM_ACTIVITY_DETAILS = `${BASE}/pm-activity/details`
 
+export const API_PM_ACTIVITY_MARK_DONE = `${BASE}/pm-activity/history-status-update`
+
 // document categories
 export const API_DOCUMENTS_CATEGORIES_LIST = `${BASE}/document-category/list`
 

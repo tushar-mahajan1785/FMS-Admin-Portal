@@ -44,6 +44,23 @@ export default function PMActivityPreviewSetUp() {
       ...currentAssetData,
       frequency_data: activity,
       type: "reschedule",
+      pm_details: {
+        title: pmScheduleData?.selected_asset_id
+          ? // Find the selected asset and get its description
+            pmScheduleData?.assets.find(
+              (asset) => asset.asset_id === pmScheduleData.selected_asset_id
+            )?.asset_description
+          : "",
+        frequency: pmScheduleData?.pm_details?.frequency,
+        schedule_start_date: pmScheduleData?.pm_details?.schedule_start_date,
+        status: pmScheduleData?.pm_details?.status,
+        location: pmScheduleData?.selected_asset_id
+          ? // Find the selected asset and get its description
+            pmScheduleData?.assets.find(
+              (asset) => asset.asset_id === pmScheduleData.selected_asset_id
+            )?.location
+          : "",
+      },
     };
 
     setSelectedActivity(activityData);
@@ -264,8 +281,6 @@ export default function PMActivityPreviewSetUp() {
     return dateString.replace("-", " ").replace("-", " ");
   };
 
-  console.log("---------pmScheduleData---------", pmScheduleData);
-
   return (
     <Box>
       <Card sx={{ p: 3, borderRadius: 3, boxShadow: "none" }}>
@@ -364,7 +379,7 @@ export default function PMActivityPreviewSetUp() {
                     Assets in this PM Activity
                   </Typography>
                   <Typography fontSize={16} fontWeight={600}>
-                    ( {pmScheduleData?.assets.length} )
+                    ( {pmScheduleData?.assets?.length} )
                   </Typography>
                 </Stack>
               </Grid>
@@ -381,8 +396,8 @@ export default function PMActivityPreviewSetUp() {
                     alignItems: "flex-start",
                   }}
                 >
-                  {pmScheduleData?.assets.length > 0 ? (
-                    pmScheduleData?.assets.map((asset) => (
+                  {pmScheduleData?.assets?.length > 0 ? (
+                    pmScheduleData?.assets?.map((asset) => (
                       <Stack
                         sx={{
                           background:
@@ -502,8 +517,6 @@ export default function PMActivityPreviewSetUp() {
         handleClose={(data, type) => {
           setRescheduleOpen(false);
           if (type == "save") {
-            console.log("DATAAAAA RESCSHDULE:", data);
-            // console.log("selectedActivity:", selectedActivity);
             let objData = Object.assign({}, selectedActivity);
             let objFrequencyData = Object.assign({}, objData?.frequency_data);
             objFrequencyData.date =
@@ -511,10 +524,7 @@ export default function PMActivityPreviewSetUp() {
                 ? moment(data.new_date, "DD/MM/YYYY").format("YYYY-MM-DD")
                 : null;
             objFrequencyData.reason_for_reschedule = data.reason_for_reschedule;
-            console.log("-------objFrequencyData--@@@@@@---", objFrequencyData);
             objData.frequency_data = objFrequencyData;
-
-            // setSelectedActivity(objData);
             let frequencies = Object.assign([], frequencyExceptionsData);
             let currentIndex = frequencyExceptionsData.findIndex(
               (obj) => obj?.title === objFrequencyData?.title
@@ -534,7 +544,6 @@ export default function PMActivityPreviewSetUp() {
               currentAssetData.frequency_exceptions = frequencies;
               assets[currentAssetIndex] = currentAssetData;
               pmData.assets = assets;
-              console.log("-------&&&&&&&&&&&&&&-----", pmData);
               dispatch(actionPMScheduleData(pmData));
             }
           }

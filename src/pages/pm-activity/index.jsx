@@ -98,7 +98,7 @@ export default function PmActivity() {
   const [masterPmActivityStatusOptions] = useState(getMasterPMActivityStatus);
   const [selectedUpcomingPmSchedule, setSelectedUpcomingPmSchedule] =
     useState("");
-  const [openAddTicket, setOpenAddTicket] = useState(false);
+  const [openAddPmSchedule, setOpenAddPmSchedule] = useState(false);
   const [openDeletePmActivityPopup, setOpenDeletePmActivityPopup] =
     useState(false);
   const [selectedPmActivityData, setSelectedPmActivityData] = useState(null);
@@ -122,6 +122,29 @@ export default function PmActivity() {
       flex: 0.5,
       field: "title",
       headerName: "Title",
+      renderCell: (params) => {
+        return (
+          <Stack
+            sx={{
+              flexDirection: "row",
+              alignItems: "center",
+              height: "100%",
+              cursor: "pointer",
+            }}
+            onClick={() => {
+              setOpenPmActivityDetails(true);
+              let objData = {
+                uuid: params.row.uuid,
+              };
+              setPmScheduleActivityData(objData);
+            }}
+          >
+            <TypographyComponent fontSize={16} fontWeight={500}>
+              {params?.row?.title}
+            </TypographyComponent>
+          </Stack>
+        );
+      },
     },
 
     {
@@ -204,7 +227,6 @@ export default function PmActivity() {
                 {/* Delete Pm Activity  */}
                 <IconButton
                   onClick={() => {
-                    console.log("params row data", params);
                     let details = {
                       uuid: params?.row?.uuid,
                       title: "Delete PM Activity",
@@ -269,21 +291,6 @@ export default function PmActivity() {
   ]);
 
   /**
-   * handleRowClick
-   * @type : EVENT HANDLER
-   * @description : Handle row click in data grid
-   */
-  const handleRowClick = (params) => {
-    const rowId = params?.id;
-    console.log("Row clicked with ID:", rowId);
-    let details = pmScheduleActivityData.find((item) => item.id === rowId);
-    details = { ...details, uuid: params?.row?.uuid };
-
-    setOpenPmActivityDetails(true);
-    setPmScheduleActivityData(details);
-  };
-
-  /**
    * useEffect
    * @dependency : branch?.currentBranch
    * @type : API CALL
@@ -327,197 +334,8 @@ export default function PmActivity() {
         setTotal(pmScheduleList?.response?.total_pm_schedules);
         setLoadingList(false);
       } else {
-        // setLoadingList(false);
-        // setPmScheduleActivityData([
-        //   {
-        //     id: 1,
-        //     title: "Electrical System PM Schedule",
-        //     assets: [
-        //       "CTPT Check Meter",
-        //       "ISO-G-1 Panel",
-        //       "Power Factor Panel",
-        //       "VFD Main Panel",
-        //     ],
-        //     start_date: "23/09/2025",
-        //     frequency: "Quarterly",
-        //     status: "Overdue",
-        //   },
-        //   {
-        //     id: 2,
-        //     title: "Plumbing System PM Schedule",
-        //     assets: [
-        //       "CTPT Check Meter",
-        //       "Pump Control Panel",
-        //       "Booster Pump Panel",
-        //     ],
-        //     start_date: "23/09/2025",
-        //     frequency: "Monthly",
-        //     status: "Completed",
-        //   },
-        //   {
-        //     id: 3,
-        //     title: "Elevator PM Schedule",
-        //     assets: [
-        //       "ISO-G-1 Panel",
-        //       "ATS Control Panel",
-        //       "Soft Starter Panel",
-        //       "VFD Bypass Panel",
-        //     ],
-        //     start_date: "23/09/2025",
-        //     frequency: "Weekly",
-        //     status: "Active",
-        //   },
-        //   {
-        //     id: 4,
-        //     title: "Fire Safety System PM Schedule",
-        //     assets: ["Conventional Fire Panel", "Sprinkler Control Panel"],
-        //     start_date: "23/09/2025",
-        //     frequency: "Yearly",
-        //     status: "Active",
-        //   },
-        //   {
-        //     id: 5,
-        //     title: "Lighting System PM Schedule",
-        //     assets: ["ISO-G-1 Panel", "CTPT Check Meter"],
-        //     start_date: "23/09/2025",
-        //     frequency: "Monthly",
-        //     status: "Active",
-        //   },
-        //   {
-        //     id: 6,
-        //     title: "HVAC System PM Schedule",
-        //     assets: [
-        //       "Chiller Control Panel",
-        //       "AHU Control Panel",
-        //       "Cooling Tower Panel",
-        //     ],
-        //     start_date: "23/09/2025",
-        //     frequency: "Weekly",
-        //     status: "Overdue",
-        //   },
-        //   {
-        //     id: 7,
-        //     title: "Security System PM Schedule",
-        //     assets: ["CCTV Control Panel", "Access Control Panel"],
-        //     start_date: "23/09/2025",
-        //     frequency: "Yearly",
-        //     status: "Completed",
-        //   },
-        //   {
-        //     id: 8,
-        //     title: "Water Treatment PM Schedule",
-        //     assets: [
-        //       "PLC Control Panel",
-        //       "BMS Control Panel",
-        //       "Main Distribution Board",
-        //     ],
-        //     start_date: "23/09/2025",
-        //     frequency: "Monthly",
-        //     status: "Active",
-        //   },
-        //   {
-        //     id: 9,
-        //     title: "Generator PM Schedule",
-        //     assets: [
-        //       "DG Control Panel",
-        //       "DG Sync Panel",
-        //       "ATS Control Panel",
-        //       "Power Factor Panel",
-        //     ],
-        //     start_date: "23/09/2025",
-        //     frequency: "Weekly",
-        //     status: "Active",
-        //   },
-        //   {
-        //     id: 10,
-        //     title: "Pump System PM Schedule",
-        //     assets: [
-        //       "Jockey Pump Panel",
-        //       "Booster Pump Panel",
-        //       "Fire Pump Panel",
-        //     ],
-        //     start_date: "23/09/2025",
-        //     frequency: "Yearly",
-        //     status: "Completed",
-        //   },
-        //   {
-        //     id: 11,
-        //     title: "HVAC System PM Schedule",
-        //     assets: [
-        //       "Chiller Control Panel",
-        //       "AHU Control Panel",
-        //       "Cooling Tower Panel",
-        //     ],
-        //     start_date: "23/09/2025",
-        //     frequency: "Weekly",
-        //     status: "Overdue",
-        //   },
-        //   {
-        //     id: 12,
-        //     title: "Security System PM Schedule",
-        //     assets: ["CCTV Control Panel", "Access Control Panel"],
-        //     start_date: "23/09/2025",
-        //     frequency: "Yearly",
-        //     status: "Completed",
-        //   },
-        //   {
-        //     id: 13,
-        //     title: "Water Treatment PM Schedule",
-        //     assets: [
-        //       "PLC Control Panel",
-        //       "BMS Control Panel",
-        //       "Main Distribution Board",
-        //     ],
-        //     start_date: "23/09/2025",
-        //     frequency: "Monthly",
-        //     status: "Active",
-        //   },
-        //   {
-        //     id: 14,
-        //     title: "Generator PM Schedule",
-        //     assets: [
-        //       "DG Control Panel",
-        //       "DG Sync Panel",
-        //       "ATS Control Panel",
-        //       "Power Factor Panel",
-        //     ],
-        //     start_date: "23/09/2025",
-        //     frequency: "Weekly",
-        //     status: "Active",
-        //   },
-        //   {
-        //     id: 15,
-        //     title: "Pump System PM Schedule",
-        //     assets: [
-        //       "Jockey Pump Panel",
-        //       "Booster Pump Panel",
-        //       "Fire Pump Panel",
-        //     ],
-        //     start_date: "23/09/2025",
-        //     frequency: "Yearly",
-        //     status: "Completed",
-        //   },
-        // ]);
+        setTotal(null);
 
-        // setTotal(100);
-        // setGetArrPmActivityCounts(null);
-        setPmScheduleActivityData([]);
-        setOriginalPmActivityScheduleData([]);
-        setUpcomingSchedules([]);
-
-        let objData = {
-          total_pm_schedules: 0,
-          active_pm_schedule: 0,
-          completed_pm_schedule: 0,
-          overdue_pm_schedule: 0,
-          upcoming_pm_schedule: 0,
-        };
-        setGetArrPmActivityCounts((prevArr) =>
-          prevArr.map((item) => ({
-            ...item,
-            value: objData[item.key] !== undefined ? objData[item.key] : 0,
-          }))
-        );
         switch (pmScheduleList?.status) {
           case UNAUTHORIZED:
             logout();
@@ -746,7 +564,7 @@ export default function PmActivity() {
                 borderColor: theme.palette.primary[600],
               }}
               onClick={() => {
-                setOpenAddTicket(true);
+                setOpenAddPmSchedule(true);
               }}
               variant="contained"
             >
@@ -806,8 +624,8 @@ export default function PmActivity() {
                       width: 48,
                       height: 48,
                       borderRadius: "8px",
-                      backgroundColor: "#F1E9FF",
-                      color: "#7E57C2",
+                      backgroundColor: theme.palette.primary[100],
+                      color: theme.palette.primary[600],
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -902,7 +720,7 @@ export default function PmActivity() {
                   </TypographyComponent>
                 </Stack>
                 <Chip
-                  label={`100 Schedule`}
+                  label={`${total.toString().padStart(2, "0")} Schedules`}
                   size="small"
                   sx={{
                     bgcolor: theme.palette.primary[50],
@@ -1078,7 +896,6 @@ export default function PmActivity() {
                 total={total}
                 page={page}
                 onPageChange={setPage}
-                onRowClick={handleRowClick}
                 pageSize={LIST_LIMIT}
                 onChange={(selectedIds) => {
                   console.log("Selected row IDs in EmployeeList:", selectedIds);
@@ -1179,7 +996,8 @@ export default function PmActivity() {
                         <Box key={item.id}>
                           <Box
                             sx={{
-                              bgcolor: "#F9F4FF",
+                              backgroundColor: theme.palette.primary[100],
+                              color: theme.palette.primary[600],
                               borderRadius: 1,
                               p: 0.5,
                               display: "inline-block",
@@ -1223,9 +1041,9 @@ export default function PmActivity() {
         </Grid>
       </Grid>
       <AddPMSchedule
-        open={openAddTicket}
+        open={openAddPmSchedule}
         handleClose={() => {
-          setOpenAddTicket(false);
+          setOpenAddPmSchedule(false);
           dispatch(
             actionPMScheduleList({
               page: page,
@@ -1279,7 +1097,6 @@ export default function PmActivity() {
               disabled={loadingDeletePmActivity}
               onClick={() => {
                 setLoadingDeletePmActivity(true);
-                console.log("selectedPmActivityData", selectedPmActivityData);
                 if (
                   selectedPmActivityData?.uuid &&
                   selectedPmActivityData?.uuid !== null

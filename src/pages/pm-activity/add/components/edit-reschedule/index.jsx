@@ -26,6 +26,7 @@ import {
   List,
   ListItem,
   ListItemText,
+  CircularProgress,
 } from "@mui/material";
 import moment from "moment";
 import TypographyComponent from "../../../../../components/custom-typography";
@@ -42,19 +43,37 @@ import { useSnackbar } from "../../../../../hooks/useSnackbar";
 import DeleteIcon from "../../../../../assets/icons/DeleteIcon";
 import FileIcon from "../../../../../assets/icons/FileIcon";
 import _ from "lodash";
-import { actionPMScheduleData } from "../../../../../store/pm-activity";
+import CustomAutocomplete from "../../../../../components/custom-autocomplete";
+import {
+  actionAssetCustodianList,
+  resetAssetCustodianListResponse,
+} from "../../../../../store/asset";
+import { ERROR, SERVER_ERROR, UNAUTHORIZED } from "../../../../../constants";
+import { useBranch } from "../../../../../hooks/useBranch";
+import { useAuth } from "../../../../../hooks/useAuth";
+import SectionHeader from "../../../../../components/section-header";
+import {
+  actionPMScheduleMarkDone,
+  resetPmScheduleMarkDoneResponse,
+} from "../../../../../store/pm-activity";
+import ClockIcon from "../../../../../assets/icons/ClockIcon";
+import { compressFile, getFormData } from "../../../../../utils";
 
 export default function ReschedulePopup({
   open,
-  handleClose,
   selectedActivity,
+  handleClose,
 }) {
   const theme = useTheme();
+  const dispatch = useDispatch();
+  const { logout } = useAuth();
+  const { showSnackbar } = useSnackbar();
+  const branch = useBranch();
   const isMDDown = useMediaQuery(theme.breakpoints.down("md"));
   const [arrUploadedFiles, setArrUploadedFiles] = useState([]);
-  const { showSnackbar } = useSnackbar();
+  const [supervisorMasterOptions, setSupervisorMasterOptions] = useState([]);
+  const [loading, setLoading] = useState(false);
   const inputRef = useRef();
-  const dispatch = useDispatch();
 
   const ALLOWED_EXTENSIONS = [
     "jpg",
@@ -67,7 +86,9 @@ export default function ReschedulePopup({
   ];
   const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
 
-  const { pmScheduleData } = useSelector((state) => state.pmActivityStore);
+  const { pmScheduleMarkDone } = useSelector((state) => state.pmActivityStore);
+
+  const { assetCustodianList } = useSelector((state) => state.AssetStore);
 
   // Trigger file dialog
   const handleTriggerInput = () => {
@@ -90,17 +111,10 @@ export default function ReschedulePopup({
 
   useEffect(() => {
     if (open === true) {
-      console.log("----selectedActivity-------", selectedActivity);
-      if (selectedActivity && selectedActivity !== null) {
-        let ObjData = Object.assign({}, pmScheduleData);
-        ObjData.pm_details = selectedActivity?.pm_details;
-        console.log("----ObjData-------", ObjData);
-        dispatch(actionPMScheduleData(ObjData));
-      }
       if (
+        selectedActivity &&
         selectedActivity !== null &&
-        selectedActivity?.frequency_data !== null &&
-        selectedActivity?.frequency_data?.date !== null
+        selectedActivity?.type === "reschedule"
       ) {
         setValue(
           "current_schedule_date",
@@ -109,26 +123,8 @@ export default function ReschedulePopup({
           )
         );
       }
-      if (
-        selectedActivity !== null &&
-        selectedActivity?.frequency_data !== null &&
-        selectedActivity?.frequency_data?.scheduled_date !== null
-      ) {
-        setValue(
-          "current_schedule_date",
-          moment(
-            selectedActivity?.frequency_data?.scheduled_date,
-            "YYYY-MM-DD"
-          ).format("DD/MM/YYYY")
-        );
-      }
     }
   }, [selectedActivity, open]);
-
-  const onSubmit = (data) => {
-    reset();
-    handleClose(data, "save");
-  };
 
   //handle delete function
   const handleDelete = (index) => {
@@ -209,6 +205,130 @@ export default function ReschedulePopup({
     event.stopPropagation();
   };
 
+  useEffect(() => {
+    if (
+      branch?.currentBranch?.uuid &&
+      branch?.currentBranch?.uuid !== null &&
+      selectedActivity?.client_id
+    ) {
+      dispatch(
+        actionAssetCustodianList({
+          branch_uuid: branch?.currentBranch?.uuid,
+          client_id: selectedActivity?.client_id,
+        })
+      );
+    }
+  }, [branch?.currentBranch, selectedActivity?.client_id]);
+
+  useEffect(() => {
+    if (assetCustodianList && assetCustodianList !== null) {
+      dispatch(resetAssetCustodianListResponse());
+      if (assetCustodianList?.result === true) {
+        setSupervisorMasterOptions(assetCustodianList?.response);
+      } else {
+        setSupervisorMasterOptions([]);
+        switch (assetCustodianList?.status) {
+          case UNAUTHORIZED:
+            logout();
+            break;
+          case ERROR:
+            dispatch(resetAssetCustodianListResponse());
+            break;
+          case SERVER_ERROR:
+            showSnackbar({
+              message: assetCustodianList?.message,
+              severity: "error",
+            });
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }, [assetCustodianList]);
+
+  useEffect(() => {
+    if (pmScheduleMarkDone && pmScheduleMarkDone !== null) {
+      dispatch(resetPmScheduleMarkDoneResponse());
+      if (pmScheduleMarkDone?.result === true) {
+        showSnackbar({
+          message: pmScheduleMarkDone?.message,
+          severity: "success",
+        });
+        reset();
+        handleClose("save");
+        setLoading(false);
+      } else {
+        setLoading(false);
+
+        switch (pmScheduleMarkDone?.status) {
+          case UNAUTHORIZED:
+            logout();
+            break;
+          case ERROR:
+            dispatch(resetPmScheduleMarkDoneResponse());
+            break;
+          case SERVER_ERROR:
+            showSnackbar({
+              message: pmScheduleMarkDone?.message,
+              severity: "error",
+            });
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }, [pmScheduleMarkDone]);
+
+  const onSubmit = async (data) => {
+    if (selectedActivity?.type === "markAsDone") {
+      // Build the main payload
+      let input = {
+        branch_uuid: branch?.currentBranch?.uuid,
+        activity_date: selectedActivity?.frequency_data?.scheduled_date,
+        completion_date: data?.completion_date
+          ? moment(data?.completion_date, "DD/MM/YYYY").format("YYYY-MM-DD")
+          : null,
+
+        duration: data.duration,
+        supervised_by: data.supervised_by,
+        completed_by: selectedActivity?.pm_details?.vendor?.vendor_id,
+        remark: data.completion_notes,
+        sequence: selectedActivity?.frequency_data?.sequence,
+        pm_activity_id: selectedActivity?.pm_activity_id,
+        asset_id: selectedActivity?.asset_id,
+      };
+
+      // -------------------------------
+      // FILE HANDLING
+      // -------------------------------
+      const files = [];
+
+      const newFiles = arrUploadedFiles?.filter((f) => f?.is_new === 1) || [];
+
+      if (newFiles.length > 0) {
+        for (const fileObj of newFiles) {
+          const compressedFile = await compressFile(fileObj.file);
+
+          files.push({
+            title: "history_file", // previously undefined
+            data: compressedFile,
+          });
+        }
+      }
+
+      setLoading(true);
+
+      // Create formData
+      const formData = getFormData(input, files);
+
+      dispatch(actionPMScheduleMarkDone(formData));
+    } else if (selectedActivity?.type === "reschedule") {
+      handleClose(data, "save");
+    }
+  };
+
   return (
     <Dialog
       fullWidth
@@ -231,20 +351,46 @@ export default function ReschedulePopup({
           justifyContent="space-between"
           sx={{ width: "100%" }}
         >
-          <Stack flexDirection="row" alignItems="center">
-            <Stack columnGap={1}>
-              <TypographyComponent fontSize={16} fontWeight={600}>
-                Reschedule #{selectedActivity?.frequency_data?.id} PM Activity
-              </TypographyComponent>
-              <TypographyComponent
-                fontSize={14}
-                fontWeight={400}
-                sx={{ color: theme.palette.grey[700] }}
-              >
-                Reschedule PM Activity #{selectedActivity?.frequency_data?.id}
-              </TypographyComponent>
-            </Stack>
-          </Stack>
+          {selectedActivity?.type === "reschedule" && (
+            <React.Fragment>
+              <Stack flexDirection="row" alignItems="center">
+                <Stack columnGap={1}>
+                  <TypographyComponent fontSize={16} fontWeight={600}>
+                    Reschedule #{selectedActivity?.frequency_data?.id} PM
+                    Activity
+                  </TypographyComponent>
+                  <TypographyComponent
+                    fontSize={14}
+                    fontWeight={400}
+                    sx={{ color: theme.palette.grey[700] }}
+                  >
+                    Reschedule PM Activity #
+                    {selectedActivity?.frequency_data?.id}
+                  </TypographyComponent>
+                </Stack>
+              </Stack>
+            </React.Fragment>
+          )}
+          {selectedActivity?.type === "markAsDone" && (
+            <React.Fragment>
+              <Stack flexDirection="row" alignItems="center">
+                <Stack columnGap={1}>
+                  <TypographyComponent fontSize={16} fontWeight={600}>
+                    Mark #{selectedActivity?.frequency_data?.id} PM Activity as
+                    Completed
+                  </TypographyComponent>
+                  <TypographyComponent
+                    fontSize={14}
+                    fontWeight={400}
+                    sx={{ color: theme.palette.grey[700] }}
+                  >
+                    Record completion details for PM Activity #
+                    {selectedActivity?.frequency_data?.id}
+                  </TypographyComponent>
+                </Stack>
+              </Stack>
+            </React.Fragment>
+          )}
         </Stack>
       </DialogTitle>
       <form noValidate autoComplete="off" onSubmit={handleSubmit(onSubmit)}>
@@ -281,8 +427,11 @@ export default function ReschedulePopup({
                   fontSize={16}
                   fontWeight={500}
                   sx={{ color: theme.palette.grey[700] }}
+                  title={selectedActivity?.pm_details?.title}
                 >
-                  {selectedActivity?.asset_description}
+                  {_.truncate(selectedActivity?.pm_details?.title, {
+                    length: 20,
+                  })}
                 </TypographyComponent>
               </Grid>
               <Grid size={{ xs: 12, sm: 12, md: 3, lg: 3, xl: 3 }}>
@@ -298,7 +447,7 @@ export default function ReschedulePopup({
                   fontWeight={500}
                   sx={{ color: theme.palette.grey[700] }}
                 >
-                  {pmScheduleData?.pm_details?.frequency}
+                  {selectedActivity?.pm_details?.frequency}
                 </TypographyComponent>
               </Grid>
               <Grid size={{ xs: 12, sm: 12, md: 3, lg: 3, xl: 3 }}>
@@ -314,14 +463,10 @@ export default function ReschedulePopup({
                   fontWeight={500}
                   sx={{ color: theme.palette.grey[700] }}
                 >
-                  {console.log(
-                    "----pmScheduleData---4444444444444----",
-                    pmScheduleData
-                  )}
-                  {pmScheduleData?.pm_details?.schedule_start_date !== null &&
+                  {selectedActivity?.frequency_data?.scheduled_date !== null &&
                     moment(
-                      pmScheduleData?.pm_details?.schedule_start_date,
-                      "DD/MM/YYYY"
+                      selectedActivity?.frequency_data?.scheduled_date,
+                      "YYYY-MM-DD"
                     ).format("DD MMM YYYY")}
                 </TypographyComponent>
               </Grid>
@@ -338,7 +483,7 @@ export default function ReschedulePopup({
                   fontWeight={500}
                   sx={{ color: theme.palette.grey[700] }}
                 >
-                  {selectedActivity?.location}
+                  {selectedActivity?.pm_details?.location}
                 </TypographyComponent>
               </Grid>
             </Grid>
@@ -490,91 +635,79 @@ export default function ReschedulePopup({
                     <Controller
                       name="completion_date"
                       control={control}
-                      render={({ field }) => (
-                        <DatePicker
-                          id="completion_date"
-                          customInput={
-                            <CustomTextField
-                              size="small"
-                              label={
-                                <FormLabel
-                                  label="Completion Date"
-                                  required={false}
-                                />
-                              }
-                              fullWidth
-                              InputProps={{
-                                startAdornment: (
-                                  <InputAdornment position="start">
-                                    <IconButton
-                                      edge="start"
-                                      onMouseDown={(e) => e.preventDefault()}
-                                    >
-                                      <CalendarIcon />
-                                    </IconButton>
-                                  </InputAdornment>
-                                ),
-                              }}
-                              error={Boolean(errors.completion_date)}
-                              {...(errors.completion_date && {
-                                helperText: errors.completion_date.message,
-                              })}
-                            />
-                          }
-                          value={field.value}
-                          minDate={moment().toDate()}
-                          maxDate={moment().endOf("month").toDate()}
-                          selected={
-                            field?.value
-                              ? moment(field.value, "DD/MM/YYYY").toDate()
-                              : null
-                          }
-                          showYearDropdown={true}
-                          onChange={(date) => {
-                            const formattedDate =
-                              moment(date).format("DD/MM/YYYY");
-                            field.onChange(formattedDate);
-                          }}
-                        />
-                      )}
+                      render={({ field }) => {
+                        // read scheduled_date from selectedActivity
+                        const scheduledDate =
+                          selectedActivity?.frequency_data?.scheduled_date;
+
+                        // convert YYYY-MM-DD → moment date
+                        const scheduledMoment = scheduledDate
+                          ? moment(scheduledDate, "YYYY-MM-DD")
+                          : moment(); // fallback current date
+
+                        // set min & max based on scheduled_date month
+                        const minDate = scheduledMoment
+                          .startOf("month")
+                          .toDate();
+                        const maxDate = scheduledMoment.endOf("month").toDate();
+
+                        // Convert stored DD/MM/YYYY → Date object safely
+                        const selectedDate = field.value
+                          ? moment(field.value, "DD/MM/YYYY").toDate()
+                          : null;
+
+                        return (
+                          <DatePicker
+                            id="completion_date"
+                            placeholder="Completion Date"
+                            customInput={
+                              <CustomTextField
+                                size="small"
+                                label={
+                                  <FormLabel
+                                    label="Completion Date"
+                                    required={false}
+                                  />
+                                }
+                                fullWidth
+                                error={Boolean(errors.completion_date)}
+                                {...(errors.completion_date && {
+                                  helperText: errors.completion_date.message,
+                                })}
+                              />
+                            }
+                            minDate={minDate}
+                            maxDate={maxDate}
+                            selected={selectedDate}
+                            dateFormat="dd/MM/yyyy"
+                            onChange={(date) => {
+                              // Save to form as DD/MM/YYYY
+                              const formatted =
+                                moment(date).format("DD/MM/YYYY");
+                              field.onChange(formatted);
+                            }}
+                          />
+                        );
+                      }}
                     />
                   </Grid>
+
                   <Grid size={{ xs: 12, sm: 12, md: 3, lg: 3, xl: 3 }}>
                     <Controller
                       name="completed_by"
                       control={control}
-                      rules={{
-                        // required: "Address is required",
-                        maxLength: {
-                          value: 500,
-                          message: "Maximum length is 500 characters",
-                        },
-                      }}
                       render={({ field }) => (
                         <CustomTextField
                           fullWidth
-                          value={field?.value}
+                          value={
+                            selectedActivity?.pm_details?.vendor?.vendor_name
+                          }
+                          placeholder={"Vendor Name"}
                           label={
-                            <FormLabel
-                              label="Completed By"
-                              placeholder={"Vendor Name"}
-                              required={true}
-                            />
+                            <FormLabel label="Completed By" required={false} />
                           }
                           onChange={field?.onChange}
-                          inputProps={{ maxLength: 500 }}
-                          InputProps={{
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <IconButton
-                                  edge="start"
-                                  onMouseDown={(e) => e.preventDefault()}
-                                >
-                                  <AddressIcon />
-                                </IconButton>
-                              </InputAdornment>
-                            ),
-                          }}
+                          disabled
                           error={Boolean(errors.completed_by)}
                           {...(errors.address && {
                             helperText: errors.completed_by.message,
@@ -591,87 +724,66 @@ export default function ReschedulePopup({
                         required: "Please select Supervisor",
                       }}
                       render={({ field }) => (
-                        <CustomTextField
-                          select
-                          fullWidth
-                          value={field?.value ?? ""}
-                          label={
-                            <FormLabel label="Supervised By" required={true} />
-                          }
-                          onChange={field?.onChange}
-                          SelectProps={{
-                            displayEmpty: true,
-                            IconComponent: ChevronDownIcon,
-                            MenuProps: {
-                              PaperProps: {
-                                style: {
-                                  maxHeight: 220, // Set your desired max height
-                                  scrollbarWidth: "thin",
-                                },
-                              },
-                            },
-                          }}
+                        <CustomAutocomplete
+                          {...field}
+                          label="Supervisor"
+                          is_required={false}
+                          displayName1="name"
+                          displayName2="role"
+                          options={supervisorMasterOptions}
                           error={Boolean(errors.supervised_by)}
-                          {...(errors.supervised_by && {
-                            helperText: errors.supervised_by.message,
-                          })}
-                        >
-                          <MenuItem value="">
-                            <em>Select Supervisor</em>
-                          </MenuItem>
-                          {/* {supervisorMasterOptions &&
-                        supervisorMasterOptions !== null &&
-                        supervisorMasterOptions.length > 0 &&
-                        supervisorMasterOptions.map((option) => ( */}
-                          <MenuItem
-                            sx={{
-                              whiteSpace: "normal", // allow wrapping
-                              wordBreak: "break-word", // break long words if needed
-                              maxWidth: 600, // control dropdown width
-                              display: "-webkit-box",
-                              WebkitLineClamp: 2, // limit to 2 lines
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                            }}
-                          ></MenuItem>
-                          {/* ))} */}
-                        </CustomTextField>
+                          helperText={errors.supervised_by?.message}
+                        />
                       )}
                     />
                   </Grid>
                   <Grid size={{ xs: 12, sm: 12, md: 3, lg: 3, xl: 3 }}>
                     <Controller
-                      name="duration"
+                      name={`duration`}
                       control={control}
-                      rules={{
-                        required: "Address is required",
-                        maxLength: {
-                          value: 500,
-                          message: "Maximum length is 500 characters",
-                        },
-                      }}
                       render={({ field }) => (
-                        <CustomTextField
-                          fullWidth
-                          value={field?.value}
-                          label={<FormLabel label="Duration" required={true} />}
-                          onChange={field?.onChange}
-                          inputProps={{ maxLength: 500 }}
-                          InputProps={{
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <IconButton
-                                  edge="start"
-                                  onMouseDown={(e) => e.preventDefault()}
-                                ></IconButton>
-                              </InputAdornment>
-                            ),
+                        <DatePicker
+                          id={`duration`}
+                          showTimeSelect
+                          showTimeSelectOnly
+                          timeIntervals={15}
+                          timeCaption="Duration"
+                          dateFormat="HH:mm"
+                          value={field.value}
+                          selected={
+                            field?.value
+                              ? moment(field.value, "HH:mm").toDate()
+                              : null
+                          }
+                          onChange={(date) => {
+                            const formattedTime = moment(date).format("HH:mm");
+                            field.onChange(formattedTime);
                           }}
-                          error={Boolean(errors.duration)}
-                          {...(errors.duration && {
-                            helperText: errors.duration.message,
-                          })}
+                          customInput={
+                            <CustomTextField
+                              size="small"
+                              fullWidth
+                              label={
+                                <FormLabel label="Duration" required={false} />
+                              }
+                              InputProps={{
+                                startAdornment: (
+                                  <InputAdornment position="start">
+                                    <IconButton
+                                      edge="start"
+                                      onMouseDown={(e) => e.preventDefault()}
+                                    >
+                                      <ClockIcon />
+                                    </IconButton>
+                                  </InputAdornment>
+                                ),
+                              }}
+                              error={Boolean(errors.duration)}
+                              {...(errors.duration && {
+                                helperText: errors.duration.message,
+                              })}
+                            />
+                          }
                         />
                       )}
                     />
@@ -712,6 +824,12 @@ export default function ReschedulePopup({
                     />
                   </Grid>
                   <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
+                    <SectionHeader
+                      title="Upload Files"
+                      show_progress={0}
+                      sx={{ marginTop: 1 }}
+                    />
+
                     <Stack
                       sx={{
                         borderRadius: "8px",
@@ -834,6 +952,7 @@ export default function ReschedulePopup({
           onClick={() => {
             handleSubmit(onSubmit)();
           }}
+          disabled={loading}
           sx={{
             backgroundColor: theme.palette.primary[600],
             color: theme.palette.common.white,
@@ -847,9 +966,13 @@ export default function ReschedulePopup({
             },
           }}
         >
-          {selectedActivity?.type === "reschedule"
-            ? "Confirm Reschedule"
-            : "Mark Done"}
+          {loading ? (
+            <CircularProgress size={18} sx={{ color: "white" }} />
+          ) : selectedActivity?.type === "reschedule" ? (
+            "Confirm Reschedule"
+          ) : (
+            "Mark Done"
+          )}
         </Button>
       </DialogActions>
     </Dialog>

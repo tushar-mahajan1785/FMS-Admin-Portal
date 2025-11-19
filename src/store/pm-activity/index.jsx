@@ -1,11 +1,12 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { axiosApi } from "../../common/api";
+import { axiosApi, MULTIPART_HEADER } from "../../common/api";
 import { getErrorResponse } from "../../utils";
 import {
   API_PM_ACTIVITY_LIST,
   API_PM_ACTIVITY_REMOVE,
   API_PM_ACTIVITY_ADD,
   API_PM_ACTIVITY_DETAILS,
+  API_PM_ACTIVITY_MARK_DONE,
 } from "../../common/api/constants";
 
 export const defaultPMScheduleData = {
@@ -72,6 +73,22 @@ export const actionPMScheduleDetails = createAsyncThunk(
     }
   }
 );
+export const actionPMScheduleMarkDone = createAsyncThunk(
+  "pm-activity/actionPMScheduleMarkDone",
+  async (params) => {
+    try {
+      const response = await axiosApi.post(
+        API_PM_ACTIVITY_MARK_DONE,
+        params,
+        MULTIPART_HEADER
+      );
+
+      return response.status !== 200 ? getErrorResponse() : response.data;
+    } catch (error) {
+      return error;
+    }
+  }
+);
 
 export const pmActivityStore = createSlice({
   name: "pm-activity",
@@ -81,6 +98,7 @@ export const pmActivityStore = createSlice({
     deletePmActivity: null,
     pmScheduleAdd: null,
     pmScheduleDetails: null,
+    pmScheduleMarkDone: null,
   },
 
   reducers: {
@@ -99,6 +117,9 @@ export const pmActivityStore = createSlice({
     resetPmScheduleDetailsResponse: (state) => {
       state.pmScheduleDetails = null;
     },
+    resetPmScheduleMarkDoneResponse: (state) => {
+      state.pmScheduleMarkDone = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -116,6 +137,9 @@ export const pmActivityStore = createSlice({
       })
       .addCase(actionPMScheduleDetails.fulfilled, (state, action) => {
         state.pmScheduleDetails = action.payload;
+      })
+      .addCase(actionPMScheduleMarkDone.fulfilled, (state, action) => {
+        state.pmScheduleMarkDone = action.payload;
       });
   },
 });
@@ -126,6 +150,7 @@ export const {
   resetDeletePmActivityResponse,
   resetPmScheduleAddAssetResponse,
   resetPmScheduleDetailsResponse,
+  resetPmScheduleMarkDoneResponse,
 } = pmActivityStore.actions;
 
 export default pmActivityStore.reducer;
