@@ -30,7 +30,7 @@ import TypographyComponent from "../../../components/custom-typography";
 import SectionHeader from "../../../components/section-header";
 import ChevronDownIcon from "../../../assets/icons/ChevronDown";
 import { useBranch } from "../../../hooks/useBranch";
-import { compressFile, decrypt, getFormData, getObjectById } from "../../../utils";
+import { compressFile, decrypt, encrypt, getFormData, getObjectById } from "../../../utils";
 import { actionMasterCountryCodeList, actionVendorMasterList, resetVendorMasterListResponse } from "../../../store/vendor";
 import BoxPlusIcon from "../../../assets/icons/BoxPlusIcon";
 import MailIcon from "../../../assets/icons/MailIcon";
@@ -104,16 +104,13 @@ export default function AddInventory({ open, handleClose, type, details }) {
     const [masterCategoryOptions, setMasterCategoryOptions] = useState([])
     const [masterUnitOptions, setMasterUnitOptions] = useState([])
 
-    // console.log('-------inventoryCategoryList----', masterCategoryOptions)
-    // console.log('-------arrUploadedFile----', arrUploadedFile)
-
     /**
-     * Initiale Render and masters api call
+     * Initial Render and masters api call
      */
     useEffect(() => {
         if (open === true) {
             if (type === 'edit' && details !== null) {
-                let editFileUrl = "https://fms-super-admin.interdev.in/fms/ticket/8/8_1763011390575.jpg"
+                let editFileUrl = "https://fms-super-admin.interdev.in/fms/client/1/branch/2/ticket/1/1_1763449512315.jpg"
                 const fileName = editFileUrl.split("/").pop();
                 setArrUploadedFile({
                     file: null,
@@ -123,52 +120,18 @@ export default function AddInventory({ open, handleClose, type, details }) {
                 });
                 setValue('item_id', details?.item_id && details?.item_id !== null ? details?.item_id : '')
                 setValue('item_name', details?.item_name && details?.item_name !== null ? details?.item_name : '')
-                setValue('category', details?.category && details?.category !== null ? details?.category : '')
+                setValue('category', details?.category_id && details?.category_id !== null ? details?.category_id : '')
                 setValue('description', details?.description && details?.description !== null ? details?.description : '')
                 setValue('initial_quantity', details?.initial_quantity && details?.initial_quantity !== null ? details?.initial_quantity : '')
                 setValue('minimum_quantity', details?.minimum_quantity && details?.minimum_quantity !== null ? details?.minimum_quantity : '')
                 setValue('critical_quantity', details?.critical_quantity && details?.critical_quantity !== null ? details?.critical_quantity : '')
                 setValue('storage_location', details?.storage_location && details?.storage_location !== null ? details?.storage_location : '')
-                setValue('unit', details?.unit && details?.unit !== null ? details?.unit : '')
-                setValue('supplier_name', details?.supplier_name && details?.supplier_name !== null ? details?.supplier_name : '')
+                setValue('unit', details?.unit_id && details?.unit_id !== null ? details?.unit_id : '')
+
                 setValue('contact', details?.contact && details?.contact !== null ? details?.contact : '')
                 setValue('email', details?.email && details?.email !== null ? details?.email : '')
 
             }
-
-
-            //for testing purpose only
-            setMasterCategoryOptions([
-                {
-                    "id": 1,
-                    "name": "Chemicals",
-                    "description": "Chemicals details",
-                    "status": "Active"
-                },
-                {
-                    "id": 2,
-                    "name": "Electrical ",
-                    "description": "Electrical items",
-                    "status": "Active"
-                }])
-            setMasterUnitOptions([
-                {
-                    "id": 1,
-                    "name": "Kilograms",
-                    "status": "Active"
-                },
-                {
-                    "id": 2,
-                    "name": "Grams",
-                    "status": "Active"
-                },
-                {
-                    "id": 3,
-                    "name": "Liters",
-                    "status": "Active"
-                }])
-            //---------------------
-
 
             dispatch(actionInventoryCategoryList({
                 client_id: branch?.currentBranch?.client_id,
@@ -192,7 +155,11 @@ export default function AddInventory({ open, handleClose, type, details }) {
 
     }, [open])
 
-    console.log('----watchSupplier---', watchSupplier)
+    useEffect(() => {
+        if (supervisorMasterOptions && supervisorMasterOptions !== null && supervisorMasterOptions.length > 0) {
+            setValue('supplier_name', details?.supplier_id && details?.supplier_id !== null ? details?.supplier_id : '')
+        }
+    }, [supervisorMasterOptions])
 
     /**
      * On selection of Supplier set contact and email fields for supplier_name
@@ -282,7 +249,7 @@ export default function AddInventory({ open, handleClose, type, details }) {
             if (inventoryCategoryList?.result === true) {
                 setMasterCategoryOptions(inventoryCategoryList?.response)
             } else {
-                // setMasterCategoryOptions([])
+                setMasterCategoryOptions([])
                 switch (inventoryCategoryList?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -312,7 +279,7 @@ export default function AddInventory({ open, handleClose, type, details }) {
             if (getUnitMaster?.result === true) {
                 setMasterUnitOptions(getUnitMaster?.response)
             } else {
-                // setMasterUnitOptions([])
+                setMasterUnitOptions([])
                 switch (getUnitMaster?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -340,50 +307,7 @@ export default function AddInventory({ open, handleClose, type, details }) {
         if (vendorMasterList && vendorMasterList !== null) {
             dispatch(resetVendorMasterListResponse())
             if (vendorMasterList?.result === true) {
-                // setSupervisorMasterOptions(vendorMasterList?.response)
-                let data = [
-                    {
-                        "id": 30,
-                        "name": "TSA Technologies",
-                        "primary_contact_name": "Vijay Patil",
-                        "primary_contact_no": "U2FsdGVkX19vzhb7C71e1kog/pqdsepXrsj1KCkt4eA=",
-                        "primary_contact_email": "U2FsdGVkX1//Zj9k1PxUyR09FgCXVOdqs7tpvnnuDfGJmqa0xIRqg61nBK31y39S",
-                        "primary_contact_country_code": "+91"
-                    },
-                    {
-                        "id": 29,
-                        "name": "Jio India",
-                        "primary_contact_name": "Rahul Pawar",
-                        "primary_contact_no": "U2FsdGVkX19DwxKeFI7M6YApCEULM+uPMaN0+oMzHGM=",
-                        "primary_contact_email": "U2FsdGVkX18oUEDIJg/l99utABZy1zQ79GTUKJurL6k=",
-                        "primary_contact_country_code": "+91"
-                    },
-                    {
-                        "id": 28,
-                        "name": "VI Private Limited",
-                        "primary_contact_name": "Sarthak Chavan",
-                        "primary_contact_no": "U2FsdGVkX19vzhb7C71e1kog/pqdsepXrsj1KCkt4eA=",
-                        "primary_contact_email": "U2FsdGVkX1//Zj9k1PxUyR09FgCXVOdqs7tpvnnuDfGJmqa0xIRqg61nBK31y39S",
-                        "primary_contact_country_code": "+91"
-                    },
-                    {
-                        "id": 27,
-                        "name": "Vodafone India Pvt Ltd",
-                        "primary_contact_name": "Gauri More",
-                        "primary_contact_no": "U2FsdGVkX19vzhb7C71e1kog/pqdsepXrsj1KCkt4eA=",
-                        "primary_contact_email": "U2FsdGVkX1//Zj9k1PxUyR09FgCXVOdqs7tpvnnuDfGJmqa0xIRqg61nBK31y39S",
-                        "primary_contact_country_code": "+91"
-                    },
-                    {
-                        "id": 1,
-                        "name": "Lorem Ips1",
-                        "primary_contact_name": "Akash Pawar",
-                        "primary_contact_no": "U2FsdGVkX19vzhb7C71e1kog/pqdsepXrsj1KCkt4eA=",
-                        "primary_contact_email": "U2FsdGVkX1//Zj9k1PxUyR09FgCXVOdqs7tpvnnuDfGJmqa0xIRqg61nBK31y39S",
-                        "primary_contact_country_code": "+91"
-                    }
-                ]
-                setSupervisorMasterOptions(data)
+                setSupervisorMasterOptions(vendorMasterList?.response)
             } else {
                 setSupervisorMasterOptions([])
                 switch (vendorMasterList?.status) {
@@ -443,21 +367,21 @@ export default function AddInventory({ open, handleClose, type, details }) {
      */
     const onSubmit = async data => {
         console.log('----submit data----', data)
-        let currentSupplier = getObjectById(supervisorMasterOptions, watchSupplier)
+        // let currentSupplier = getObjectById(supervisorMasterOptions, watchSupplier)
         let objData = {
             branch_uuid: branch?.currentBranch?.uuid,
             item_name: data?.item_name && data?.item_name !== null ? data?.item_name : null,
-            category: data?.category && data?.category !== null ? data?.category : null,
+            category_id: data?.category && data?.category !== null ? data?.category : null,
             description: data?.description && data?.description !== null ? data?.description : null,
             initial_quantity: data?.initial_quantity && data?.initial_quantity !== null ? data?.initial_quantity : null,
             minimum_quantity: data?.minimum_quantity && data?.minimum_quantity !== null ? data?.minimum_quantity : null,
             critical_quantity: data?.critical_quantity && data?.critical_quantity !== null ? data?.critical_quantity : null,
-            unit: data?.unit && data?.unit !== null ? data?.unit : null,
+            unit_id: data?.unit && data?.unit !== null ? data?.unit : null,
             storage_location: data?.storage_location && data?.storage_location !== null ? data?.storage_location : null,
-            supplier_name: currentSupplier ? currentSupplier?.name : null,
-            supplier_contact: data?.contact && data?.contact !== null ? data?.contact : null,
+            supplier_id: data?.supplier_name ? data?.supplier_name : null,
+            supplier_contact: data?.contact && data?.contact !== null ? encrypt(data?.contact) : null,
             supplier_country_code: data?.contact_country_code && data?.contact_country_code !== null ? data?.contact_country_code : null,
-            supplier_email: data?.email && data?.email !== null ? data?.email : null
+            supplier_email: data?.email && data?.email !== null ? encrypt(data?.email) : null
         }
 
         if (type == 'edit') {
@@ -613,7 +537,7 @@ export default function AddInventory({ open, handleClose, type, details }) {
                                                                 masterCategoryOptions.map(option => (
                                                                     <MenuItem
                                                                         key={option?.id}
-                                                                        value={option?.name}
+                                                                        value={option?.id}
                                                                         sx={{
                                                                             whiteSpace: 'normal',        // allow wrapping
                                                                             wordBreak: 'break-word',     // break long words if needed
@@ -625,7 +549,7 @@ export default function AddInventory({ open, handleClose, type, details }) {
                                                                             textOverflow: 'ellipsis'
                                                                         }}
                                                                     >
-                                                                        {option?.name}
+                                                                        {option?.title}
                                                                     </MenuItem>
                                                                 ))}
                                                         </CustomTextField>
@@ -733,7 +657,7 @@ export default function AddInventory({ open, handleClose, type, details }) {
                                                                 masterUnitOptions.map(option => (
                                                                     <MenuItem
                                                                         key={option?.id}
-                                                                        value={option?.name}
+                                                                        value={option?.id}
                                                                         sx={{
                                                                             whiteSpace: 'normal',        // allow wrapping
                                                                             wordBreak: 'break-word',     // break long words if needed
@@ -745,7 +669,7 @@ export default function AddInventory({ open, handleClose, type, details }) {
                                                                             textOverflow: 'ellipsis'
                                                                         }}
                                                                     >
-                                                                        {option?.name}
+                                                                        {option?.title}
                                                                     </MenuItem>
                                                                 ))}
                                                         </CustomTextField>
@@ -1054,7 +978,7 @@ export default function AddInventory({ open, handleClose, type, details }) {
                                             <Divider />
                                             <Stack direction="row" justifyContent="space-between" alignItems="center">
                                                 <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[500] }}>Category -</TypographyComponent>
-                                                <TypographyComponent title={watchCategory} fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[500] }}>{watchCategory && watchCategory !== null ? _.truncate(watchCategory, { length: 30 }) : 'NA'}</TypographyComponent>
+                                                <TypographyComponent title={watchCategory} fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[500] }}>{watchCategory && watchCategory !== null ? _.truncate(getObjectById(masterCategoryOptions, watchCategory)?.title, { length: 30 }) : 'NA'}</TypographyComponent>
                                             </Stack>
                                             <Divider />
                                             <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -1064,7 +988,7 @@ export default function AddInventory({ open, handleClose, type, details }) {
                                             <Divider />
                                             <Stack direction="row" justifyContent="space-between" alignItems="center">
                                                 <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[500] }}>Unity -</TypographyComponent>
-                                                <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[500] }}>{watchUnit && watchUnit !== null ? watchUnit : 'NA'}</TypographyComponent>
+                                                <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[500] }}>{watchUnit && watchUnit !== null ? getObjectById(masterUnitOptions, watchUnit)?.title : 'NA'}</TypographyComponent>
                                             </Stack>
                                             <Divider />
                                             <Stack direction="row" justifyContent="space-between" alignItems="center">

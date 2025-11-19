@@ -46,104 +46,8 @@ export default function InventoryList() {
     const [searchQuery, setSearchQuery] = useState('')
     const [openRestockInventoryPopup, setOpenRestockInventoryPopup] = useState(false);
     const [openConsumptionInventoryPopup, setOpenConsumptionInventoryPopup] = useState(false);
-    const [inventoryListData, setInventoryListData] = useState([{
-        id: 1,
-        item_id: 'INV-000121',
-        item_name: 'Air filter 16X16',
-        category: "Chemicals",
-        storage_location: "Shivaji nagar, Pune",
-        initial_quantity: 16,
-        minimum_quantity: 5,
-        supplier_name: 'abc',
-        supplier_id: 27,
-        critical_quantity: "101",
-        unit: "Kilograms",
-        stock_status: 'Low Stock',
-        updated_on: '2024-06-10 22:03:90',
-        image_url: "https://fms-super-admin.interdev.in/fms/ticket/8/8_1763011390575.jpg"
-    },
-    {
-        id: 2,
-        item_id: 'INV-000122',
-        item_name: 'Compressor Oil (1L)',
-        category: "Chemicals",
-        storage_location: "Shivaji nagar, Pune",
-        initial_quantity: 8,
-        minimum_quantity: 20,
-        supplier_name: 'abc',
-        supplier_id: 27,
-        critical_quantity: "101",
-        unit: "Kilograms",
-        stock_status: 'Out Of Stock',
-        updated_on: '2024-06-10 21:09:12',
-        image_url: "https://fms-super-admin.interdev.in/fms/client/1/branch/1/ticket/12/12_1763123256318.jpg"
-    },
-    {
-        id: 3,
-        item_id: 'INV-000123',
-        item_name: 'Drain Pump Kit',
-        category: "Chemicals",
-        storage_location: "Shivaji nagar, Pune",
-        initial_quantity: 44,
-        minimum_quantity: 20,
-        supplier_name: 'abc',
-        supplier_id: 27,
-        critical_quantity: "101",
-        unit: "Kilograms",
-        stock_status: 'Good Stock',
-        updated_on: '2024-06-10 09:02:12',
-        image_url: "https://fms-super-admin.interdev.in/fms/ticket/8/8_1763011390575.jpg"
-    }
-    ])
-    const [originalInventoryListData, setOriginalInventoryListData] = useState([{
-        id: 1,
-        item_id: 'INV-000121',
-        item_name: 'Air filter 16X16',
-        category: "Chemicals",
-        storage_location: "Shivaji nagar, Pune",
-        initial_quantity: 16,
-        minimum_quantity: 5,
-        supplier_name: 'abc',
-        supplier_id: 27,
-        critical_quantity: "101",
-        unit: "Kilograms",
-        stock_status: 'Low Stock',
-        updated_on: '2024-06-10 22:03:90',
-        image_url: "https://fms-super-admin.interdev.in/fms/ticket/8/8_1763011390575.jpg"
-    },
-    {
-        id: 2,
-        item_id: 'INV-000122',
-        item_name: 'Compressor Oil (1L)',
-        category: "Chemicals",
-        storage_location: "Shivaji nagar, Pune",
-        initial_quantity: 8,
-        minimum_quantity: 20,
-        supplier_name: 'abc',
-        supplier_id: 27,
-        critical_quantity: "101",
-        unit: "Kilograms",
-        stock_status: 'Out Of Stock',
-        updated_on: '2024-06-10 21:09:12',
-        image_url: "https://fms-super-admin.interdev.in/fms/client/1/branch/1/ticket/12/12_1763123256318.jpg"
-    },
-    {
-        id: 3,
-        item_id: 'INV-000123',
-        item_name: 'Drain Pump Kit',
-        category: "Chemicals",
-        storage_location: "Shivaji nagar, Pune",
-        initial_quantity: 44,
-        minimum_quantity: 20,
-        supplier_name: 'abc',
-        supplier_id: 27,
-        critical_quantity: "101",
-        unit: "Kilograms",
-        stock_status: 'Good Stock',
-        updated_on: '2024-06-10 09:02:12',
-        image_url: "https://fms-super-admin.interdev.in/fms/ticket/8/8_1763011390575.jpg"
-    }
-    ])
+    const [inventoryListData, setInventoryListData] = useState([])
+    const [originalInventoryListData, setOriginalInventoryListData] = useState([])
     const [loadingList, setLoadingList] = useState(false)
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
@@ -154,7 +58,7 @@ export default function InventoryList() {
         id: 1,
         item_id: 'INV-000121',
         item_name: 'Air filter 16X16',
-        initial_quantity: 16,
+        current_stock: 16,
         minimum_quantity: 5,
         stock_status: 'In Stock',
         updated_on: '2024-06-10 11:03:12'
@@ -163,7 +67,7 @@ export default function InventoryList() {
         id: 2,
         item_id: 'INV-000122',
         item_name: 'Compressor Oil (1L)',
-        initial_quantity: 8,
+        current_stock: 8,
         minimum_quantity: 20,
         stock_status: 'In Stock',
         updated_on: '2024-04-13 21:09:12'
@@ -172,7 +76,7 @@ export default function InventoryList() {
         id: 3,
         item_id: 'INV-000123',
         item_name: 'Drain Pump (1L)',
-        initial_quantity: 8,
+        current_stock: 8,
         minimum_quantity: 20,
         stock_status: 'In Stock',
         updated_on: '2024-04-13 21:09:12'
@@ -181,7 +85,44 @@ export default function InventoryList() {
         id: 4,
         item_id: 'INV-000123',
         item_name: 'Drain Pump 2333 (1L)',
-        initial_quantity: 8,
+        current_stock: 8,
+        minimum_quantity: 20,
+        stock_status: 'In Stock',
+        updated_on: '2024-04-13 21:09:12'
+    }
+    ]);
+    const [arrRecentlyUsedItems, setArrRecentlyUsedItems] = useState([{
+        id: 1,
+        item_id: 'INV-000121',
+        item_name: 'Air filter 16X16',
+        current_stock: 16,
+        minimum_quantity: 5,
+        stock_status: 'In Stock',
+        updated_on: '2024-06-10 11:03:12'
+    },
+    {
+        id: 2,
+        item_id: 'INV-000122',
+        item_name: 'Compressor Oil (1L)',
+        current_stock: 8,
+        minimum_quantity: 20,
+        stock_status: 'In Stock',
+        updated_on: '2024-04-13 21:09:12'
+    },
+    {
+        id: 3,
+        item_id: 'INV-000123',
+        item_name: 'Drain Pump (1L)',
+        current_stock: 8,
+        minimum_quantity: 20,
+        stock_status: 'In Stock',
+        updated_on: '2024-04-13 21:09:12'
+    },
+    {
+        id: 4,
+        item_id: 'INV-000123',
+        item_name: 'Drain Pump 2333 (1L)',
+        current_stock: 8,
         minimum_quantity: 20,
         stock_status: 'In Stock',
         updated_on: '2024-04-13 21:09:12'
@@ -225,7 +166,7 @@ export default function InventoryList() {
                 return (
                     <Stack sx={{ flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
                         <TypographyComponent color={theme.palette.grey[900]} fontSize={14} fontWeight={500} sx={{ lineHeight: '20px' }}>
-                            {params.row.initial_quantity && params.row.initial_quantity !== null ? `${params.row.initial_quantity} pcs` : ''}
+                            {params.row.current_stock && params.row.current_stock !== null ? `${params.row.current_stock} pcs` : ''}
                         </TypographyComponent>
                         <TypographyComponent color={theme.palette.grey[500]} fontSize={14} fontWeight={400} >
                             {params.row.minimum_quantity && params.row.minimum_quantity !== null ? `Min: ${params.row.minimum_quantity}` : ''}
@@ -353,25 +294,28 @@ export default function InventoryList() {
                 );
                 setTotal(inventoryList?.response?.counts?.total_items)
                 setArrRecentlyAddedItems(inventoryList?.response?.recently_added_items)
+                setArrRecentlyUsedItems(inventoryList?.response?.recently_used_items)
                 setLoadingList(false)
+
             } else {
                 setLoadingList(false)
-                // setInventoryListData([])
-                // setOriginalInventoryListData([])
-                // setArrRecentlyAddedItems([])
-                // setTotal(0)
-                // let objData = {
-                //     total_items: 0,
-                //     in_stock_items: 0,
-                //     out_of_stock_items: 0,
-                //     critical_items: 0
-                // }
-                // setGetArrInventoryCounts(prevArr =>
-                //     prevArr.map(item => ({
-                //         ...item,
-                //         value: objData[item.key] !== undefined ? objData[item.key] : 0
-                //     }))
-                // );
+                setInventoryListData([])
+                setOriginalInventoryListData([])
+                setArrRecentlyAddedItems([])
+                setArrRecentlyUsedItems([])
+                setTotal(0)
+                let objData = {
+                    total_items: 0,
+                    in_stock_items: 0,
+                    out_of_stock_items: 0,
+                    critical_items: 0
+                }
+                setGetArrInventoryCounts(prevArr =>
+                    prevArr.map(item => ({
+                        ...item,
+                        value: objData[item.key] !== undefined ? objData[item.key] : 0
+                    }))
+                );
                 switch (inventoryList?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -393,7 +337,7 @@ export default function InventoryList() {
     useEffect(() => {
         if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && page && page !== null) {
             dispatch(actionInventoryList({
-                status: selectedStatus,
+                stock_status: selectedStatus,
                 branch_uuid: branch?.currentBranch?.uuid,
                 page: page,
                 limit: LIST_LIMIT
@@ -672,10 +616,10 @@ export default function InventoryList() {
                                                     </Grid>
                                                     <Grid size={{ xs: 3.5, sm: 3.5, md: 3.5, lg: 3.5, xl: 3.5 }}>
                                                         <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.success[700] }}>
-                                                            {item?.initial_quantity && item?.initial_quantity !== null ? `+${item?.initial_quantity} pcs` : ''}
+                                                            {item?.current_stock && item?.current_stock !== null ? `+${item?.current_stock} pcs` : ''}
                                                         </TypographyComponent>
                                                         <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>
-                                                            Avl: {item?.initial_quantity && item?.initial_quantity !== null ? item?.initial_quantity : ''}
+                                                            Avl: {item?.current_stock && item?.current_stock !== null ? item?.current_stock : ''}
                                                         </TypographyComponent>
                                                     </Grid>{
                                                         index < arrRecentlyAddedItems.length - 1 ?
@@ -709,8 +653,8 @@ export default function InventoryList() {
                                 },
                             }}>
                                 {
-                                    arrRecentlyAddedItems && arrRecentlyAddedItems !== null && arrRecentlyAddedItems.length > 0 ? (
-                                        arrRecentlyAddedItems.map((item, index) => (
+                                    arrRecentlyUsedItems && arrRecentlyUsedItems !== null && arrRecentlyUsedItems.length > 0 ? (
+                                        arrRecentlyUsedItems.map((item, index) => (
                                             <React.Fragment key={index}>
                                                 <Grid container spacing={1}>
                                                     <Grid size={{ xs: 5, sm: 5, md: 5, lg: 5, xl: 5 }}>
@@ -731,13 +675,13 @@ export default function InventoryList() {
                                                     </Grid>
                                                     <Grid size={{ xs: 3.5, sm: 3.5, md: 3.5, lg: 3.5, xl: 3.5 }}>
                                                         <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.error[700] }}>
-                                                            {item?.initial_quantity && item?.initial_quantity !== null ? `-${item?.initial_quantity} pcs` : ''}
+                                                            {item?.current_stock && item?.current_stock !== null ? `-${item?.current_stock} pcs` : ''}
                                                         </TypographyComponent>
                                                         <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>
-                                                            Avl: {item?.initial_quantity && item?.initial_quantity !== null ? item?.initial_quantity : ''}
+                                                            Avl: {item?.current_stock && item?.current_stock !== null ? item?.current_stock : ''}
                                                         </TypographyComponent>
                                                     </Grid>{
-                                                        index < arrRecentlyAddedItems.length - 1 ?
+                                                        index < arrRecentlyUsedItems.length - 1 ?
                                                             <Divider sx={{ width: '100%', my: 1.2 }} />
                                                             :
                                                             <></>
@@ -762,7 +706,7 @@ export default function InventoryList() {
                     setOpenAddInventoryPopup(false)
                     if (data == 'save') {
                         dispatch(actionInventoryList({
-                            status: selectedStatus,
+                            stock_status: selectedStatus,
                             branch_uuid: branch?.currentBranch?.uuid,
                             page: page,
                             limit: LIST_LIMIT
@@ -773,20 +717,29 @@ export default function InventoryList() {
             <InventoryDetails
                 open={openViewInventoryPopup}
                 detail={inventoryData}
-                handleClose={() => {
+                handleClose={(data) => {
                     setOpenViewInventoryPopup(false)
                     setInventoryData(null)
+                    if (data == 'delete') {
+                        dispatch(actionInventoryList({
+                            stock_status: selectedStatus,
+                            branch_uuid: branch?.currentBranch?.uuid,
+                            page: page,
+                            limit: LIST_LIMIT
+                        }))
+                    }
                 }}
             />
             <RestockInventory
                 open={openRestockInventoryPopup}
                 restockData={inventoryData}
+                from={'list'}
                 handleClose={(data) => {
                     setOpenRestockInventoryPopup(false)
                     setInventoryData(null)
                     if (data == 'save') {
                         dispatch(actionInventoryList({
-                            status: selectedStatus,
+                            stock_status: selectedStatus,
                             branch_uuid: branch?.currentBranch?.uuid,
                             page: page,
                             limit: LIST_LIMIT
@@ -797,12 +750,13 @@ export default function InventoryList() {
             <InventoryConsumption
                 open={openConsumptionInventoryPopup}
                 consumeData={inventoryData}
+                from={'list'}
                 handleClose={(data) => {
                     setOpenConsumptionInventoryPopup(false)
                     setInventoryData(null)
                     if (data == 'save') {
                         dispatch(actionInventoryList({
-                            status: selectedStatus,
+                            stock_status: selectedStatus,
                             branch_uuid: branch?.currentBranch?.uuid,
                             page: page,
                             limit: LIST_LIMIT
