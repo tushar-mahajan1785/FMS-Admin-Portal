@@ -36,6 +36,7 @@ import ArrowDownIcon from '../../../assets/icons/ArrowDownIcon'
 import ArrowUpIcon from '../../../assets/icons/ArrowUpIcon'
 import UserCircleIcon from '../../../assets/icons/UserCircleIcon'
 import _ from 'lodash'
+import { ViewMultipleFilesPopup } from '../../../components/view-multiple-files'
 
 export const InventoryDetails = ({ open, handleClose, detail }) => {
     const dispatch = useDispatch()
@@ -65,6 +66,8 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
     const [showLowStockMessage, setShowLowStockMessage] = useState(1)
     const [loadingList, setLoadingList] = useState(0)
     const [screenType, setScreenType] = useState(null)
+    const [openViewMultipleFiles, setOpenViewMultipleFiles] = useState(false)
+    const [filesDetails, setFilesDetails] = useState([])
 
     const columnsCompleteHistory = [
         {
@@ -382,7 +385,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
             headerName: 'Invoice No.'
         },
         {
-            flex: 0.06,
+            flex: 0.05,
             field: 'stock_after',
             headerName: 'Stock After',
             renderCell: (params) => {
@@ -401,48 +404,71 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
             headerName: 'Additional Information',
         },
         {
-            flex: 0.12,
+            flex: 0.14,
             field: 'files',
             headerName: 'Attachments',
             renderCell: (params) => {
+                const files = params?.row?.files || [];
+                const visibleFiles = files.slice(0, 2); // show only first 2
+                const remainingCount = files.length - 2;
+
                 return (
                     <Stack
                         sx={{
-                            justifyContent: 'flex-start', // Align to start for better wrapping
+                            justifyContent: 'flex-start',
                             flexDirection: 'row',
                             alignItems: 'center',
-                            gap: 0.7, // ⭐ This creates space between chips
-                            flexWrap: 'wrap', // ⭐ This allows files to wrap to the next line
+                            gap: 0.7,
+                            // flexWrap: 'wrap',
                             height: '100%',
-                            // overflowY: 'auto', // Optional: adds a scrollbar if files are numerous
                             p: 0.5
                         }}
                     >
-                        {
-                            params?.row?.files && params?.row?.files.length > 0 ?
-                                params?.row?.files.map((file, index) => {
+                        {visibleFiles.map((file, index) => (
+                            <TypographyComponent
+                                key={index}
+                                fontSize={14}
+                                fontWeight={400}
+                                sx={{
+                                    cursor: 'pointer',
+                                    color: theme.palette.primary[600],
+                                    textDecoration: 'underline',
+                                    borderRight:
+                                        index + 1 < visibleFiles.length
+                                            ? `1.5px solid ${theme.palette.grey[900]}`
+                                            : 'none',
+                                    paddingRight: 0.7
+                                }}
+                                onClick={() => {
+                                    window.open(file?.image_url, '_blank');
+                                }}
+                            >
+                                {file?.file_name}
+                            </TypographyComponent>
+                        ))}
 
-                                    return (
-                                        <React.Fragment>
-                                            <TypographyComponent
-                                                fontSize={14}
-                                                fontWeight={400}
-                                                sx={{ cursor: 'pointer', color: theme.palette.primary[600], textDecoration: 'underline', borderRight: index + 1 < params?.row?.files.length ? `1.5px solid ${theme.palette.grey[900]}` : 'none', paddingRight: 0.7 }}
-                                                onClick={() => {
-                                                    window.open(file?.image_url, '_blank')
-                                                }}
-                                            >{file?.file_name}
-                                            </TypographyComponent>
-                                        </React.Fragment>
-                                    )
-                                })
-                                :
-                                <></>
-                        }
+                        {/* Show "+X more" */}
+                        {remainingCount > 0 && (
+                            <TypographyComponent
+                                fontSize={14}
+                                fontWeight={500}
+                                sx={{
+                                    cursor: 'pointer',
+                                    color: theme.palette.grey[900]
+                                }}
+                                onClick={() => {
+                                    setOpenViewMultipleFiles(true)
+                                    setFilesDetails(params?.row?.files)
+                                }}
+                            >
+                                +{remainingCount} more
+                            </TypographyComponent>
+                        )}
                     </Stack>
-                )
+                );
             }
         }
+
     ];
 
     /**
@@ -1303,6 +1329,15 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                         }
                         fetchInventoryHistory()
                     }
+                }}
+            />
+            <ViewMultipleFilesPopup
+                open={openViewMultipleFiles}
+                files={filesDetails}
+                label={'Files'}
+                handleClose={() => {
+                    setOpenViewMultipleFiles(false)
+                    setFilesDetails([])
                 }}
             />
         </Drawer>
