@@ -609,8 +609,8 @@ export default function InventoryList() {
                                                         </TypographyComponent>
                                                     </Grid>
                                                     <Grid size={{ xs: 3.5, sm: 3.5, md: 3.5, lg: 3.5, xl: 3.5 }}>
-                                                        <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.success[700] }}>
-                                                            {item?.quantity && item?.quantity !== null ? `+${item?.quantity} ${item?.unit && item?.unit !== null ? item?.unit : ''}` : ''}
+                                                        <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.error[700] }}>
+                                                            {item?.quantity && item?.quantity !== null ? `-${item?.quantity} ${item?.unit && item?.unit !== null ? item?.unit : ''}` : ''}
                                                         </TypographyComponent>
                                                         <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>
                                                             Avl: {item?.stock_after !== null ? item?.stock_after : '-'}
