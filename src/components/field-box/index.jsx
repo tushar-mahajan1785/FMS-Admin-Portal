@@ -25,7 +25,8 @@ export default function FieldBox({
   linkType = "url", // "url" | "phone" | "email"
   type,
   length,
-  textColor
+  textColor,
+  is_number = 0,
 }) {
   const theme = useTheme();
   const href = isLink ? buildHref(value, linkType) : value;
@@ -51,7 +52,7 @@ export default function FieldBox({
             fontWeight: 500,
             fontSize: 16,
             lineHeight: "1.5",
-            color: theme.palette.grey[600],
+            color: textColor && textColor !== null ? textColor : theme.palette.grey[600],
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
@@ -74,7 +75,7 @@ export default function FieldBox({
               lineHeight="1.5"
               sx={{
                 maxWidth: "100%",
-                color: theme.palette.grey[600],
+                color: textColor && textColor !== null ? textColor : theme.palette.grey[600],
               }}
             >
               {value.length > length
@@ -167,7 +168,7 @@ export default function FieldBox({
           {renderValue()}
         </Stack>
       ) : (
-        <>-</>
+        <>{is_number == 1 ? '0' : '-'}</>
       )}
     </Box>
   );

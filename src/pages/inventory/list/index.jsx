@@ -36,9 +36,9 @@ export default function InventoryList() {
     const { logout } = useAuth()
     const branch = useBranch()
     const { showSnackbar } = useSnackbar()
+
     //Stores
     const { inventoryList } = useSelector(state => state.inventoryStore)
-
 
     //States
     const [selectedStatus, setSelectedStatus] = useState('')
@@ -46,147 +46,17 @@ export default function InventoryList() {
     const [searchQuery, setSearchQuery] = useState('')
     const [openRestockInventoryPopup, setOpenRestockInventoryPopup] = useState(false);
     const [openConsumptionInventoryPopup, setOpenConsumptionInventoryPopup] = useState(false);
-    const [inventoryListData, setInventoryListData] = useState([{
-        id: 1,
-        item_id: 'INV-000121',
-        item_name: 'Air filter 16X16',
-        category: "Chemicals",
-        storage_location: "Shivaji nagar, Pune",
-        initial_quantity: 16,
-        minimum_quantity: 5,
-        supplier_name: 'abc',
-        supplier_id: 27,
-        critical_quantity: "101",
-        unit: "Kilograms",
-        stock_status: 'Low Stock',
-        updated_on: '2024-06-10 22:03:90',
-        image_url: "https://fms-super-admin.interdev.in/fms/ticket/8/8_1763011390575.jpg"
-    },
-    {
-        id: 2,
-        item_id: 'INV-000122',
-        item_name: 'Compressor Oil (1L)',
-        category: "Chemicals",
-        storage_location: "Shivaji nagar, Pune",
-        initial_quantity: 8,
-        minimum_quantity: 20,
-        supplier_name: 'abc',
-        supplier_id: 27,
-        critical_quantity: "101",
-        unit: "Kilograms",
-        stock_status: 'Out Of Stock',
-        updated_on: '2024-06-10 21:09:12',
-        image_url: "https://fms-super-admin.interdev.in/fms/client/1/branch/1/ticket/12/12_1763123256318.jpg"
-    },
-    {
-        id: 3,
-        item_id: 'INV-000123',
-        item_name: 'Drain Pump Kit',
-        category: "Chemicals",
-        storage_location: "Shivaji nagar, Pune",
-        initial_quantity: 44,
-        minimum_quantity: 20,
-        supplier_name: 'abc',
-        supplier_id: 27,
-        critical_quantity: "101",
-        unit: "Kilograms",
-        stock_status: 'Good Stock',
-        updated_on: '2024-06-10 09:02:12',
-        image_url: "https://fms-super-admin.interdev.in/fms/ticket/8/8_1763011390575.jpg"
-    }
-    ])
-    const [originalInventoryListData, setOriginalInventoryListData] = useState([{
-        id: 1,
-        item_id: 'INV-000121',
-        item_name: 'Air filter 16X16',
-        category: "Chemicals",
-        storage_location: "Shivaji nagar, Pune",
-        initial_quantity: 16,
-        minimum_quantity: 5,
-        supplier_name: 'abc',
-        supplier_id: 27,
-        critical_quantity: "101",
-        unit: "Kilograms",
-        stock_status: 'Low Stock',
-        updated_on: '2024-06-10 22:03:90',
-        image_url: "https://fms-super-admin.interdev.in/fms/ticket/8/8_1763011390575.jpg"
-    },
-    {
-        id: 2,
-        item_id: 'INV-000122',
-        item_name: 'Compressor Oil (1L)',
-        category: "Chemicals",
-        storage_location: "Shivaji nagar, Pune",
-        initial_quantity: 8,
-        minimum_quantity: 20,
-        supplier_name: 'abc',
-        supplier_id: 27,
-        critical_quantity: "101",
-        unit: "Kilograms",
-        stock_status: 'Out Of Stock',
-        updated_on: '2024-06-10 21:09:12',
-        image_url: "https://fms-super-admin.interdev.in/fms/client/1/branch/1/ticket/12/12_1763123256318.jpg"
-    },
-    {
-        id: 3,
-        item_id: 'INV-000123',
-        item_name: 'Drain Pump Kit',
-        category: "Chemicals",
-        storage_location: "Shivaji nagar, Pune",
-        initial_quantity: 44,
-        minimum_quantity: 20,
-        supplier_name: 'abc',
-        supplier_id: 27,
-        critical_quantity: "101",
-        unit: "Kilograms",
-        stock_status: 'Good Stock',
-        updated_on: '2024-06-10 09:02:12',
-        image_url: "https://fms-super-admin.interdev.in/fms/ticket/8/8_1763011390575.jpg"
-    }
-    ])
+    const [inventoryListData, setInventoryListData] = useState([])
+    const [originalInventoryListData, setOriginalInventoryListData] = useState([])
     const [loadingList, setLoadingList] = useState(false)
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
     const [openAddInventoryPopup, setOpenAddInventoryPopup] = useState(false);
     const [openViewInventoryPopup, setOpenViewInventoryPopup] = useState(false);
     const [inventoryData, setInventoryData] = useState(null);
-    const [arrRecentlyAddedItems, setArrRecentlyAddedItems] = useState([{
-        id: 1,
-        item_id: 'INV-000121',
-        item_name: 'Air filter 16X16',
-        initial_quantity: 16,
-        minimum_quantity: 5,
-        stock_status: 'In Stock',
-        updated_on: '2024-06-10 11:03:12'
-    },
-    {
-        id: 2,
-        item_id: 'INV-000122',
-        item_name: 'Compressor Oil (1L)',
-        initial_quantity: 8,
-        minimum_quantity: 20,
-        stock_status: 'In Stock',
-        updated_on: '2024-04-13 21:09:12'
-    },
-    {
-        id: 3,
-        item_id: 'INV-000123',
-        item_name: 'Drain Pump (1L)',
-        initial_quantity: 8,
-        minimum_quantity: 20,
-        stock_status: 'In Stock',
-        updated_on: '2024-04-13 21:09:12'
-    },
-    {
-        id: 4,
-        item_id: 'INV-000123',
-        item_name: 'Drain Pump 2333 (1L)',
-        initial_quantity: 8,
-        minimum_quantity: 20,
-        stock_status: 'In Stock',
-        updated_on: '2024-04-13 21:09:12'
-    }
-    ]);
+    const [arrRecentlyAddedItems, setArrRecentlyAddedItems] = useState([]);
+    const [arrRecentlyUsedItems, setArrRecentlyUsedItems] = useState([]);
+
     //Default Inventory Counts Array
     const [getArrInventoryCounts, setGetArrInventoryCounts] = useState([
         { labelTop: "Total", labelBottom: "Items", key: 'total_items', value: 0, icon: <BoxIcon size={'24'} stroke={theme.palette.primary[600]} />, color: theme.palette.primary[50] },
@@ -197,13 +67,12 @@ export default function InventoryList() {
 
     const columns = [
         {
-            flex: 0.08,
+            flex: 0.06,
             field: 'item_id',
             headerName: 'Item ID',
             renderCell: (params) => {
                 return (
                     <>
-
                         <Stack sx={{ justifyContent: 'center', height: '100%' }}>
                             <TypographyComponent fontSize={14} fontWeight={400}>{params?.row?.item_id}</TypographyComponent>
                         </Stack>
@@ -225,26 +94,26 @@ export default function InventoryList() {
                 return (
                     <Stack sx={{ flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
                         <TypographyComponent color={theme.palette.grey[900]} fontSize={14} fontWeight={500} sx={{ lineHeight: '20px' }}>
-                            {params.row.initial_quantity && params.row.initial_quantity !== null ? `${params.row.initial_quantity} pcs` : ''}
+                            {params?.row?.current_stock && params?.row?.current_stock !== null ? `${params?.row?.current_stock} ${params?.row?.unit && params?.row?.unit !== null ? params?.row?.unit : ''}` : ''}
                         </TypographyComponent>
                         <TypographyComponent color={theme.palette.grey[500]} fontSize={14} fontWeight={400} >
-                            {params.row.minimum_quantity && params.row.minimum_quantity !== null ? `Min: ${params.row.minimum_quantity}` : ''}
+                            {params?.row?.minimum_quantity && params?.row?.minimum_quantity !== null ? `Min: ${params?.row?.minimum_quantity}` : ''}
                         </TypographyComponent>
                     </Stack>
                 )
             }
         },
         {
-            flex: 0.08,
+            flex: 0.06,
             field: 'updated_on',
             headerName: 'Updated On',
             renderCell: (params) => {
                 return (
                     <Stack sx={{ height: '100%', justifyContent: 'center' }}>
                         {
-                            params.row.updated_on && params.row.updated_on !== null ?
+                            params?.row?.updated_on && params?.row?.updated_on !== null ?
                                 <TypographyComponent color={theme.palette.grey.primary} fontSize={14} fontWeight={400} sx={{ py: '10px' }}>
-                                    {params.row.updated_on && params.row.updated_on !== null ? moment(params.row.updated_on, 'YYYY-MM-DD').format('DD MMM YYYY') : ''}
+                                    {params?.row?.updated_on && params?.row?.updated_on !== null ? moment(params?.row?.updated_on, 'YYYY-MM-DD').format('DD MMM YYYY') : ''}
                                 </TypographyComponent>
                                 :
                                 <></>
@@ -255,7 +124,7 @@ export default function InventoryList() {
             }
         },
         {
-            flex: 0.09,
+            flex: 0.08,
             field: "stock_status",
             headerName: "Status",
             renderCell: (params) => {
@@ -279,13 +148,40 @@ export default function InventoryList() {
             }
         },
         {
-            flex: 0.16,
+            flex: 0.18,
             sortable: false,
             field: "",
             headerName: 'Action',
             renderCell: (params) => {
                 return (
                     <Stack sx={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center', gap: 2, height: '100%' }}>
+                        {
+                            Number(params?.row?.current_stock) > 0 ?
+                                <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.info[500]}`, background: theme.palette.info[50], borderRadius: '6px', padding: '5px 8px', cursor: 'pointer' }}
+                                    onClick={() => {
+                                        setInventoryData(params?.row)
+                                        setOpenConsumptionInventoryPopup(true)
+                                    }}
+                                >
+                                    <BoxIcon stroke={theme.palette.info[700]} />
+                                    <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.info[700] }}>
+                                        Record Usage
+                                    </TypographyComponent>
+                                </Stack>
+                                :
+                                <></>
+                        }
+                        <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.primary[600]}`, background: theme.palette.common.white, borderRadius: '6px', padding: '5px 8px', cursor: 'pointer' }}
+                            onClick={() => {
+                                setInventoryData(params?.row)
+                                setOpenRestockInventoryPopup(true)
+                            }}
+                        >
+                            <BoxPlusIcon stroke={theme.palette.primary[500]} />
+                            <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.primary[600] }}>
+                                Restock
+                            </TypographyComponent>
+                        </Stack>
                         {
                             hasPermission('INVENTORY_VIEW') ?
                                 <Box sx={{ display: "flex", alignItems: "center", height: '100%' }}>
@@ -303,28 +199,6 @@ export default function InventoryList() {
                                 :
                                 <></>
                         }
-                        <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.info[500]}`, background: theme.palette.info[50], borderRadius: '6px', padding: '5px 8px', cursor: 'pointer' }}
-                            onClick={() => {
-                                setInventoryData(params?.row)
-                                setOpenConsumptionInventoryPopup(true)
-                            }}
-                        >
-                            <BoxIcon stroke={theme.palette.info[700]} />
-                            <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.info[700] }}>
-                                Record Usage
-                            </TypographyComponent>
-                        </Stack>
-                        <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.primary[600]}`, background: theme.palette.common.white, borderRadius: '6px', padding: '5px 8px', cursor: 'pointer' }}
-                            onClick={() => {
-                                setInventoryData(params?.row)
-                                setOpenRestockInventoryPopup(true)
-                            }}
-                        >
-                            <BoxPlusIcon stroke={theme.palette.primary[500]} />
-                            <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.primary[600] }}>
-                                Restock
-                            </TypographyComponent>
-                        </Stack>
 
                     </Stack>
                 );
@@ -342,36 +216,38 @@ export default function InventoryList() {
         if (inventoryList && inventoryList !== null) {
             dispatch(resetInventoryListResponse())
             if (inventoryList?.result === true) {
+                setLoadingList(false)
                 setInventoryListData(inventoryList?.response?.data)
                 setOriginalInventoryListData(inventoryList?.response?.data)
                 let objData = inventoryList?.response?.counts
                 setGetArrInventoryCounts(prevArr =>
-                    prevArr.map(item => ({
+                    prevArr?.map(item => ({
                         ...item,
                         value: objData[item.key] !== undefined ? objData[item.key] : 0
                     }))
                 );
                 setTotal(inventoryList?.response?.counts?.total_items)
                 setArrRecentlyAddedItems(inventoryList?.response?.recently_added_items)
-                setLoadingList(false)
+                setArrRecentlyUsedItems(inventoryList?.response?.recently_used_items)
             } else {
                 setLoadingList(false)
-                // setInventoryListData([])
-                // setOriginalInventoryListData([])
-                // setArrRecentlyAddedItems([])
-                // setTotal(0)
-                // let objData = {
-                //     total_items: 0,
-                //     in_stock_items: 0,
-                //     out_of_stock_items: 0,
-                //     critical_items: 0
-                // }
-                // setGetArrInventoryCounts(prevArr =>
-                //     prevArr.map(item => ({
-                //         ...item,
-                //         value: objData[item.key] !== undefined ? objData[item.key] : 0
-                //     }))
-                // );
+                setInventoryListData([])
+                setOriginalInventoryListData([])
+                setArrRecentlyAddedItems([])
+                setArrRecentlyUsedItems([])
+                setTotal(0)
+                let objData = {
+                    total_items: 0,
+                    in_stock_items: 0,
+                    out_of_stock_items: 0,
+                    critical_items: 0
+                }
+                setGetArrInventoryCounts(prevArr =>
+                    prevArr.map(item => ({
+                        ...item,
+                        value: objData[item.key] !== undefined ? objData[item.key] : 0
+                    }))
+                );
                 switch (inventoryList?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -393,7 +269,7 @@ export default function InventoryList() {
     useEffect(() => {
         if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && page && page !== null) {
             dispatch(actionInventoryList({
-                status: selectedStatus,
+                stock_status: selectedStatus,
                 branch_uuid: branch?.currentBranch?.uuid,
                 page: page,
                 limit: LIST_LIMIT
@@ -672,12 +548,13 @@ export default function InventoryList() {
                                                     </Grid>
                                                     <Grid size={{ xs: 3.5, sm: 3.5, md: 3.5, lg: 3.5, xl: 3.5 }}>
                                                         <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.success[700] }}>
-                                                            {item?.initial_quantity && item?.initial_quantity !== null ? `+${item?.initial_quantity} pcs` : ''}
+                                                            {item?.quantity && item?.quantity !== null ? `+${item?.quantity} ${item?.unit && item?.unit !== null ? item?.unit : ''}` : ''}
                                                         </TypographyComponent>
                                                         <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>
-                                                            Avl: {item?.initial_quantity && item?.initial_quantity !== null ? item?.initial_quantity : ''}
+                                                            Avl: {item?.stock_after !== null ? item?.stock_after : '-'}
                                                         </TypographyComponent>
-                                                    </Grid>{
+                                                    </Grid>
+                                                    {
                                                         index < arrRecentlyAddedItems.length - 1 ?
                                                             <Divider sx={{ width: '100%', my: 1.2 }} />
                                                             :
@@ -688,7 +565,9 @@ export default function InventoryList() {
                                         ))
                                     )
                                         :
-                                        <></>
+                                        <Stack>
+                                            <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} imageSize={180} mt={0} title={''} subTitle={'No Items Found'} />
+                                        </Stack>
                                 }
                             </Stack>
                         </Stack>
@@ -709,8 +588,8 @@ export default function InventoryList() {
                                 },
                             }}>
                                 {
-                                    arrRecentlyAddedItems && arrRecentlyAddedItems !== null && arrRecentlyAddedItems.length > 0 ? (
-                                        arrRecentlyAddedItems.map((item, index) => (
+                                    arrRecentlyUsedItems && arrRecentlyUsedItems !== null && arrRecentlyUsedItems.length > 0 ? (
+                                        arrRecentlyUsedItems.map((item, index) => (
                                             <React.Fragment key={index}>
                                                 <Grid container spacing={1}>
                                                     <Grid size={{ xs: 5, sm: 5, md: 5, lg: 5, xl: 5 }}>
@@ -731,24 +610,25 @@ export default function InventoryList() {
                                                     </Grid>
                                                     <Grid size={{ xs: 3.5, sm: 3.5, md: 3.5, lg: 3.5, xl: 3.5 }}>
                                                         <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.error[700] }}>
-                                                            {item?.initial_quantity && item?.initial_quantity !== null ? `-${item?.initial_quantity} pcs` : ''}
+                                                            {item?.quantity && item?.quantity !== null ? `-${item?.quantity} ${item?.unit && item?.unit !== null ? item?.unit : ''}` : ''}
                                                         </TypographyComponent>
                                                         <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>
-                                                            Avl: {item?.initial_quantity && item?.initial_quantity !== null ? item?.initial_quantity : ''}
+                                                            Avl: {item?.stock_after !== null ? item?.stock_after : '-'}
                                                         </TypographyComponent>
                                                     </Grid>{
-                                                        index < arrRecentlyAddedItems.length - 1 ?
+                                                        index < arrRecentlyUsedItems.length - 1 ?
                                                             <Divider sx={{ width: '100%', my: 1.2 }} />
                                                             :
                                                             <></>
                                                     }
-
                                                 </Grid>
                                             </React.Fragment>
                                         ))
                                     )
                                         :
-                                        <></>
+                                        <Stack>
+                                            <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} imageSize={180} mt={0} title={''} subTitle={'No Items Found'} />
+                                        </Stack>
                                 }
                             </Stack>
                         </Stack>
@@ -762,7 +642,7 @@ export default function InventoryList() {
                     setOpenAddInventoryPopup(false)
                     if (data == 'save') {
                         dispatch(actionInventoryList({
-                            status: selectedStatus,
+                            stock_status: selectedStatus,
                             branch_uuid: branch?.currentBranch?.uuid,
                             page: page,
                             limit: LIST_LIMIT
@@ -773,20 +653,29 @@ export default function InventoryList() {
             <InventoryDetails
                 open={openViewInventoryPopup}
                 detail={inventoryData}
-                handleClose={() => {
+                handleClose={(data) => {
                     setOpenViewInventoryPopup(false)
                     setInventoryData(null)
+                    if (data == 'delete') {
+                        dispatch(actionInventoryList({
+                            stock_status: selectedStatus,
+                            branch_uuid: branch?.currentBranch?.uuid,
+                            page: page,
+                            limit: LIST_LIMIT
+                        }))
+                    }
                 }}
             />
             <RestockInventory
                 open={openRestockInventoryPopup}
                 restockData={inventoryData}
+                from={'list'}
                 handleClose={(data) => {
                     setOpenRestockInventoryPopup(false)
                     setInventoryData(null)
                     if (data == 'save') {
                         dispatch(actionInventoryList({
-                            status: selectedStatus,
+                            stock_status: selectedStatus,
                             branch_uuid: branch?.currentBranch?.uuid,
                             page: page,
                             limit: LIST_LIMIT
@@ -797,12 +686,13 @@ export default function InventoryList() {
             <InventoryConsumption
                 open={openConsumptionInventoryPopup}
                 consumeData={inventoryData}
+                from={'list'}
                 handleClose={(data) => {
                     setOpenConsumptionInventoryPopup(false)
                     setInventoryData(null)
                     if (data == 'save') {
                         dispatch(actionInventoryList({
-                            status: selectedStatus,
+                            stock_status: selectedStatus,
                             branch_uuid: branch?.currentBranch?.uuid,
                             page: page,
                             limit: LIST_LIMIT
