@@ -525,7 +525,7 @@ export const InventoryConsumption = ({ open, handleClose, consumeData, from = 'd
                                                 </Grid>
                                                 {/* Category */}
                                                 <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 4 }}>
-                                                    <FieldBox textColor={theme.palette.grey[900]} label="Storage Location" value={inventoryRestockDetailsData?.storage_location && inventoryRestockDetailsData?.storage_location !== null ? inventoryRestockDetailsData?.storage_location : ''} />
+                                                    <FieldBox textColor={theme.palette.grey[900]} label="Storage Location" type="description" length={70} value={inventoryRestockDetailsData?.storage_location && inventoryRestockDetailsData?.storage_location !== null ? inventoryRestockDetailsData?.storage_location : ''} />
                                                 </Grid>
                                             </Grid>
                                         </Stack>
