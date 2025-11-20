@@ -16,7 +16,7 @@ import CustomAutocomplete from '../../../components/custom-autocomplete'
 import { useDispatch, useSelector } from 'react-redux'
 import { ERROR, SERVER_ERROR, UNAUTHORIZED } from '../../../constants'
 import { actionVendorMasterList, resetVendorMasterListResponse } from '../../../store/vendor'
-import { actionInventoryRestockSave, resetGetUnitMasterResponse, resetInventoryRestockSaveResponse } from '../../../store/inventory'
+import { actionGetUnitMaster, actionInventoryRestockSave, resetGetUnitMasterResponse, resetInventoryRestockSaveResponse } from '../../../store/inventory'
 import { useAuth } from '../../../hooks/useAuth'
 import { useSnackbar } from '../../../hooks/useSnackbar'
 import { useBranch } from '../../../hooks/useBranch'
@@ -27,7 +27,7 @@ import DatePickerWrapper from '../../../components/datapicker-wrapper'
 import DeleteIcon from '../../../assets/icons/DeleteIcon'
 import FileIcon from '../../../assets/icons/FileIcon'
 import _ from 'lodash'
-import { compressFile, getCurrentStatusColor, getCurrentStockValue, getFormData, getObjectById } from '../../../utils'
+import { compressFile, getCurrentStatusColor, getCurrentStockValue, getFormData } from '../../../utils'
 import CustomChip from '../../../components/custom-chip'
 
 export const RestockInventory = ({ open, handleClose, restockData }) => {
@@ -71,71 +71,36 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
             critical_quantity: '',
             unit: '',
             supplier_name: '',
-            invoice_no: '',
+            invoice_number: '',
             restock_date: '',
             additional_notes: ''
         }
     });
 
     //watchers
-    const watchSupplier = watch('supplier_name')
     const watchAddedQuantity = watch('added_quantity')
 
+    /**
+     * Initial Render
+     * @dependent restockData
+     */
     useEffect(() => {
         if (open === true) {
             reset()
-            // setInventoryRestockDetailsData({
-            //     "uuid": "tyyg7687878787878",
-            //     "item_id": "INV-98989",
-            //     "item_name": "R-22 Refrigerant Gas",
-            //     "category": "Chemicals",
-            //     "description": "cdddddddddddddd",
-            //     "initial_quantity": "100",
-            //     "minimum_quantity": "120",
-            //     "critical_quantity": "101",
-            //     "unit": "Kilograms",
-            //     "storage_location": "Shivaji nagar, Pune",
-            //     "contact_country_code": "+91",
-            //     "contact": "9876543222",
-            //     "email": "vijay+4@mail.com",
-            //     "supplier_name": 27,
-            //     "restocked_quantity": "50",
-            //     "consumed_quantity": "30",
-            //     "status": "Out Of Stock",
-            //     "last_restocked_date": "2025-04-01",
-            //     "image_url": "https://fms-super-admin.interdev.in/fms/client/1/branch/1/ticket/12/12_1763123256318.jpg"
-            // })
+
+            //set the previously filled inventory data 
             if (restockData && restockData !== null) {
                 setInventoryRestockDetailsData(restockData)
             } else {
                 setInventoryRestockDetailsData(null)
             }
-            // dispatch(actionGetInventoryDetails({
-            //     uuid: detail?.uuid
-            // }))
-            //-----development purpose-----
-            //for testing purpose only
+
+            //Masters api Call
+            dispatch(actionGetUnitMaster())
             dispatch(actionVendorMasterList({
                 client_id: branch?.currentBranch?.client_id,
                 branch_uuid: branch?.currentBranch?.uuid
             }))
-            setMasterUnitOptions([
-                {
-                    "id": 1,
-                    "name": "Kilograms",
-                    "status": "Active"
-                },
-                {
-                    "id": 2,
-                    "name": "Grams",
-                    "status": "Active"
-                },
-                {
-                    "id": 3,
-                    "name": "Liters",
-                    "status": "Active"
-                }])
-            //---------------------------
         }
         return () => {
             reset()
@@ -144,12 +109,22 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
         }
     }, [open, restockData])
 
+    /**
+    * Set supplier_name
+    * @dependent supervisorMasterOptions
+    */
+    useEffect(() => {
+        if (supervisorMasterOptions && supervisorMasterOptions !== null && supervisorMasterOptions.length > 0) {
+            setValue('supplier_name', inventoryRestockDetailsData?.supplier_id && inventoryRestockDetailsData?.supplier_id !== null ? inventoryRestockDetailsData?.supplier_id : '')
+        }
+    }, [supervisorMasterOptions])
+
     useEffect(() => {
         if (inventoryRestockDetailsData && inventoryRestockDetailsData !== null) {
             setValue('minimum_quantity', inventoryRestockDetailsData?.minimum_quantity)
-            setValue('unit', inventoryRestockDetailsData?.unit)
+            setValue('unit', inventoryRestockDetailsData?.unit_id)
             setValue('critical_quantity', inventoryRestockDetailsData?.critical_quantity)
-            setValue('supplier_name', inventoryRestockDetailsData?.supplier_name)
+            setValue('supplier_name', inventoryRestockDetailsData?.supplier_id)
         }
 
     }, [inventoryRestockDetailsData])
@@ -233,7 +208,7 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
             if (getUnitMaster?.result === true) {
                 setMasterUnitOptions(getUnitMaster?.response)
             } else {
-                // setMasterUnitOptions([])
+                setMasterUnitOptions([])
                 switch (getUnitMaster?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -261,50 +236,7 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
         if (vendorMasterList && vendorMasterList !== null) {
             dispatch(resetVendorMasterListResponse())
             if (vendorMasterList?.result === true) {
-                // setSupervisorMasterOptions(vendorMasterList?.response)
-                let data = [
-                    {
-                        "id": 30,
-                        "name": "TSA Technologies",
-                        "primary_contact_name": "Vijay Patil",
-                        "primary_contact_no": "U2FsdGVkX19vzhb7C71e1kog/pqdsepXrsj1KCkt4eA=",
-                        "primary_contact_email": "U2FsdGVkX1//Zj9k1PxUyR09FgCXVOdqs7tpvnnuDfGJmqa0xIRqg61nBK31y39S",
-                        "primary_contact_country_code": "+91"
-                    },
-                    {
-                        "id": 29,
-                        "name": "Jio India",
-                        "primary_contact_name": "Rahul Pawar",
-                        "primary_contact_no": "U2FsdGVkX19DwxKeFI7M6YApCEULM+uPMaN0+oMzHGM=",
-                        "primary_contact_email": "U2FsdGVkX18oUEDIJg/l99utABZy1zQ79GTUKJurL6k=",
-                        "primary_contact_country_code": "+91"
-                    },
-                    {
-                        "id": 28,
-                        "name": "VI Private Limited",
-                        "primary_contact_name": "Sarthak Chavan",
-                        "primary_contact_no": "U2FsdGVkX19vzhb7C71e1kog/pqdsepXrsj1KCkt4eA=",
-                        "primary_contact_email": "U2FsdGVkX1//Zj9k1PxUyR09FgCXVOdqs7tpvnnuDfGJmqa0xIRqg61nBK31y39S",
-                        "primary_contact_country_code": "+91"
-                    },
-                    {
-                        "id": 27,
-                        "name": "Vodafone India Pvt Ltd",
-                        "primary_contact_name": "Gauri More",
-                        "primary_contact_no": "U2FsdGVkX19vzhb7C71e1kog/pqdsepXrsj1KCkt4eA=",
-                        "primary_contact_email": "U2FsdGVkX1//Zj9k1PxUyR09FgCXVOdqs7tpvnnuDfGJmqa0xIRqg61nBK31y39S",
-                        "primary_contact_country_code": "+91"
-                    },
-                    {
-                        "id": 1,
-                        "name": "Lorem Ips1",
-                        "primary_contact_name": "Akash Pawar",
-                        "primary_contact_no": "U2FsdGVkX19vzhb7C71e1kog/pqdsepXrsj1KCkt4eA=",
-                        "primary_contact_email": "U2FsdGVkX1//Zj9k1PxUyR09FgCXVOdqs7tpvnnuDfGJmqa0xIRqg61nBK31y39S",
-                        "primary_contact_country_code": "+91"
-                    }
-                ]
-                setSupervisorMasterOptions(data)
+                setSupervisorMasterOptions(vendorMasterList?.response)
             } else {
                 setSupervisorMasterOptions([])
                 switch (vendorMasterList?.status) {
@@ -360,16 +292,12 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
 
 
     const onSubmit = async (data) => {
-        let currentSupplier = getObjectById(supervisorMasterOptions, watchSupplier)
         let objData = {
             branch_uuid: branch?.currentBranch?.uuid,
             inventory_uuid: inventoryRestockDetailsData?.uuid && inventoryRestockDetailsData?.uuid !== null ? inventoryRestockDetailsData?.uuid : null,
             added_quantity: data?.added_quantity && data?.added_quantity !== null ? data?.added_quantity : null,
-            minimum_quantity: data?.minimum_quantity && data?.minimum_quantity !== null ? data?.minimum_quantity : null,
-            critical_quantity: data?.critical_quantity && data?.critical_quantity !== null ? data?.critical_quantity : null,
-            unit: data?.unit && data?.unit !== null ? data?.unit : null,
-            supplier_name: currentSupplier ? currentSupplier?.name : null,
-            invoice_no: data?.invoice_no && data?.invoice_no !== null ? data?.invoice_no : null,
+            supplier_id: data?.supplier_name ? data?.supplier_name : null,
+            invoice_number: data?.invoice_number && data?.invoice_number !== null ? data?.invoice_number : null,
             restock_date: data?.restock_date && data?.restock_date !== null ? moment(data.restock_date, 'DD MMM YYYY').format('YYYY-MM-DD') : null,
             additional_notes: data?.additional_notes && data?.additional_notes !== null ? data?.additional_notes : null
         }
@@ -402,7 +330,7 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
             variant='temporary'
             onClose={handleClose}
             ModalProps={{ keepMounted: true }}
-            sx={{ '& .MuiDrawer-paper': { width: { xs: '100%', md: '100%', lg: '86%' } } }}
+            sx={{ '& .MuiDrawer-paper': { width: { xs: '100%', md: '100%', lg: '100%', xl: '86%' } } }}
         >
             <Stack sx={{ height: '100%' }} justifyContent={'flex-start'} flexDirection={'column'}>
                 <FormHeader
@@ -455,9 +383,9 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                                         <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', mt: 0, mb: 0, px: 1, pt: 1 }}>
                                             <SectionHeader sx={{}} title={'Basic Information'} show_progress={false} />
                                             {
-                                                inventoryRestockDetailsData?.status && inventoryRestockDetailsData?.status !== null ?
+                                                inventoryRestockDetailsData?.stock_status && inventoryRestockDetailsData?.stock_status !== null ?
                                                     <Stack>
-                                                        <CustomChip text={inventoryRestockDetailsData?.status} colorName={getCurrentStatusColor(inventoryRestockDetailsData?.status)} />
+                                                        <CustomChip text={inventoryRestockDetailsData?.stock_status} colorName={getCurrentStatusColor(inventoryRestockDetailsData?.stock_status)} />
                                                     </Stack>
                                                     :
                                                     <></>
@@ -483,7 +411,7 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                                                 </Grid>
                                                 {/* Item ID */}
                                                 <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 4 }}>
-                                                    <FieldBox textColor={theme.palette.grey[900]} label="Current Stock" value={inventoryRestockDetailsData?.initial_quantity && inventoryRestockDetailsData?.initial_quantity !== null ? inventoryRestockDetailsData?.initial_quantity : ''} />
+                                                    <FieldBox textColor={theme.palette.grey[900]} label="Current Stock" value={inventoryRestockDetailsData?.current_stock && inventoryRestockDetailsData?.current_stock !== null ? inventoryRestockDetailsData?.current_stock : ''} />
                                                 </Grid>
                                                 {/* Item Name */}
                                                 <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 4 }}>
@@ -566,7 +494,7 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                                                                     masterUnitOptions.map(option => (
                                                                         <MenuItem
                                                                             key={option?.id}
-                                                                            value={option?.name}
+                                                                            value={option?.id}
                                                                             sx={{
                                                                                 whiteSpace: 'normal',        // allow wrapping
                                                                                 wordBreak: 'break-word',     // break long words if needed
@@ -578,7 +506,7 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                                                                                 textOverflow: 'ellipsis'
                                                                             }}
                                                                         >
-                                                                            {option?.name}
+                                                                            {option?.title}
                                                                         </MenuItem>
                                                                     ))}
                                                             </CustomTextField>
@@ -669,7 +597,7 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                                                 </Grid>
                                                 <Grid size={{ xs: 12, sm: 4, md: 4, lg: 4, xl: 4 }}>
                                                     <Controller
-                                                        name='invoice_no'
+                                                        name='invoice_number'
                                                         control={control}
                                                         rules={{
                                                             required: 'Invoice/Reference Number is required',
@@ -686,8 +614,8 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                                                                 label={<FormLabel label='Invoice / Reference Number' required={true} />}
                                                                 onChange={field.onChange}
                                                                 inputProps={{ maxLength: 255 }}
-                                                                error={Boolean(errors.invoice_no)}
-                                                                {...(errors.invoice_no && { helperText: errors.invoice_no.message })}
+                                                                error={Boolean(errors.invoice_number)}
+                                                                {...(errors.invoice_number && { helperText: errors.invoice_number.message })}
                                                             />
                                                         )}
                                                     />
@@ -850,9 +778,9 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                                                 }
                                             </Stack>
                                             <Stack spacing={1.5} sx={{ width: '100%', my: 2 }}>
-                                                <Stack sx={{ padding: '12px', borderRadius: '8px', border: getCurrentStockValue('Restock', watchAddedQuantity, inventoryRestockDetailsData?.initial_quantity) < inventoryRestockDetailsData?.minimum_quantity ? `1px solid ${theme.palette.error[500]}` : `1px solid ${theme.palette.success[500]}`, background: getCurrentStockValue('Restock', watchAddedQuantity, inventoryRestockDetailsData?.initial_quantity) < inventoryRestockDetailsData?.minimum_quantity ? theme.palette.error[50] : theme.palette.success[50] }}>
+                                                <Stack sx={{ padding: '12px', borderRadius: '8px', border: getCurrentStockValue('Restock', watchAddedQuantity, inventoryRestockDetailsData?.current_stock) < inventoryRestockDetailsData?.minimum_quantity ? `1px solid ${theme.palette.error[500]}` : `1px solid ${theme.palette.success[500]}`, background: getCurrentStockValue('Restock', watchAddedQuantity, inventoryRestockDetailsData?.current_stock) < inventoryRestockDetailsData?.minimum_quantity ? theme.palette.error[50] : theme.palette.success[50] }}>
                                                     <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>Current Stock</TypographyComponent>
-                                                    <TypographyComponent fontSize={24} fontWeight={500} sx={{ color: theme.palette.grey[900] }}>{getCurrentStockValue('Restock', watchAddedQuantity, inventoryRestockDetailsData?.initial_quantity)} {inventoryRestockDetailsData?.unit}</TypographyComponent>
+                                                    <TypographyComponent fontSize={24} fontWeight={500} sx={{ color: theme.palette.grey[900] }}>{getCurrentStockValue('Restock', watchAddedQuantity, inventoryRestockDetailsData?.current_stock)} {inventoryRestockDetailsData?.unit}</TypographyComponent>
                                                 </Stack>
                                                 <Stack sx={{ padding: '12px', borderRadius: '8px', border: `1px solid ${theme.palette.grey[500]}` }}>
                                                     <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>Minimum Stock</TypographyComponent>

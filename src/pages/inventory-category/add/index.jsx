@@ -27,12 +27,14 @@ import StatusSwitch from "../../../components/status-switch";
 import CloseIcon from "../../../assets/icons/CloseIcon";
 import { actionAddInventoryCategory, resetAddInventoryCategoryResponse } from "../../../store/inventory";
 import ClientsIcon from "../../../assets/icons/ClientsIcon";
+import { useBranch } from "../../../hooks/useBranch";
 
 export default function AddInventoryCategory({ open, handleClose, objData }) {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout } = useAuth()
     const { showSnackbar } = useSnackbar()
+    const branch = useBranch()
 
     //Stores
     const { addInventoryCategory } = useSelector(state => state.inventoryStore)
@@ -62,7 +64,7 @@ export default function AddInventoryCategory({ open, handleClose, objData }) {
     useEffect(() => {
         if (open === true) {
             if (objData && objData !== null) {
-                setValue('name', objData?.name && objData?.name !== null ? objData?.name : '')
+                setValue('name', objData?.title && objData?.title !== null ? objData?.title : '')
                 setValue('description', objData?.description && objData?.description !== null ? objData?.description : '')
                 setInventoryCategoryStatus(objData?.status)
             }
@@ -113,11 +115,12 @@ export default function AddInventoryCategory({ open, handleClose, objData }) {
 
         let finalData = {
             status: inventoryCategoryStatus,
-            name: data.name && data.name !== null ? data.name : null,
+            branch_uuid: branch?.currentBranch?.uuid,
+            title: data.name && data.name !== null ? data.name : null,
             description: data.description && data.description !== null ? data.description : null
         }
-        if (objData?.id && objData?.id !== null) {
-            finalData.id = objData?.id
+        if (objData?.uuid && objData?.uuid !== null) {
+            finalData.uuid = objData?.uuid
         }
 
         setLoading(true)

@@ -221,7 +221,12 @@ export const getCurrentStockValue = (type, current, initial) => {
   if (type == 'Consumption') {
     total_quantity = Number(total_quantity) - Number(changed_quantity)
   }
-  return total_quantity
+  if (Number(total_quantity) > 0) {
+    return total_quantity
+  } else {
+    return 'Limit Exceed'
+  }
+
 }
 
 /**

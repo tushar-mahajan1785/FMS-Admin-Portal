@@ -265,7 +265,7 @@ export const API_DELETE_TICKET_UPDATE = `${BASE}/ticket/remove-history`
 
 export const API_DELETE_TICKET_UPDATE_FILE = `${BASE}/ticket/remove-history-media`
 
-export const API_GET_TICKET_MASTER = `${BASE}/ticket/master/list`
+export const API_GET_TICKET_MASTER = `${BASE}/ticket/master-list`
 
 // documents
 export const API_DOCUMENTS_LIST = `${BASE}/document-group/list`
@@ -285,21 +285,21 @@ export const API_INVENTORY_DETAIL = `${BASE}/inventory/details`
 
 export const API_INVENTORY_DELETE = `${BASE}/inventory/remove`
 
-export const API_INVENTORY_CATEGORY = `${BASE}/inventory/category/list`
+export const API_INVENTORY_CATEGORY = `${BASE}/inventory-category/list`
 
-export const API_INVENTORY_CATEGORY_ADD = `${BASE}/inventory/category/add`
+export const API_INVENTORY_CATEGORY_ADD = `${BASE}/inventory-category/add-or-edit`
 
-export const API_INVENTORY_CATEGORY_DELETE = `${BASE}/inventory/category/remove`
+export const API_INVENTORY_CATEGORY_DELETE = `${BASE}/inventory-category/remove`
 
-export const API_INVENTORY_CATEGORY_DETAILS = `${BASE}/inventory/category/details`
+export const API_INVENTORY_CATEGORY_DETAILS = `${BASE}/inventory-category/details`
 
 export const API_GET_UNIT_LIST = `${BASE}/unit/list`
 
-export const API_GET_INVENTORY_TRANSACTION_HISTORY = `${BASE}/inventory/transaction/history`
+export const API_GET_INVENTORY_TRANSACTION_HISTORY = `${BASE}/inventory/stock-list`
 
-export const API_INVENTORY_RESTOCK_SAVE = `${BASE}/inventory/restock/save`
+export const API_INVENTORY_RESTOCK_SAVE = `${BASE}/inventory/restock`
 
-export const API_INVENTORY_CONSUMPTION_SAVE = `${BASE}/inventory/consumption/save`
+export const API_INVENTORY_CONSUMPTION_SAVE = `${BASE}/inventory/usage`
 
 //PM ACTIVITY
 
@@ -325,3 +325,5 @@ export const API_UPLOAD_DOCUMENTS_CATEGORIES_LIST = `${BASE}/document/list`
 export const API_UPLOAD_DOCUMENTS_CATEGORIES_DELETE = `${BASE}/document/remove`
 
 export const API_UPLOAD_DOCUMENTS_CATEGORIES_ARCHIVE = `${BASE}/document/archive`
+
+export const API_UPLOAD_DOCUMENTS_CATEGORIES_RESTORE = `${BASE}/document/restore`

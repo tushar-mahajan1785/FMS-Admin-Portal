@@ -18,43 +18,21 @@ import CustomChip from "../../../components/custom-chip";
 import InventoryCategoryDetails from "../details";
 import AddInventoryCategory from "../add";
 import { actionInventoryCategoryList, resetInventoryCategoryListResponse } from "../../../store/inventory";
+import { useBranch } from "../../../hooks/useBranch";
 
 export default function CategoryList() {
     const { showSnackbar } = useSnackbar()
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout, hasPermission } = useAuth()
+    const branch = useBranch()
 
     //Stores
     const { inventoryCategoryList } = useSelector(state => state.inventoryStore)
 
     //States
-    const [inventoryCategoryData, setInventoryCategoryData] = useState([
-        {
-            "id": 1,
-            "name": "Chemicals",
-            "description": "Chemicals details",
-            "status": "Active"
-        },
-        {
-            "id": 2,
-            "name": "Electrical ",
-            "description": "Electrical items",
-            "status": "Active"
-        }])
-    const [inventoryCategoryOriginalData, setInventoryCategoryOriginalData] = useState([
-        {
-            "id": 1,
-            "name": "Chemicals",
-            "description": "Chemicals details",
-            "status": "Active"
-        },
-        {
-            "id": 2,
-            "name": "Electrical ",
-            "description": "Electrical items",
-            "status": "Active"
-        }])
+    const [inventoryCategoryData, setInventoryCategoryData] = useState([])
+    const [inventoryCategoryOriginalData, setInventoryCategoryOriginalData] = useState([])
     const [openAddInventoryCategoryPopup, setOpenAddInventoryCategoryPopup] = useState(false)
     const [inventoryCategoryDetailData, setInventoryCategoryDetailData] = useState(null)
     const [loadingList, setLoadingList] = useState(false)
@@ -64,7 +42,7 @@ export default function CategoryList() {
     const columns = [
         {
             flex: 0.1,
-            field: 'name',
+            field: 'title',
             headerName: 'Name'
         },
         {
@@ -123,7 +101,7 @@ export default function CategoryList() {
      */
     useEffect(() => {
         setLoadingList(true)
-        dispatch(actionInventoryCategoryList())
+        dispatch(actionInventoryCategoryList({ branch_uuid: branch?.currentBranch?.uuid }))
     }, [])
 
     const handleSearchQueryChange = event => {
@@ -139,7 +117,7 @@ export default function CategoryList() {
             if (inventoryCategoryOriginalData && inventoryCategoryOriginalData !== null && inventoryCategoryOriginalData.length > 0) {
                 var filteredData = inventoryCategoryOriginalData.filter(
                     item =>
-                        (item?.name && item?.name.toLowerCase().includes(searchQuery.trim().toLowerCase())) ||
+                        (item?.title && item?.title.toLowerCase().includes(searchQuery.trim().toLowerCase())) ||
                         (item?.description && item?.description.toLowerCase().includes(searchQuery.trim().toLowerCase())) ||
                         (item?.status && item?.status.toLowerCase().includes(searchQuery.trim().toLowerCase()))
                 )
@@ -170,8 +148,8 @@ export default function CategoryList() {
                 setLoadingList(false)
             } else {
                 setLoadingList(false)
-                // setInventoryCategoryData([])
-                // setInventoryCategoryOriginalData[[]]
+                setInventoryCategoryData([])
+                setInventoryCategoryOriginalData[[]]
                 switch (inventoryCategoryList?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -231,9 +209,6 @@ export default function CategoryList() {
                     rows={inventoryCategoryData}
                     columns={columns}
                     isCheckbox={false}
-                    onChange={(selectedIds) => {
-                        console.log("Selected row IDs in inventoryCategoryList:", selectedIds);
-                    }}
                 />
             ) : (
                 <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Inventory Category Found'} subTitle={''} />
@@ -246,7 +221,7 @@ export default function CategoryList() {
                 open={openAddInventoryCategoryPopup}
                 handleClose={(data) => {
                     if (data && data !== null && data === 'save') {
-                        dispatch(actionInventoryCategoryList())
+                        dispatch(actionInventoryCategoryList({ branch_uuid: branch?.currentBranch?.uuid }))
                     }
                     setOpenAddInventoryCategoryPopup(false)
                     setInventoryCategoryDetailData(null)

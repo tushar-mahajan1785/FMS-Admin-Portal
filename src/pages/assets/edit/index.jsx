@@ -39,6 +39,7 @@ import AddressIcon from "../../../assets/icons/AddressIcon";
 import { CommonDynamicFields } from "../../../components/common-dynamic-fields";
 import AssetIcon from "../../../assets/icons/AssetIcon";
 import { useBranch } from "../../../hooks/useBranch";
+import CustomAutocomplete from "../../../components/custom-autocomplete";
 
 export default function EditAsset({ open, objData, toggle }) {
     const theme = useTheme()
@@ -1053,51 +1054,16 @@ export default function EditAsset({ open, objData, toggle }) {
                                             required: 'Please select Asset Custodian'
                                         }}
                                         render={({ field }) => (
-                                            <CustomTextField
-                                                select
-                                                fullWidth
-                                                value={field?.value}
-                                                label={<FormLabel label='Asset Custodian' required={true} />}
-                                                onChange={field?.onChange}
-                                                SelectProps={{
-                                                    displayEmpty: true,
-                                                    IconComponent: ChevronDownIcon,
-                                                    MenuProps: {
-                                                        PaperProps: {
-                                                            style: {
-                                                                maxHeight: 220, // Set your desired max height
-                                                                scrollbarWidth: 'thin'
-                                                            }
-                                                        }
-                                                    }
-                                                }}
-
+                                            <CustomAutocomplete
+                                                {...field}
+                                                label="Asset Custodian"
+                                                is_required={true}
+                                                displayName1="name"
+                                                displayName2="role"
+                                                options={assetCustodianMaster}
                                                 error={Boolean(errors.asset_custodian)}
-                                                {...(errors.asset_custodian && { helperText: errors.asset_custodian.message })}
-                                            >
-                                                <MenuItem value='' disabled>
-                                                    Select Asset Custodian
-                                                </MenuItem>
-                                                {assetCustodianMaster &&
-                                                    assetCustodianMaster.map(option => (
-                                                        <MenuItem
-                                                            key={option?.id}
-                                                            value={option?.id}
-                                                            sx={{
-                                                                whiteSpace: 'normal',        // allow wrapping
-                                                                wordBreak: 'break-word',     // break long words if needed
-                                                                maxWidth: 500,               // control dropdown width
-                                                                display: '-webkit-box',
-                                                                WebkitLineClamp: 2,          // limit to 2 lines
-                                                                WebkitBoxOrient: 'vertical',
-                                                                overflow: 'hidden',
-                                                                textOverflow: 'ellipsis'
-                                                            }}
-                                                        >
-                                                            {option?.name}
-                                                        </MenuItem>
-                                                    ))}
-                                            </CustomTextField>
+                                                helperText={errors.asset_custodian?.message}
+                                            />
                                         )}
                                     />
                                 </Grid>

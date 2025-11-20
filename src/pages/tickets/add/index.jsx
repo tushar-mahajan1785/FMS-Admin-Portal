@@ -43,6 +43,7 @@ import moment from "moment";
 import EditVendor from "../../vendors/edit";
 import { actionMasterCountryCodeList, actionVendorDetails, resetVendorDetailsResponse } from "../../../store/vendor";
 import _ from "lodash";
+import CustomAutocomplete from "../../../components/custom-autocomplete";
 
 export default function AddTicket({ open, handleClose }) {
     const theme = useTheme()
@@ -756,50 +757,16 @@ export default function AddTicket({ open, handleClose }) {
                                                         required: 'Please select Supervisor'
                                                     }}
                                                     render={({ field }) => (
-                                                        <CustomTextField
-                                                            select
-                                                            fullWidth
-                                                            value={field?.value ?? ''}
-                                                            label={<FormLabel label='Supervisor' required={true} />}
-                                                            onChange={field?.onChange}
-                                                            SelectProps={{
-                                                                displayEmpty: true,
-                                                                IconComponent: ChevronDownIcon,
-                                                                MenuProps: {
-                                                                    PaperProps: {
-                                                                        style: {
-                                                                            maxHeight: 220, // Set your desired max height
-                                                                            scrollbarWidth: 'thin'
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }}
+                                                        <CustomAutocomplete
+                                                            {...field}
+                                                            label="Supervisor"
+                                                            is_required={true}
+                                                            displayName1="name"
+                                                            displayName2="role"
+                                                            options={supervisorMasterOptions}
                                                             error={Boolean(errors.supervisor)}
-                                                            {...(errors.supervisor && { helperText: errors.supervisor.message })}
-                                                        >
-                                                            <MenuItem value=''>
-                                                                <em>Select Supervisor</em>
-                                                            </MenuItem>
-                                                            {supervisorMasterOptions && supervisorMasterOptions !== null && supervisorMasterOptions.length > 0 &&
-                                                                supervisorMasterOptions.map(option => (
-                                                                    <MenuItem
-                                                                        key={option?.id}
-                                                                        value={option?.id}
-                                                                        sx={{
-                                                                            whiteSpace: 'normal',        // allow wrapping
-                                                                            wordBreak: 'break-word',     // break long words if needed
-                                                                            maxWidth: 400,               // control dropdown width
-                                                                            display: '-webkit-box',
-                                                                            WebkitLineClamp: 2,          // limit to 2 lines
-                                                                            WebkitBoxOrient: 'vertical',
-                                                                            overflow: 'hidden',
-                                                                            textOverflow: 'ellipsis',
-                                                                        }}
-                                                                    >
-                                                                        {option?.name}
-                                                                    </MenuItem>
-                                                                ))}
-                                                        </CustomTextField>
+                                                            helperText={errors.supervisor?.message}
+                                                        />
                                                     )}
                                                 />
                                             </Grid>

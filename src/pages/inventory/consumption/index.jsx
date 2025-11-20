@@ -15,7 +15,7 @@ import FieldBox from '../../../components/field-box'
 import CustomAutocomplete from '../../../components/custom-autocomplete'
 import { useDispatch, useSelector } from 'react-redux'
 import { ERROR, SERVER_ERROR, UNAUTHORIZED } from '../../../constants'
-import { actionInventoryConsumptionSave, resetGetUnitMasterResponse, resetInventoryConsumptionSaveResponse } from '../../../store/inventory'
+import { actionGetInventoryDetails, actionGetUnitMaster, actionInventoryConsumptionSave, resetGetInventoryDetailsResponse, resetGetUnitMasterResponse, resetInventoryConsumptionSaveResponse } from '../../../store/inventory'
 import { useAuth } from '../../../hooks/useAuth'
 import { useSnackbar } from '../../../hooks/useSnackbar'
 import { useBranch } from '../../../hooks/useBranch'
@@ -30,7 +30,7 @@ import { actionAssetCustodianList, resetAssetCustodianListResponse } from '../..
 import { actionGetTicketMaster, resetGetTicketMasterResponse } from '../../../store/tickets'
 import { RestockInventory } from '../restock'
 
-export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
+export const InventoryConsumption = ({ open, handleClose, consumeData, from = 'detail' }) => {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout } = useAuth()
@@ -40,31 +40,14 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
     //Stores
     const { assetCustodianList } = useSelector(state => state.AssetStore)
     const { getTicketMaster } = useSelector(state => state.ticketsStore)
-    const { getUnitMaster, inventoryConsumptionSave } = useSelector(state => state.inventoryStore)
+    const { getUnitMaster, inventoryConsumptionSave, getInventoryDetails } = useSelector(state => state.inventoryStore)
 
     //States
     const [loading, setLoading] = useState(false)
     const [inventoryRestockDetailsData, setInventoryRestockDetailsData] = useState(null)
     const [masterUnitOptions, setMasterUnitOptions] = useState([])
     const [usedByMasterOptions, setUsedByMasterOptions] = useState([])
-    const [ticketNoMasterOptions, setTicketNoMasterOptions] = useState([
-        {
-            id: 1,
-            name: 'TKT-1762774588309'
-        },
-        {
-            id: 2,
-            name: 'TKT-1762776726257'
-        },
-        {
-            id: 3,
-            name: 'TICKET-11222'
-        },
-        {
-            id: 4,
-            name: 'TICKET-11223'
-        },
-    ])
+    const [ticketNoMasterOptions, setTicketNoMasterOptions] = useState([])
     const [arrUploadedFiles, setArrUploadedFiles] = useState([])
     const [openRestockInventoryPopup, setOpenRestockInventoryPopup] = useState(false);
     const [showLowStockMessage, setShowLowStockMessage] = useState(1)
@@ -90,69 +73,33 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
     });
 
     //watcher
-    const watchSupplier = watch('used_by')
     const watchAddedQuantity = watch('used_quantity')
+    const watchTicketNo = watch('ticket_no')
 
+    /**
+     * Initial Render
+     * @dependent consumeData
+     */
     useEffect(() => {
         if (open === true) {
             reset()
-            // setInventoryRestockDetailsData({
-            //     "uuid": "tyyg7687878787878",
-            //     "item_id": "INV-98989",
-            //     "item_name": "R-22 Refrigerant Gas",
-            //     "category": "Chemicals",
-            //     "description": "cdddddddddddddd",
-            //     "initial_quantity": "100",
-            //     "minimum_quantity": "120",
-            //     "critical_quantity": "101",
-            //     "unit": "Kilograms",
-            //     "storage_location": "Shivaji nagar, Pune",
-            //     "contact_country_code": "+91",
-            //     "contact": "9876543222",
-            //     "email": "vijay+4@mail.com",
-            //     "used_by": 27,
-            //     "restocked_quantity": "50",
-            //     "consumed_quantity": "30",
-            //     "status": "Out Of Stock",
-            //     "last_restocked_date": "2025-04-01",
-            //     "image_url": "https://fms-super-admin.interdev.in/fms/client/1/branch/1/ticket/12/12_1763123256318.jpg"
-            // })
 
+            //set the previously filled inventory data 
             if (consumeData && consumeData !== null) {
                 setInventoryRestockDetailsData(consumeData)
             } else {
                 setInventoryRestockDetailsData(null)
             }
-            // dispatch(actionGetInventoryDetails({
-            //     uuid: detail?.uuid
-            // }))
-            //-----development purpose-----
-            //for testing purpose only
+
+            //Master API Calls
+            dispatch(actionGetUnitMaster())
             dispatch(actionAssetCustodianList({
                 client_id: branch?.currentBranch?.client_id,
                 branch_uuid: branch?.currentBranch?.uuid
             }))
             dispatch(actionGetTicketMaster({
-                client_id: branch?.currentBranch?.client_id,
                 branch_uuid: branch?.currentBranch?.uuid
             }))
-            setMasterUnitOptions([
-                {
-                    "id": 1,
-                    "name": "Kilograms",
-                    "status": "Active"
-                },
-                {
-                    "id": 2,
-                    "name": "Grams",
-                    "status": "Active"
-                },
-                {
-                    "id": 3,
-                    "name": "Liters",
-                    "status": "Active"
-                }])
-            //---------------------------
         }
         return () => {
             reset()
@@ -162,10 +109,14 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
         }
     }, [open, consumeData])
 
+    /**
+    * Set minimum_quantity, unit, critical_quantity
+    * @dependent inventoryRestockDetailsData
+    */
     useEffect(() => {
         if (inventoryRestockDetailsData && inventoryRestockDetailsData !== null) {
             setValue('minimum_quantity', inventoryRestockDetailsData?.minimum_quantity)
-            setValue('unit', inventoryRestockDetailsData?.unit)
+            setValue('unit', inventoryRestockDetailsData?.unit_id)
             setValue('critical_quantity', inventoryRestockDetailsData?.critical_quantity)
         }
 
@@ -183,7 +134,7 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
             if (getUnitMaster?.result === true) {
                 setMasterUnitOptions(getUnitMaster?.response)
             } else {
-                // setMasterUnitOptions([])
+                setMasterUnitOptions([])
                 switch (getUnitMaster?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -200,6 +151,7 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
             }
         }
     }, [getUnitMaster])
+
     /**
        * useEffect
        * @dependency : getTicketMaster
@@ -212,7 +164,7 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
             if (getTicketMaster?.result === true) {
                 setTicketNoMasterOptions(getTicketMaster?.response)
             } else {
-                // setTicketNoMasterOptions([])
+                setTicketNoMasterOptions([])
                 switch (getTicketMaster?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -241,49 +193,6 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
             dispatch(resetAssetCustodianListResponse())
             if (assetCustodianList?.result === true) {
                 setUsedByMasterOptions(assetCustodianList?.response)
-                // let data = [
-                //     {
-                //         "id": 30,
-                //         "name": "TSA Technologies",
-                //         "primary_contact_name": "Vijay Patil",
-                //         "primary_contact_no": "U2FsdGVkX19vzhb7C71e1kog/pqdsepXrsj1KCkt4eA=",
-                //         "primary_contact_email": "U2FsdGVkX1//Zj9k1PxUyR09FgCXVOdqs7tpvnnuDfGJmqa0xIRqg61nBK31y39S",
-                //         "primary_contact_country_code": "+91"
-                //     },
-                //     {
-                //         "id": 29,
-                //         "name": "Jio India",
-                //         "primary_contact_name": "Rahul Pawar",
-                //         "primary_contact_no": "U2FsdGVkX19DwxKeFI7M6YApCEULM+uPMaN0+oMzHGM=",
-                //         "primary_contact_email": "U2FsdGVkX18oUEDIJg/l99utABZy1zQ79GTUKJurL6k=",
-                //         "primary_contact_country_code": "+91"
-                //     },
-                //     {
-                //         "id": 28,
-                //         "name": "VI Private Limited",
-                //         "primary_contact_name": "Sarthak Chavan",
-                //         "primary_contact_no": "U2FsdGVkX19vzhb7C71e1kog/pqdsepXrsj1KCkt4eA=",
-                //         "primary_contact_email": "U2FsdGVkX1//Zj9k1PxUyR09FgCXVOdqs7tpvnnuDfGJmqa0xIRqg61nBK31y39S",
-                //         "primary_contact_country_code": "+91"
-                //     },
-                //     {
-                //         "id": 27,
-                //         "name": "Vodafone India Pvt Ltd",
-                //         "primary_contact_name": "Gauri More",
-                //         "primary_contact_no": "U2FsdGVkX19vzhb7C71e1kog/pqdsepXrsj1KCkt4eA=",
-                //         "primary_contact_email": "U2FsdGVkX1//Zj9k1PxUyR09FgCXVOdqs7tpvnnuDfGJmqa0xIRqg61nBK31y39S",
-                //         "primary_contact_country_code": "+91"
-                //     },
-                //     {
-                //         "id": 1,
-                //         "name": "Lorem Ips1",
-                //         "primary_contact_name": "Akash Pawar",
-                //         "primary_contact_no": "U2FsdGVkX19vzhb7C71e1kog/pqdsepXrsj1KCkt4eA=",
-                //         "primary_contact_email": "U2FsdGVkX1//Zj9k1PxUyR09FgCXVOdqs7tpvnnuDfGJmqa0xIRqg61nBK31y39S",
-                //         "primary_contact_country_code": "+91"
-                //     }
-                // ]
-                // setUsedByMasterOptions(data)
             } else {
                 setUsedByMasterOptions([])
                 switch (assetCustodianList?.status) {
@@ -337,18 +246,45 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
         }
     }, [inventoryConsumptionSave])
 
+    /**
+        * useEffect
+        * @dependency : getInventoryDetails
+        * @type : HANDLE API RESULT
+        * @description : Handle the result of inventory details API
+        */
+    useEffect(() => {
+        if (getInventoryDetails && getInventoryDetails !== null) {
+            dispatch(resetGetInventoryDetailsResponse())
+            if (getInventoryDetails?.result === true) {
+                setInventoryRestockDetailsData(getInventoryDetails?.response)
+            } else {
+                setInventoryRestockDetailsData(null)
+                switch (getInventoryDetails?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetGetInventoryDetailsResponse())
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: getInventoryDetails?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [getInventoryDetails])
+
 
     const onSubmit = async (data) => {
-        let currentSupplier = getObjectById(usedByMasterOptions, watchSupplier)
+        let currentTicket = getObjectById(ticketNoMasterOptions, watchTicketNo)
         let objData = {
             branch_uuid: branch?.currentBranch?.uuid,
             inventory_uuid: inventoryRestockDetailsData?.uuid && inventoryRestockDetailsData?.uuid !== null ? inventoryRestockDetailsData?.uuid : null,
-            used_quantity: data?.used_quantity && data?.used_quantity !== null ? data?.used_quantity : null,
-            minimum_quantity: data?.minimum_quantity && data?.minimum_quantity !== null ? data?.minimum_quantity : null,
-            critical_quantity: data?.critical_quantity && data?.critical_quantity !== null ? data?.critical_quantity : null,
-            unit: data?.unit && data?.unit !== null ? data?.unit : null,
-            used_by: currentSupplier ? currentSupplier?.name : null,
-            ticket_no: data?.ticket_no && data?.ticket_no !== null ? data?.ticket_no : null,
+            usage_quantity: data?.used_quantity && data?.used_quantity !== null ? data?.used_quantity : null,
+            used_by: data?.used_by ? data?.used_by : null,
+            ticket_no: data?.ticket_no && data?.ticket_no !== null ? currentTicket?.ticket_no : null,
             consumption_date: data?.consumption_date && data?.consumption_date !== null ? moment(data.consumption_date, 'DD MMM YYYY').format('YYYY-MM-DD') : null,
             additional_notes: data?.additional_notes && data?.additional_notes !== null ? data?.additional_notes : null,
             used_for: data?.used_for && data?.used_for !== null ? data?.used_for : null
@@ -382,7 +318,7 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
             variant='temporary'
             onClose={handleClose}
             ModalProps={{ keepMounted: true }}
-            sx={{ '& .MuiDrawer-paper': { width: { xs: '100%', md: '100%', lg: '86%' } } }}
+            sx={{ '& .MuiDrawer-paper': { width: { xs: '100%', md: '100%', lg: '100%', xl: '86%' } } }}
         >
             <Stack sx={{ height: '100%' }} justifyContent={'flex-start'} flexDirection={'column'}>
                 <FormHeader
@@ -416,61 +352,119 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
                     }}
                 >
                     {
-                        showLowStockMessage == 1 && inventoryRestockDetailsData?.initial_quantity !== null && inventoryRestockDetailsData?.minimum_quantity && Number(inventoryRestockDetailsData?.initial_quantity) < Number(inventoryRestockDetailsData?.minimum_quantity) ?
-                            <Stack sx={{ border: `1px solid ${theme.palette.warning[600]}`, alignItems: 'center', borderRadius: '8px', flexDirection: 'row', justifyContent: 'space-between', padding: '16px', background: theme.palette.warning[100] }}>
-                                <Stack sx={{ flexDirection: 'row', gap: 1 }}>
-                                    <Box
-                                        sx={{
-                                            backgroundColor: theme.palette.warning[600],
-                                            borderRadius: '6px',
-                                            padding: '12px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}
-                                    >
-                                        <AlertTriangleIcon stroke={theme.palette.common.white} size={22} />
-                                    </Box>
-                                    <Stack>
-                                        <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.warning[700] }}>
-                                            Low Stock Alert
-                                        </TypographyComponent>
-                                        <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.warning[600] }}>
-                                            Current stock ({Number(inventoryRestockDetailsData?.initial_quantity)} {inventoryRestockDetailsData?.unit}) is below the minimum level ({Number(inventoryRestockDetailsData?.minimum_quantity)} {inventoryRestockDetailsData?.unit}). Consider restocking soon to avoid stockouts.
-                                        </TypographyComponent>
-                                    </Stack>
-                                </Stack>
-                                <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>
-                                    <Stack
-                                        onClick={() => {
-                                            setOpenRestockInventoryPopup(true)
-                                        }}
-                                        sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', background: theme.palette.warning[600], borderRadius: '6px', padding: '8px 12px', cursor: 'pointer' }}>
-                                        <BoxPlusIcon stroke={theme.palette.common.white} size={22} />
-                                        <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.common.white }}>
-                                            Restock
-                                        </TypographyComponent>
-                                    </Stack>
-                                    <Stack>
-                                        <Tooltip title="Hide Message" followCursor placement="top">
-                                            <IconButton
-                                                variant="outlined"
-                                                color='primary'
-                                                sx={{
-                                                    background: theme.palette.warning[600], borderRadius: '6px', padding: '12px 12px',
-                                                    '&:hover': { backgroundColor: theme.palette.warning[500] },
-                                                }}
-                                                onClick={() => {
-                                                    setShowLowStockMessage(0)
-                                                }}
-                                            >
-                                                <CloseIcon size={16} stroke='white' />
-                                            </IconButton>
-                                        </Tooltip>
-                                    </Stack>
-                                </Stack>
-
-                            </Stack>
+                        showLowStockMessage == 1 && inventoryRestockDetailsData?.stock_status && inventoryRestockDetailsData?.stock_status !== null && ['Out Of Stock', 'Low Stock'].includes(inventoryRestockDetailsData?.stock_status) ?
+                            <>
+                                {
+                                    inventoryRestockDetailsData?.stock_status == 'Low Stock' ?
+                                        <Stack sx={{ border: `1px solid ${theme.palette.warning[600]}`, alignItems: 'center', borderRadius: '8px', flexDirection: 'row', justifyContent: 'space-between', padding: '16px', background: theme.palette.warning[100] }}>
+                                            <Stack sx={{ flexDirection: 'row', gap: 1 }}>
+                                                <Box
+                                                    sx={{
+                                                        backgroundColor: theme.palette.warning[600],
+                                                        borderRadius: '6px',
+                                                        padding: '12px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center'
+                                                    }}
+                                                >
+                                                    <AlertTriangleIcon stroke={theme.palette.common.white} size={22} />
+                                                </Box>
+                                                <Stack>
+                                                    <TypographyComponent fontSize={14} fontWeight={600} sx={{ color: theme.palette.warning[700] }}>
+                                                        Low Stock Alert
+                                                    </TypographyComponent>
+                                                    <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.warning[600] }}>
+                                                        Current stock ({Number(inventoryRestockDetailsData?.current_stock)}{inventoryRestockDetailsData?.unit && inventoryRestockDetailsData?.unit !== null ? ` ${inventoryRestockDetailsData?.unit}` : ''})  is above the minimum level but below the critical level ({Number(inventoryRestockDetailsData?.critical_quantity)}{inventoryRestockDetailsData?.unit && inventoryRestockDetailsData?.unit !== null ? ` ${inventoryRestockDetailsData?.unit}` : ''}). Consider restocking soon to avoid stockouts.
+                                                    </TypographyComponent>
+                                                </Stack>
+                                            </Stack>
+                                            <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                                                <Stack
+                                                    onClick={() => {
+                                                        setOpenRestockInventoryPopup(true)
+                                                    }}
+                                                    sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', background: theme.palette.warning[600], borderRadius: '6px', padding: '8px 12px', cursor: 'pointer' }}>
+                                                    <BoxPlusIcon stroke={theme.palette.common.white} size={22} />
+                                                    <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.common.white }}>
+                                                        Restock
+                                                    </TypographyComponent>
+                                                </Stack>
+                                                <Stack>
+                                                    <Tooltip title="Hide Message" followCursor placement="top">
+                                                        <IconButton
+                                                            variant="outlined"
+                                                            color='primary'
+                                                            sx={{
+                                                                background: theme.palette.warning[600], borderRadius: '6px', padding: '12px 12px',
+                                                                '&:hover': { backgroundColor: theme.palette.warning[500] },
+                                                            }}
+                                                            onClick={() => {
+                                                                setShowLowStockMessage(0)
+                                                            }}
+                                                        >
+                                                            <CloseIcon size={16} stroke='white' />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </Stack>
+                                            </Stack>
+                                        </Stack>
+                                        :
+                                        <Stack sx={{ border: `1px solid ${theme.palette.error[600]}`, alignItems: 'center', borderRadius: '8px', flexDirection: 'row', justifyContent: 'space-between', padding: '16px', background: theme.palette.error[100] }}>
+                                            <Stack sx={{ flexDirection: 'row', gap: 1 }}>
+                                                <Box
+                                                    sx={{
+                                                        backgroundColor: theme.palette.error[600],
+                                                        borderRadius: '6px',
+                                                        padding: '12px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center'
+                                                    }}
+                                                >
+                                                    <AlertTriangleIcon stroke={theme.palette.common.white} size={22} />
+                                                </Box>
+                                                <Stack>
+                                                    <TypographyComponent fontSize={14} fontWeight={600} sx={{ color: theme.palette.error[700] }}>
+                                                        Running Out Of Stock
+                                                    </TypographyComponent>
+                                                    <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.error[600] }}>
+                                                        Current stock ({Number(inventoryRestockDetailsData?.current_stock)}{inventoryRestockDetailsData?.unit && inventoryRestockDetailsData?.unit !== null ? ` ${inventoryRestockDetailsData?.unit}` : ''}) is below the minimum level ({Number(inventoryRestockDetailsData?.minimum_quantity)}{inventoryRestockDetailsData?.unit && inventoryRestockDetailsData?.unit !== null ? ` ${inventoryRestockDetailsData?.unit}` : ''}). Consider restocking soon to avoid stockouts.
+                                                    </TypographyComponent>
+                                                </Stack>
+                                            </Stack>
+                                            <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                                                <Stack
+                                                    onClick={() => {
+                                                        setOpenRestockInventoryPopup(true)
+                                                    }}
+                                                    sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', background: theme.palette.error[600], borderRadius: '6px', padding: '8px 12px', cursor: 'pointer' }}>
+                                                    <BoxPlusIcon stroke={theme.palette.common.white} size={22} />
+                                                    <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.common.white }}>
+                                                        Restock
+                                                    </TypographyComponent>
+                                                </Stack>
+                                                <Stack>
+                                                    <Tooltip title="Hide Message" followCursor placement="top">
+                                                        <IconButton
+                                                            variant="outlined"
+                                                            color='primary'
+                                                            sx={{
+                                                                background: theme.palette.error[600], borderRadius: '6px', padding: '12px 12px',
+                                                                '&:hover': { backgroundColor: theme.palette.error[500] },
+                                                            }}
+                                                            onClick={() => {
+                                                                setShowLowStockMessage(0)
+                                                            }}
+                                                        >
+                                                            <CloseIcon size={16} stroke='white' />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </Stack>
+                                            </Stack>
+                                        </Stack>
+                                }
+                            </>
                             :
                             <></>
                     }
@@ -495,9 +489,9 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
                                         <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', mt: 1, mb: 0, pt: 1 }}>
                                             <SectionHeader sx={{}} title={'Basic Information'} show_progress={false} />
                                             {
-                                                inventoryRestockDetailsData?.status && inventoryRestockDetailsData?.status !== null ?
+                                                inventoryRestockDetailsData?.stock_status && inventoryRestockDetailsData?.stock_status !== null ?
                                                     <Stack>
-                                                        <CustomChip text={inventoryRestockDetailsData?.status} colorName={getCurrentStatusColor(inventoryRestockDetailsData?.status)} />
+                                                        <CustomChip text={inventoryRestockDetailsData?.stock_status} colorName={getCurrentStatusColor(inventoryRestockDetailsData?.stock_status)} />
                                                     </Stack>
                                                     :
                                                     <></>
@@ -523,7 +517,7 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
                                                 </Grid>
                                                 {/* Item ID */}
                                                 <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 4 }}>
-                                                    <FieldBox textColor={theme.palette.grey[900]} label="Current Stock" value={inventoryRestockDetailsData?.initial_quantity && inventoryRestockDetailsData?.initial_quantity !== null ? inventoryRestockDetailsData?.initial_quantity : ''} />
+                                                    <FieldBox textColor={theme.palette.grey[900]} label="Current Stock" value={inventoryRestockDetailsData?.current_stock && inventoryRestockDetailsData?.current_stock !== null ? inventoryRestockDetailsData?.current_stock : ''} />
                                                 </Grid>
                                                 {/* Item Name */}
                                                 <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 4 }}>
@@ -545,7 +539,7 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
                                                         rules={{
                                                             required: 'Used Quantity is required',
                                                             validate: (value) => {
-                                                                if (Number(value) > Number(inventoryRestockDetailsData?.initial_quantity)) {
+                                                                if (Number(value) > Number(inventoryRestockDetailsData?.current_stock)) {
                                                                     return 'Used Quantity should be less than or equal Current Stock'
                                                                 } else if (Number(value) < 0 || Number(value) == 0) {
                                                                     return 'Used Quantity should be greater than 0'
@@ -608,7 +602,7 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
                                                                     masterUnitOptions.map(option => (
                                                                         <MenuItem
                                                                             key={option?.id}
-                                                                            value={option?.name}
+                                                                            value={option?.id}
                                                                             sx={{
                                                                                 whiteSpace: 'normal',        // allow wrapping
                                                                                 wordBreak: 'break-word',     // break long words if needed
@@ -620,7 +614,7 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
                                                                                 textOverflow: 'ellipsis'
                                                                             }}
                                                                         >
-                                                                            {option?.name}
+                                                                            {option?.title}
                                                                         </MenuItem>
                                                                     ))}
                                                             </CustomTextField>
@@ -689,60 +683,6 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
                                                     <Stack sx={{ borderBottom: `1px solid ${theme.palette.grey[300]}` }}></Stack>
                                                 </Grid>
                                                 <Grid size={{ xs: 12, sm: 4, md: 4, lg: 4, xl: 4 }}>
-                                                    {/* <Controller
-                                                        name='used_by'
-                                                        control={control}
-                                                        rules={{
-                                                            required: 'Please select Used By'
-                                                        }}
-                                                        render={({ field }) => (
-                                                            <CustomTextField
-                                                                select
-                                                                fullWidth
-                                                                value={field?.value}
-                                                                label={<FormLabel label='Used By' required={true} />}
-                                                                onChange={field?.onChange}
-                                                                SelectProps={{
-                                                                    displayEmpty: true,
-                                                                    IconComponent: ChevronDownIcon,
-                                                                    MenuProps: {
-                                                                        PaperProps: {
-                                                                            style: {
-                                                                                maxHeight: 220, // Set your desired max height
-                                                                                scrollbarWidth: 'thin'
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                }}
-
-                                                                error={Boolean(errors.asset_custodian)}
-                                                                {...(errors.asset_custodian && { helperText: errors.asset_custodian.message })}
-                                                            >
-                                                                <MenuItem value='' disabled>
-                                                                    Select Used By
-                                                                </MenuItem>
-                                                                {usedByMasterOptions &&
-                                                                    usedByMasterOptions.map(option => (
-                                                                        <MenuItem
-                                                                            key={option?.id}
-                                                                            value={option?.id}
-                                                                            sx={{
-                                                                                whiteSpace: 'normal',        // allow wrapping
-                                                                                wordBreak: 'break-word',     // break long words if needed
-                                                                                maxWidth: 300,               // control dropdown width
-                                                                                display: '-webkit-box',
-                                                                                WebkitLineClamp: 2,          // limit to 2 lines
-                                                                                WebkitBoxOrient: 'vertical',
-                                                                                overflow: 'hidden',
-                                                                                textOverflow: 'ellipsis'
-                                                                            }}
-                                                                        >
-                                                                            {option?.name}
-                                                                        </MenuItem>
-                                                                    ))}
-                                                            </CustomTextField>
-                                                        )}
-                                                    /> */}
                                                     <Controller
                                                         name='used_by'
                                                         control={control}
@@ -755,6 +695,7 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
                                                                 label="Used By"
                                                                 is_required={true}
                                                                 displayName1="name"
+                                                                displayName2="role"
                                                                 options={usedByMasterOptions}
                                                                 error={Boolean(errors.used_by)}
                                                                 helperText={errors.used_by?.message}
@@ -771,35 +712,13 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
                                                                 {...field}
                                                                 label="Ticket No"
                                                                 is_required={false}
-                                                                displayName1="name"
+                                                                displayName1="ticket_no"
                                                                 options={ticketNoMasterOptions}
                                                                 error={Boolean(errors.ticket_no)}
                                                                 helperText={errors.ticket_no?.message}
                                                             />
                                                         )}
                                                     />
-                                                    {/* <Controller
-                                                        name='ticket_no'
-                                                        control={control}
-                                                        rules={{
-                                                            maxLength: {
-                                                                value: 255,
-                                                                message: 'Maximum length is 255 characters'
-                                                            },
-                                                        }}
-                                                        render={({ field }) => (
-                                                            <CustomTextField
-                                                                fullWidth
-                                                                placeholder={'Ticket Number'}
-                                                                value={field?.value}
-                                                                label={<FormLabel label='Ticket Number' required={false} />}
-                                                                onChange={field.onChange}
-                                                                inputProps={{ maxLength: 255 }}
-                                                                error={Boolean(errors.ticket_no)}
-                                                                {...(errors.ticket_no && { helperText: errors.ticket_no.message })}
-                                                            />
-                                                        )}
-                                                    /> */}
                                                 </Grid>
                                                 <Grid size={{ xs: 12, sm: 4, md: 4, lg: 4, xl: 4 }}>
                                                     <Controller
@@ -936,9 +855,13 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
                                                 }
                                             </Stack>
                                             <Stack spacing={2.5} sx={{ width: '100%', my: 2.5 }}>
-                                                <Stack sx={{ padding: '12px', borderRadius: '8px', border: getCurrentStockValue('Consumption', watchAddedQuantity, inventoryRestockDetailsData?.initial_quantity) < inventoryRestockDetailsData?.minimum_quantity ? `1px solid ${theme.palette.error[500]}` : `1px solid ${theme.palette.success[500]}`, background: getCurrentStockValue('Consumption', watchAddedQuantity, inventoryRestockDetailsData?.initial_quantity) < inventoryRestockDetailsData?.minimum_quantity ? theme.palette.error[50] : theme.palette.success[50] }}>
+                                                <Stack sx={{ padding: '12px', borderRadius: '8px', border: getCurrentStockValue('Consumption', watchAddedQuantity, inventoryRestockDetailsData?.current_stock) < inventoryRestockDetailsData?.minimum_quantity ? `1px solid ${theme.palette.error[500]}` : `1px solid ${theme.palette.success[500]}`, background: getCurrentStockValue('Consumption', watchAddedQuantity, inventoryRestockDetailsData?.current_stock) < inventoryRestockDetailsData?.minimum_quantity ? theme.palette.error[50] : theme.palette.success[50] }}>
                                                     <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>Current Stock</TypographyComponent>
-                                                    <TypographyComponent fontSize={24} fontWeight={500} sx={{ color: theme.palette.grey[900] }}>{getCurrentStockValue('Consumption', watchAddedQuantity, inventoryRestockDetailsData?.initial_quantity)} {inventoryRestockDetailsData?.unit}</TypographyComponent>
+                                                    {getCurrentStockValue('Consumption', watchAddedQuantity, inventoryRestockDetailsData?.current_stock) == 'Limit Exceed' ?
+                                                        <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.error[600] }}>Limit Exceed</TypographyComponent>
+                                                        :
+                                                        <TypographyComponent fontSize={24} fontWeight={500} sx={{ color: theme.palette.grey[900] }}>{getCurrentStockValue('Consumption', watchAddedQuantity, inventoryRestockDetailsData?.current_stock)} {inventoryRestockDetailsData?.unit}</TypographyComponent>
+                                                    }
                                                 </Stack>
                                                 <Stack sx={{ padding: '12px', borderRadius: '8px', border: `1px solid ${theme.palette.grey[500]}` }}>
                                                     <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>Minimum Stock</TypographyComponent>
@@ -959,7 +882,6 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
                         sx={{ textTransform: "capitalize", px: 6, borderColor: `${theme.palette.grey[300]}`, color: `${theme.palette.grey[700]}`, borderRadius: '8px', fontSize: 16, fontWeight: 600 }}
                         onClick={() => {
                             handleClose()
-                            // reset()
                         }}
                         variant='outlined'
                     >
@@ -980,15 +902,20 @@ export const InventoryConsumption = ({ open, handleClose, consumeData }) => {
             </Stack>
             <RestockInventory
                 open={openRestockInventoryPopup}
+                restockData={inventoryRestockDetailsData}
                 handleClose={(data) => {
                     setOpenRestockInventoryPopup(false)
                     if (data == 'save') {
-                        // dispatch(actionGetInventoryDetails({
-                        //     uuid: detail?.uuid
-                        // }))
+                        if (from == 'list') {
+                            if (inventoryRestockDetailsData?.uuid && inventoryRestockDetailsData?.uuid !== null) {
+                                dispatch(actionGetInventoryDetails({
+                                    uuid: inventoryRestockDetailsData?.uuid
+                                }))
+                            }
+                        }
                     }
                 }}
             />
-        </Drawer >
+        </Drawer>
     )
 }
