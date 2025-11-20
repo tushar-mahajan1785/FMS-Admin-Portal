@@ -549,52 +549,73 @@ export default function ReschedulePopup({
                     <Controller
                       name="new_date"
                       control={control}
-                      render={({ field }) => (
-                        <DatePicker
-                          id="new_date"
-                          customInput={
-                            <CustomTextField
-                              size="small"
-                              label={
-                                <FormLabel label="New Date" required={false} />
-                              }
-                              fullWidth
-                              InputProps={{
-                                startAdornment: (
-                                  <InputAdornment position="start">
-                                    <IconButton
-                                      edge="start"
-                                      onMouseDown={(e) => e.preventDefault()}
-                                    >
-                                      <CalendarIcon />
-                                    </IconButton>
-                                  </InputAdornment>
-                                ),
-                              }}
-                              error={Boolean(errors.new_date)}
-                              {...(errors.new_date && {
-                                helperText: errors.new_date.message,
-                              })}
-                            />
-                          }
-                          value={field.value}
-                          minDate={moment().toDate()}
-                          maxDate={moment().endOf("month").toDate()}
-                          selected={
-                            field?.value
-                              ? moment(field.value, "DD/MM/YYYY").toDate()
-                              : null
-                          }
-                          showYearDropdown={true}
-                          onChange={(date) => {
-                            const formattedDate =
-                              moment(date).format("DD/MM/YYYY");
-                            field.onChange(formattedDate);
-                          }}
-                        />
-                      )}
+                      render={({ field }) => {
+                        // Read scheduled_date from selectedActivity
+                        const scheduledDate =
+                          selectedActivity?.frequency_data?.scheduled_date;
+
+                        // Convert YYYY-MM-DD → moment date
+                        const scheduledMoment = scheduledDate
+                          ? moment(scheduledDate, "YYYY-MM-DD")
+                          : moment(); // Fallback to current date
+
+                        // Set min & max based on scheduled_date month
+                        const minDate = scheduledMoment
+                          .startOf("month")
+                          .toDate();
+                        const maxDate = scheduledMoment.endOf("month").toDate();
+
+                        // Convert stored DD/MM/YYYY → Date object safely
+                        const selectedDate = field.value
+                          ? moment(field.value, "DD/MM/YYYY").toDate()
+                          : null;
+
+                        return (
+                          <DatePicker
+                            id="new_date"
+                            customInput={
+                              <CustomTextField
+                                size="small"
+                                label={
+                                  <FormLabel
+                                    label="New Date"
+                                    required={false}
+                                  />
+                                }
+                                fullWidth
+                                InputProps={{
+                                  startAdornment: (
+                                    <InputAdornment position="start">
+                                      <IconButton
+                                        edge="start"
+                                        onMouseDown={(e) => e.preventDefault()}
+                                      >
+                                        <CalendarIcon />
+                                      </IconButton>
+                                    </InputAdornment>
+                                  ),
+                                }}
+                                error={Boolean(errors.new_date)}
+                                {...(errors.new_date && {
+                                  helperText: errors.new_date.message,
+                                })}
+                              />
+                            }
+                            minDate={minDate}
+                            maxDate={maxDate}
+                            selected={selectedDate}
+                            dateFormat="dd/MM/yyyy"
+                            onChange={(date) => {
+                              const formattedDate =
+                                moment(date).format("DD/MM/YYYY");
+                              field.onChange(formattedDate);
+                            }}
+                          />
+                        );
+                      }}
                     />
                   </Grid>
+
                   <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
                     <Controller
                       name="reason_for_reschedule"

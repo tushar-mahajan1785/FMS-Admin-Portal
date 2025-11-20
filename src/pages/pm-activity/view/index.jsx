@@ -56,14 +56,16 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
   );
 
   // Inside your PMActivityPreviewSetUp component, add this state:
-  const [openPmActivityViewReportPopup,setOpenPmActivityViewReportPopup]=useState(false)
-  const [selectedActivityReport,setSelectedActivityReport]=useState(null)
+  const [openPmActivityViewReportPopup, setOpenPmActivityViewReportPopup] =
+    useState(false);
+  const [selectedActivityReport, setSelectedActivityReport] = useState(null);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [pmScheduleActivityDetails, setPmScheduleActivityDetails] =
     useState(null);
   // Inside the PMActivityDetails component, add this state with your other states
   const [openEditPmSchedule, setOpenEditPmSchedule] = useState(false);
+  const [frequencyExceptionsData, setFrequencyExceptionsData] = useState([]);
 
   // Add these functions inside your component:
   const handleRescheduleClick = (activity) => {
@@ -151,6 +153,23 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
   }, [objData, open]);
 
   console.log("PM SChdule dataaa:", pmScheduleData);
+
+  const today = moment().startOf("day"); // Get today's date at the start of the day
+
+  // Check if the schedule start date is today or later
+  const showButton = moment(
+    pmScheduleActivityDetails?.schedule_start_date
+  ).isSameOrAfter(today);
+
+  // Check if there is at least one status that is "Completed"
+  const hasCompletedStatus = frequencyExceptionsData?.some(
+    (obj) => obj.status === "Completed"
+  );
+
+  // Check if there is at least one status that is NOT "Completed"
+  const hasNonCompletedStatus = frequencyExceptionsData?.some(
+    (obj) => obj.status !== "Completed"
+  );
 
   useEffect(() => {
     if (pmScheduleDetails && pmScheduleDetails !== null) {
@@ -401,9 +420,9 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
                     padding: "5px 8px",
                     cursor: "pointer",
                   }}
-                  onClick={()=>{
-                    setOpenPmActivityViewReportPopup(true)
-                    setSelectedActivityReport(params?.row)
+                  onClick={() => {
+                    setOpenPmActivityViewReportPopup(true);
+                    setSelectedActivityReport(params?.row);
                   }}
                 >
                   <ReportAnalyticsIcon stroke={"#101828"} />
@@ -417,27 +436,33 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
                 </Stack>
               ) : (
                 <React.Fragment>
-                  <Stack
-                    sx={{
-                      flexDirection: "row",
-                      gap: 1,
-                      border: `1px solid${theme.palette.success[400]}`,
-                      background: theme.palette.success[50],
-                      borderRadius: "6px",
-                      padding: "5px 8px",
-                      cursor: "pointer",
-                    }}
-                    onClick={() => handleMarkAsDoneClick(params.row)}
-                  >
-                    <PmActivityMarkAsDone stroke={"#32D583"} />
-                    <TypographyComponent
-                      fontSize={14}
-                      fontWeight={500}
-                      sx={{ color: theme.palette.success[600] }}
-                    >
-                      Mark Done
-                    </TypographyComponent>
-                  </Stack>
+                  {params.row.scheduled_date &&
+                    params.row.scheduled_date !== null &&
+                    moment(params.row.scheduled_date).isSameOrBefore(
+                      moment(today).format("YYYY-MM-DD")
+                    ) && (
+                      <Stack
+                        sx={{
+                          flexDirection: "row",
+                          gap: 1,
+                          border: `1px solid${theme.palette.success[400]}`,
+                          background: theme.palette.success[50],
+                          borderRadius: "6px",
+                          padding: "5px 8px",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => handleMarkAsDoneClick(params.row)}
+                      >
+                        <PmActivityMarkAsDone stroke={"#32D583"} />
+                        <TypographyComponent
+                          fontSize={14}
+                          fontWeight={500}
+                          sx={{ color: theme.palette.success[600] }}
+                        >
+                          Mark Done
+                        </TypographyComponent>
+                      </Stack>
+                    )}
                   <Stack
                     sx={{
                       flexDirection: "row",
@@ -467,8 +492,6 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
       },
     },
   ];
-
-  const [frequencyExceptionsData, setFrequencyExceptionsData] = useState([]);
 
   useEffect(() => {
     if (
@@ -769,30 +792,37 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
           </Box>
         </Stack>
         <Divider sx={{ m: 2 }} />
+        {console.log("frequencyExceptionsData:::::", frequencyExceptionsData)}
         <Stack
           direction="row"
           justifyContent="space-between"
           alignItems="center"
           sx={{ p: 3 }}
         >
-          <Button
-            sx={{
-              textTransform: "capitalize",
-              px: 6,
-              borderColor: `${theme.palette.grey[300]}`,
-              color: `${theme.palette.grey[700]}`,
-              borderRadius: "8px",
-              fontSize: 16,
-              fontWeight: 600,
-            }}
-            onClick={() => {
-              setOpenEditPmSchedule(true);
-            }}
-            variant="outlined"
-          >
-            Edit
-          </Button>
-
+          {showButton &&
+            frequencyExceptionsData !== null &&
+            frequencyExceptionsData.length > 0 &&
+            hasNonCompletedStatus &&
+            !hasCompletedStatus && (
+              <Button
+                sx={{
+                  textTransform: "capitalize",
+                  px: 6,
+                  borderColor: `${theme.palette.grey[300]}`,
+                  color: `${theme.palette.grey[700]}`,
+                  borderRadius: "8px",
+                  fontSize: 16,
+                  fontWeight: 600,
+                }}
+                onClick={() => {
+                  setOpenEditPmSchedule(true);
+                }}
+                variant="outlined"
+              >
+                Edit
+              </Button>
+            )}
+          {/* Close Button with margin-left auto to always align to the right */}
           <Button
             sx={{
               textTransform: "capitalize",
@@ -803,6 +833,7 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
               fontSize: 16,
               fontWeight: 600,
               borderColor: theme.palette.primary[600],
+              ml: "auto", // This pushes the Close button to the right
             }}
             variant="contained"
             onClick={handleClose}
@@ -826,8 +857,8 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
       <PMActivityViewReport
         open={openPmActivityViewReportPopup}
         objData={selectedActivityReport}
-        handleClose={()=>{
-          setOpenPmActivityViewReportPopup(false)
+        handleClose={() => {
+          setOpenPmActivityViewReportPopup(false);
         }}
       />
     </React.Fragment>
