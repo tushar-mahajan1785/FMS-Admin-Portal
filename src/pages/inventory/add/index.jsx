@@ -98,9 +98,7 @@ export default function AddInventory({ open, handleClose, type, details }) {
     //States
     const [loading, setLoading] = useState(false)
     const [supervisorMasterOptions, setSupervisorMasterOptions] = useState([])
-    // const [inventoryDetailsData, setInventoryDetailsData] = useState(null)
     const [arrUploadedFile, setArrUploadedFile] = useState(null)
-
     const [masterCategoryOptions, setMasterCategoryOptions] = useState([])
     const [masterUnitOptions, setMasterUnitOptions] = useState([])
 
@@ -110,7 +108,9 @@ export default function AddInventory({ open, handleClose, type, details }) {
     useEffect(() => {
         if (open === true) {
             if (type === 'edit' && details !== null) {
-                let editFileUrl = "https://fms-super-admin.interdev.in/fms/client/1/branch/2/ticket/1/1_1763449512315.jpg"
+
+                //Set all previously filled details
+                let editFileUrl = details?.image_url && details?.image_url !== null ? details?.image_url : ''
                 const fileName = editFileUrl.split("/").pop();
                 setArrUploadedFile({
                     file: null,
@@ -127,18 +127,17 @@ export default function AddInventory({ open, handleClose, type, details }) {
                 setValue('critical_quantity', details?.critical_quantity && details?.critical_quantity !== null ? details?.critical_quantity : '')
                 setValue('storage_location', details?.storage_location && details?.storage_location !== null ? details?.storage_location : '')
                 setValue('unit', details?.unit_id && details?.unit_id !== null ? details?.unit_id : '')
-
                 setValue('contact', details?.contact && details?.contact !== null ? details?.contact : '')
                 setValue('email', details?.email && details?.email !== null ? details?.email : '')
-
             }
 
+            //Master API Calls
+            dispatch(actionGetUnitMaster())
+            dispatch(actionMasterCountryCodeList())
             dispatch(actionInventoryCategoryList({
                 client_id: branch?.currentBranch?.client_id,
                 branch_uuid: branch?.currentBranch?.uuid
             }))
-            dispatch(actionGetUnitMaster())
-            dispatch(actionMasterCountryCodeList())
             dispatch(actionVendorMasterList({
                 client_id: branch?.currentBranch?.client_id,
                 branch_uuid: branch?.currentBranch?.uuid
@@ -155,6 +154,9 @@ export default function AddInventory({ open, handleClose, type, details }) {
 
     }, [open])
 
+    /**
+     * Set supplier_name after supervisorMasterOptions data is filled
+     */
     useEffect(() => {
         if (supervisorMasterOptions && supervisorMasterOptions !== null && supervisorMasterOptions.length > 0) {
             setValue('supplier_name', details?.supplier_id && details?.supplier_id !== null ? details?.supplier_id : '')
@@ -366,8 +368,6 @@ export default function AddInventory({ open, handleClose, type, details }) {
      * @param {*} data 
      */
     const onSubmit = async data => {
-        console.log('----submit data----', data)
-        // let currentSupplier = getObjectById(supervisorMasterOptions, watchSupplier)
         let objData = {
             branch_uuid: branch?.currentBranch?.uuid,
             item_name: data?.item_name && data?.item_name !== null ? data?.item_name : null,
@@ -521,7 +521,7 @@ export default function AddInventory({ open, handleClose, type, details }) {
                                                                 MenuProps: {
                                                                     PaperProps: {
                                                                         style: {
-                                                                            maxHeight: 220, // Set your desired max height
+                                                                            maxHeight: 220,
                                                                             scrollbarWidth: 'thin'
                                                                         }
                                                                     }
@@ -843,7 +843,6 @@ export default function AddInventory({ open, handleClose, type, details }) {
                                                     name='email'
                                                     control={control}
                                                     rules={{
-                                                        // required: 'Email is required',
                                                         validate: {
                                                             isEmail: value => !value || isEmail(value) || 'Invalid email address'
                                                         },

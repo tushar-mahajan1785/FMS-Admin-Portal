@@ -73,22 +73,25 @@ export const InventoryConsumption = ({ open, handleClose, consumeData, from = 'd
     });
 
     //watcher
-    // const watchSupplier = watch('used_by')
     const watchAddedQuantity = watch('used_quantity')
     const watchTicketNo = watch('ticket_no')
 
+    /**
+     * Initial Render
+     * @dependent consumeData
+     */
     useEffect(() => {
         if (open === true) {
             reset()
-            console.log('-----consumeData----', consumeData)
+
+            //set the previously filled inventory data 
             if (consumeData && consumeData !== null) {
                 setInventoryRestockDetailsData(consumeData)
             } else {
                 setInventoryRestockDetailsData(null)
             }
-            // dispatch(actionGetInventoryDetails({
-            //     uuid: detail?.uuid
-            // }))
+
+            //Master API Calls
             dispatch(actionGetUnitMaster())
             dispatch(actionAssetCustodianList({
                 client_id: branch?.currentBranch?.client_id,
@@ -106,8 +109,10 @@ export const InventoryConsumption = ({ open, handleClose, consumeData, from = 'd
         }
     }, [open, consumeData])
 
-    console.log('-------inventoryRestockDetailsData----', inventoryRestockDetailsData)
-
+    /**
+    * Set minimum_quantity, unit, critical_quantity
+    * @dependent inventoryRestockDetailsData
+    */
     useEffect(() => {
         if (inventoryRestockDetailsData && inventoryRestockDetailsData !== null) {
             setValue('minimum_quantity', inventoryRestockDetailsData?.minimum_quantity)
@@ -278,9 +283,6 @@ export const InventoryConsumption = ({ open, handleClose, consumeData, from = 'd
             branch_uuid: branch?.currentBranch?.uuid,
             inventory_uuid: inventoryRestockDetailsData?.uuid && inventoryRestockDetailsData?.uuid !== null ? inventoryRestockDetailsData?.uuid : null,
             usage_quantity: data?.used_quantity && data?.used_quantity !== null ? data?.used_quantity : null,
-            // minimum_quantity: data?.minimum_quantity && data?.minimum_quantity !== null ? data?.minimum_quantity : null,
-            // critical_quantity: data?.critical_quantity && data?.critical_quantity !== null ? data?.critical_quantity : null,
-            // unit_id: data?.unit && data?.unit !== null ? data?.unit : null,
             used_by: data?.used_by ? data?.used_by : null,
             ticket_no: data?.ticket_no && data?.ticket_no !== null ? currentTicket?.ticket_no : null,
             consumption_date: data?.consumption_date && data?.consumption_date !== null ? moment(data.consumption_date, 'DD MMM YYYY').format('YYYY-MM-DD') : null,
@@ -316,7 +318,7 @@ export const InventoryConsumption = ({ open, handleClose, consumeData, from = 'd
             variant='temporary'
             onClose={handleClose}
             ModalProps={{ keepMounted: true }}
-            sx={{ '& .MuiDrawer-paper': { width: { xs: '100%', md: '100%', lg: '86%' } } }}
+            sx={{ '& .MuiDrawer-paper': { width: { xs: '100%', md: '100%', lg: '100%', xl: '86%' } } }}
         >
             <Stack sx={{ height: '100%' }} justifyContent={'flex-start'} flexDirection={'column'}>
                 <FormHeader
@@ -353,7 +355,7 @@ export const InventoryConsumption = ({ open, handleClose, consumeData, from = 'd
                         showLowStockMessage == 1 && inventoryRestockDetailsData?.stock_status && inventoryRestockDetailsData?.stock_status !== null && ['Out Of Stock', 'Low Stock'].includes(inventoryRestockDetailsData?.stock_status) ?
                             <>
                                 {
-                                    Number(inventoryRestockDetailsData?.current_stock) > Number(inventoryRestockDetailsData?.minimum_quantity) && Number(inventoryRestockDetailsData?.current_stock) < Number(inventoryRestockDetailsData?.critical_quantity) ?
+                                    inventoryRestockDetailsData?.stock_status == 'Low Stock' ?
                                         <Stack sx={{ border: `1px solid ${theme.palette.warning[600]}`, alignItems: 'center', borderRadius: '8px', flexDirection: 'row', justifyContent: 'space-between', padding: '16px', background: theme.palette.warning[100] }}>
                                             <Stack sx={{ flexDirection: 'row', gap: 1 }}>
                                                 <Box
@@ -717,28 +719,6 @@ export const InventoryConsumption = ({ open, handleClose, consumeData, from = 'd
                                                             />
                                                         )}
                                                     />
-                                                    {/* <Controller
-                                                        name='ticket_no'
-                                                        control={control}
-                                                        rules={{
-                                                            maxLength: {
-                                                                value: 255,
-                                                                message: 'Maximum length is 255 characters'
-                                                            },
-                                                        }}
-                                                        render={({ field }) => (
-                                                            <CustomTextField
-                                                                fullWidth
-                                                                placeholder={'Ticket Number'}
-                                                                value={field?.value}
-                                                                label={<FormLabel label='Ticket Number' required={false} />}
-                                                                onChange={field.onChange}
-                                                                inputProps={{ maxLength: 255 }}
-                                                                error={Boolean(errors.ticket_no)}
-                                                                {...(errors.ticket_no && { helperText: errors.ticket_no.message })}
-                                                            />
-                                                        )}
-                                                    /> */}
                                                 </Grid>
                                                 <Grid size={{ xs: 12, sm: 4, md: 4, lg: 4, xl: 4 }}>
                                                     <Controller
@@ -925,22 +905,17 @@ export const InventoryConsumption = ({ open, handleClose, consumeData, from = 'd
                 restockData={inventoryRestockDetailsData}
                 handleClose={(data) => {
                     setOpenRestockInventoryPopup(false)
-                    console.log('------data------', data)
-                    console.log('------from------', from)
-                    console.log('------inventoryRestockDetailsData------', inventoryRestockDetailsData)
                     if (data == 'save') {
                         if (from == 'list') {
-                            console.log('------inventoryRestockDetailsData--aaaaaa-@@@@@@@@@@@---', inventoryRestockDetailsData)
                             if (inventoryRestockDetailsData?.uuid && inventoryRestockDetailsData?.uuid !== null) {
                                 dispatch(actionGetInventoryDetails({
                                     uuid: inventoryRestockDetailsData?.uuid
                                 }))
                             }
                         }
-
                     }
                 }}
             />
-        </Drawer >
+        </Drawer>
     )
 }

@@ -32,6 +32,10 @@ import DatePickerWrapper from '../../../components/datapicker-wrapper'
 import AddInventory from '../add'
 import { RestockInventory } from '../restock'
 import { InventoryConsumption } from '../consumption'
+import ArrowDownIcon from '../../../assets/icons/ArrowDownIcon'
+import ArrowUpIcon from '../../../assets/icons/ArrowUpIcon'
+import UserCircleIcon from '../../../assets/icons/UserCircleIcon'
+import _ from 'lodash'
 
 export const InventoryDetails = ({ open, handleClose, detail }) => {
     const dispatch = useDispatch()
@@ -39,6 +43,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
     const { showSnackbar } = useSnackbar()
     const { logout, hasPermission } = useAuth()
     const branch = useBranch()
+
     //Stores
     const { getInventoryDetails, getInventoryTransactionHistory, deleteInventory } = useSelector(state => state.inventoryStore)
 
@@ -61,9 +66,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
     const [loadingList, setLoadingList] = useState(0)
     const [screenType, setScreenType] = useState(null)
 
-    console.log('------screenType--------', screenType)
-
-    const columns = [
+    const columnsCompleteHistory = [
         {
             flex: 0.05,
             field: 'date',
@@ -72,13 +75,173 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                 return (
                     <Stack sx={{ height: '100%', justifyContent: 'center' }}>
                         {
-                            params.row.date && params.row.date !== null ?
+                            params?.row?.date && params?.row?.date !== null ?
                                 <Stack>
                                     <TypographyComponent color={theme.palette.grey.primary} fontSize={14} fontWeight={400} >
-                                        {params.row.date && params.row.date !== null ? moment(params.row.date, 'YYYY-MM-DD hh:mm:ss').format('DD MMM YYYY') : ''}
+                                        {params?.row?.date && params?.row?.date !== null ? moment(params?.row?.date, 'YYYY-MM-DD hh:mm:ss').format('DD MMM YYYY') : ''}
                                     </TypographyComponent>
                                     <TypographyComponent color={theme.palette.grey.primary} fontSize={14} fontWeight={400} >
-                                        {params.row.date && params.row.date !== null ? moment(params.row.date, 'YYYY-MM-DD hh:mm:ss').format('hh:mm A') : ''}
+                                        {params?.row?.date && params?.row?.date !== null ? moment(params?.row?.date, 'YYYY-MM-DD hh:mm:ss').format('hh:mm A') : ''}
+                                    </TypographyComponent>
+                                </Stack>
+                                :
+                                <></>
+                        }
+
+                    </Stack>
+                )
+            }
+        },
+        {
+            flex: 0.06,
+            field: 'transaction_type',
+            headerName: 'Transaction Type',
+            renderCell: (params) => {
+                return (
+                    <Stack sx={{ height: '100%', justifyContent: 'center' }}>
+                        {
+                            params?.row?.transaction_type && params?.row?.transaction_type !== null && params?.row?.transaction_type == 'RESTOCK' ?
+                                <Stack flexDirection={'row'}>
+                                    <ArrowUpIcon stroke={theme.palette.success[700]} size={22} />
+                                    <TypographyComponent color={theme.palette.success[700]} fontSize={14} fontWeight={400} >
+                                        Restocked
+                                    </TypographyComponent>
+                                </Stack>
+                                :
+                                <>
+                                    {
+                                        params?.row?.transaction_type == 'USAGE' ?
+                                            <Stack flexDirection={'row'}>
+                                                <ArrowDownIcon stroke={theme.palette.error[700]} size={22} />
+                                                <TypographyComponent color={theme.palette.error[700]} fontSize={14} fontWeight={400} >
+                                                    Consumed
+                                                </TypographyComponent>
+                                            </Stack>
+                                            :
+                                            <></>
+                                    }
+                                </>
+                        }
+
+                    </Stack>
+                )
+            }
+        },
+        {
+            flex: 0.05,
+            field: 'quantity',
+            headerName: 'Quantity',
+            renderCell: (params) => {
+                return (
+                    <Stack sx={{ flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                        <TypographyComponent color={params?.row?.transaction_type == 'RESTOCK' ? theme.palette.success[700] : theme.palette.error[700]} fontSize={14} fontWeight={500} sx={{ lineHeight: '20px' }}>
+                            {params?.row?.quantity && params?.row?.quantity !== null ? `${params?.row?.transaction_type == 'RESTOCK' ? '+' : '-'}${params?.row?.quantity} ${params?.row?.unit && params?.row?.unit !== null ? params?.row?.unit : ''}` : ''}
+                        </TypographyComponent>
+                    </Stack>
+                )
+            }
+        },
+        {
+            flex: 0.06,
+            field: 'stock_before',
+            headerName: 'Stock Before',
+            renderCell: (params) => {
+                return (
+                    <Stack sx={{ flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                        <TypographyComponent color={theme.palette.grey[900]} fontSize={14} fontWeight={500} sx={{ lineHeight: '20px' }}>
+                            {params?.row?.stock_before !== null ? `+${params?.row?.stock_before} ${params?.row?.unit && params?.row?.unit !== null ? params?.row?.unit : ''}` : 0}
+                        </TypographyComponent>
+                    </Stack>
+                )
+            }
+        },
+        {
+            flex: 0.06,
+            field: 'stock_after',
+            headerName: 'Stock After',
+            renderCell: (params) => {
+                return (
+                    <Stack sx={{ height: '100%', justifyContent: 'center' }}>
+                        {
+                            params?.row?.stock_after !== null && params?.row?.transaction_type && params?.row?.transaction_type !== null && params?.row?.transaction_type == 'RESTOCK' ?
+                                <Stack flexDirection={'row'}>
+                                    <ArrowUpIcon stroke={theme.palette.success[700]} size={22} />
+                                    <TypographyComponent color={theme.palette.success[700]} fontSize={14} fontWeight={400} >
+                                        {params?.row?.stock_after !== null ? params?.row?.stock_after : ''}
+                                    </TypographyComponent>
+                                </Stack>
+                                :
+                                <>
+                                    {
+                                        params?.row?.stock_after !== null && params?.row?.transaction_type == 'USAGE' ?
+                                            <Stack flexDirection={'row'}>
+                                                <ArrowDownIcon stroke={theme.palette.error[700]} size={22} />
+                                                <TypographyComponent color={theme.palette.error[700]} fontSize={14} fontWeight={400} >
+                                                    {params?.row?.stock_after !== null ? params?.row?.stock_after : ''}
+                                                </TypographyComponent>
+                                            </Stack>
+                                            :
+                                            <></>
+                                    }
+                                </>
+                        }
+
+                    </Stack>
+                )
+            }
+        },
+        {
+            flex: 0.1,
+            field: 'details',
+            headerName: 'Details',
+            renderCell: (params) => {
+                return (
+                    <Stack sx={{ height: '100%', justifyContent: 'center' }}>
+                        <Stack>
+                            <TypographyComponent title={params?.row?.additional_info} color={theme.palette.grey[900]} fontSize={14} fontWeight={400} >
+                                {params?.row?.additional_info && params?.row?.additional_info !== null ? _.truncate(params?.row?.additional_info, { length: 45 }) : ''}
+                            </TypographyComponent>
+                            <TypographyComponent title={params?.row?.used_for} color={theme.palette.grey[600]} fontSize={12} fontWeight={400} >
+                                {params?.row?.used_for && params?.row?.used_for !== null ? _.truncate(params?.row?.used_for, { length: 50 }) : ''}
+                            </TypographyComponent>
+                        </Stack>
+                    </Stack>
+                )
+            }
+        },
+        {
+            flex: 0.08,
+            field: 'created_by',
+            headerName: 'Performed By',
+            renderCell: (params) => {
+                return (
+                    <Stack sx={{ flexDirection: 'row', alignItems: 'center', height: '100%', gap: 0.5 }}>
+                        <UserCircleIcon stroke={theme.palette.grey[900]} size={24} />
+                        <TypographyComponent color={theme.palette.grey[900]} fontSize={14} fontWeight={500}>
+                            {params?.row?.created_by && params?.row?.created_by !== null ? params?.row?.created_by : ''}
+                        </TypographyComponent>
+                    </Stack>
+                )
+            }
+        }
+    ];
+
+    const columnsConsumptionHistory = [
+        {
+            flex: 0.05,
+            field: 'date',
+            headerName: 'Date & Time',
+            renderCell: (params) => {
+                return (
+                    <Stack sx={{ height: '100%', justifyContent: 'center' }}>
+                        {
+                            params?.row?.date && params?.row?.date !== null ?
+                                <Stack>
+                                    <TypographyComponent color={theme.palette.grey.primary} fontSize={14} fontWeight={400} >
+                                        {params?.row?.date && params?.row?.date !== null ? moment(params?.row?.date, 'YYYY-MM-DD hh:mm:ss').format('DD MMM YYYY') : ''}
+                                    </TypographyComponent>
+                                    <TypographyComponent color={theme.palette.grey.primary} fontSize={14} fontWeight={400} >
+                                        {params?.row?.date && params?.row?.date !== null ? moment(params?.row?.date, 'YYYY-MM-DD hh:mm:ss').format('hh:mm A') : ''}
                                     </TypographyComponent>
                                 </Stack>
                                 :
@@ -96,8 +259,103 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
             renderCell: (params) => {
                 return (
                     <Stack sx={{ flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                        <TypographyComponent color={theme.palette.error[700]} fontSize={14} fontWeight={500} sx={{ lineHeight: '20px' }}>
+                            {params?.row?.quantity && params?.row?.quantity !== null ? `- ${params?.row?.quantity} ${params?.row?.unit && params?.row?.unit !== null ? params?.row?.unit : ''}` : ''}
+                        </TypographyComponent>
+                    </Stack>
+                )
+            }
+        },
+        {
+            flex: 0.08,
+            field: 'used_by',
+            headerName: 'Used By',
+            renderCell: (params) => {
+                return (
+                    <Stack sx={{ flexDirection: 'row', alignItems: 'center', height: '100%', gap: 0.5 }}>
+                        <UserCircleIcon stroke={theme.palette.grey[900]} size={24} />
+                        <TypographyComponent color={theme.palette.grey[900]} fontSize={14} fontWeight={500}>
+                            {params?.row?.used_by && params?.row?.used_by !== null ? params?.row?.used_by : ''}
+                        </TypographyComponent>
+                    </Stack>
+                )
+            }
+        },
+        {
+            flex: 0.1,
+            field: 'details',
+            headerName: 'Details',
+            renderCell: (params) => {
+                return (
+                    <Stack sx={{ height: '100%', justifyContent: 'center' }}>
+                        <Stack>
+                            <TypographyComponent title={params?.row?.additional_info} color={theme.palette.grey[900]} fontSize={14} fontWeight={400} >
+                                {params?.row?.additional_info && params?.row?.additional_info !== null ? _.truncate(params?.row?.additional_info, { length: 45 }) : ''}
+                            </TypographyComponent>
+                            <TypographyComponent title={params?.row?.used_for} color={theme.palette.grey[600]} fontSize={12} fontWeight={400} >
+                                {params?.row?.used_for && params?.row?.used_for !== null ? _.truncate(params?.row?.used_for, { length: 50 }) : ''}
+                            </TypographyComponent>
+                        </Stack>
+                    </Stack>
+                )
+            }
+        },
+        {
+            flex: 0.05,
+            field: 'ticket_no',
+            headerName: 'Ticket No'
+        },
+        {
+            flex: 0.06,
+            field: 'stock_after',
+            headerName: 'Stock After',
+            renderCell: (params) => {
+                return (
+                    <Stack sx={{ flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
                         <TypographyComponent color={theme.palette.grey[900]} fontSize={14} fontWeight={500} sx={{ lineHeight: '20px' }}>
-                            {params.row.quantity && params.row.quantity !== null ? `+ ${params.row.quantity}` : ''}
+                            {params?.row?.stock_after !== null ? `+${params?.row?.stock_after} ${params?.row?.unit && params?.row?.unit !== null ? params?.row?.unit : ''}` : ''}
+                        </TypographyComponent>
+                    </Stack>
+                )
+            }
+        },
+    ];
+
+    const columnsRestockHistory = [
+        {
+            flex: 0.05,
+            field: 'date',
+            headerName: 'Date & Time',
+            renderCell: (params) => {
+                return (
+                    <Stack sx={{ height: '100%', justifyContent: 'center' }}>
+                        {
+                            params?.row?.date && params?.row?.date !== null ?
+                                <Stack>
+                                    <TypographyComponent color={theme.palette.grey.primary} fontSize={14} fontWeight={400} >
+                                        {params?.row?.date && params?.row?.date !== null ? moment(params?.row?.date, 'YYYY-MM-DD hh:mm:ss').format('DD MMM YYYY') : ''}
+                                    </TypographyComponent>
+                                    <TypographyComponent color={theme.palette.grey.primary} fontSize={14} fontWeight={400} >
+                                        {params?.row?.date && params?.row?.date !== null ? moment(params?.row?.date, 'YYYY-MM-DD hh:mm:ss').format('hh:mm A') : ''}
+                                    </TypographyComponent>
+                                </Stack>
+                                :
+                                <></>
+                        }
+
+                    </Stack>
+                )
+            }
+        },
+        {
+            flex: 0.05,
+            field: 'quantity',
+            headerName: 'Quantity',
+            renderCell: (params) => {
+                return (
+                    <Stack sx={{ flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                        <TypographyComponent color={theme.palette.success[700]} fontSize={14} fontWeight={500} sx={{ lineHeight: '20px' }}>
+                            {params?.row?.quantity && params?.row?.quantity !== null ? `+${params?.row?.quantity} ${params?.row?.unit && params?.row?.unit !== null ? params?.row?.unit : ''}` : ''}
                         </TypographyComponent>
                     </Stack>
                 )
@@ -106,7 +364,17 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
         {
             flex: 0.08,
             field: 'supplier',
-            headerName: 'Supplier'
+            headerName: 'Supplier',
+            renderCell: (params) => {
+                return (
+                    <Stack sx={{ flexDirection: 'row', alignItems: 'center', height: '100%', gap: 0.5 }}>
+                        <UserCircleIcon stroke={theme.palette.grey[900]} size={24} />
+                        <TypographyComponent color={theme.palette.grey[900]} fontSize={14} fontWeight={500}>
+                            {params?.row?.supplier && params?.row?.supplier !== null ? params?.row?.supplier : ''}
+                        </TypographyComponent>
+                    </Stack>
+                )
+            }
         },
         {
             flex: 0.05,
@@ -116,7 +384,16 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
         {
             flex: 0.06,
             field: 'stock_after',
-            headerName: 'Stock After'
+            headerName: 'Stock After',
+            renderCell: (params) => {
+                return (
+                    <Stack sx={{ flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                        <TypographyComponent color={theme.palette.grey[900]} fontSize={14} fontWeight={500} sx={{ lineHeight: '20px' }}>
+                            {params?.row?.stock_after !== null ? `+${params?.row?.stock_after} ${params?.row?.unit && params?.row?.unit !== null ? params?.row?.unit : ''}` : ''}
+                        </TypographyComponent>
+                    </Stack>
+                )
+            }
         },
         {
             flex: 0.1,
@@ -142,15 +419,15 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                         }}
                     >
                         {
-                            params?.row?.files && params.row.files.length > 0 ?
-                                params.row.files.map((file, index) => {
+                            params?.row?.files && params?.row?.files.length > 0 ?
+                                params?.row?.files.map((file, index) => {
 
                                     return (
                                         <React.Fragment>
                                             <TypographyComponent
                                                 fontSize={14}
                                                 fontWeight={400}
-                                                sx={{ cursor: 'pointer', color: theme.palette.primary[600], textDecoration: 'underline', borderRight: index + 1 < params.row.files.length ? `1.5px solid ${theme.palette.grey[900]}` : 'none', paddingRight: 0.7 }}
+                                                sx={{ cursor: 'pointer', color: theme.palette.primary[600], textDecoration: 'underline', borderRight: index + 1 < params?.row?.files.length ? `1.5px solid ${theme.palette.grey[900]}` : 'none', paddingRight: 0.7 }}
                                                 onClick={() => {
                                                     window.open(file?.image_url, '_blank')
                                                 }}
@@ -166,26 +443,31 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                 )
             }
         }
-        //     renderCell: (params) => {
-        //         return (
-        //             <>
-        //                 <Stack sx={{ justifyContent: 'center', flexDirection: 'row' }}>
-        //                     {
-        //                         params?.row?.files && params?.row?.files !== null && params?.row?.files.length > 0 ?
-        //                             params?.row?.files.map((file, index) => {
-        //                                 return (
-        //                                     <Stack key={index}><TypographyComponent>{file.split("/").pop()}</TypographyComponent></Stack>
-        //                                 )
-        //                             })
-        //                             :
-        //                             <></>
-        //                     }
-        //                 </Stack>
-        //             </>
-
-        //         )
-        //     }
     ];
+
+    /**
+     * function to return columns as per Selected filter
+     * @param {*} filter 
+     * @returns 
+     */
+    const getCurrentColumn = (filter) => {
+        let columns = columnsCompleteHistory
+        switch (filter) {
+            case 'Complete History':
+                columns = columnsCompleteHistory
+                break;
+            case 'Consumption History':
+                columns = columnsConsumptionHistory
+                break;
+            case 'Restock History':
+                columns = columnsRestockHistory
+                break;
+
+            default:
+                break;
+        }
+        return columns
+    }
 
     useEffect(() => {
         if (open === true) {
@@ -199,48 +481,6 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                     uuid: detail?.uuid
                 }))
             }
-            //-----development purpose-----
-            setTransactionHistoryData([{
-                id: 1,
-                date: '2024-06-10 22:01:01',
-                supplier: 'Cooltech Sipplies',
-                quantity: '50 Kilograms',
-                invoice_no: 'INV-8788',
-                stock_after: '200 Kilograms',
-                additional_info: "Restocked via purchase order PO-4523",
-                files: [
-                    {
-                        "id": 22,
-                        "image_url": "https://fms-super-admin.interdev.in/fms/ticket/8/8_1762780539544.jpg",
-                        "file_name": "8_1762780539544.jpg"
-                    },
-                    {
-                        "id": 21,
-                        "image_url": "https://fms-super-admin.interdev.in/fms/ticket/8/8_1763011390575.jpg",
-                        "file_name": "8_1763011390575.jpg"
-                    },
-                    {
-                        "id": 20,
-                        "image_url": "https://fms-super-admin.interdev.in/fms/ticket/10/10_1762840033061.jpg",
-                        "file_name": "10_1762840033061.jpg"
-                    }
-                ]
-            },
-            {
-                id: 2,
-                date: '2024-06-10 09:01:01',
-                supplier: 'Cooltech Sipplies',
-                quantity: '50 Kilograms',
-                invoice_no: 'INV-8788',
-                stock_after: '200 Kilograms',
-                additional_info: "Restocked via purchase order PO-4523",
-                files: [{
-                    "id": 20,
-                    "image_url": "https://fms-super-admin.interdev.in/fms/ticket/10/10_1762840033061.jpg",
-                    "file_name": "10_1762840033061.jpg"
-                }]
-            }])
-            //---------------------------
         }
         return () => {
             setInventoryDetailsData(null)
@@ -299,7 +539,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
             setLoadingList(true)
             dispatch(actionGetInventoryTransactionHistory({
                 filter_type: filterValue,
-                inventory_uuid: detail?.uuid,
+                inventory_uuid: detail?.uuid && detail?.uuid !== null ? detail?.uuid : inventoryDetailsData?.uuid,
                 branch_uuid: branch?.currentBranch?.uuid,
                 page: page,
                 limit: LIST_LIMIT,
@@ -354,8 +594,8 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                 setTransactionHistoryData(getInventoryTransactionHistory?.response.data)
                 setTotal(getInventoryTransactionHistory?.response?.total_records)
             } else {
-                // setTransactionHistoryData(null)
-                // setTotal(0)
+                setTransactionHistoryData(null)
+                setTotal(0)
                 setLoadingList(false)
                 switch (getInventoryTransactionHistory?.status) {
                     case UNAUTHORIZED:
@@ -414,7 +654,6 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
     const InfoTile = ({ title, value, subtext, icon, iconBgColor }) => {
         return (
             <Stack sx={{
-                // minWidth: 200,
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
@@ -483,16 +722,21 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                     ]}
                     need_responsive={1}
                     rightSection={<Stack flexDirection={{ xs: 'row', sm: 'row' }} gap={{ xs: 1, sm: 2 }} sx={{ mx: 3, alignItems: 'center' }}>
-                        <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.grey[700]}`, background: theme.palette.common.white, borderRadius: '6px', padding: '8px 12px', cursor: 'pointer' }}
-                            onClick={() => {
-                                setOpenConsumptionInventoryPopup(true)
-                            }}
-                        >
-                            <BoxIcon stroke={theme.palette.grey[700]} size={22} />
-                            <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.grey[700] }}>
-                                Record Usage
-                            </TypographyComponent>
-                        </Stack>
+                        {
+                            Number(inventoryDetailsData?.current_stock) > 0 ?
+                                <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.grey[700]}`, background: theme.palette.common.white, borderRadius: '6px', padding: '8px 12px', cursor: 'pointer' }}
+                                    onClick={() => {
+                                        setOpenConsumptionInventoryPopup(true)
+                                    }}
+                                >
+                                    <BoxIcon stroke={theme.palette.grey[700]} size={22} />
+                                    <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.grey[700] }}>
+                                        Record Usage
+                                    </TypographyComponent>
+                                </Stack>
+                                :
+                                <></>
+                        }
                         <Stack sx={{ flexDirection: 'row', gap: 0.7, alignItems: 'center', border: `1px solid${theme.palette.grey[700]}`, background: theme.palette.common.white, borderRadius: '6px', padding: '8px 12px', cursor: 'pointer' }}
                             onClick={() => {
                                 setOpenRestockInventoryPopup(true)
@@ -519,13 +763,6 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                                     {/* open setting delete popup */}
                                     <IconButton
                                         onClick={() => {
-                                            // let objData = {
-                                            //     uuid: inventoryDetailsData?.ticket_uuid,
-                                            //     title: `Delete Ticket`,
-                                            //     text: `Are you sure you want to delete this ticket? This action cannot be undone.`
-                                            // }
-                                            // setViewTicketData(objData)
-                                            // setOpenViewDeleteTicketPopup(true)
                                             let objData = {
                                                 uuid: inventoryDetailsData?.uuid,
                                                 title: `Delete Inventory`,
@@ -547,7 +784,6 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                 <Stack
                     sx={{
                         px: 2,
-                        // flexGrow: 1,
                         width: '100%',
                         overflowY: 'auto',
                         rowGap: 3,
@@ -564,7 +800,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                         showLowStockMessage == 1 && inventoryDetailsData?.stock_status && inventoryDetailsData?.stock_status !== null && ['Out Of Stock', 'Low Stock'].includes(inventoryDetailsData?.stock_status) ?
                             <>
                                 {
-                                    Number(inventoryDetailsData?.current_stock) > Number(inventoryDetailsData?.minimum_quantity) && Number(inventoryDetailsData?.current_stock) < Number(inventoryDetailsData?.critical_quantity) ?
+                                    inventoryDetailsData?.stock_status == 'Low Stock' ?
                                         <Stack sx={{ border: `1px solid ${theme.palette.warning[600]}`, alignItems: 'center', borderRadius: '8px', flexDirection: 'row', justifyContent: 'space-between', padding: '16px', background: theme.palette.warning[100] }}>
                                             <Stack sx={{ flexDirection: 'row', gap: 1 }}>
                                                 <Box
@@ -706,8 +942,8 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                         <Grid size={{ xs: 12, sm: 4, md: 2.4 }}>
                             <InfoTile
                                 title="Current Stock"
-                                value={`${inventoryDetailsData?.current_stock && inventoryDetailsData?.current_stock !== null ? `${inventoryDetailsData?.current_stock}  ${inventoryDetailsData?.unit}` : 0}`}
-                                subtext={`Min: ${inventoryDetailsData?.minimum_quantity && inventoryDetailsData?.minimum_quantity !== null ? `${inventoryDetailsData?.minimum_quantity} ${inventoryDetailsData?.unit}` : ''}`}
+                                value={`${inventoryDetailsData?.current_stock && inventoryDetailsData?.current_stock !== null ? `${inventoryDetailsData?.current_stock}  ${inventoryDetailsData?.unit && inventoryDetailsData?.unit !== null ? inventoryDetailsData?.unit : ''}` : 0}`}
+                                subtext={`Min: ${inventoryDetailsData?.minimum_quantity && inventoryDetailsData?.minimum_quantity !== null ? `${inventoryDetailsData?.minimum_quantity} ${inventoryDetailsData?.unit && inventoryDetailsData?.unit !== null ? inventoryDetailsData?.unit : ''}` : ''}`}
                                 icon={<BoxIcon stroke={theme.palette.primary[600]} size={24} />}
                                 iconBgColor={theme.palette.primary[100]}
                             />
@@ -715,7 +951,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                         <Grid size={{ xs: 12, sm: 4, md: 2.4 }}>
                             <InfoTile
                                 title="Total Restocked"
-                                value={`${inventoryDetailsData?.restocked_quantity && inventoryDetailsData?.restocked_quantity !== null ? `${inventoryDetailsData?.restocked_quantity}  ${inventoryDetailsData?.unit}` : 0}`}
+                                value={`${inventoryDetailsData?.restocked_quantity && inventoryDetailsData?.restocked_quantity !== null ? `${inventoryDetailsData?.restocked_quantity}  ${inventoryDetailsData?.unit && inventoryDetailsData?.unit !== null ? inventoryDetailsData?.unit : ''}` : 0}`}
                                 subtext="All Time"
                                 icon={<BoxPlusIcon stroke={theme.palette.success[600]} size={24} />}
                                 iconBgColor={theme.palette.success[100]}
@@ -724,7 +960,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                         <Grid size={{ xs: 12, sm: 4, md: 2.4 }}>
                             <InfoTile
                                 title="Total Consumed"
-                                value={`${inventoryDetailsData?.consumed_quantity && inventoryDetailsData?.consumed_quantity !== null ? `${inventoryDetailsData?.consumed_quantity}  ${inventoryDetailsData?.unit}` : 0}`}
+                                value={`${inventoryDetailsData?.consumed_quantity && inventoryDetailsData?.consumed_quantity !== null ? `${inventoryDetailsData?.consumed_quantity}  ${inventoryDetailsData?.unit && inventoryDetailsData?.unit !== null ? inventoryDetailsData?.unit : ''}` : 0}`}
                                 subtext="All Time"
                                 icon={<StairDownIcon stroke={theme.palette.warning[600]} size={24} />}
                                 iconBgColor={theme.palette.warning[100]}
@@ -845,7 +1081,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                                                     }
                                                     value={selectedEndDate}
                                                     selected={selectedEndDate ? moment(selectedEndDate, 'DD/MM/YYYY').toDate() : null}
-                                                    minDate={selectedEndDate ? moment(selectedEndDate, 'DD/MM/YYYY').add(1, 'days').toDate() : null}
+                                                    minDate={selectedStartDate ? moment(selectedStartDate, 'DD/MM/YYYY').add(1, 'days').toDate() : null}
                                                     showYearDropdown={true}
                                                     onChange={date => {
                                                         const formattedDate = moment(date).format('DD/MM/YYYY')
@@ -853,8 +1089,6 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                                                     }}
                                                 />
                                             </Stack>
-
-
                                         </Stack>
                                     </DatePickerWrapper>
                                 </Box>
@@ -886,14 +1120,14 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                                             </Grid>
                                             {/* Description */}
                                             <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
-                                                <FieldBox textColor={theme.palette.grey[900]} label="Description" value={inventoryDetailsData?.description && inventoryDetailsData?.description !== null ? inventoryDetailsData?.description : ''} />
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Description" type="description" length={90} value={inventoryDetailsData?.description && inventoryDetailsData?.description !== null ? inventoryDetailsData?.description : ''} />
                                             </Grid>
                                             <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }} >
                                                 <Stack sx={{ borderBottom: `1px solid ${theme.palette.grey[300]}`, mx: 2 }}></Stack>
                                             </Grid>
                                             {/* Storage Location */}
                                             <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
-                                                <FieldBox textColor={theme.palette.grey[900]} label="Storage Location" value={inventoryDetailsData?.storage_location && inventoryDetailsData?.storage_location !== null ? inventoryDetailsData?.storage_location : ''} />
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Storage Location" type="description" length={85} value={inventoryDetailsData?.storage_location && inventoryDetailsData?.storage_location !== null ? inventoryDetailsData?.storage_location : ''} />
                                             </Grid>
                                         </Grid>
                                     </Stack>
@@ -919,11 +1153,11 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                                             </Grid>
                                             {/* Total Restocked */}
                                             <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 4 }}>
-                                                <FieldBox textColor={theme.palette.grey[900]} label="Total Restocked" value={inventoryDetailsData?.restocked_quantity && inventoryDetailsData?.restocked_quantity !== null ? `${inventoryDetailsData?.restocked_quantity} ${inventoryDetailsData?.unit && inventoryDetailsData?.unit !== null ? ` ${inventoryDetailsData?.unit}` : ''}` : ''} />
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Total Restocked" is_number={'1'} value={inventoryDetailsData?.restocked_quantity && inventoryDetailsData?.restocked_quantity !== null ? `${inventoryDetailsData?.restocked_quantity} ${inventoryDetailsData?.unit && inventoryDetailsData?.unit !== null ? ` ${inventoryDetailsData?.unit}` : ''}` : ''} />
                                             </Grid>
                                             {/* Total Consumed */}
                                             <Grid size={{ xs: 12, sm: 6, md: 6, lg: 8, xl: 8 }}>
-                                                <FieldBox textColor={theme.palette.grey[900]} label="Total Consumed" value={inventoryDetailsData?.consumed_quantity && inventoryDetailsData?.consumed_quantity !== null ? `${inventoryDetailsData?.consumed_quantity} ${inventoryDetailsData?.unit && inventoryDetailsData?.unit !== null ? ` ${inventoryDetailsData?.unit}` : ''}` : ''} />
+                                                <FieldBox textColor={theme.palette.grey[900]} label="Total Consumed" is_number={'1'} value={inventoryDetailsData?.consumed_quantity && inventoryDetailsData?.consumed_quantity !== null ? `${inventoryDetailsData?.consumed_quantity} ${inventoryDetailsData?.unit && inventoryDetailsData?.unit !== null ? ` ${inventoryDetailsData?.unit}` : ''}` : 0} />
                                             </Grid>
                                             <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }} >
                                                 <Stack sx={{ borderBottom: `1px solid ${theme.palette.grey[300]}`, mx: 2 }}></Stack>
@@ -953,7 +1187,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                                             height={275}
                                             borderRadius='8px'
                                             rows={transactionHistoryData}
-                                            columns={columns}
+                                            columns={getCurrentColumn(selectedFilter)}
                                             isCheckbox={false}
                                             total={total}
                                             page={page}
@@ -962,7 +1196,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                                         />
                                     ) : (
                                         <Stack sx={{ height: 275 }}>
-                                            <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Transaction History Found'} subTitle={''} />
+                                            <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} imageSize={200} mt={2} title={'No Transaction History Found'} subTitle={''} />
                                         </Stack>
                                     )}
                                 </Stack>
@@ -1063,6 +1297,6 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                     }
                 }}
             />
-        </Drawer >
+        </Drawer>
     )
 }

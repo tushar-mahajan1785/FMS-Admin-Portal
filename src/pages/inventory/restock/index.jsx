@@ -80,17 +80,22 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
     //watchers
     const watchAddedQuantity = watch('added_quantity')
 
+    /**
+     * Initial Render
+     * @dependent restockData
+     */
     useEffect(() => {
         if (open === true) {
             reset()
+
+            //set the previously filled inventory data 
             if (restockData && restockData !== null) {
                 setInventoryRestockDetailsData(restockData)
             } else {
                 setInventoryRestockDetailsData(null)
             }
-            // dispatch(actionGetInventoryDetails({
-            //     uuid: detail?.uuid
-            // }))
+
+            //Masters api Call
             dispatch(actionGetUnitMaster())
             dispatch(actionVendorMasterList({
                 client_id: branch?.currentBranch?.client_id,
@@ -104,6 +109,10 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
         }
     }, [open, restockData])
 
+    /**
+    * Set supplier_name
+    * @dependent supervisorMasterOptions
+    */
     useEffect(() => {
         if (supervisorMasterOptions && supervisorMasterOptions !== null && supervisorMasterOptions.length > 0) {
             setValue('supplier_name', inventoryRestockDetailsData?.supplier_id && inventoryRestockDetailsData?.supplier_id !== null ? inventoryRestockDetailsData?.supplier_id : '')
@@ -283,7 +292,6 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
 
 
     const onSubmit = async (data) => {
-        // let currentSupplier = getObjectById(supervisorMasterOptions, watchSupplier)
         let objData = {
             branch_uuid: branch?.currentBranch?.uuid,
             inventory_uuid: inventoryRestockDetailsData?.uuid && inventoryRestockDetailsData?.uuid !== null ? inventoryRestockDetailsData?.uuid : null,
@@ -322,7 +330,7 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
             variant='temporary'
             onClose={handleClose}
             ModalProps={{ keepMounted: true }}
-            sx={{ '& .MuiDrawer-paper': { width: { xs: '100%', md: '100%', lg: '86%' } } }}
+            sx={{ '& .MuiDrawer-paper': { width: { xs: '100%', md: '100%', lg: '100%', xl: '86%' } } }}
         >
             <Stack sx={{ height: '100%' }} justifyContent={'flex-start'} flexDirection={'column'}>
                 <FormHeader
@@ -375,9 +383,9 @@ export const RestockInventory = ({ open, handleClose, restockData }) => {
                                         <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', mt: 0, mb: 0, px: 1, pt: 1 }}>
                                             <SectionHeader sx={{}} title={'Basic Information'} show_progress={false} />
                                             {
-                                                inventoryRestockDetailsData?.status && inventoryRestockDetailsData?.status !== null ?
+                                                inventoryRestockDetailsData?.stock_status && inventoryRestockDetailsData?.stock_status !== null ?
                                                     <Stack>
-                                                        <CustomChip text={inventoryRestockDetailsData?.status} colorName={getCurrentStatusColor(inventoryRestockDetailsData?.status)} />
+                                                        <CustomChip text={inventoryRestockDetailsData?.stock_status} colorName={getCurrentStatusColor(inventoryRestockDetailsData?.stock_status)} />
                                                     </Stack>
                                                     :
                                                     <></>
