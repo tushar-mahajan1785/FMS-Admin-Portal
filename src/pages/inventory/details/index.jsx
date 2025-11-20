@@ -497,7 +497,11 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
         }
     }, [open])
 
-    useEffect(() => {
+    /**
+     * 
+     * function to call inventory history List API
+     */
+    const fetchInventoryHistory = () => {
         if (selectedFilter !== 'Overview' && branch?.currentBranch?.uuid !== null && page && page !== null) {
             if (!selectedStartDate || !selectedEndDate) return;
 
@@ -547,7 +551,10 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                 end_date: moment(selectedEndDate, "DD/MM/YYYY").format('YYYY-MM-DD')
             }))
         }
+    }
 
+    useEffect(() => {
+        fetchInventoryHistory();
     }, [branch?.currentBranch?.uuid, selectedFilter, page, selectedStartDate, selectedEndDate])
 
     /**
@@ -1279,6 +1286,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                                 uuid: detail?.uuid
                             }))
                         }
+                        fetchInventoryHistory()
                     }
                 }}
             />
@@ -1293,7 +1301,7 @@ export const InventoryDetails = ({ open, handleClose, detail }) => {
                                 uuid: detail?.uuid
                             }))
                         }
-
+                        fetchInventoryHistory()
                     }
                 }}
             />
