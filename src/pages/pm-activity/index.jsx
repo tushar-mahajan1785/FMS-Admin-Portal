@@ -21,7 +21,7 @@ import AddIcon from "@mui/icons-material/Add";
 import OverDueIcon from "../../assets/icons/OverdueIcon";
 import {
   ERROR,
-  getMasterPMActivityStatus,
+  getMasterPMActivityEditStatus,
   getPmActivityFrequencyArray,
   getMasterPMActivitySchedule,
   IMAGES_SCREEN_NO_DATA,
@@ -95,7 +95,6 @@ export default function PmActivity() {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedAssetTypes, setSelectedAssetTypes] = useState("");
   const [masterAssetTypeOptions, setMasterAssetTypeOptions] = useState([]);
-  const [masterPmActivityStatusOptions] = useState(getMasterPMActivityStatus);
   const [selectedUpcomingPmSchedule, setSelectedUpcomingPmSchedule] =
     useState("");
   const [openAddPmSchedule, setOpenAddPmSchedule] = useState(false);
@@ -775,8 +774,8 @@ export default function PmActivity() {
                   <MenuItem value="">
                     <em>All Status</em>
                   </MenuItem>
-                  {masterPmActivityStatusOptions &&
-                    masterPmActivityStatusOptions.map((option) => (
+                  {getMasterPMActivityEditStatus &&
+                    getMasterPMActivityEditStatus.map((option) => (
                       <MenuItem
                         key={option?.name}
                         value={option?.name}

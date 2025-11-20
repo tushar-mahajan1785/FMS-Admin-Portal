@@ -313,6 +313,9 @@ export const API_PM_ACTIVITY_DETAILS = `${BASE}/pm-activity/details`
 
 export const API_PM_ACTIVITY_MARK_DONE = `${BASE}/pm-activity/history-status-update`
 
+export const API_PM_ACTIVITY_EDIT = `${BASE}/pm-activity/edit`
+
+
 // document categories
 export const API_DOCUMENTS_CATEGORIES_LIST = `${BASE}/document-category/list`
 

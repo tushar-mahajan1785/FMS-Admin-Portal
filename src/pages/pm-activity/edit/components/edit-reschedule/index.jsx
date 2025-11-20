@@ -111,7 +111,7 @@ export default function ReschedulePopup({
 
   useEffect(() => {
     if (open === true) {
-      console.log("-----selectedActivity--add-----", selectedActivity);
+      console.log("-----selectedActivity--edit-----", selectedActivity);
       if (
         selectedActivity &&
         selectedActivity !== null &&
@@ -119,10 +119,9 @@ export default function ReschedulePopup({
       ) {
         setValue(
           "current_schedule_date",
-          moment(
-            selectedActivity?.frequency_data?.scheduled_date,
-            "YYYY-MM-DD"
-          ).format("DD/MM/YYYY")
+          moment(selectedActivity?.frequency_data?.date, "YYYY-MM-DD").format(
+            "DD/MM/YYYY"
+          )
         );
       }
     }
@@ -465,9 +464,9 @@ export default function ReschedulePopup({
                   fontWeight={500}
                   sx={{ color: theme.palette.grey[700] }}
                 >
-                  {selectedActivity?.frequency_data?.scheduled_date !== null &&
+                  {selectedActivity?.frequency_data?.date !== null &&
                     moment(
-                      selectedActivity?.frequency_data?.scheduled_date,
+                      selectedActivity?.frequency_data?.date,
                       "YYYY-MM-DD"
                     ).format("DD MMM YYYY")}
                 </TypographyComponent>

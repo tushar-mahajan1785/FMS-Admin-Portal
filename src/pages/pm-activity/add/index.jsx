@@ -425,12 +425,6 @@ export default function AddPMSchedule({ open, handleClose }) {
             sx={{
               px: 4,
               pb: 4,
-              // flexGrow: 1,
-              // "&::-webkit-scrollbar": { width: "2px" },
-              // "&::-webkit-scrollbar-thumb": {
-              //   backgroundColor: "#ccc",
-              //   borderRadius: "2px",
-              // },
             }}
           >
             {activeStep !== steps.length && getStepContent(activeStep)}

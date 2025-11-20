@@ -1,308 +1,378 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useEffect, useState } from "react";
+import { useForm, Controller, FormProvider } from "react-hook-form";
 import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CircularProgress,
-  Divider,
   Drawer,
-  Grid,
+  Button,
+  Stack,
+  Divider,
+  CircularProgress,
   IconButton,
-  InputAdornment,
+  Grid,
+  useTheme,
+  MenuItem,
+  Box,
   List,
   ListItem,
-  MenuItem,
-  Stack,
-  Tooltip,
-  useTheme,
+  ListItemText,
+  Avatar,
+  Typography,
 } from "@mui/material";
-import { useDispatch, useSelector } from "react-redux";
-import { Controller, useForm } from "react-hook-form";
-import toast from "react-hot-toast";
-import {
-  ERROR,
-  IMAGES_SCREEN_NO_DATA,
-  SERVER_ERROR,
-  UNAUTHORIZED,
-  getMasterPMActivityStatus,
-  getPmActivityFrequencyArray,
-} from "../../../constants";
-import {
-  actionMasterAssetType,
-  resetMasterAssetTypeResponse,
-} from "../../../store/asset";
-import {
-  actionAssetTypeWiseList,
-  resetAssetTypeWiseListResponse,
-} from "../../../store/roster";
-import DatePicker from "react-datepicker";
-import moment from "moment";
-import SearchIcon from "../../../assets/icons/SearchIcon";
-import TypographyComponent from "../../../components/custom-typography";
-import { AntSwitch, SearchInput } from "../../../components/common";
+import React, { useEffect, useState } from "react";
 import CustomTextField from "../../../components/text-field";
 import FormLabel from "../../../components/form-label";
-import EmptyContent from "../../../components/empty_content";
-import { useAuth } from "../../../hooks/useAuth";
-import { useBranch } from "../../../hooks/useBranch";
+import { ERROR, SERVER_ERROR, UNAUTHORIZED } from "../../../constants";
+import { useDispatch, useSelector } from "react-redux";
+import FormHeader from "../../../components/form-header";
 import { useSnackbar } from "../../../hooks/useSnackbar";
-import CalendarIcon from "../../../assets/icons/CalendarIcon";
-import DeleteIcon from "../../../assets/icons/DeleteIcon";
-import DatePickerWrapper from "../../../components/datapicker-wrapper";
-import ChevronDownIcon from "../../../assets/icons/ChevronDown";
+import { useAuth } from "../../../hooks/useAuth";
+import CloseIcon from "../../../assets/icons/CloseIcon";
+
+import { actionMasterAssetType } from "../../../store/asset";
+import { useBranch } from "../../../hooks/useBranch";
+import TotalPMIcon from "../../../assets/icons/TotalPMIcon";
+import PMActivityAssetSetUp from "./components/pm-assets-setup";
 import {
   actionPMScheduleData,
-  actionPMScheduleDetails,
+  actionPMScheduleEdit,
+  resetPmScheduleEditResponse,
 } from "../../../store/pm-activity";
-import { getObjectById } from "../../../utils";
-import FormHeader from "../../../components/form-header";
-import CloseIcon from "../../../assets/icons/CloseIcon";
-import TotalPMIcon from "../../../assets/icons/TotalPMIcon";
+import PMActivityPreviewSetUp from "./components/pm-preview-setup";
 
 export default function PMActivityEdit({ open, handleClose, objData }) {
-  /**
-   * 🔹 Hooks & Store Access
-   * @description : Accessing theme, dispatch, auth, snackbar, branch and form context
-   */
   const theme = useTheme();
   const dispatch = useDispatch();
   const { logout } = useAuth();
-  const { showSnackbar } = useSnackbar();
   const branch = useBranch();
+  const { showSnackbar } = useSnackbar();
 
-  const {
-    setValue,
-    control,
-
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
-
-  /**
-   * 🔹 Local States
-   * @description : Local states for search query, asset type options and asset list
-   */
-  const [searchQuery, setSearchQuery] = useState("");
-  const [assetTypeMasterOption, setAssetTypeMasterOption] = useState([]);
-  const [assetTypeWiseListOptions, setAssetTypeWiseListOptions] = useState([]);
-  const [assetTypeWiseListOriginalData, setAssetTypeWiseListOriginalData] =
-    useState([]);
-  const [pmScheduleActivityDetails, setPmScheduleActivityDetails] =
-    useState(null);
-  const [loading, setLoading] = useState(false);
-
-  /**
-   * 🔹 Redux Store Access
-   *  @description : Accessing master asset type and asset type wise list from Redux store
-   */
-  const { masterAssetType } = useSelector((state) => state.AssetStore);
-  const { assetTypeWiseList } = useSelector((state) => state.rosterStore);
-  const { pmScheduleData, pmScheduleDetails } = useSelector(
+  //Stores
+  const { pmScheduleData, pmScheduleEdit } = useSelector(
     (state) => state.pmActivityStore
   );
 
-  /**
-   * 🔹 Load PM Schedule Details when component opens
-   */
+  const methods = useForm({
+    mode: "onSubmit",
+    defaultValues: {
+      pm_activity_title: "",
+      frequency: "",
+      status: "",
+      schedule_start_date: "",
+    },
+  });
+
+  const { handleSubmit, reset } = methods;
+
+  //States
+  const [loading, setLoading] = useState(false);
+  const [activeStep, setActiveStep] = useState(0);
+  const steps = ["PM Activity", "Preview PM Details"];
+
   useEffect(() => {
-    if (open && objData?.uuid) {
-      dispatch(actionPMScheduleDetails({ uuid: objData?.uuid }));
-    }
-  }, [open, objData]);
-
-  /**
-   * 🔹 Handle PM Schedule Details Response and populate form
-   */
-  useEffect(() => {
-    if (pmScheduleDetails && pmScheduleDetails !== null) {
-      if (pmScheduleDetails?.result === true) {
-        const response = pmScheduleDetails?.response;
-        setPmScheduleActivityDetails(response);
-
-        // Populate form with existing data
-        setValue("pm_activity_title", response?.activity_title || "");
-        setValue("frequency", response?.frequency || "");
-        setValue(
-          "schedule_start_date",
-          response?.schedule_start_date
-            ? moment(response.schedule_start_date, "YYYY-MM-DD").format(
-                "DD/MM/YYYY"
-              )
-            : ""
-        );
-        setValue("status", response?.status || "");
-
-        // Set assets in pmScheduleData
-        const updatedPmData = {
-          ...pmScheduleData,
-          assets: response?.assets || [],
-        };
-        dispatch(actionPMScheduleData(updatedPmData));
+    if (pmScheduleEdit && pmScheduleEdit !== null) {
+      dispatch(resetPmScheduleEditResponse());
+      if (pmScheduleEdit?.result === true) {
+        handleClose("save");
+        reset();
+        setLoading(false);
+        showSnackbar({
+          message: pmScheduleEdit?.message,
+          severity: "success",
+        });
       } else {
-        console.error("Failed to load PM schedule details");
+        setLoading(false);
+        switch (pmScheduleEdit?.status) {
+          case UNAUTHORIZED:
+            logout();
+            break;
+          case ERROR:
+            dispatch(resetPmScheduleEditResponse());
+            showSnackbar({
+              message: pmScheduleEdit?.message,
+              severity: "error",
+            });
+            break;
+          case SERVER_ERROR:
+            showSnackbar({
+              message: pmScheduleEdit?.message,
+              severity: "error",
+            });
+            break;
+          default:
+            break;
+        }
       }
     }
-  }, [pmScheduleDetails]);
+  }, [pmScheduleEdit]);
 
-  /**
-   * 🔹 Initial API call to fetch master asset types
-   */
-  useEffect(() => {
-    if (branch?.currentBranch?.client_uuid) {
-      dispatch(
-        actionMasterAssetType({
-          client_uuid: branch.currentBranch.client_uuid,
-        })
-      );
-    }
-  }, [branch?.currentBranch]);
-
-  /**
-   * 🔹 Fetch asset-type-wise list when asset type changes
-   */
-  useEffect(() => {
-    if (branch?.currentBranch?.uuid && pmScheduleData?.asset_type) {
-      dispatch(
-        actionAssetTypeWiseList({
-          branch_uuid: branch.currentBranch.uuid,
-          asset_type: pmScheduleData.asset_type,
-        })
-      );
-    }
-  }, [branch?.currentBranch, pmScheduleData?.asset_type]);
-
-  /**
-   * 🔹 Handle Master Asset Type Response
-   */
-  useEffect(() => {
-    if (!masterAssetType) return;
-    dispatch(resetMasterAssetTypeResponse());
-
-    if (masterAssetType?.result === true) {
-      setAssetTypeMasterOption(masterAssetType?.response ?? []);
-      if (
-        masterAssetType?.response?.length > 0 &&
-        !pmScheduleData?.asset_type
-      ) {
-        const firstAsset = masterAssetType.response[0];
-        setValue("asset_type", firstAsset?.id);
-        const updated = { ...pmScheduleData, asset_type: firstAsset?.name };
-        dispatch(actionPMScheduleData(updated));
-      }
-    } else {
-      setAssetTypeMasterOption([]);
-      switch (masterAssetType?.status) {
-        case UNAUTHORIZED:
-          logout();
-          break;
-        case ERROR:
-          break;
-        case SERVER_ERROR:
-          toast.dismiss();
-          showSnackbar({
-            message: masterAssetType?.message,
-            severity: "error",
-          });
-          break;
-        default:
-          break;
-      }
-    }
-  }, [masterAssetType]);
-
-  /**
-   * 🔹 Handle Asset Type Wise List Response
-   */
-  useEffect(() => {
-    if (!assetTypeWiseList) return;
-    dispatch(resetAssetTypeWiseListResponse());
-
-    if (assetTypeWiseList?.result === true) {
-      const data = assetTypeWiseList?.response ?? [];
-      setAssetTypeWiseListOptions(data);
-      setAssetTypeWiseListOriginalData(data);
-    } else {
-      setAssetTypeWiseListOptions([]);
-      setAssetTypeWiseListOriginalData([]);
-      switch (assetTypeWiseList?.status) {
-        case UNAUTHORIZED:
-          logout();
-          break;
-        case SERVER_ERROR:
-          toast.dismiss();
-          showSnackbar({
-            message: assetTypeWiseList?.message,
-            severity: "error",
-          });
-          break;
-        default:
-          break;
-      }
-    }
-  }, [assetTypeWiseList]);
-
-  /**
-   * 🔹 Filter search results
-   */
-  useEffect(() => {
-    if (searchQuery.trim().length > 0) {
-      const filtered =
-        assetTypeWiseListOriginalData?.filter(
-          (item) =>
-            item?.asset_description
-              ?.toLowerCase()
-              ?.includes(searchQuery.toLowerCase()) ||
-            item?.type?.toLowerCase()?.includes(searchQuery.toLowerCase())
-        ) ?? [];
-      setAssetTypeWiseListOptions(filtered);
-    } else {
-      setAssetTypeWiseListOptions(assetTypeWiseListOriginalData ?? []);
-    }
-  }, [searchQuery]);
-
-  /**
-   * 🔹 Handlers
-   * @description : Handlers for search input changes
-   */
-  const handleSearchQueryChange = (event) => {
-    setSearchQuery(event.target.value);
+  // Handle next step (go to preview)
+  const handleNext = () => {
+    setActiveStep(1);
   };
 
-  /**
-   * 🔹 Handle Save Schedule
-   * @description : Submit handler for saving updated PM schedule
-   */
-  const handleSaveSchedule = (data) => {
-    setLoading(true);
+  // Handle back step (go back to form)
+  const handleBack = () => {
+    setActiveStep(0);
+  };
+  // Helper function to format date as "2025-11-05"
+  const formatDate = (date) => {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, "0"); // months are 0-indexed
+    const day = date.getDate().toString().padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
-    // Prepare updated data
-    const updatedData = {
-      ...data,
-      uuid: objData?.uuid, // Include the UUID for update
-      assets: pmScheduleData?.assets || [],
-      originalData: pmScheduleActivityDetails, // Original data for reference
-      updatedFields: {
-        pm_activity_title: data.pm_activity_title,
-        frequency: data.frequency,
-        schedule_start_date: data.schedule_start_date,
-        status: data.status,
-        asset_type: pmScheduleData?.asset_type,
-        selected_assets_count: pmScheduleData?.assets?.length || 0,
-      },
+  // Helper function to get ordinal suffix (1st, 2nd, 3rd, 4th, etc.)
+  const getOrdinalSuffix = (number) => {
+    const lastDigit = number % 10;
+    const lastTwoDigits = number % 100;
+
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
+      return "th";
+    }
+
+    switch (lastDigit) {
+      case 1:
+        return "st";
+      case 2:
+        return "nd";
+      case 3:
+        return "rd";
+      default:
+        return "th";
+    }
+  };
+
+  // Helper function to create activity object with proper title and date format
+  const createActivityObject = (index, date) => {
+    const ordinal = getOrdinalSuffix(index);
+    const formattedDate = formatDate(date);
+
+    return {
+      id: index,
+      title: `${index}${ordinal} Activity Date`,
+      date: formattedDate,
+      status: "Upcoming",
+      completed_date: "",
+      supervision_by: "",
+      time: "",
+      additional_info: "",
     };
-    console.log("Updated Dataaaaa: Edit screen ", updatedData);
+  };
 
-    // Simulate API call delay
-    setTimeout(() => {
-      setLoading(false);
-      showSnackbar({
-        message: "PM Schedule updated successfully!",
-        severity: "success",
+  // Function to generate dates based on frequency
+  const generateFrequencyDates = (frequency, startDate) => {
+    // Validate inputs
+    if (!frequency || !startDate) {
+      console.error("Missing frequency or startDate:", {
+        frequency,
+        startDate,
       });
-      handleClose();
-    }, 1500);
+      return [];
+    }
+
+    const dates = [];
+
+    try {
+      // Parse date from DD/MM/YYYY format
+      const dateParts = startDate.split("/");
+      if (dateParts.length !== 3) {
+        console.error(
+          "Invalid date format. Expected DD/MM/YYYY, got:",
+          startDate
+        );
+        return [];
+      }
+      const [day, month, year] = dateParts.map(Number);
+      const start = new Date(year, month - 1, day);
+
+      if (isNaN(start.getTime())) {
+        console.error("Invalid start date:", startDate);
+        return [];
+      }
+
+      // Normalize frequency string for case-insensitive matching
+      const normalizedFrequency = frequency.toLowerCase().trim();
+
+      // Handle different frequency types
+      if (
+        normalizedFrequency.includes("monthly") ||
+        (normalizedFrequency.includes("month") &&
+          !normalizedFrequency.includes("3") &&
+          !normalizedFrequency.includes("6"))
+      ) {
+        // Monthly frequency - generate for 12 months (1 year)
+        for (let i = 0; i < 12; i++) {
+          const newDate = new Date(start);
+          newDate.setMonth(start.getMonth() + i);
+
+          // Handle edge case where day doesn't exist in target month
+          if (newDate.getDate() !== day) {
+            newDate.setDate(0); // Last day of previous month
+          }
+
+          dates.push(createActivityObject(i + 1, newDate));
+        }
+      } else if (
+        normalizedFrequency.includes("quarterly") ||
+        normalizedFrequency.includes("3 month")
+      ) {
+        // Quarterly frequency - generate for 4 quarters (1 year)
+        for (let i = 0; i < 4; i++) {
+          const newDate = new Date(start);
+          newDate.setMonth(start.getMonth() + i * 3);
+
+          if (newDate.getDate() !== day) {
+            newDate.setDate(0);
+          }
+
+          dates.push(createActivityObject(i + 1, newDate));
+        }
+      } else if (
+        normalizedFrequency.includes("half yearly") ||
+        normalizedFrequency.includes("6 month")
+      ) {
+        // Half Yearly frequency - generate for 2 half-years (1 year)
+        for (let i = 0; i < 2; i++) {
+          const newDate = new Date(start);
+          newDate.setMonth(start.getMonth() + i * 6);
+
+          if (newDate.getDate() !== day) {
+            newDate.setDate(0);
+          }
+
+          dates.push(createActivityObject(i + 1, newDate));
+        }
+      } else if (
+        normalizedFrequency.includes("yearly") ||
+        normalizedFrequency.includes("1 year")
+      ) {
+        // Yearly frequency - generate for 1 year
+        const oneYearDate = new Date(start);
+        oneYearDate.setFullYear(start.getFullYear() + 1);
+
+        if (oneYearDate.getDate() !== day) {
+          oneYearDate.setDate(0);
+        }
+
+        dates.push(createActivityObject(1, oneYearDate));
+      } else if (normalizedFrequency.includes("week")) {
+        // Weekly frequency - generate 52 weeks (1 year)
+        for (let i = 0; i < 52; i++) {
+          const newDate = new Date(start);
+          newDate.setDate(start.getDate() + i * 7);
+          dates.push(createActivityObject(i + 1, newDate));
+        }
+      } else {
+        console.warn("Unknown frequency:", frequency);
+        dates.push(createActivityObject(1, start));
+      }
+    } catch (error) {
+      console.error("Error generating frequency dates:", error);
+      return [];
+    }
+
+    return dates;
+  };
+
+  const onStep1Submit = (data) => {
+    let pmData = Object.assign({}, pmScheduleData);
+    console.log("PMMMMM DTAAAA", pmData);
+    let objData = {
+      title: data?.pm_activity_title,
+      frequency: data?.frequency,
+      schedule_start_date: data?.schedule_start_date,
+      status: data?.status,
+      is_active: data?.is_active,
+    };
+    pmData.pm_details = objData;
+
+    // Generate frequency dates for each selected asset separately
+    if (data && data?.frequency && data?.schedule_start_date) {
+      const assetsWithGeneratedDates =
+        pmData?.assets && pmData?.assets !== null && pmData?.assets.length > 0
+          ? pmData?.assets?.map((asset) => ({
+              ...asset,
+              frequency_exceptions: generateFrequencyDates(
+                data.frequency,
+                data.schedule_start_date
+              ),
+            }))
+          : [];
+
+      pmData.assets = assetsWithGeneratedDates;
+    } else {
+      console.error("Missing frequency or start date in data:", data);
+      // Ensure each asset has empty frequency_exceptions
+      pmData.assets =
+        pmData?.assets && pmData?.assets !== null && pmData?.assets.length > 0
+          ? pmData?.assets?.map((asset) => ({
+              ...asset,
+            }))
+          : [];
+    }
+
+    pmData.is_active = 1; // Set to 1 for preview step
+    pmData.selected_asset_id = pmData?.assets[0]?.asset_id || 0;
+    // Dispatch the data to Redux store
+    dispatch(actionPMScheduleData(pmData));
+    setActiveStep(1);
+  };
+
+  const getStepContent = (step) => {
+    switch (step) {
+      case 0:
+        return (
+          <form
+            noValidate
+            autoComplete="off"
+            onSubmit={handleSubmit(onStep1Submit)}
+          >
+            <PMActivityAssetSetUp onNext={handleNext} onBack={handleBack} />
+          </form>
+        );
+      case 1:
+        return <PMActivityPreviewSetUp onBack={handleBack} />;
+      default:
+        return (
+          <Typography>
+            {" "}
+            <Stack>
+              <Typography>This is default Page!!</Typography>
+            </Stack>{" "}
+          </Typography>
+        );
+    }
+  };
+
+  useEffect(() => {
+    if (open === true) {
+      // Reset to first step when drawer opens
+      setActiveStep(0);
+      let pmData = Object.assign({}, pmScheduleData);
+      pmData.is_active = 0;
+      dispatch(actionPMScheduleData(pmData));
+
+      dispatch(
+        actionMasterAssetType({
+          client_uuid: branch?.currentBranch?.client_uuid,
+        })
+      );
+    }
+  }, [open]);
+
+  // Handle save schedule
+  const handleSaveSchedule = () => {
+    setLoading(false);
+
+    let input = {
+      branch_uuid: branch?.currentBranch?.uuid,
+      pm_activity_details: pmScheduleData?.pm_details,
+      assets: pmScheduleData?.assets,
+      pm_activity_uuid: objData?.uuid,
+    };
+    setLoading(true);
+    console.log("OBJJJ DATTAAAA", input);
+    dispatch(actionPMScheduleEdit(input));
   };
 
   return (
@@ -319,14 +389,17 @@ export default function PMActivityEdit({ open, handleClose, objData }) {
         overflow: "hidden",
       }}
     >
-      <Stack sx={{ height: "100%" }}>
-        {/* Header Section */}
+      <Stack
+        sx={{ height: "100%" }}
+        justifyContent={"flex-start"}
+        flexDirection={"column"}
+      >
         <FormHeader
           color={theme.palette.primary[600]}
           size={48}
           icon={<TotalPMIcon stroke={theme.palette.primary[600]} size={20} />}
-          title="Edit HVAC system PM schedule"
-          subtitle="Fill below form to update PM schedule"
+          title={`Edit ${objData?.activity_title}  PM Schedule`}
+          subtitle="Fill below form to create new PM schedule"
           actions={[
             <IconButton onClick={handleClose}>
               <CloseIcon size={16} />
@@ -334,665 +407,111 @@ export default function PMActivityEdit({ open, handleClose, objData }) {
           ]}
         />
         <Divider sx={{ m: 2 }} />
-
-        {/* Main Content */}
-        <Box sx={{ flex: 1, overflow: "auto", p: 3 }}>
-          <form onSubmit={handleSubmit(handleSaveSchedule)}>
-            <Grid
-              container
-              spacing={"24px"}
-              sx={{ mt: 1, width: "100%" }}
-              direction="row"
-            >
-              {/* 🔹 LEFT PANEL: Select Asset */}
-              <Grid size={{ xs: 12, sm: 12, md: 3, lg: 3 }}>
-                <TypographyComponent fontSize={"16px"} fontWeight={600}>
-                  Select Asset
-                </TypographyComponent>
-
-                <Card
-                  sx={{
-                    borderRadius: "16px",
-                    p: "24px",
-                    border: `1px solid ${theme.palette.grey[300]}`,
-                    mt: 2,
-                    height: "630px",
-                    width: "100%",
-                    overflowY: "auto",
-                    "&::-webkit-scrollbar": {
-                      width: "2px",
-                    },
-                    "&::-webkit-scrollbar-thumb": {
-                      backgroundColor: "#ccc",
-                      borderRadius: "2px",
-                    },
-                  }}
-                >
-                  <CardContent sx={{ p: 0 }}>
-                    <Stack>
-                      <Controller
-                        name="asset_type"
-                        control={control}
-                        render={({ field }) => (
-                          <CustomTextField
-                            select
-                            fullWidth
-                            value={field?.value ?? ""}
-                            label={
-                              <FormLabel
-                                label="Select Asset Type "
-                                required={false}
-                              />
-                            }
-                            onChange={(event) => {
-                              field.onChange(event);
-                              let objData = Object.assign({}, pmScheduleData);
-                              let objCurrent = getObjectById(
-                                assetTypeMasterOption,
-                                event.target.value
-                              );
-                              objData.asset_type = objCurrent.name;
-                              dispatch(actionPMScheduleData(objData));
-                            }}
-                            SelectProps={{
-                              displayEmpty: true,
-                              IconComponent: ChevronDownIcon,
-                              MenuProps: {
-                                PaperProps: {
-                                  style: {
-                                    maxHeight: 220,
-                                    scrollbarWidth: "thin",
-                                  },
-                                },
-                              },
-                            }}
-                            error={Boolean(errors.asset_type)}
-                            {...(errors.asset_type && {
-                              helperText: errors.asset_type.message,
-                            })}
-                          >
-                            <MenuItem value="" disabled>
-                              <em>Select Asset Type</em>
-                            </MenuItem>
-                            {assetTypeMasterOption &&
-                              assetTypeMasterOption.map((option) => (
-                                <MenuItem
-                                  key={option?.id}
-                                  value={option?.id}
-                                  color={theme.palette.primary[900]}
-                                  sx={{
-                                    whiteSpace: "normal",
-                                    wordBreak: "break-word",
-                                    maxWidth: 550,
-                                    display: "-webkit-box",
-                                    WebkitLineClamp: 2,
-                                    WebkitBoxOrient: "vertical",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                  }}
-                                >
-                                  {option?.name}
-                                </MenuItem>
-                              ))}
-                          </CustomTextField>
-                        )}
-                      />
-                    </Stack>
-
-                    <Stack
-                      sx={{
-                        my: 2,
-                        fontSize: "16px",
-                        fontWeight: 600,
-                        color: theme.palette.grey[500],
-                      }}
-                    >
-                      <SearchInput
-                        id="search-assets"
-                        placeholder="Search"
-                        variant="outlined"
-                        size="small"
-                        fullWidth
-                        value={searchQuery}
-                        onChange={handleSearchQueryChange}
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start" sx={{ mr: 1 }}>
-                              <SearchIcon stroke={theme.palette.grey[500]} />
-                            </InputAdornment>
-                          ),
-                        }}
-                      />
-                    </Stack>
-
-                    <List dense sx={{ p: 0 }}>
-                      {(assetTypeWiseListOptions ?? []).length > 0 ? (
-                        assetTypeWiseListOptions.map((asset) => {
-                          const isChecked = (pmScheduleData?.assets ?? []).some(
-                            (item) =>
-                              item.asset_id === asset.id &&
-                              item.asset_type === asset.type
-                          );
-
-                          return (
-                            <ListItem
-                              key={asset.id}
-                              disablePadding
-                              sx={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                py: 1.5,
-                                px: 1,
-                                borderBottom: `1px solid ${theme.palette.grey[300]}`,
-                              }}
-                            >
-                              <Box>
-                                <TypographyComponent
-                                  fontSize={16}
-                                  fontWeight={400}
-                                >
-                                  {asset?.asset_description ?? "N/A"}
-                                </TypographyComponent>
-                                <TypographyComponent
-                                  fontSize={14}
-                                  fontWeight={400}
-                                  sx={{ color: theme.palette.grey[600] }}
-                                >
-                                  {asset?.type ?? "N/A"}
-                                </TypographyComponent>
-                              </Box>
-
-                              <AntSwitch
-                                checked={isChecked}
-                                onChange={(event) => {
-                                  const updated = { ...pmScheduleData };
-                                  let updatedAssets = [
-                                    ...(updated.assets ?? []),
-                                  ];
-
-                                  if (event.target.checked) {
-                                    // Add asset if not already selected
-                                    if (
-                                      !updatedAssets.some(
-                                        (item) =>
-                                          item.asset_id === asset.id &&
-                                          item.asset_type === asset.type
-                                      )
-                                    ) {
-                                      updatedAssets.push({
-                                        asset_id: asset.id,
-                                        asset_type: asset.type,
-                                        asset_description:
-                                          asset.asset_description,
-                                        location: asset.location,
-                                        frequency_exceptions: [],
-                                      });
-                                    }
-                                  } else {
-                                    // Remove asset if unchecked
-                                    updatedAssets = updatedAssets.filter(
-                                      (item) =>
-                                        !(
-                                          item.asset_id === asset.id &&
-                                          item.asset_type === asset.type
-                                        )
-                                    );
-                                  }
-
-                                  updated.assets = updatedAssets;
-                                  dispatch(actionPMScheduleData(updated));
-                                }}
-                              />
-                            </ListItem>
-                          );
-                        })
-                      ) : (
-                        <EmptyContent
-                          imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND}
-                          title="No Asset Found"
-                          subTitle=""
-                        />
-                      )}
-                    </List>
-                  </CardContent>
-                </Card>
-              </Grid>
-
-              {/* 🔹 MIDDLE PANEL: Selected Asset Details */}
-              <Grid size={{ xs: 12, sm: 12, md: 3, lg: 5 }}>
-                <Stack
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    flexDirection: "row",
-                  }}
-                >
-                  <Stack>
-                    <TypographyComponent fontSize={"16px"} fontWeight={600}>
-                      Selected Asset Details
-                    </TypographyComponent>
-                  </Stack>
-                  <Stack>
-                    <TypographyComponent fontSize={"16px"} fontWeight={600}>
-                      ({pmScheduleData?.assets?.length || 0})
-                    </TypographyComponent>
-                  </Stack>
-                </Stack>
-
-                <Card
-                  sx={{
-                    borderRadius: "16px",
-                    p: "12px",
-                    border: `1px solid ${theme.palette.grey[300]}`,
-                    my: 2,
-                    width: "100%",
-                    height: "630px",
-                    overflowY: "auto",
-                    "&::-webkit-scrollbar": {
-                      width: "2px",
-                    },
-                    "&::-webkit-scrollbar-thumb": {
-                      backgroundColor: "#ccc",
-                      borderRadius: "2px",
-                    },
-                  }}
-                >
-                  <CardContent sx={{ p: 2 }}>
-                    {(pmScheduleData?.assets ?? []).length > 0 ? (
-                      pmScheduleData.assets.map((asset, index) => (
-                        <React.Fragment key={asset.asset_id || index}>
-                          <Grid
-                            container
-                            spacing={2}
-                            alignItems="center"
-                            sx={{ py: 1 }}
-                          >
-                            {/* Asset Name */}
-                            <Grid size={{ xs: 6, sm: 6, md: 6, lg: 6, xl: 6 }}>
-                              <TypographyComponent
-                                fontSize={16}
-                                fontWeight={400}
-                                sx={{ color: theme.palette.grey[1000] }}
-                              >
-                                Asset Name
-                              </TypographyComponent>
-
-                              <TypographyComponent
-                                fontSize={14}
-                                fontWeight={600}
-                                sx={{ color: theme.palette.grey[400] }}
-                              >
-                                {asset?.asset_description ?? "N/A"}
-                              </TypographyComponent>
-                            </Grid>
-
-                            {/* Asset Type */}
-                            <Grid size={{ xs: 4, sm: 4, md: 4, lg: 4, xl: 4 }}>
-                              <TypographyComponent
-                                fontSize={16}
-                                fontWeight={400}
-                                sx={{ color: theme.palette.grey[1000] }}
-                              >
-                                Asset Type
-                              </TypographyComponent>
-
-                              <TypographyComponent
-                                fontSize={14}
-                                fontWeight={600}
-                                sx={{ color: theme.palette.grey[400] }}
-                              >
-                                {asset?.asset_type ?? "N/A"}
-                              </TypographyComponent>
-                            </Grid>
-
-                            {/* Delete Icon */}
-                            <Grid
-                              size={{ xs: 2, sm: 2, md: 2, lg: 2, xl: 2 }}
-                              sx={{
-                                paddingLeft: 5,
-                              }}
-                            >
-                              <IconButton
-                                color="error"
-                                onClick={() => {
-                                  const updated = { ...pmScheduleData };
-                                  updated.assets = (
-                                    updated.assets ?? []
-                                  ).filter(
-                                    (item) =>
-                                      !(
-                                        item.asset_id === asset.asset_id &&
-                                        item.asset_type === asset.asset_type
-                                      )
-                                  );
-                                  dispatch(actionPMScheduleData(updated));
-                                }}
-                              >
-                                <DeleteIcon fontSize="medium" />
-                              </IconButton>
-                            </Grid>
-                          </Grid>
-
-                          {index < pmScheduleData.assets.length - 1 && (
-                            <Divider
-                              sx={{
-                                my: 1.5,
-                                borderColor: theme.palette.grey[300],
-                              }}
-                            />
-                          )}
-                        </React.Fragment>
-                      ))
-                    ) : (
-                      <EmptyContent
-                        imageUrl={"/assets/person-details.png"}
-                        title="Select Asset to get details"
-                        subTitle=""
-                      />
-                    )}
-                  </CardContent>
-                </Card>
-              </Grid>
-
-              {/* 🔹 RIGHT PANEL: PM Activity Group */}
-              <Grid size={{ xs: 12, sm: 12, md: 3, lg: 4 }}>
-                <TypographyComponent
-                  fontSize={"16px"}
-                  fontWeight={600}
-                  sx={{ mb: 2 }}
-                >
-                  PM Activity Details
-                </TypographyComponent>
-
-                <Card
-                  sx={{
-                    borderRadius: "16px",
-                    padding: "12px",
-                    gap: "16px",
-                    border: `1px solid ${theme.palette.grey[300]}`,
-                    my: 2,
-                    width: "500px",
-                    height: "630px",
-                  }}
-                >
-                  <CardContent sx={{ p: 2 }}>
-                    <DatePickerWrapper>
-                      <Grid container sx={{ gap: "18px" }}>
-                        {/* PM Activity Title */}
-                        <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
-                          <Controller
-                            name="pm_activity_title"
-                            control={control}
-                            rules={{
-                              required: "PM Activity Title is required",
-                              maxLength: {
-                                value: 255,
-                                message: "Maximum length is 255 characters",
-                              },
-                            }}
-                            render={({ field }) => (
-                              <CustomTextField
-                                fullWidth
-                                value={field?.value || ""}
-                                label={
-                                  <FormLabel
-                                    label="PM Activity Title"
-                                    fontSize={14}
-                                    fontWeight={500}
-                                    required={true}
-                                  />
-                                }
-                                placeholder="Enter activity title"
-                                onChange={(e) => field.onChange(e)}
-                                inputProps={{ maxLength: 255 }}
-                                error={Boolean(errors.pm_activity_title)}
-                                {...(errors.pm_activity_title && {
-                                  helperText: errors.pm_activity_title.message,
-                                })}
-                              />
-                            )}
-                          />
-                        </Grid>
-                        {/* Frequency */}
-                        <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
-                          <Controller
-                            name="frequency"
-                            control={control}
-                            rules={{
-                              required: "Frequency is required",
-                            }}
-                            render={({ field }) => (
-                              <CustomTextField
-                                select
-                                fullWidth
-                                value={field?.value || ""}
-                                label={
-                                  <FormLabel
-                                    label="Frequency"
-                                    required={true}
-                                  />
-                                }
-                                placeholder="Select frequency"
-                                onChange={(e) => field.onChange(e)}
-                                error={Boolean(errors.frequency)}
-                                {...(errors.frequency && {
-                                  helperText: errors.frequency.message,
-                                })}
-                                SelectProps={{
-                                  displayEmpty: true,
-                                  IconComponent: ChevronDownIcon,
-                                  MenuProps: {
-                                    PaperProps: {
-                                      style: {
-                                        maxHeight: 220,
-                                        scrollbarWidth: "thin",
-                                      },
-                                    },
-                                  },
-                                }}
-                              >
-                                <MenuItem value="" disabled>
-                                  <em>Select Frequency</em>
-                                </MenuItem>
-
-                                {getPmActivityFrequencyArray &&
-                                  getPmActivityFrequencyArray.map((option) => (
-                                    <MenuItem
-                                      key={option?.name}
-                                      value={option?.name}
-                                      sx={{
-                                        whiteSpace: "normal",
-                                        wordBreak: "break-word",
-                                        maxWidth: 300,
-                                        display: "-webkit-box",
-                                        WebkitLineClamp: 2,
-                                        WebkitBoxOrient: "vertical",
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                      }}
-                                    >
-                                      {option?.name}
-                                    </MenuItem>
-                                  ))}
-                              </CustomTextField>
-                            )}
-                          />
-                        </Grid>
-                        {/* Schedule Start Date */}
-                        <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
-                          <Controller
-                            name="schedule_start_date"
-                            control={control}
-                            rules={{
-                              required: "Schedule Start Date is required",
-                            }}
-                            render={({ field }) => (
-                              <DatePicker
-                                id="schedule_start_date"
-                                customInput={
-                                  <CustomTextField
-                                    size="small"
-                                    label={
-                                      <FormLabel
-                                        label="Schedule Start Date"
-                                        required={true}
-                                      />
-                                    }
-                                    fullWidth
-                                    placeholder="DD/MM/YYYY"
-                                    InputProps={{
-                                      endAdornment: (
-                                        <InputAdornment position="start">
-                                          <IconButton
-                                            edge="start"
-                                            onMouseDown={(e) =>
-                                              e.preventDefault()
-                                            }
-                                          >
-                                            <CalendarIcon />
-                                          </IconButton>
-                                        </InputAdornment>
-                                      ),
-                                    }}
-                                    error={Boolean(errors.schedule_start_date)}
-                                    {...(errors.schedule_start_date && {
-                                      helperText:
-                                        errors.schedule_start_date.message,
-                                    })}
-                                  />
-                                }
-                                value={field.value}
-                                selected={
-                                  field?.value
-                                    ? moment(field.value, "DD/MM/YYYY").toDate()
-                                    : null
-                                }
-                                showYearDropdown={true}
-                                onChange={(date) => {
-                                  const formattedDate =
-                                    moment(date).format("DD/MM/YYYY");
-                                  field.onChange(formattedDate);
-                                }}
-                              />
-                            )}
-                          />
-                        </Grid>
-                        {/* Status */}
-                        <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
-                          <Controller
-                            name="status"
-                            control={control}
-                            rules={{ required: "Status is required" }}
-                            render={({ field }) => (
-                              <CustomTextField
-                                select
-                                fullWidth
-                                value={field?.value || ""}
-                                label={
-                                  <FormLabel label="Status" required={true} />
-                                }
-                                placeholder="Select status"
-                                onChange={(e) => field.onChange(e)}
-                                error={Boolean(errors.status)}
-                                {...(errors.status && {
-                                  helperText: errors.status.message,
-                                })}
-                                SelectProps={{
-                                  displayEmpty: true,
-                                  IconComponent: ChevronDownIcon,
-                                  MenuProps: {
-                                    PaperProps: {
-                                      style: {
-                                        maxHeight: 220,
-                                        scrollbarWidth: "thin",
-                                      },
-                                    },
-                                  },
-                                }}
-                              >
-                                <MenuItem value="" disabled>
-                                  <em>Select Status</em>
-                                </MenuItem>
-
-                                {getMasterPMActivityStatus &&
-                                  getMasterPMActivityStatus.map((option) => (
-                                    <MenuItem
-                                      key={option?.name}
-                                      value={option?.name}
-                                      sx={{
-                                        whiteSpace: "normal",
-                                        wordBreak: "break-word",
-                                        maxWidth: 300,
-                                        display: "-webkit-box",
-                                        WebkitLineClamp: 2,
-                                        WebkitBoxOrient: "vertical",
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                      }}
-                                    >
-                                      {option?.name}
-                                    </MenuItem>
-                                  ))}
-                              </CustomTextField>
-                            )}
-                          />
-                        </Grid>
-                      </Grid>
-                    </DatePickerWrapper>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
-          </form>
-        </Box>
-
-        {/* Footer Buttons */}
-        <Divider sx={{ m: 2 }} />
-        <Stack
-          direction="row"
-          justifyContent="flex-end"
-          alignItems="center"
-          sx={{ p: 3, gap: 2 }}
-        >
-          <Button
+        <FormProvider {...methods}>
+          <Stack
             sx={{
-              textTransform: "capitalize",
-              px: 6,
-              borderColor: `${theme.palette.grey[300]}`,
-              color: `${theme.palette.grey[700]}`,
-              borderRadius: "8px",
-              fontSize: 16,
-              fontWeight: 600,
+              px: 4,
+              pb: 4,
             }}
-            onClick={handleClose}
-            variant="outlined"
-            disabled={loading}
           >
-            Cancel
-          </Button>
-          <Button
-            sx={{
-              textTransform: "capitalize",
-              px: 6,
-              borderRadius: "8px",
-              backgroundColor: theme.palette.primary[600],
-              color: theme.palette.common.white,
-              fontSize: 16,
-              fontWeight: 600,
-              borderColor: theme.palette.primary[600],
-            }}
-            variant="contained"
-            onClick={handleSubmit(handleSaveSchedule)}
-            disabled={loading}
-          >
-            {loading ? (
-              <CircularProgress size={20} color="inherit" />
-            ) : (
-              "Save schedule"
-            )}
-          </Button>
-        </Stack>
+            {activeStep !== steps.length && getStepContent(activeStep)}
+          </Stack>
+          {activeStep == 1 ? (
+            <>
+              <Divider sx={{ m: 2 }} />
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{ p: 3 }}
+              >
+                <Button
+                  sx={{
+                    textTransform: "capitalize",
+                    px: 6,
+                    borderColor: `${theme.palette.grey[300]}`,
+                    color: `${theme.palette.grey[700]}`,
+                    borderRadius: "8px",
+                    fontSize: 16,
+                    fontWeight: 600,
+                  }}
+                  variant="outlined"
+                  onClick={handleBack}
+                >
+                  Back
+                </Button>
+                <Button
+                  sx={{
+                    textTransform: "capitalize",
+                    px: 6,
+                    borderRadius: "8px",
+                    backgroundColor: theme.palette.primary[600],
+                    color: theme.palette.common.white,
+                    fontSize: 16,
+                    fontWeight: 600,
+                    borderColor: theme.palette.primary[600],
+                  }}
+                  variant="contained"
+                  onClick={handleSaveSchedule}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <CircularProgress size={18} sx={{ color: "white" }} />
+                  ) : (
+                    "Save Schedule"
+                  )}
+                </Button>
+              </Stack>
+            </>
+          ) : (
+            <React.Fragment>
+              <Divider sx={{ m: 2 }} />
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{ p: 2 }}
+              >
+                <Button
+                  sx={{
+                    textTransform: "capitalize",
+                    px: 6,
+                    borderColor: `${theme.palette.grey[300]}`,
+                    color: `${theme.palette.grey[700]}`,
+                    borderRadius: "8px",
+                    fontSize: 16,
+                    fontWeight: 600,
+                  }}
+                  variant="outlined"
+                  onClick={handleBack}
+                >
+                  Reset
+                </Button>
+                <Button
+                  sx={{
+                    textTransform: "capitalize",
+                    px: 6,
+                    borderRadius: "8px",
+                    backgroundColor: theme.palette.primary[600],
+                    color: theme.palette.common.white,
+                    fontSize: 16,
+                    fontWeight: 600,
+                    borderColor: theme.palette.primary[600],
+                  }}
+                  variant="contained"
+                  onClick={handleSubmit(onStep1Submit)}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <CircularProgress size={18} sx={{ color: "white" }} />
+                  ) : (
+                    "Preview"
+                  )}
+                </Button>
+              </Stack>
+            </React.Fragment>
+          )}
+        </FormProvider>
       </Stack>
     </Drawer>
   );

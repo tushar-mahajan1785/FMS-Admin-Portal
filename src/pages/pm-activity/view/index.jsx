@@ -147,12 +147,20 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
     }
   }, [objData, open]);
 
+  console.log("PM SChdule dataaa:", pmScheduleData);
+
   useEffect(() => {
     if (pmScheduleDetails && pmScheduleDetails !== null) {
       dispatch(resetPmScheduleDetailsResponse());
       if (pmScheduleDetails?.result === true) {
         setPmScheduleActivityDetails(pmScheduleDetails?.response);
         let objData = Object.assign({}, pmScheduleData);
+        objData.pm_details = {
+          title: pmScheduleDetails?.response?.activity_title,
+          frequency: pmScheduleDetails?.response?.frequency,
+          schedule_start_date: pmScheduleDetails?.response?.schedule_start_date,
+          status: pmScheduleDetails?.response?.status,
+        };
         objData.assets = pmScheduleDetails?.response?.assets;
         if (
           pmScheduleDetails?.response?.assets &&
@@ -463,7 +471,7 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
       pmScheduleData?.assets?.length > 0
     ) {
       setFrequencyExceptionsData(
-        pmScheduleData?.assets[0]?.frequency_expectations
+        pmScheduleData?.assets[0]?.frequency_exceptions
       );
     } else {
       setFrequencyExceptionsData([]);
@@ -656,7 +664,7 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
                                 if (currentAssetIndex > -1) {
                                   setFrequencyExceptionsData(
                                     pmData.assets[currentAssetIndex]
-                                      .frequency_expectations
+                                      .frequency_exceptions
                                   );
                                 }
 
@@ -778,6 +786,7 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
           >
             Edit
           </Button>
+
           <Button
             sx={{
               textTransform: "capitalize",
@@ -796,10 +805,15 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
           </Button>
         </Stack>
       </Drawer>
+
       {/* Edit PM Schedule Drawer */}
       <PMActivityEdit
         open={openEditPmSchedule}
-        handleClose={() => {
+        objData={pmScheduleActivityDetails}
+        handleClose={(data) => {
+          if (data && data !== null && data === "save") {
+            dispatch(actionPMScheduleDetails({ uuid: objData?.uuid }));
+          }
           setOpenEditPmSchedule(false);
         }}
       />
