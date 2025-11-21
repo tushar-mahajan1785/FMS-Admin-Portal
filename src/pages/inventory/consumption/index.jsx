@@ -68,6 +68,7 @@ export const InventoryConsumption = ({ open, handleClose, consumeData, from = 'd
             used_by: '',
             ticket_no: '',
             consumption_date: '',
+            used_for: '',
             additional_notes: ''
         }
     });
