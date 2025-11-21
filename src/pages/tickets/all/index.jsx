@@ -507,7 +507,7 @@ export const TicketList = () => {
                     ))}
                 </Box>
                 <Stack sx={{ border: `1px solid ${theme.palette.grey[200]}`, borderRadius: '8px', background: theme.palette.common.white, pb: 1 }}>
-                    <Stack sx={{ flexDirection: 'row', background: theme.palette.common.white, width: '100%', justifyContent: 'space-between', alignItems: 'center', borderRadius: '8px', py: 1 }}>
+                    <Stack sx={{ flexDirection: { xs: 'column', sm: 'column', md: 'row' }, background: theme.palette.common.white, width: '100%', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'flex-start', md: 'center' }, borderRadius: '8px', py: 1 }}>
                         <Stack sx={{ flexDirection: 'row', columnGap: 1, height: '100%', padding: '15px' }}>
                             <Stack>
                                 <TypographyComponent fontSize={18} fontWeight={500} sx={{ color: theme.palette.grey[700] }}>Tickets List</TypographyComponent>
@@ -518,7 +518,7 @@ export const TicketList = () => {
                                 sx={{ bgcolor: theme.palette.primary[50], color: theme.palette.primary[600], fontSize: 14, fontWeight: 500 }}
                             />
                         </Stack>
-                        <Stack sx={{ paddingRight: '15px', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                        <Stack sx={{ paddingLeft: { xs: '15px', sm: '15px', md: 'none' }, paddingRight: '15px', flexDirection: { xs: 'column', sm: 'row', md: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1 }}>
                             <SearchInput
                                 id="search-tickets"
                                 placeholder="Search Tickets"
