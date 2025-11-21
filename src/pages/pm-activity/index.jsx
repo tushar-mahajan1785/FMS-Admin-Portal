@@ -335,7 +335,22 @@ export default function PmActivity() {
         setLoadingList(false);
       } else {
         setTotal(null);
-
+        setPmScheduleActivityData([])
+        setOriginalPmActivityScheduleData([])
+        setUpcomingSchedules([])
+        let objData = {
+          total_pm_schedules: 0,
+          active_pm_schedules: 0,
+          completed_pm_schedules: 0,
+          overdue_pm_schedules: 0,
+          upcoming_pm_schedules: 0
+        }
+        setGetArrPmActivityCounts(prevArr =>
+          prevArr.map(item => ({
+            ...item,
+            value: objData[item.key] !== undefined ? objData[item.key] : 0
+          }))
+        );
         switch (pmScheduleList?.status) {
           case UNAUTHORIZED:
             logout();
