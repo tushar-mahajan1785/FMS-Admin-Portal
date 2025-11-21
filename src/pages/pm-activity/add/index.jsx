@@ -292,12 +292,12 @@ export default function AddPMSchedule({ open, handleClose }) {
       const assetsWithGeneratedDates =
         pmData?.assets && pmData?.assets !== null && pmData?.assets.length > 0
           ? pmData?.assets?.map((asset) => ({
-              ...asset,
-              frequency_exceptions: generateFrequencyDates(
-                data.frequency,
-                data.schedule_start_date
-              ),
-            }))
+            ...asset,
+            frequency_exceptions: generateFrequencyDates(
+              data.frequency,
+              data.schedule_start_date
+            ),
+          }))
           : [];
 
       pmData.assets = assetsWithGeneratedDates;
@@ -307,8 +307,8 @@ export default function AddPMSchedule({ open, handleClose }) {
       pmData.assets =
         pmData?.assets && pmData?.assets !== null && pmData?.assets.length > 0
           ? pmData?.assets?.map((asset) => ({
-              ...asset,
-            }))
+            ...asset,
+          }))
           : [];
     }
 
@@ -344,8 +344,6 @@ export default function AddPMSchedule({ open, handleClose }) {
         );
     }
   };
-
-  console.log("----pmScheduleData--MAIN--", pmScheduleData);
 
   useEffect(() => {
     if (open === true) {
@@ -505,15 +503,15 @@ export default function AddPMSchedule({ open, handleClose }) {
                     textTransform: "capitalize",
                     px: 6,
                     borderRadius: "8px",
-                    backgroundColor: theme.palette.primary[600],
+                    backgroundColor: pmScheduleData?.assets?.length === 0 ? theme.palette.grey[400] : theme.palette.primary[600],
                     color: theme.palette.common.white,
                     fontSize: 16,
                     fontWeight: 600,
-                    borderColor: theme.palette.primary[600],
+                    borderColor: pmScheduleData?.assets?.length === 0 ? theme.palette.grey[600] : theme.palette.primary[600],
                   }}
                   variant="contained"
                   onClick={handleSubmit(onStep1Submit)}
-                  disabled={loading}
+                  disabled={loading || pmScheduleData?.assets?.length === 0}
                 >
                   {loading ? (
                     <CircularProgress size={18} sx={{ color: "white" }} />

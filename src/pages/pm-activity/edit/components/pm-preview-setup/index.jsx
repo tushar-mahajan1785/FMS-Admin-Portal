@@ -13,9 +13,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import TypographyComponent from "../../../../../components/custom-typography";
 import EmptyContent from "../../../../../components/empty_content";
-
 import { IMAGES_SCREEN_NO_DATA } from "../../../../../constants";
-
 import { DataGrid } from "@mui/x-data-grid";
 import CustomChip from "../../../../../components/custom-chip";
 import moment from "moment/moment";
@@ -37,7 +35,6 @@ export default function PMActivityPreviewSetUp() {
 
   // Add these functions inside your component:
   const handleRescheduleClick = (activity) => {
-    console.log("Activity ::::::::", activity);
     let currentAssetData = pmScheduleData?.assets.find(
       (obj) => obj?.asset_id === pmScheduleData?.selected_asset_id
     );
@@ -421,7 +418,6 @@ export default function PMActivityPreviewSetUp() {
                           cursor: "pointer",
                         }}
                         onClick={() => {
-                          console.log("Asseet::", asset);
                           let pmData = Object.assign({}, pmScheduleData);
                           pmData.selected_asset_id = asset?.asset_id;
                           let currentAssetIndex = pmData.assets.findIndex(

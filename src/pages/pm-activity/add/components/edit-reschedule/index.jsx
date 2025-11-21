@@ -106,12 +106,12 @@ export default function ReschedulePopup({
       current_schedule_date: "",
       new_date: "",
       reason_for_reschedule: "",
+      supervised_by: ""
     },
   });
 
   useEffect(() => {
     if (open === true) {
-      console.log("-----selectedActivity--add-----", selectedActivity);
       if (
         selectedActivity &&
         selectedActivity !== null &&
@@ -282,6 +282,12 @@ export default function ReschedulePopup({
       }
     }
   }, [pmScheduleMarkDone]);
+
+  const durationOptions = [];
+  for (let hour = 1; hour <= 24; hour++) {
+    const time = `${hour.toString().padStart(2, "0")}:00`;
+    durationOptions.push(time);
+  }
 
   const onSubmit = async (data) => {
     if (selectedActivity?.type === "markAsDone") {
@@ -550,22 +556,42 @@ export default function ReschedulePopup({
                       name="new_date"
                       control={control}
                       render={({ field }) => {
-                        // Read scheduled_date from selectedActivity
-                        const scheduledDate =
-                          selectedActivity?.frequency_data?.scheduled_date;
 
-                        // Convert YYYY-MM-DD → moment date
+                        const scheduledDate = selectedActivity?.frequency_data?.scheduled_date;
+                        const frequency = selectedActivity?.pm_details?.frequency;
+
                         const scheduledMoment = scheduledDate
                           ? moment(scheduledDate, "YYYY-MM-DD")
-                          : moment(); // Fallback to current date
+                          : moment(); // fallback
 
-                        // Set min & max based on scheduled_date month
-                        const minDate = scheduledMoment
-                          .startOf("month")
-                          .toDate();
-                        const maxDate = scheduledMoment.endOf("month").toDate();
+                        let minDate, maxDate;
 
-                        // Convert stored DD/MM/YYYY → Date object safely
+                        switch (frequency) {
+                          case "Monthly":
+                            minDate = scheduledMoment.startOf("month").toDate();
+                            maxDate = scheduledMoment.endOf("month").toDate();
+                            break;
+
+                          case "Quarterly":
+                            minDate = scheduledMoment.startOf("quarter").toDate();
+                            maxDate = scheduledMoment.endOf("quarter").toDate();
+                            break;
+
+                          case "Half Yearly":
+                            minDate = scheduledMoment.startOf("quarter").subtract(1, "quarter").toDate();
+                            maxDate = scheduledMoment.endOf("quarter").add(1, "quarter").toDate();
+                            break;
+
+                          case "Yearly":
+                            minDate = scheduledMoment.startOf("year").toDate();
+                            maxDate = scheduledMoment.endOf("year").toDate();
+                            break;
+
+                          default:
+                            minDate = scheduledMoment.startOf("month").toDate();
+                            maxDate = scheduledMoment.endOf("month").toDate();
+                        }
+
                         const selectedDate = field.value
                           ? moment(field.value, "DD/MM/YYYY").toDate()
                           : null;
@@ -576,29 +602,19 @@ export default function ReschedulePopup({
                             customInput={
                               <CustomTextField
                                 size="small"
-                                label={
-                                  <FormLabel
-                                    label="New Date"
-                                    required={false}
-                                  />
-                                }
+                                label={<FormLabel label="New Date" />}
                                 fullWidth
                                 InputProps={{
                                   startAdornment: (
                                     <InputAdornment position="start">
-                                      <IconButton
-                                        edge="start"
-                                        onMouseDown={(e) => e.preventDefault()}
-                                      >
+                                      <IconButton edge="start" onMouseDown={(e) => e.preventDefault()}>
                                         <CalendarIcon />
                                       </IconButton>
                                     </InputAdornment>
                                   ),
                                 }}
                                 error={Boolean(errors.new_date)}
-                                {...(errors.new_date && {
-                                  helperText: errors.new_date.message,
-                                })}
+                                {...(errors.new_date && { helperText: errors.new_date.message })}
                               />
                             }
                             minDate={minDate}
@@ -606,16 +622,13 @@ export default function ReschedulePopup({
                             selected={selectedDate}
                             dateFormat="dd/MM/yyyy"
                             onChange={(date) => {
-                              const formattedDate =
-                                moment(date).format("DD/MM/YYYY");
-                              field.onChange(formattedDate);
+                              field.onChange(moment(date).format("DD/MM/YYYY"));
                             }}
                           />
                         );
                       }}
                     />
                   </Grid>
-
                   <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
                     <Controller
                       name="reason_for_reschedule"
@@ -659,22 +672,41 @@ export default function ReschedulePopup({
                       name="completion_date"
                       control={control}
                       render={({ field }) => {
-                        // read scheduled_date from selectedActivity
-                        const scheduledDate =
-                          selectedActivity?.frequency_data?.scheduled_date;
+                        const scheduledDate = selectedActivity?.frequency_data?.scheduled_date;
+                        const frequency = selectedActivity?.pm_details?.frequency;
 
-                        // convert YYYY-MM-DD → moment date
                         const scheduledMoment = scheduledDate
                           ? moment(scheduledDate, "YYYY-MM-DD")
-                          : moment(); // fallback current date
+                          : moment(); // fallback
 
-                        // set min & max based on scheduled_date month
-                        const minDate = scheduledMoment
-                          .startOf("month")
-                          .toDate();
-                        const maxDate = scheduledMoment.endOf("month").toDate();
+                        let minDate, maxDate;
 
-                        // Convert stored DD/MM/YYYY → Date object safely
+                        switch (frequency) {
+                          case "Monthly":
+                            minDate = scheduledMoment.startOf("month").toDate();
+                            maxDate = scheduledMoment.endOf("month").toDate();
+                            break;
+
+                          case "Quarterly":
+                            minDate = scheduledMoment.startOf("quarter").toDate();
+                            maxDate = scheduledMoment.endOf("quarter").toDate();
+                            break;
+
+                          case "Half Yearly":
+                            minDate = scheduledMoment.startOf("quarter").subtract(1, "quarter").toDate();
+                            maxDate = scheduledMoment.endOf("quarter").add(1, "quarter").toDate();
+                            break;
+
+                          case "Yearly":
+                            minDate = scheduledMoment.startOf("year").toDate();
+                            maxDate = scheduledMoment.endOf("year").toDate();
+                            break;
+
+                          default:
+                            minDate = scheduledMoment.startOf("month").toDate();
+                            maxDate = scheduledMoment.endOf("month").toDate();
+                        }
+
                         const selectedDate = field.value
                           ? moment(field.value, "DD/MM/YYYY").toDate()
                           : null;
@@ -762,52 +794,55 @@ export default function ReschedulePopup({
                   </Grid>
                   <Grid size={{ xs: 12, sm: 12, md: 3, lg: 3, xl: 3 }}>
                     <Controller
-                      name={`duration`}
+                      name="duration"
                       control={control}
                       render={({ field }) => (
-                        <DatePicker
-                          id={`duration`}
-                          showTimeSelect
-                          showTimeSelectOnly
-                          timeIntervals={15}
-                          timeCaption="Duration"
-                          dateFormat="HH:mm"
-                          value={field.value}
-                          selected={
-                            field?.value
-                              ? moment(field.value, "HH:mm").toDate()
-                              : null
-                          }
-                          onChange={(date) => {
-                            const formattedTime = moment(date).format("HH:mm");
-                            field.onChange(formattedTime);
+                        <CustomTextField
+                          select
+                          fullWidth
+                          size="small"
+                          label={<FormLabel label="Duration" />}
+                          value={field.value || ""}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          error={Boolean(errors.duration)}
+                          {...(errors.duration && { helperText: errors.duration.message })}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <ClockIcon />
+                              </InputAdornment>
+                            ),
                           }}
-                          customInput={
-                            <CustomTextField
-                              size="small"
-                              fullWidth
-                              label={
-                                <FormLabel label="Duration" required={false} />
-                              }
-                              InputProps={{
-                                startAdornment: (
-                                  <InputAdornment position="start">
-                                    <IconButton
-                                      edge="start"
-                                      onMouseDown={(e) => e.preventDefault()}
-                                    >
-                                      <ClockIcon />
-                                    </IconButton>
-                                  </InputAdornment>
-                                ),
+                          SelectProps={{
+                            MenuProps: {
+                              PaperProps: {
+                                style: {
+                                  maxHeight: 220, // Set your desired max height
+                                  scrollbarWidth: "thin",
+                                },
+                              },
+                            },
+                          }}
+                        >
+                          {durationOptions.map((time) => (
+                            <MenuItem
+                              key={time}
+                              value={time}
+                              sx={{
+                                whiteSpace: "normal",
+                                wordBreak: "break-word",
+                                maxWidth: 440,
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
                               }}
-                              error={Boolean(errors.duration)}
-                              {...(errors.duration && {
-                                helperText: errors.duration.message,
-                              })}
-                            />
-                          }
-                        />
+                            >
+                              {time}
+                            </MenuItem>
+                          ))}
+                        </CustomTextField>
                       )}
                     />
                   </Grid>
@@ -904,8 +939,8 @@ export default function ReschedulePopup({
                       </Stack>
                       <List>
                         {arrUploadedFiles &&
-                        arrUploadedFiles !== null &&
-                        arrUploadedFiles.length > 0 ? (
+                          arrUploadedFiles !== null &&
+                          arrUploadedFiles.length > 0 ? (
                           arrUploadedFiles.map((file, idx) => (
                             <React.Fragment key={file.name}>
                               <ListItem

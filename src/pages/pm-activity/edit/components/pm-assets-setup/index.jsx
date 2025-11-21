@@ -102,19 +102,14 @@ export default function PMActivityAssetSetUp() {
         "schedule_start_date",
         pmScheduleData?.pm_details?.schedule_start_date
           ? moment(
-              pmScheduleData?.pm_details.schedule_start_date,
-              "YYYY-MM-DD"
-            ).format("DD/MM/YYYY")
+            pmScheduleData?.pm_details.schedule_start_date,
+            "YYYY-MM-DD"
+          ).format("DD/MM/YYYY")
           : ""
       );
       setValue("status", pmScheduleData?.pm_details?.status || "");
-      // let updatedPmData = Object.assign({}, pmScheduleData);
-      // updatedPmData.assets = objData.assets;
-      // dispatch(actionPMScheduleData(updatedPmData));
     }
   }, [pmScheduleData?.pm_details]);
-
-  console.log("pmSchduleeeeeeee dtaaaaa", pmScheduleData);
 
   /**
    * 🔹 Initial API call to fetch master asset types
@@ -153,14 +148,20 @@ export default function PMActivityAssetSetUp() {
 
     if (masterAssetType?.result === true) {
       setAssetTypeMasterOption(masterAssetType?.response ?? []);
-      if (
-        masterAssetType?.response?.length > 0 &&
-        !pmScheduleData?.asset_type
-      ) {
-        const firstAsset = masterAssetType.response[0];
-        setValue("asset_type", firstAsset?.id);
-        const updated = { ...pmScheduleData, asset_type: firstAsset?.name };
+      if (pmScheduleData?.assets !== null && pmScheduleData?.assets?.length > 0) {
+        setValue("asset_type", pmScheduleData?.assets[0]?.asset_type_id)
+        const updated = { ...pmScheduleData, asset_type: pmScheduleData?.assets[0]?.asset_type };
         dispatch(actionPMScheduleData(updated));
+      } else {
+        if (
+          masterAssetType?.response?.length > 0 &&
+          !pmScheduleData?.asset_type
+        ) {
+          const firstAsset = masterAssetType.response[0];
+          setValue("asset_type", firstAsset?.id);
+          const updated = { ...pmScheduleData, asset_type: firstAsset?.name };
+          dispatch(actionPMScheduleData(updated));
+        }
       }
     } else {
       setAssetTypeMasterOption([]);
@@ -297,6 +298,7 @@ export default function PMActivityAssetSetUp() {
                           event.target.value
                         );
                         objData.asset_type = objCurrent.name;
+                        objData.asset_type_id = event.target.value
                         dispatch(actionPMScheduleData(objData));
                       }}
                       SelectProps={{
@@ -423,6 +425,7 @@ export default function PMActivityAssetSetUp() {
                                 updatedAssets.push({
                                   asset_id: asset.id,
                                   asset_type: asset.type,
+                                  asset_type_id: updated.asset_type_id,
                                   asset_description: asset.asset_description,
                                   location: asset.location,
                                   frequency_exceptions: [],
@@ -698,7 +701,7 @@ export default function PMActivityAssetSetUp() {
                                 sx={{
                                   whiteSpace: "normal",
                                   wordBreak: "break-word",
-                                  maxWidth: 300,
+                                  maxWidth: 440,
                                   display: "-webkit-box",
                                   WebkitLineClamp: 2,
                                   WebkitBoxOrient: "vertical",
@@ -812,7 +815,7 @@ export default function PMActivityAssetSetUp() {
                                 sx={{
                                   whiteSpace: "normal",
                                   wordBreak: "break-word",
-                                  maxWidth: 300,
+                                  maxWidth: 440,
                                   display: "-webkit-box",
                                   WebkitLineClamp: 2,
                                   WebkitBoxOrient: "vertical",

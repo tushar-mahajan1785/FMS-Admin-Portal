@@ -276,7 +276,6 @@ export default function PMActivityEdit({ open, handleClose, objData }) {
 
   const onStep1Submit = (data) => {
     let pmData = Object.assign({}, pmScheduleData);
-    console.log("PMMMMM DTAAAA", pmData);
     let objData = {
       title: data?.pm_activity_title,
       frequency: data?.frequency,
@@ -371,7 +370,6 @@ export default function PMActivityEdit({ open, handleClose, objData }) {
       pm_activity_uuid: objData?.uuid,
     };
     setLoading(true);
-    console.log("OBJJJ DATTAAAA", input);
     dispatch(actionPMScheduleEdit(input));
   };
 

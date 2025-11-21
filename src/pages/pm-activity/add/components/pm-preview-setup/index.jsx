@@ -423,7 +423,6 @@ export default function PMActivityPreviewSetUp() {
                           cursor: "pointer",
                         }}
                         onClick={() => {
-                          console.log("Asseet::", asset);
                           let pmData = Object.assign({}, pmScheduleData);
                           pmData.selected_asset_id = asset?.asset_id;
                           let currentAssetIndex = pmData.assets.findIndex(
@@ -547,7 +546,6 @@ export default function PMActivityPreviewSetUp() {
               currentAssetData.frequency_exceptions = frequencies;
               assets[currentAssetIndex] = currentAssetData;
               pmData.assets = assets;
-              console.log("----pmData-----", pmData);
               dispatch(actionPMScheduleData(pmData));
             }
           }

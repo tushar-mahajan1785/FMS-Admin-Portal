@@ -156,7 +156,7 @@ export default function PmActivity() {
             sx={{ flexDirection: "row", alignItems: "center", height: "100%" }}
           >
             <Chip
-              label={`${params?.row?.assets.length} Assets`}
+              label={`${params?.row?.asset_count} Assets`}
               size="small"
               sx={{
                 bgcolor: theme.palette.primary[50],
@@ -297,6 +297,7 @@ export default function PmActivity() {
    */
   useEffect(() => {
     if (branch?.currentBranch?.client_uuid) {
+      setSelectedUpcomingPmSchedule(getMasterPMActivitySchedule[0]?.name)
       dispatch(
         actionMasterAssetType({
           client_uuid: branch.currentBranch.client_uuid,
@@ -719,7 +720,7 @@ export default function PmActivity() {
                   </TypographyComponent>
                 </Stack>
                 <Chip
-                  label={`${total.toString().padStart(2, "0")} Schedules`}
+                  label={total && total !== null ? `${total?.toString().padStart(2, "0")} Schedules` : '0 Schedules'}
                   size="small"
                   sx={{
                     bgcolor: theme.palette.primary[50],
@@ -901,11 +902,14 @@ export default function PmActivity() {
                 }}
               />
             ) : (
-              <EmptyContent
-                imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND}
-                title={"No Tickets Found"}
-                subTitle={""}
-              />
+              <Box sx={{ height: 560 }}>
+                <EmptyContent
+                  imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND}
+                  title={"No PM Schedule Found"}
+                  subTitle={""}
+                />
+              </Box>
+
             )}
           </Stack>
         </Grid>
@@ -972,7 +976,7 @@ export default function PmActivity() {
                               sx={{
                                 whiteSpace: "normal",
                                 wordBreak: "break-word",
-                                maxWidth: 300,
+                                maxWidth: 430,
                                 display: "-webkit-box",
                                 WebkitLineClamp: 2,
                                 WebkitBoxOrient: "vertical",

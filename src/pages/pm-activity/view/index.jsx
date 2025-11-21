@@ -79,9 +79,9 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
       pm_details: {
         title: pmScheduleData?.selected_asset_id
           ? // Find the selected asset and get its description
-            pmScheduleActivityDetails?.assets.find(
-              (asset) => asset.asset_id === pmScheduleData.selected_asset_id
-            )?.asset_name
+          pmScheduleActivityDetails?.assets.find(
+            (asset) => asset.asset_id === pmScheduleData.selected_asset_id
+          )?.asset_name
           : "",
         frequency: pmScheduleActivityDetails?.frequency,
         schedule_start_date: moment(
@@ -92,9 +92,9 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
         assets: pmScheduleActivityDetails?.assets,
         location: pmScheduleData?.selected_asset_id
           ? // Find the selected asset and get its description
-            pmScheduleActivityDetails?.assets.find(
-              (asset) => asset.asset_id === pmScheduleData.selected_asset_id
-            )?.location
+          pmScheduleActivityDetails?.assets.find(
+            (asset) => asset.asset_id === pmScheduleData.selected_asset_id
+          )?.location
           : "",
       },
     };
@@ -115,9 +115,9 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
       pm_details: {
         title: pmScheduleData?.selected_asset_id
           ? // Find the selected asset and get its description
-            pmScheduleActivityDetails?.assets.find(
-              (asset) => asset.asset_id === pmScheduleData.selected_asset_id
-            )?.asset_name
+          pmScheduleActivityDetails?.assets.find(
+            (asset) => asset.asset_id === pmScheduleData.selected_asset_id
+          )?.asset_name
           : "",
         frequency: pmScheduleActivityDetails?.frequency,
         schedule_start_date: moment(
@@ -127,16 +127,16 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
         status: pmScheduleActivityDetails?.status,
         location: pmScheduleData?.selected_asset_id
           ? // Find the selected asset and get its description
-            pmScheduleActivityDetails?.assets.find(
-              (asset) => asset.asset_id === pmScheduleData.selected_asset_id
-            )?.location
+          pmScheduleActivityDetails?.assets.find(
+            (asset) => asset.asset_id === pmScheduleData.selected_asset_id
+          )?.location
           : "",
 
         vendor: pmScheduleData?.selected_asset_id
           ? // Find the selected asset and get its description
-            pmScheduleActivityDetails?.assets.find(
-              (asset) => asset.asset_id === pmScheduleData.selected_asset_id
-            )?.vendor
+          pmScheduleActivityDetails?.assets.find(
+            (asset) => asset.asset_id === pmScheduleData.selected_asset_id
+          )?.vendor
           : null,
       },
     };
@@ -151,8 +151,6 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
       }
     }
   }, [objData, open]);
-
-  console.log("PM SChdule dataaa:", pmScheduleData);
 
   const today = moment().startOf("day"); // Get today's date at the start of the day
 
@@ -260,8 +258,8 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
               >
                 {params.row.scheduled_date && params.row.scheduled_date !== null
                   ? moment(params.row.scheduled_date, "YYYY-MM-DD").format(
-                      "DD MMM YYYY"
-                    )
+                    "DD MMM YYYY"
+                  )
                   : ""}
               </TypographyComponent>
             ) : (
@@ -322,8 +320,8 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
               >
                 {params.row.completed_date && params.row.completed_date !== null
                   ? moment(params.row.completed_date, "YYYY-MM-DD").format(
-                      "DD MMM YYYY"
-                    )
+                    "DD MMM YYYY"
+                  )
                   : ""}
               </TypographyComponent>
             ) : (
@@ -436,11 +434,8 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
                 </Stack>
               ) : (
                 <React.Fragment>
-                  {params.row.scheduled_date &&
-                    params.row.scheduled_date !== null &&
-                    moment(params.row.scheduled_date).isSameOrBefore(
-                      moment(today).format("YYYY-MM-DD")
-                    ) && (
+                  {params?.row?.scheduled_date && params?.row?.scheduled_date !== null &&
+                    moment(params?.row?.scheduled_date).isSame(moment(), "month") && (
                       <Stack
                         sx={{
                           flexDirection: "row",
@@ -533,7 +528,7 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
             icon={<TotalPMIcon stroke={theme.palette.primary[600]} size={20} />}
             title={
               pmScheduleActivityDetails?.activity_title &&
-              pmScheduleActivityDetails?.activity_title !== null
+                pmScheduleActivityDetails?.activity_title !== null
                 ? pmScheduleActivityDetails?.activity_title
                 : "PM Activity"
             }
@@ -608,9 +603,9 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
                     <Typography fontSize={16} fontWeight={500}>
                       {pmScheduleActivityDetails?.schedule_start_date
                         ? moment(
-                            pmScheduleActivityDetails?.schedule_start_date,
-                            "YYYY-MM-DD"
-                          ).format("DD MMM YYYY")
+                          pmScheduleActivityDetails?.schedule_start_date,
+                          "YYYY-MM-DD"
+                        ).format("DD MMM YYYY")
                         : "N/A"}
                     </Typography>
                   </Grid>
@@ -667,17 +662,17 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
                               sx={{
                                 background:
                                   pmScheduleData?.selected_asset_id ===
-                                  asset?.asset_id
+                                    asset?.asset_id
                                     ? theme.palette.primary[600]
                                     : theme.palette.common.white,
                                 border:
                                   pmScheduleData?.selected_asset_id ===
-                                  asset?.asset_id
+                                    asset?.asset_id
                                     ? "none"
                                     : `1px solid ${theme.palette.grey[500]}`,
                                 color:
                                   pmScheduleData?.selected_asset_id ===
-                                  asset?.asset_id
+                                    asset?.asset_id
                                     ? theme.palette.common.white
                                     : theme.palette.grey[500],
                                 borderRadius: "8px",
@@ -723,18 +718,18 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
                 <Typography fontSize={16} fontWeight={600} mb={2}>
                   {pmScheduleData?.selected_asset_id
                     ? // Find the selected asset and get its description
-                      pmScheduleData.assets.find(
-                        (asset) =>
-                          asset.asset_id === pmScheduleData.selected_asset_id
-                      )?.asset_name + " PM Activity Schedule"
+                    pmScheduleData.assets.find(
+                      (asset) =>
+                        asset.asset_id === pmScheduleData.selected_asset_id
+                    )?.asset_name + " PM Activity Schedule"
                     : "PM Activity Schedule"}
                 </Typography>
               </Stack>
 
               {/* Frequency Exceptions */}
               {frequencyExceptionsData &&
-              frequencyExceptionsData !== null &&
-              frequencyExceptionsData?.length > 0 ? (
+                frequencyExceptionsData !== null &&
+                frequencyExceptionsData?.length > 0 ? (
                 <Box sx={{ height: "330px", width: "100%" }}>
                   <DataGrid
                     sx={{
@@ -792,7 +787,6 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
           </Box>
         </Stack>
         <Divider sx={{ m: 2 }} />
-        {console.log("frequencyExceptionsData:::::", frequencyExceptionsData)}
         <Stack
           direction="row"
           justifyContent="space-between"
