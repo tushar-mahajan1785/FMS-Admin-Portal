@@ -119,10 +119,9 @@ export default function ReschedulePopup({
       ) {
         setValue(
           "current_schedule_date",
-          moment(
-            selectedActivity?.frequency_data?.scheduled_date,
-            "YYYY-MM-DD"
-          ).format("DD/MM/YYYY")
+          moment(selectedActivity?.frequency_data?.date, "YYYY-MM-DD").format(
+            "DD/MM/YYYY"
+          )
         );
       }
     }
@@ -288,7 +287,7 @@ export default function ReschedulePopup({
       // Build the main payload
       let input = {
         branch_uuid: branch?.currentBranch?.uuid,
-        activity_date: selectedActivity?.frequency_data?.scheduled_date,
+        activity_date: selectedActivity?.frequency_data?.date,
         completion_date: data?.completion_date
           ? moment(data?.completion_date, "DD/MM/YYYY").format("YYYY-MM-DD")
           : null,
@@ -465,9 +464,9 @@ export default function ReschedulePopup({
                   fontWeight={500}
                   sx={{ color: theme.palette.grey[700] }}
                 >
-                  {selectedActivity?.frequency_data?.scheduled_date !== null &&
+                  {selectedActivity?.frequency_data?.date !== null &&
                     moment(
-                      selectedActivity?.frequency_data?.scheduled_date,
+                      selectedActivity?.frequency_data?.date,
                       "YYYY-MM-DD"
                     ).format("DD MMM YYYY")}
                 </TypographyComponent>
@@ -552,7 +551,7 @@ export default function ReschedulePopup({
                       render={({ field }) => {
                         // Read scheduled_date from selectedActivity
                         const scheduledDate =
-                          selectedActivity?.frequency_data?.scheduled_date;
+                          selectedActivity?.frequency_data?.date;
 
                         // Convert YYYY-MM-DD → moment date
                         const scheduledMoment = scheduledDate
@@ -604,7 +603,7 @@ export default function ReschedulePopup({
                             minDate={minDate}
                             maxDate={maxDate}
                             selected={selectedDate}
-                            dateFormat="dd/MM/yyyy"
+                            dateFormat="DD/MM/YYYY"
                             onChange={(date) => {
                               const formattedDate =
                                 moment(date).format("DD/MM/YYYY");
@@ -661,7 +660,7 @@ export default function ReschedulePopup({
                       render={({ field }) => {
                         // read scheduled_date from selectedActivity
                         const scheduledDate =
-                          selectedActivity?.frequency_data?.scheduled_date;
+                          selectedActivity?.frequency_data?.date;
 
                         // convert YYYY-MM-DD → moment date
                         const scheduledMoment = scheduledDate

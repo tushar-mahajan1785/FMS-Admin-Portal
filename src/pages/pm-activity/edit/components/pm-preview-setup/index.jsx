@@ -37,22 +37,20 @@ export default function PMActivityPreviewSetUp() {
 
   // Add these functions inside your component:
   const handleRescheduleClick = (activity) => {
+    console.log("Activity ::::::::", activity);
     let currentAssetData = pmScheduleData?.assets.find(
       (obj) => obj?.asset_id === pmScheduleData?.selected_asset_id
     );
     let activityData = {
       ...currentAssetData,
-      frequency_data: {
-        ...activity,
-        scheduled_date: activity?.date,
-      },
+      frequency_data: activity,
       type: "reschedule",
       pm_details: {
         title: pmScheduleData?.selected_asset_id
           ? // Find the selected asset and get its description
             pmScheduleData?.assets.find(
               (asset) => asset.asset_id === pmScheduleData.selected_asset_id
-            )?.asset_description
+            )?.asset_name
           : "",
         frequency: pmScheduleData?.pm_details?.frequency,
         schedule_start_date: pmScheduleData?.pm_details?.schedule_start_date,
@@ -440,7 +438,7 @@ export default function PMActivityPreviewSetUp() {
                         }}
                       >
                         <TypographyComponent fontSize={14} fontWeight={400}>
-                          {asset?.asset_description}
+                          {asset?.asset_name}
                         </TypographyComponent>
                       </Stack>
                     ))
@@ -461,7 +459,7 @@ export default function PMActivityPreviewSetUp() {
               ? // Find the selected asset and get its description
                 pmScheduleData.assets.find(
                   (asset) => asset.asset_id === pmScheduleData.selected_asset_id
-                )?.asset_description + " PM Activity Schedule"
+                )?.asset_name + " PM Activity Schedule"
               : "PM Activity Schedule"}
           </Typography>
         </Stack>
@@ -547,7 +545,6 @@ export default function PMActivityPreviewSetUp() {
               currentAssetData.frequency_exceptions = frequencies;
               assets[currentAssetIndex] = currentAssetData;
               pmData.assets = assets;
-              console.log("----pmData-----", pmData);
               dispatch(actionPMScheduleData(pmData));
             }
           }

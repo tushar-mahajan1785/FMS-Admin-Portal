@@ -31,7 +31,7 @@ import {
   IMAGES_SCREEN_NO_DATA,
   SERVER_ERROR,
   UNAUTHORIZED,
-  getMasterPMActivityAddStatus,
+  getMasterPMActivityEditStatus,
   getPmActivityFrequencyArray,
 } from "../../../../../constants";
 import {
@@ -91,6 +91,32 @@ export default function PMActivityAssetSetUp() {
   const { pmScheduleData } = useSelector((state) => state.pmActivityStore);
 
   /**
+   * 🔹 Handle PM Schedule Details Response and populate form
+   */
+  useEffect(() => {
+    if (pmScheduleData?.pm_details && pmScheduleData?.pm_details !== null) {
+      // Populate form with existing data
+      setValue("pm_activity_title", pmScheduleData?.pm_details?.title || "");
+      setValue("frequency", pmScheduleData?.pm_details?.frequency || "");
+      setValue(
+        "schedule_start_date",
+        pmScheduleData?.pm_details?.schedule_start_date
+          ? moment(
+              pmScheduleData?.pm_details.schedule_start_date,
+              "YYYY-MM-DD"
+            ).format("DD/MM/YYYY")
+          : ""
+      );
+      setValue("status", pmScheduleData?.pm_details?.status || "");
+      // let updatedPmData = Object.assign({}, pmScheduleData);
+      // updatedPmData.assets = objData.assets;
+      // dispatch(actionPMScheduleData(updatedPmData));
+    }
+  }, [pmScheduleData?.pm_details]);
+
+  console.log("pmSchduleeeeeeee dtaaaaa", pmScheduleData);
+
+  /**
    * 🔹 Initial API call to fetch master asset types
    */
   useEffect(() => {
@@ -127,13 +153,14 @@ export default function PMActivityAssetSetUp() {
 
     if (masterAssetType?.result === true) {
       setAssetTypeMasterOption(masterAssetType?.response ?? []);
-      if (masterAssetType?.response?.length > 0) {
+      if (
+        masterAssetType?.response?.length > 0 &&
+        !pmScheduleData?.asset_type
+      ) {
         const firstAsset = masterAssetType.response[0];
         setValue("asset_type", firstAsset?.id);
         const updated = { ...pmScheduleData, asset_type: firstAsset?.name };
         dispatch(actionPMScheduleData(updated));
-      } else {
-        console.log("here we are ");
       }
     } else {
       setAssetTypeMasterOption([]);
@@ -219,7 +246,7 @@ export default function PMActivityAssetSetUp() {
       <Grid
         container
         spacing={"24px"}
-        sx={{ mt: 1, width: "100%", paddingLeft: 5 }}
+        sx={{ mt: 1, width: "100%" }}
         direction="row"
       >
         {/* 🔹 LEFT PANEL: Select Asset */}
@@ -278,7 +305,7 @@ export default function PMActivityAssetSetUp() {
                         MenuProps: {
                           PaperProps: {
                             style: {
-                              maxHeight: 220, // Set your desired max height
+                              maxHeight: 220,
                               scrollbarWidth: "thin",
                             },
                           },
@@ -299,11 +326,11 @@ export default function PMActivityAssetSetUp() {
                             value={option?.id}
                             color={theme.palette.primary[900]}
                             sx={{
-                              whiteSpace: "normal", // allow wrapping
-                              wordBreak: "break-word", // break long words if needed
-                              maxWidth: 550, // control dropdown width
+                              whiteSpace: "normal",
+                              wordBreak: "break-word",
+                              maxWidth: 550,
                               display: "-webkit-box",
-                              WebkitLineClamp: 2, // limit to 2 lines
+                              WebkitLineClamp: 2,
                               WebkitBoxOrient: "vertical",
                               overflow: "hidden",
                               textOverflow: "ellipsis",
@@ -398,7 +425,7 @@ export default function PMActivityAssetSetUp() {
                                   asset_type: asset.type,
                                   asset_description: asset.asset_description,
                                   location: asset.location,
-                                  frequency_exceptions: [], // Initialize empty frequency exceptions
+                                  frequency_exceptions: [],
                                 });
                               }
                             } else {
@@ -485,7 +512,7 @@ export default function PMActivityAssetSetUp() {
                         <TypographyComponent
                           fontSize={16}
                           fontWeight={400}
-                          sx={{ color: theme.palette.grey[1000] }} // ✅ lighter grey label
+                          sx={{ color: theme.palette.grey[1000] }}
                         >
                           Asset Name
                         </TypographyComponent>
@@ -493,9 +520,9 @@ export default function PMActivityAssetSetUp() {
                         <TypographyComponent
                           fontSize={14}
                           fontWeight={600}
-                          sx={{ color: theme.palette.grey[400] }} // ✅ dark grey value
+                          sx={{ color: theme.palette.grey[400] }}
                         >
-                          {asset?.asset_description ?? "N/A"}
+                          {asset?.asset_name ?? "N/A"}
                         </TypographyComponent>
                       </Grid>
 
@@ -504,7 +531,7 @@ export default function PMActivityAssetSetUp() {
                         <TypographyComponent
                           fontSize={16}
                           fontWeight={400}
-                          sx={{ color: theme.palette.grey[1000] }} // ✅ lighter grey label
+                          sx={{ color: theme.palette.grey[1000] }}
                         >
                           Asset Type
                         </TypographyComponent>
@@ -512,7 +539,7 @@ export default function PMActivityAssetSetUp() {
                         <TypographyComponent
                           fontSize={14}
                           fontWeight={600}
-                          sx={{ color: theme.palette.grey[400] }} // ✅ dark grey value
+                          sx={{ color: theme.palette.grey[400] }}
                         >
                           {asset?.asset_type ?? "N/A"}
                         </TypographyComponent>
@@ -546,7 +573,10 @@ export default function PMActivityAssetSetUp() {
 
                     {index < pmScheduleData.assets.length - 1 && (
                       <Divider
-                        sx={{ my: 1.5, borderColor: theme.palette.grey[300] }}
+                        sx={{
+                          my: 1.5,
+                          borderColor: theme.palette.grey[300],
+                        }}
                       />
                     )}
                   </React.Fragment>
@@ -584,11 +614,6 @@ export default function PMActivityAssetSetUp() {
             }}
           >
             <CardContent sx={{ p: 2 }}>
-              {/* <form
-                noValidate
-                autoComplete="off"
-                onSubmit={handleSubmit(onSubmit)}
-              > */}
               <DatePickerWrapper>
                 <Grid container sx={{ gap: "18px" }}>
                   {/* PM Activity Title */}
@@ -654,7 +679,7 @@ export default function PMActivityAssetSetUp() {
                             MenuProps: {
                               PaperProps: {
                                 style: {
-                                  maxHeight: 220, // Set your desired max height
+                                  maxHeight: 220,
                                   scrollbarWidth: "thin",
                                 },
                               },
@@ -693,7 +718,9 @@ export default function PMActivityAssetSetUp() {
                     <Controller
                       name="schedule_start_date"
                       control={control}
-                      rules={{ required: "Schedule Start Date is required" }}
+                      rules={{
+                        required: "Schedule Start Date is required",
+                      }}
                       render={({ field }) => (
                         <DatePicker
                           id="schedule_start_date"
@@ -766,7 +793,7 @@ export default function PMActivityAssetSetUp() {
                             MenuProps: {
                               PaperProps: {
                                 style: {
-                                  maxHeight: 220, // Set your desired max height
+                                  maxHeight: 220,
                                   scrollbarWidth: "thin",
                                 },
                               },
@@ -777,8 +804,8 @@ export default function PMActivityAssetSetUp() {
                             <em>Select Status</em>
                           </MenuItem>
 
-                          {getMasterPMActivityAddStatus &&
-                            getMasterPMActivityAddStatus.map((option) => (
+                          {getMasterPMActivityEditStatus &&
+                            getMasterPMActivityEditStatus.map((option) => (
                               <MenuItem
                                 key={option?.name}
                                 value={option?.name}
@@ -802,7 +829,6 @@ export default function PMActivityAssetSetUp() {
                   </Grid>
                 </Grid>
               </DatePickerWrapper>
-              {/* </form> */}
             </CardContent>
           </Card>
         </Grid>
