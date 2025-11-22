@@ -294,7 +294,10 @@ export default function InventoryList() {
                     item =>
                         (item?.item_id && item?.item_id.toLowerCase().includes(searchQuery.trim().toLowerCase())) ||
                         (item?.item_name && item?.item_name.toLowerCase().includes(searchQuery.trim().toLowerCase())) ||
-                        (item?.stock_status && item?.stock_status.toLowerCase().includes(searchQuery.trim().toLowerCase()))
+                        (item?.unit && item?.unit.toLowerCase().includes(searchQuery.trim().toLowerCase())) ||
+                        (item?.stock_status && item?.stock_status.toLowerCase().includes(searchQuery.trim().toLowerCase())) ||
+                        (item?.minimum_quantity && item?.minimum_quantity.toString().includes(searchQuery.trim())) ||
+                        (item?.current_stock && item?.current_stock.toString().includes(searchQuery.trim()))
                 )
 
                 if (filteredData && filteredData.length > 0) {

@@ -32,13 +32,13 @@ import { useBranch } from "../../../hooks/useBranch";
 import TotalPMIcon from "../../../assets/icons/TotalPMIcon";
 import PMActivityAssetSetUp from "./components/pm-assets-setup";
 import {
-  actionPMScheduleAdd,
   actionPMScheduleData,
-  resetPmScheduleAddAssetResponse,
+  actionPMScheduleEdit,
+  resetPmScheduleEditResponse,
 } from "../../../store/pm-activity";
 import PMActivityPreviewSetUp from "./components/pm-preview-setup";
 
-export default function AddPMSchedule({ open, handleClose }) {
+export default function PMActivityEdit({ open, handleClose, objData }) {
   const theme = useTheme();
   const dispatch = useDispatch();
   const { logout } = useAuth();
@@ -46,7 +46,7 @@ export default function AddPMSchedule({ open, handleClose }) {
   const { showSnackbar } = useSnackbar();
 
   //Stores
-  const { pmScheduleData, pmScheduleAdd } = useSelector(
+  const { pmScheduleData, pmScheduleEdit } = useSelector(
     (state) => state.pmActivityStore
   );
 
@@ -68,32 +68,32 @@ export default function AddPMSchedule({ open, handleClose }) {
   const steps = ["PM Activity", "Preview PM Details"];
 
   useEffect(() => {
-    if (pmScheduleAdd && pmScheduleAdd !== null) {
-      dispatch(resetPmScheduleAddAssetResponse());
-      if (pmScheduleAdd?.result === true) {
+    if (pmScheduleEdit && pmScheduleEdit !== null) {
+      dispatch(resetPmScheduleEditResponse());
+      if (pmScheduleEdit?.result === true) {
         handleClose("save");
         reset();
         setLoading(false);
         showSnackbar({
-          message: pmScheduleAdd?.message,
+          message: pmScheduleEdit?.message,
           severity: "success",
         });
       } else {
         setLoading(false);
-        switch (pmScheduleAdd?.status) {
+        switch (pmScheduleEdit?.status) {
           case UNAUTHORIZED:
             logout();
             break;
           case ERROR:
-            dispatch(resetPmScheduleAddAssetResponse());
+            dispatch(resetPmScheduleEditResponse());
             showSnackbar({
-              message: pmScheduleAdd?.message,
+              message: pmScheduleEdit?.message,
               severity: "error",
             });
             break;
           case SERVER_ERROR:
             showSnackbar({
-              message: pmScheduleAdd?.message,
+              message: pmScheduleEdit?.message,
               severity: "error",
             });
             break;
@@ -102,7 +102,7 @@ export default function AddPMSchedule({ open, handleClose }) {
         }
       }
     }
-  }, [pmScheduleAdd]);
+  }, [pmScheduleEdit]);
 
   // Handle next step (go to preview)
   const handleNext = () => {
@@ -275,8 +275,6 @@ export default function AddPMSchedule({ open, handleClose }) {
   };
 
   const onStep1Submit = (data) => {
-    // setLoading(true);
-
     let pmData = Object.assign({}, pmScheduleData);
     let objData = {
       title: data?.pm_activity_title,
@@ -292,12 +290,12 @@ export default function AddPMSchedule({ open, handleClose }) {
       const assetsWithGeneratedDates =
         pmData?.assets && pmData?.assets !== null && pmData?.assets.length > 0
           ? pmData?.assets?.map((asset) => ({
-            ...asset,
-            frequency_exceptions: generateFrequencyDates(
-              data.frequency,
-              data.schedule_start_date
-            ),
-          }))
+              ...asset,
+              frequency_exceptions: generateFrequencyDates(
+                data.frequency,
+                data.schedule_start_date
+              ),
+            }))
           : [];
 
       pmData.assets = assetsWithGeneratedDates;
@@ -307,8 +305,8 @@ export default function AddPMSchedule({ open, handleClose }) {
       pmData.assets =
         pmData?.assets && pmData?.assets !== null && pmData?.assets.length > 0
           ? pmData?.assets?.map((asset) => ({
-            ...asset,
-          }))
+              ...asset,
+            }))
           : [];
     }
 
@@ -351,9 +349,6 @@ export default function AddPMSchedule({ open, handleClose }) {
       setActiveStep(0);
       let pmData = Object.assign({}, pmScheduleData);
       pmData.is_active = 0;
-      pmData.pm_details = null;
-      pmData.assets = [];
-      pmData.selected_asset_id = null;
       dispatch(actionPMScheduleData(pmData));
 
       dispatch(
@@ -362,28 +357,20 @@ export default function AddPMSchedule({ open, handleClose }) {
         })
       );
     }
-
-    return () => {
-      let pmData = Object.assign({}, pmScheduleData);
-      pmData.is_active = 0;
-      pmData.pm_details = null;
-      pmData.assets = [];
-      pmData.selected_asset_id = null;
-      dispatch(actionPMScheduleData(pmData));
-    };
   }, [open]);
 
   // Handle save schedule
   const handleSaveSchedule = () => {
     setLoading(false);
 
-    let objData = {
+    let input = {
       branch_uuid: branch?.currentBranch?.uuid,
       pm_activity_details: pmScheduleData?.pm_details,
       assets: pmScheduleData?.assets,
+      pm_activity_uuid: objData?.uuid,
     };
     setLoading(true);
-    dispatch(actionPMScheduleAdd(objData));
+    dispatch(actionPMScheduleEdit(input));
   };
 
   return (
@@ -409,7 +396,7 @@ export default function AddPMSchedule({ open, handleClose }) {
           color={theme.palette.primary[600]}
           size={48}
           icon={<TotalPMIcon stroke={theme.palette.primary[600]} size={20} />}
-          title="Create New PM Schedule"
+          title={`Edit ${objData?.activity_title}  PM Schedule`}
           subtitle="Fill below form to create new PM schedule"
           actions={[
             <IconButton onClick={handleClose}>
@@ -503,15 +490,15 @@ export default function AddPMSchedule({ open, handleClose }) {
                     textTransform: "capitalize",
                     px: 6,
                     borderRadius: "8px",
-                    backgroundColor: pmScheduleData?.assets?.length === 0 ? theme.palette.grey[400] : theme.palette.primary[600],
+                    backgroundColor: theme.palette.primary[600],
                     color: theme.palette.common.white,
                     fontSize: 16,
                     fontWeight: 600,
-                    borderColor: pmScheduleData?.assets?.length === 0 ? theme.palette.grey[600] : theme.palette.primary[600],
+                    borderColor: theme.palette.primary[600],
                   }}
                   variant="contained"
                   onClick={handleSubmit(onStep1Submit)}
-                  disabled={loading || pmScheduleData?.assets?.length === 0}
+                  disabled={loading}
                 >
                   {loading ? (
                     <CircularProgress size={18} sx={{ color: "white" }} />

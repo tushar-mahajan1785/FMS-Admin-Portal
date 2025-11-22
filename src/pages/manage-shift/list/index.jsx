@@ -190,6 +190,7 @@ export default function ManageShiftList() {
                 setLoadingList(false)
                 setManageShiftOptions([])
                 setManageShiftOriginalData([])
+                setTotal(0)
                 switch (employeeShiftScheduleList?.status) {
                     case UNAUTHORIZED:
                         logout()

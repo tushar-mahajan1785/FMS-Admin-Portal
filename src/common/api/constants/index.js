@@ -305,9 +305,17 @@ export const API_INVENTORY_CONSUMPTION_SAVE = `${BASE}/inventory/usage`
 
 export const API_PM_ACTIVITY_LIST = `${BASE}/pm-activity/list`
 
-export const API_SELECTED_ASSET_REMOVE = `${BASE}/pm-activity/remove`
+export const API_PM_ACTIVITY_REMOVE = `${BASE}/pm-activity/remove`
 
 export const API_PM_ACTIVITY_ADD = `${BASE}/pm-activity/add`
+
+export const API_PM_ACTIVITY_DETAILS = `${BASE}/pm-activity/details`
+
+export const API_PM_ACTIVITY_MARK_DONE = `${BASE}/pm-activity/history-status-update`
+
+export const API_PM_ACTIVITY_EDIT = `${BASE}/pm-activity/edit`
+
+export const API_PM_ACTIVITY_VIEW_REPORT = `${BASE}/pm-activity/history-view-report`
 
 // document categories
 export const API_DOCUMENTS_CATEGORIES_LIST = `${BASE}/document-category/list`

@@ -23,6 +23,8 @@ import _ from "lodash";
 import AlertPopup from "../../../components/alert-confirm"
 import AlertCircleIcon from "../../../assets/icons/AlertCircleIcon"
 import * as XLSX from "xlsx-js-style";
+import HeaderDays from "../add/components/header-days";
+import PublishShiftTable from "../add/components/publish-shift";
 
 export default function ManageShiftDetails({ open, objData, page, handleClose }) {
     const theme = useTheme()
@@ -153,6 +155,22 @@ export default function ManageShiftDetails({ open, objData, page, handleClose })
     const weekdays = Array.from({ length: 7 }, (_, i) =>
         moment(currentWeekStart).add(i, "days")
     );
+
+    // Example code typically found outside your provided JSX:
+
+    // 1. Get the current date object (e.g., from the application state)
+    const currentDate = moment();
+
+    // 2. Set currentMonthStart to the first day of that month
+    const currentMonthStart = currentDate.clone().startOf('month');
+
+    // 3. Define monthDays based on this start date
+    const monthDays = Array.from({ length: currentDate.daysInMonth() }, (_, i) =>
+        currentMonthStart.clone().add(i, "days")
+    );
+
+    // 💡 Determine which days array to use
+    const daysToDisplay = manageShiftDetailData?.schedule_type === 'WEEKLY' ? weekdays : monthDays;
 
     // 🎨 Define your color map
     const displayColorMap = {
@@ -491,117 +509,20 @@ export default function ManageShiftDetails({ open, objData, page, handleClose })
                                 }}
                             >
                                 {/* ---- Weekday Header (common for both) ---- */}
-                                <Grid
-                                    container
-                                    sx={{
-                                        px: 2,
-                                        py: 1,
-                                        borderBottom: `1px solid ${theme.palette.grey[300]}`,
-                                        fontWeight: 600,
-                                        minWidth: isMDDown ? "1600px" : "",
-                                    }}
-                                >
-                                    <Grid
-                                        size={{ xs: 2, sm: 2, md: 2, lg: 2, xl: 2 }}
-                                        display="flex"
-                                        alignItems="center"
-                                    >
-                                        <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[600] }}>
-                                            Weekdays
-                                        </TypographyComponent>
-                                    </Grid>
-
-                                    <Grid size={{ xs: 10, sm: 10, md: 10, lg: 10, xl: 10 }} container>
-                                        {weekdays.map((day, index) => (
-                                            <Grid
-                                                key={index}
-                                                size={{ xs: 1.7, sm: 1.7, md: 1.7, lg: 1.7, xl: 1.7 }}
-                                                textAlign="center"
-                                            >
-                                                <TypographyComponent fontSize={16} fontWeight={600} sx={{ color: theme.palette.grey[700] }}>
-                                                    {day.format("ddd").toUpperCase()}
-                                                </TypographyComponent>
-                                                <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>
-                                                    {day.format("D MMM")}
-                                                </TypographyComponent>
-                                            </Grid>
-                                        ))}
-                                    </Grid>
-                                </Grid>
-                                <Stack sx={{ gap: 2, mt: 2 }}>
-                                    {manageShiftDetailData?.shift_schedule && manageShiftDetailData?.shift_schedule !== null && manageShiftDetailData?.shift_schedule?.length > 0 &&
-                                        manageShiftDetailData?.shift_schedule.map((emp, index) => (
-                                            <Box
-                                                key={index}
-                                                sx={{
-                                                    overflowX: "auto",
-                                                    border: `1px solid ${theme.palette.grey[300]}`,
-                                                    borderRadius: "8px",
-                                                    bgcolor: theme.palette.common.white,
-                                                    minWidth: isMDDown ? "1600px" : "",
-                                                }}
-                                            >
-                                                <Grid container alignItems="center" sx={{ p: 2 }}>
-                                                    <Grid
-                                                        size={{ xs: 2, sm: 2, md: 2, lg: 2, xl: 2 }}
-                                                        display="flex"
-                                                        alignItems="center"
-                                                        gap={1.5}
-                                                    >
-                                                        <Box>
-                                                            <TypographyComponent fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[600] }}>
-                                                                {_.truncate(emp?.employee_name, { length: 20 })}
-                                                            </TypographyComponent>
-                                                            {emp?.is_manager === 1 && (
-                                                                <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>
-                                                                    {emp?.role_type}
-                                                                </TypographyComponent>
-                                                            )}
-                                                        </Box>
-                                                    </Grid>
-                                                    <Grid size={{ xs: 10, sm: 10, md: 10, lg: 10, xl: 10 }} container>
-                                                        {weekdays.map((day, dayIndex) => {
-                                                            const dateKey = moment(day).format("YYYY-MM-DD");
-
-                                                            const selectedShortName = emp.shift_selection?.[dateKey];
-                                                            const color = getDisplayCurrentColor(selectedShortName);
-                                                            return (
-                                                                <Grid
-                                                                    key={dayIndex}
-                                                                    size={{ xs: 1.7, sm: 1.7, md: 1.7, lg: 1.7, xl: 1.7 }}
-                                                                    display="flex"
-                                                                    justifyContent="center"
-                                                                    alignItems="center"
-                                                                >
-                                                                    {selectedShortName && (
-                                                                        <Button
-                                                                            size="small"
-                                                                            variant="outlined"
-                                                                            sx={{
-                                                                                minWidth: 168,
-                                                                                height: 32,
-                                                                                borderRadius: 1,
-                                                                                fontSize: 12,
-                                                                                textTransform: "none",
-                                                                                borderColor: color.dark,
-                                                                                color: color.text,
-                                                                                background: `linear-gradient(180deg, ${color.light} 0%, ${color.dark} 100%)`,
-                                                                                "&:hover": {
-                                                                                    background: `linear-gradient(180deg, ${color.dark} 0%, ${color.dark} 100%)`,
-                                                                                },
-                                                                            }}
-                                                                        >
-                                                                            {selectedShortName}
-                                                                        </Button>
-                                                                    )}
-                                                                </Grid>
-                                                            );
-                                                        })}
-                                                    </Grid>
-                                                </Grid>
-                                            </Box>
-                                        ))}
-                                </Stack>
+                                <HeaderDays
+                                    rosterData={manageShiftDetailData}
+                                    daysToDisplay={daysToDisplay}
+                                    leftHeader="Weekdays"
+                                    isMDDown={isMDDown}
+                                    theme={theme}
+                                />
+                                <PublishShiftTable
+                                    employeeList={manageShiftDetailData?.shift_schedule}
+                                    daysToDisplay={daysToDisplay}
+                                    rosterData={manageShiftDetailData}
+                                    theme={theme}
+                                    getDisplayCurrentColor={getDisplayCurrentColor}
+                                />
                             </Box>
                         </Stack>
                     ) : (

@@ -45,6 +45,9 @@ import _ from "lodash";
 import UploadIcon from "../../../assets/icons/UploadIcon";
 import AddNewMemberGroup from "./components/add-new-members";
 import * as XLSX from "xlsx-js-style";
+import HeaderDays from "./components/header-days";
+import PreviewShiftTable from "./components/preview-shift";
+import PublishShiftTable from "./components/publish-shift";
 
 export default function CreateShiftDrawer({ open, objData, handleClose }) {
     const theme = useTheme()
@@ -269,6 +272,23 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
         moment(currentWeekStart).add(i, "days")
     );
 
+    // Example code typically found outside your provided JSX:
+
+    // 1. Get the current date object (e.g., from the application state)
+    const currentDate = moment();
+
+    // 2. Set currentMonthStart to the first day of that month
+    const currentMonthStart = currentDate.clone().startOf('month');
+
+    // 3. Define monthDays based on this start date
+    const monthDays = Array.from({ length: currentDate.daysInMonth() }, (_, i) =>
+        currentMonthStart.clone().add(i, "days")
+    );
+
+    // 💡 Determine which days array to use
+    const daysToDisplay = rosterData?.schedule_type === 'WEEKLY' ? weekdays : monthDays;
+
+    // You might need a more compact header for monthly view due to space constraints, e.g., 'Days'
     const weekRangeText = `${currentWeekStart.format("D MMM")} - ${moment(currentWeekStart)
         .endOf("week")
         .format("D MMM")}`;
@@ -728,224 +748,34 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                             }}
                         >
                             {/* ---- Weekday Header (common for both) ---- */}
-                            <Grid
-                                container
-                                sx={{
-                                    px: 2,
-                                    py: 1,
-                                    borderBottom: `1px solid ${theme.palette.grey[300]}`,
-                                    fontWeight: 600,
-                                    minWidth: isMDDown ? "1600px" : "",
-                                }}
-                            >
-                                <Grid
-                                    size={{ xs: 2, sm: 2, md: 2, lg: 2, xl: 2 }}
-                                    display="flex"
-                                    alignItems="center"
-                                >
-                                    <Typography fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[600] }}>
-                                        Weekdays
-                                    </Typography>
-                                </Grid>
-
-                                <Grid size={{ xs: 10, sm: 10, md: 10, lg: 10, xl: 10 }} container>
-                                    {weekdays.map((day, index) => (
-                                        <Grid
-                                            key={index}
-                                            size={{ xs: 1.7, sm: 1.7, md: 1.7, lg: 1.7, xl: 1.7 }}
-                                            textAlign="center"
-                                        >
-                                            <Typography fontSize={16} fontWeight={600} sx={{ color: theme.palette.grey[700] }}>
-                                                {day.format("ddd").toUpperCase()}
-                                            </Typography>
-                                            <Typography fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>
-                                                {day.format("D MMM")}
-                                            </Typography>
-                                        </Grid>
-                                    ))}
-                                </Grid>
-                            </Grid>
+                            <HeaderDays
+                                rosterData={rosterData}
+                                daysToDisplay={activePage === 'Preview' ? weekdays : daysToDisplay}
+                                leftHeader="Weekdays"
+                                isMDDown={isMDDown}
+                                theme={theme}
+                                activePage={activePage}
+                            />
 
                             {/* ---- Employee Rows (switch content based on activePage) ---- */}
-                            <Stack sx={{ gap: 2, mt: 2 }}>
-                                {
-                                    employeeShiftScheduleMasterOption && employeeShiftScheduleMasterOption?.length > 0 &&
-                                    employeeShiftScheduleMasterOption.map((emp, index) => (
-                                        <Box
-                                            key={index}
-                                            sx={{
-                                                overflowX: "auto",
-                                                border: `1px solid ${theme.palette.grey[300]}`,
-                                                borderRadius: "8px",
-                                                bgcolor: theme.palette.common.white,
-                                                minWidth: isMDDown ? "1600px" : "",
-                                            }}
-                                        >
-                                            <Grid container alignItems="center" sx={{ p: 2 }}>
-                                                {/* ---- Employee Name ---- */}
-                                                <Grid
-                                                    size={{ xs: 2, sm: 2, md: 2, lg: 2, xl: 2 }}
-                                                    display="flex"
-                                                    alignItems="center"
-                                                    gap={1.5}
-                                                >
-                                                    {activePage === "Preview" && (
-                                                        <FormControlLabel
-                                                            sx={{
-                                                                m: 0,
-                                                                gap: 1,
-                                                                ".MuiTypography-root": {
-                                                                    fontWeight: emp.status === "Active" ? 600 : 400,
-                                                                    fontSize: 14,
-                                                                },
-                                                                color:
-                                                                    emp.status === "Active"
-                                                                        ? theme.palette.grey[700]
-                                                                        : theme.palette.grey[600],
-                                                            }}
-                                                            control={
-                                                                <AntSwitch
-                                                                    checked={emp.status === "Active"}
-                                                                    onChange={() => {
-                                                                        const updated = employeeShiftScheduleMasterOption.map((item, i) =>
-                                                                            i === index
-                                                                                ? {
-                                                                                    ...item,
-                                                                                    status:
-                                                                                        item.status === "Active" ? "Inactive" : "Active",
-                                                                                }
-                                                                                : item
-                                                                        );
-                                                                        setEmployeeShiftScheduleMasterOption(updated);
-                                                                    }}
-                                                                />
-                                                            }
-                                                        />
-                                                    )}
-
-                                                    <Box>
-                                                        <Typography fontSize={16} fontWeight={500} sx={{ color: theme.palette.grey[600] }}>
-                                                            {_.truncate(emp?.employee_name, { length: 20 })}
-                                                        </Typography>
-                                                        {emp?.is_manager === 1 && (
-                                                            <Typography fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>
-                                                                {emp?.role_type}
-                                                            </Typography>
-                                                        )}
-                                                    </Box>
-                                                </Grid>
-
-                                                {/* ---- Shift Cells ---- */}
-                                                <Grid size={{ xs: 10, sm: 10, md: 10, lg: 10, xl: 10 }} container>
-                                                    {weekdays.map((day, dayIndex) => {
-                                                        const dateKey = moment(day).format("YYYY-MM-DD");
-
-                                                        // ✅ PREVIEW MODE — Select shifts
-                                                        if (activePage === "Preview" && emp.status === "Active") {
-                                                            return (
-                                                                <Grid
-                                                                    key={dayIndex}
-                                                                    size={{ xs: 1.7, sm: 1.7, md: 1.7, lg: 1.7, xl: 1.7 }}
-                                                                    display="flex"
-                                                                    justifyContent="center"
-                                                                    alignItems="center"
-                                                                    flexWrap="wrap"
-                                                                >
-                                                                    {emp?.shifts?.map((s, shiftIndex) => {
-                                                                        const isSelected = emp.shift_selection?.[dateKey] === s.short_name;
-                                                                        const currentColor = getCurrentColor(s.short_name, isSelected);
-
-                                                                        return (
-                                                                            <Button
-                                                                                key={`${dateKey}-${shiftIndex}`}
-                                                                                size="small"
-                                                                                variant="outlined"
-                                                                                sx={{
-                                                                                    minWidth: 32,
-                                                                                    height: 32,
-                                                                                    borderRadius: 1,
-                                                                                    fontSize: 12,
-                                                                                    textTransform: "none",
-                                                                                    borderColor: isSelected
-                                                                                        ? currentColor.dark
-                                                                                        : theme.palette.grey[300],
-                                                                                    color: isSelected
-                                                                                        ? currentColor.text
-                                                                                        : theme.palette.grey[700],
-                                                                                    background: isSelected
-                                                                                        ? `linear-gradient(180deg, ${currentColor.light} 0%, ${currentColor.dark} 100%)`
-                                                                                        : "transparent",
-                                                                                    transition: "all 0.2s ease",
-                                                                                    "&:hover": {
-                                                                                        background: isSelected
-                                                                                            ? `linear-gradient(180deg, ${currentColor.dark} 0%, ${currentColor.dark} 100%)`
-                                                                                            : theme.palette.action.hover,
-                                                                                    },
-                                                                                    marginRight: 0.2
-                                                                                }}
-                                                                                onClick={() => {
-                                                                                    setEmployeeShiftScheduleMasterOption(prev =>
-                                                                                        prev.map((empItem, empIndex) => {
-                                                                                            if (empIndex !== index) return empItem;
-                                                                                            const newSelection = { ...empItem.shift_selection };
-                                                                                            if (newSelection[dateKey] === s.short_name) {
-                                                                                                delete newSelection[dateKey];
-                                                                                            } else {
-                                                                                                newSelection[dateKey] = s.short_name;
-                                                                                            }
-                                                                                            return { ...empItem, shift_selection: newSelection };
-                                                                                        })
-                                                                                    );
-                                                                                }}
-                                                                            >
-                                                                                {s.short_name}
-                                                                            </Button>
-                                                                        );
-                                                                    })}
-                                                                </Grid>
-                                                            );
-                                                        }
-
-                                                        // ✅ PUBLISH MODE — Show only selected short_name
-                                                        const selectedShortName = emp.shift_selection?.[dateKey];
-                                                        const color = getDisplayCurrentColor(selectedShortName);
-                                                        return (
-                                                            <Grid
-                                                                key={dayIndex}
-                                                                size={{ xs: 1.7, sm: 1.7, md: 1.7, lg: 1.7, xl: 1.7 }}
-                                                                display="flex"
-                                                                justifyContent="center"
-                                                                alignItems="center"
-                                                            >
-                                                                {selectedShortName && (
-                                                                    <Button
-                                                                        size="small"
-                                                                        variant="outlined"
-                                                                        sx={{
-                                                                            minWidth: 168,
-                                                                            height: 32,
-                                                                            borderRadius: 1,
-                                                                            fontSize: 12,
-                                                                            textTransform: "none",
-                                                                            borderColor: color.dark,
-                                                                            color: color.text,
-                                                                            background: `linear-gradient(180deg, ${color.light} 0%, ${color.dark} 100%)`,
-                                                                            "&:hover": {
-                                                                                background: `linear-gradient(180deg, ${color.dark} 0%, ${color.dark} 100%)`,
-                                                                            },
-                                                                        }}
-                                                                    >
-                                                                        {selectedShortName}
-                                                                    </Button>
-                                                                )}
-                                                            </Grid>
-                                                        );
-                                                    })}
-                                                </Grid>
-                                            </Grid>
-                                        </Box>
-                                    ))}
-                            </Stack>
+                            {activePage === "Preview" ? (
+                                <PreviewShiftTable
+                                    employeeList={employeeShiftScheduleMasterOption}
+                                    daysToDisplay={weekdays}
+                                    rosterData={rosterData}
+                                    theme={theme}
+                                    setEmployeeShiftScheduleMasterOption={setEmployeeShiftScheduleMasterOption}
+                                    getCurrentColor={getCurrentColor}
+                                />
+                            ) : (
+                                <PublishShiftTable
+                                    employeeList={employeeShiftScheduleMasterOption}
+                                    daysToDisplay={daysToDisplay}
+                                    rosterData={rosterData}
+                                    theme={theme}
+                                    getDisplayCurrentColor={getDisplayCurrentColor}
+                                />
+                            )}
                         </Box>
                     </Stack>
                     {/* Footer */}

@@ -119,10 +119,9 @@ export default function ReschedulePopup({
       ) {
         setValue(
           "current_schedule_date",
-          moment(
-            selectedActivity?.frequency_data?.scheduled_date,
-            "YYYY-MM-DD"
-          ).format("DD/MM/YYYY")
+          moment(selectedActivity?.frequency_data?.date, "YYYY-MM-DD").format(
+            "DD/MM/YYYY"
+          )
         );
       }
     }
@@ -294,7 +293,7 @@ export default function ReschedulePopup({
       // Build the main payload
       let input = {
         branch_uuid: branch?.currentBranch?.uuid,
-        activity_date: selectedActivity?.frequency_data?.scheduled_date,
+        activity_date: selectedActivity?.frequency_data?.date,
         completion_date: data?.completion_date
           ? moment(data?.completion_date, "DD/MM/YYYY").format("YYYY-MM-DD")
           : null,
@@ -471,9 +470,9 @@ export default function ReschedulePopup({
                   fontWeight={500}
                   sx={{ color: theme.palette.grey[700] }}
                 >
-                  {selectedActivity?.frequency_data?.scheduled_date !== null &&
+                  {selectedActivity?.frequency_data?.date !== null &&
                     moment(
-                      selectedActivity?.frequency_data?.scheduled_date,
+                      selectedActivity?.frequency_data?.date,
                       "YYYY-MM-DD"
                     ).format("DD MMM YYYY")}
                 </TypographyComponent>
@@ -672,41 +671,22 @@ export default function ReschedulePopup({
                       name="completion_date"
                       control={control}
                       render={({ field }) => {
-                        const scheduledDate = selectedActivity?.frequency_data?.scheduled_date;
-                        const frequency = selectedActivity?.pm_details?.frequency;
+                        // read scheduled_date from selectedActivity
+                        const scheduledDate =
+                          selectedActivity?.frequency_data?.date;
 
+                        // convert YYYY-MM-DD → moment date
                         const scheduledMoment = scheduledDate
                           ? moment(scheduledDate, "YYYY-MM-DD")
-                          : moment(); // fallback
+                          : moment(); // fallback current date
 
-                        let minDate, maxDate;
+                        // set min & max based on scheduled_date month
+                        const minDate = scheduledMoment
+                          .startOf("month")
+                          .toDate();
+                        const maxDate = scheduledMoment.endOf("month").toDate();
 
-                        switch (frequency) {
-                          case "Monthly":
-                            minDate = scheduledMoment.startOf("month").toDate();
-                            maxDate = scheduledMoment.endOf("month").toDate();
-                            break;
-
-                          case "Quarterly":
-                            minDate = scheduledMoment.startOf("quarter").toDate();
-                            maxDate = scheduledMoment.endOf("quarter").toDate();
-                            break;
-
-                          case "Half Yearly":
-                            minDate = scheduledMoment.startOf("quarter").subtract(1, "quarter").toDate();
-                            maxDate = scheduledMoment.endOf("quarter").add(1, "quarter").toDate();
-                            break;
-
-                          case "Yearly":
-                            minDate = scheduledMoment.startOf("year").toDate();
-                            maxDate = scheduledMoment.endOf("year").toDate();
-                            break;
-
-                          default:
-                            minDate = scheduledMoment.startOf("month").toDate();
-                            maxDate = scheduledMoment.endOf("month").toDate();
-                        }
-
+                        // Convert stored DD/MM/YYYY → Date object safely
                         const selectedDate = field.value
                           ? moment(field.value, "DD/MM/YYYY").toDate()
                           : null;
@@ -846,7 +826,6 @@ export default function ReschedulePopup({
                       )}
                     />
                   </Grid>
-
                   <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
                     <Controller
                       name="completion_notes"

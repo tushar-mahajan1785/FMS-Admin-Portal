@@ -1,10 +1,14 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { axiosApi } from "../../common/api";
+import { axiosApi, MULTIPART_HEADER } from "../../common/api";
 import { getErrorResponse } from "../../utils";
 import {
   API_PM_ACTIVITY_LIST,
-  API_SELECTED_ASSET_REMOVE,
+  API_PM_ACTIVITY_REMOVE,
   API_PM_ACTIVITY_ADD,
+  API_PM_ACTIVITY_DETAILS,
+  API_PM_ACTIVITY_MARK_DONE,
+  API_PM_ACTIVITY_EDIT,
+  API_PM_ACTIVITY_VIEW_REPORT,
 } from "../../common/api/constants";
 
 export const defaultPMScheduleData = {
@@ -46,11 +50,11 @@ export const actionPMScheduleData = createAsyncThunk(
   }
 );
 
-export const actionDeleteSelectedAsset = createAsyncThunk(
-  "pm-activity/actionDeleteSelectedAsset",
+export const actionDeletePmActivity = createAsyncThunk(
+  "pm-activity/actionDeletePmActivity",
   async (params) => {
     try {
-      const response = await axiosApi.post(API_SELECTED_ASSET_REMOVE, params);
+      const response = await axiosApi.post(API_PM_ACTIVITY_REMOVE, params);
 
       return response.status !== 200 ? getErrorResponse() : response.data;
     } catch (error) {
@@ -59,13 +63,72 @@ export const actionDeleteSelectedAsset = createAsyncThunk(
   }
 );
 
-export const PmActivityStore = createSlice({
+export const actionPMScheduleDetails = createAsyncThunk(
+  "pm-activity/actionPMScheduleDetails",
+  async (params) => {
+    try {
+      const response = await axiosApi.post(API_PM_ACTIVITY_DETAILS, params);
+
+      return response.status !== 200 ? getErrorResponse() : response.data;
+    } catch (error) {
+      return error;
+    }
+  }
+);
+export const actionPMScheduleMarkDone = createAsyncThunk(
+  "pm-activity/actionPMScheduleMarkDone",
+  async (params) => {
+    try {
+      const response = await axiosApi.post(
+        API_PM_ACTIVITY_MARK_DONE,
+        params,
+        MULTIPART_HEADER
+      );
+
+      return response.status !== 200 ? getErrorResponse() : response.data;
+    } catch (error) {
+      return error;
+    }
+  }
+);
+
+export const actionPMActivityViewReport = createAsyncThunk(
+  "pm-activity/actionPMActivityViewReport",
+  async (params) => {
+    try {
+      const response = await axiosApi.post(API_PM_ACTIVITY_VIEW_REPORT, params);
+
+      return response.status !== 200 ? getErrorResponse() : response.data;
+    } catch (error) {
+      return error;
+    }
+  }
+);
+
+export const actionPMScheduleEdit = createAsyncThunk(
+  "pm-activity/actionPMScheduleEdit",
+  async (params) => {
+    try {
+      const response = await axiosApi.post(API_PM_ACTIVITY_EDIT, params);
+
+      return response.status !== 200 ? getErrorResponse() : response.data;
+    } catch (error) {
+      return error;
+    }
+  }
+);
+
+export const pmActivityStore = createSlice({
   name: "pm-activity",
   initialState: {
     pmScheduleList: null,
     pmScheduleData: null,
-    deleteSelectedAsset: null,
+    deletePmActivity: null,
     pmScheduleAdd: null,
+    pmScheduleDetails: null,
+    pmScheduleMarkDone: null,
+    pmScheduleEdit: null,
+    pmActivityViewReport: null,
   },
 
   reducers: {
@@ -75,11 +138,23 @@ export const PmActivityStore = createSlice({
     resetPmScheduleDataResponse: (state) => {
       state.pmScheduleData = null;
     },
-    resetPmScheduleSelectedAssetResponse: (state) => {
-      state.deleteSelectedAsset = null;
+    resetDeletePmActivityResponse: (state) => {
+      state.deletePmActivity = null;
     },
     resetPmScheduleAddAssetResponse: (state) => {
       state.pmScheduleAdd = null;
+    },
+    resetPmScheduleDetailsResponse: (state) => {
+      state.pmScheduleDetails = null;
+    },
+    resetPmScheduleMarkDoneResponse: (state) => {
+      state.pmScheduleMarkDone = null;
+    },
+    resetPmScheduleEditResponse: (state) => {
+      state.pmScheduleEdit = null;
+    },
+    resetPmActivityViewReportResponse: (state) => {
+      state.pmActivityViewReport = null;
     },
   },
   extraReducers: (builder) => {
@@ -90,11 +165,23 @@ export const PmActivityStore = createSlice({
       .addCase(actionPMScheduleData.fulfilled, (state, action) => {
         state.pmScheduleData = action.payload;
       })
-      .addCase(actionDeleteSelectedAsset.fulfilled, (state, action) => {
-        state.deleteSelectedAsset = action.payload;
+      .addCase(actionDeletePmActivity.fulfilled, (state, action) => {
+        state.deletePmActivity = action.payload;
       })
       .addCase(actionPMScheduleAdd.fulfilled, (state, action) => {
         state.pmScheduleAdd = action.payload;
+      })
+      .addCase(actionPMScheduleDetails.fulfilled, (state, action) => {
+        state.pmScheduleDetails = action.payload;
+      })
+      .addCase(actionPMScheduleMarkDone.fulfilled, (state, action) => {
+        state.pmScheduleMarkDone = action.payload;
+      })
+      .addCase(actionPMScheduleEdit.fulfilled, (state, action) => {
+        state.pmScheduleEdit = action.payload;
+      })
+      .addCase(actionPMActivityViewReport.fulfilled, (state, action) => {
+        state.pmActivityViewReport = action.payload;
       });
   },
 });
@@ -102,8 +189,12 @@ export const PmActivityStore = createSlice({
 export const {
   resetPmScheduleListResponse,
   resetPmScheduleDataResponse,
-  resetPmScheduleSelectedAssetResponse,
+  resetDeletePmActivityResponse,
   resetPmScheduleAddAssetResponse,
-} = PmActivityStore.actions;
+  resetPmScheduleDetailsResponse,
+  resetPmScheduleMarkDoneResponse,
+  resetPmScheduleEditResponse,
+  resetPmActivityViewReportResponse,
+} = pmActivityStore.actions;
 
-export default PmActivityStore.reducer;
+export default pmActivityStore.reducer;

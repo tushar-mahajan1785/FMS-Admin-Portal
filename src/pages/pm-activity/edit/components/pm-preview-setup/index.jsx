@@ -13,9 +13,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import TypographyComponent from "../../../../../components/custom-typography";
 import EmptyContent from "../../../../../components/empty_content";
-
 import { IMAGES_SCREEN_NO_DATA } from "../../../../../constants";
-
 import { DataGrid } from "@mui/x-data-grid";
 import CustomChip from "../../../../../components/custom-chip";
 import moment from "moment/moment";
@@ -42,17 +40,14 @@ export default function PMActivityPreviewSetUp() {
     );
     let activityData = {
       ...currentAssetData,
-      frequency_data: {
-        ...activity,
-        scheduled_date: activity?.date,
-      },
+      frequency_data: activity,
       type: "reschedule",
       pm_details: {
         title: pmScheduleData?.selected_asset_id
           ? // Find the selected asset and get its description
             pmScheduleData?.assets.find(
               (asset) => asset.asset_id === pmScheduleData.selected_asset_id
-            )?.asset_description
+            )?.asset_name
           : "",
         frequency: pmScheduleData?.pm_details?.frequency,
         schedule_start_date: pmScheduleData?.pm_details?.schedule_start_date,
@@ -439,7 +434,7 @@ export default function PMActivityPreviewSetUp() {
                         }}
                       >
                         <TypographyComponent fontSize={14} fontWeight={400}>
-                          {asset?.asset_description}
+                          {asset?.asset_name}
                         </TypographyComponent>
                       </Stack>
                     ))
@@ -460,7 +455,7 @@ export default function PMActivityPreviewSetUp() {
               ? // Find the selected asset and get its description
                 pmScheduleData.assets.find(
                   (asset) => asset.asset_id === pmScheduleData.selected_asset_id
-                )?.asset_description + " PM Activity Schedule"
+                )?.asset_name + " PM Activity Schedule"
               : "PM Activity Schedule"}
           </Typography>
         </Stack>
