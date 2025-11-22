@@ -264,4 +264,14 @@ export const getCurrentStatusColor = (status) => {
   return color
 }
 
+/*
+* Generate Percentage function
+*/
+export const getPercentage = (value, total) => {
+  let count = (Number(value) / Number(total))
+  let percentage = count * Number(100)
+
+  return percentage
+}
+
 

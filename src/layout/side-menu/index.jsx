@@ -83,7 +83,7 @@ export const sideMenuItems = [
       },
     ],
   },
-    {
+  {
     group: "Documents",
     icon: ReportsIcon,
     items: [
@@ -100,5 +100,11 @@ export const sideMenuItems = [
         permission: "DOCUMENT_CATEGORIES",
       }
     ],
-  }
+  },
+  {
+    title: "Checklist",
+    path: "/checklist",
+    icon: ReportsIcon,
+    permission: "DASHBOARD",
+  },
 ];
