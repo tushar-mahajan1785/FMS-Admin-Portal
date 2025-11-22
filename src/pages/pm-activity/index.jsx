@@ -67,7 +67,7 @@ export default function PmActivity() {
   /** Hooks **/
   const theme = useTheme();
   const dispatch = useDispatch();
-  const { logout } = useAuth();
+  const { logout, hasPermission } = useAuth();
   const { showSnackbar } = useSnackbar();
   const branch = useBranch();
 
@@ -222,22 +222,27 @@ export default function PmActivity() {
         return (
           <React.Fragment>
             <Box sx={{ display: "flex", alignItems: "center" }}>
-              <Tooltip title="Delete" followCursor placement="top">
-                {/* Delete Pm Activity  */}
-                <IconButton
-                  onClick={() => {
-                    let details = {
-                      uuid: params?.row?.uuid,
-                      title: "Delete PM Activity",
-                      text: " Are you sure you want to delete this PM Activity? This action cannot be undone.",
-                    };
-                    setSelectedPmActivityData(details);
-                    setOpenDeletePmActivityPopup(true);
-                  }}
-                >
-                  <DeleteIcon stroke={"#181D27"} />
-                </IconButton>
-              </Tooltip>
+              {
+                hasPermission('PM_ACTIVITY_DELETE') ?
+                  <Tooltip title="Delete" followCursor placement="top">
+                    {/* Delete Pm Activity  */}
+                    <IconButton
+                      onClick={() => {
+                        let details = {
+                          uuid: params?.row?.uuid,
+                          title: "Delete PM Activity",
+                          text: " Are you sure you want to delete this PM Activity? This action cannot be undone.",
+                        };
+                        setSelectedPmActivityData(details);
+                        setOpenDeletePmActivityPopup(true);
+                      }}
+                    >
+                      <DeleteIcon stroke={"#181D27"} />
+                    </IconButton>
+                  </Tooltip>
+                  :
+                  <></>
+              }
             </Box>
           </React.Fragment>
         );
@@ -544,96 +549,86 @@ export default function PmActivity() {
   return (
     <React.Fragment>
       <Stack>
-        <Stack sx={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <Stack
-            sx={{
-              flexDirection: "row",
-              columnGap: 1,
-              alignItems: "center",
-              height: "100%",
-              justifyContent: "center",
-            }}
-          >
-            <Stack>
-              <TypographyComponent
-                color={theme.palette.grey.primary}
-                fontSize={24}
-                fontWeight={500}
-              >
-                Preventive Maintenance Activity
-              </TypographyComponent>
-            </Stack>
-          </Stack>
+        <Stack sx={{ flexDirection: { xs: "column", sm: 'row', md: 'row', lg: 'row', xl: 'row' }, justifyContent: "space-between", gap: 1 }}>
           <Stack>
-            <Button
-              size={"small"}
-              sx={{
-                textTransform: "capitalize",
-                px: "18px",
-                py: "10px",
-                borderRadius: "8px",
-                backgroundColor: theme.palette.primary[600],
-                color: theme.palette.common.white,
-                fontSize: 16,
-                fontWeight: 600,
-                borderColor: theme.palette.primary[600],
-              }}
-              onClick={() => {
-                setOpenAddPmSchedule(true);
-              }}
-              variant="contained"
+            <TypographyComponent
+              color={theme.palette.grey.primary}
+              fontSize={24}
+              fontWeight={500}
             >
-              <AddIcon
-                sx={{
-                  color: "white",
-                  fontSize: { xs: "20px", sm: "20px", md: "22px" },
-                }}
-              />
-              Add New Schedule
-            </Button>
+              Preventive Maintenance Activity
+            </TypographyComponent>
           </Stack>
+          {
+            hasPermission('PM_ACTIVITY_ADD') ?
+              <Stack>
+                <Button
+                  size={"small"}
+                  sx={{
+                    textTransform: "capitalize",
+                    px: "18px",
+                    py: "10px",
+                    borderRadius: "8px",
+                    backgroundColor: theme.palette.primary[600],
+                    color: theme.palette.common.white,
+                    fontSize: 16,
+                    fontWeight: 600,
+                    borderColor: theme.palette.primary[600],
+                  }}
+                  onClick={() => {
+                    setOpenAddPmSchedule(true);
+                  }}
+                  variant="contained"
+                >
+                  <AddIcon
+                    sx={{
+                      color: "white",
+                      fontSize: { xs: "20px", sm: "20px", md: "22px" },
+                    }}
+                  />
+                  Add New Schedule
+                </Button>
+              </Stack>
+              :
+              <></>
+          }
         </Stack>
         <Box
+          display="grid"
+          gap={2}
+          gridTemplateColumns={{
+            xs: "repeat(2, 1fr)",
+            sm: "repeat(3, 1fr)",
+            md: "repeat(3, 1fr)",
+            lg: "repeat(5, 1fr)",
+          }}
           sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            borderRadius: "8px",
-            columnGap: 2,
+            my: 2,
+            alignItems: "stretch", // ensures equal height
           }}
         >
           {getArrPMActivityCounts?.map((item, index) => (
             <Card
               key={index}
               sx={{
-                flex: 1,
                 display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
                 flexDirection: "column",
-
+                justifyContent: "center",
+                alignItems: "center",
                 p: 2,
-                my: 2,
                 borderRadius: "8px",
-                overflow: "hidden",
                 bgcolor: "#fff",
+                height: "100%", // equal height cards
+                boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
               }}
             >
               <Stack
-                sx={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  width: "100%",
-                  alignItems: "center",
-                }}
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                width="100%"
               >
-                <Stack
-                  sx={{
-                    flexDirection: "row",
-                    columnGap: 1,
-                    alignItems: "center",
-                  }}
-                >
+                <Stack direction="row" spacing={1} alignItems="center">
                   <Box
                     sx={{
                       width: 48,
@@ -650,28 +645,17 @@ export default function PmActivity() {
                     {item.icon}
                   </Box>
                   <Stack>
-                    {/* Label Top */}
                     <Typography
                       fontSize={14}
                       fontWeight={400}
-                      sx={{
-                        color: theme.palette.grey[650],
-                        fontSize: "0.85rem",
-                        lineHeight: "20px",
-                      }}
+                      sx={{ color: theme.palette.grey[650], lineHeight: "20px" }}
                     >
                       {item.labelTop}
                     </Typography>
-
-                    {/* Label Bottom */}
                     <Typography
                       fontSize={14}
                       fontWeight={400}
-                      sx={{
-                        color: theme.palette.grey[650],
-                        fontSize: "0.85rem",
-                        lineHeight: "20px",
-                      }}
+                      sx={{ color: theme.palette.grey[650], lineHeight: "20px" }}
                     >
                       {item.labelBottom}
                     </Typography>
@@ -680,10 +664,9 @@ export default function PmActivity() {
 
                 <Typography
                   fontSize={24}
-                  fontWeight={600}
+                  fontWeight={700}
                   sx={{
                     color: theme.palette.primary[600],
-                    fontWeight: 700,
                     mt: 0.3,
                   }}
                 >
@@ -696,63 +679,19 @@ export default function PmActivity() {
       </Stack>
       <Grid container spacing={"24px"}>
         <Grid size={{ xs: 12, sm: 12, md: 12, lg: 9, xl: 9 }}>
-          <Stack
-            sx={{
-              border: `1px solid ${theme.palette.grey[200]}`,
-              borderRadius: "8px",
-              // minHeight: "772px",
-              // height: "100%",
-              background: theme.palette.common.white,
-              pb: 1,
-            }}
-          >
-            <Stack
-              sx={{
-                flexDirection: "row",
-                background: theme.palette.common.white,
-                justifyContent: "space-between",
-                alignItems: "center",
-                borderRadius: "8px",
-                py: 2,
-              }}
-            >
-              <Stack
-                sx={{
-                  flexDirection: "row",
-                  columnGap: 1,
-                  paddingX: "20px",
-                  paddingTop: "20px",
-                  alignItems: "center",
-                }}
-              >
+          <Stack sx={{ border: `1px solid ${theme.palette.grey[200]}`, borderRadius: '8px', background: theme.palette.common.white, pb: 1 }}>
+            <Stack sx={{ flexDirection: { xs: 'column', sm: 'column', md: 'row' }, background: theme.palette.common.white, width: '100%', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'flex-start', md: 'center' }, borderRadius: '8px', py: 1 }}>
+              <Stack sx={{ flexDirection: 'row', columnGap: 1, height: '100%', padding: '15px' }}>
                 <Stack>
-                  <TypographyComponent
-                    fontSize={18}
-                    fontWeight={500}
-                    sx={{ color: theme.palette.grey[700] }}
-                  >
-                    PM Schedule List
-                  </TypographyComponent>
+                  <TypographyComponent fontSize={18} fontWeight={500} sx={{ color: theme.palette.grey[700] }}>PM Schedule List</TypographyComponent>
                 </Stack>
                 <Chip
                   label={total && total !== null ? `${total?.toString().padStart(2, "0")} Schedules` : '0 Schedules'}
                   size="small"
-                  sx={{
-                    bgcolor: theme.palette.primary[50],
-                    color: theme.palette.primary[600],
-                    fontSize: 14,
-                    fontWeight: 500,
-                  }}
+                  sx={{ bgcolor: theme.palette.primary[50], color: theme.palette.primary[600], fontSize: 14, fontWeight: 500 }}
                 />
               </Stack>
-              <Stack
-                sx={{
-                  paddingRight: "15px",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 1,
-                }}
-              >
+              <Stack sx={{ paddingLeft: { xs: '15px', sm: '15px', md: 'none' }, paddingRight: '15px', flexDirection: { xs: 'column', sm: 'row', md: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1 }}>
                 <SearchInput
                   id="search-schedules"
                   placeholder="Search Schedules"

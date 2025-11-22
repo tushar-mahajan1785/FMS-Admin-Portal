@@ -290,12 +290,12 @@ export default function PMActivityEdit({ open, handleClose, objData }) {
       const assetsWithGeneratedDates =
         pmData?.assets && pmData?.assets !== null && pmData?.assets.length > 0
           ? pmData?.assets?.map((asset) => ({
-              ...asset,
-              frequency_exceptions: generateFrequencyDates(
-                data.frequency,
-                data.schedule_start_date
-              ),
-            }))
+            ...asset,
+            frequency_exceptions: generateFrequencyDates(
+              data.frequency,
+              data.schedule_start_date
+            ),
+          }))
           : [];
 
       pmData.assets = assetsWithGeneratedDates;
@@ -305,8 +305,8 @@ export default function PMActivityEdit({ open, handleClose, objData }) {
       pmData.assets =
         pmData?.assets && pmData?.assets !== null && pmData?.assets.length > 0
           ? pmData?.assets?.map((asset) => ({
-              ...asset,
-            }))
+            ...asset,
+          }))
           : [];
     }
 
@@ -380,18 +380,9 @@ export default function PMActivityEdit({ open, handleClose, objData }) {
       variant="temporary"
       onClose={handleClose}
       ModalProps={{ keepMounted: true }}
-      sx={{
-        "& .MuiDrawer-paper": {
-          width: { xs: "100%", md: "100%", lg: "86%" },
-        },
-        overflow: "hidden",
-      }}
+      sx={{ '& .MuiDrawer-paper': { width: { xs: '100%', sm: '100%', md: '100%', lg: '100%', xl: '86%' } } }}
     >
-      <Stack
-        sx={{ height: "100%" }}
-        justifyContent={"flex-start"}
-        flexDirection={"column"}
-      >
+      <Stack sx={{ height: '100%' }} justifyContent={'flex-start'} flexDirection={'column'}>
         <FormHeader
           color={theme.palette.primary[600]}
           size={48}
@@ -409,19 +400,20 @@ export default function PMActivityEdit({ open, handleClose, objData }) {
           <Stack
             sx={{
               px: 4,
-              pb: 4,
+              flexGrow: 1,
+              overflowY: 'auto'
             }}
           >
             {activeStep !== steps.length && getStepContent(activeStep)}
           </Stack>
+          <Divider sx={{ m: 2 }} />
           {activeStep == 1 ? (
             <>
-              <Divider sx={{ m: 2 }} />
               <Stack
                 direction="row"
                 justifyContent="space-between"
                 alignItems="center"
-                sx={{ p: 3 }}
+                sx={{ px: 2, pb: 2 }}
               >
                 <Button
                   sx={{
@@ -463,12 +455,11 @@ export default function PMActivityEdit({ open, handleClose, objData }) {
             </>
           ) : (
             <React.Fragment>
-              <Divider sx={{ m: 2 }} />
               <Stack
                 direction="row"
                 justifyContent="space-between"
                 alignItems="center"
-                sx={{ p: 2 }}
+                sx={{ px: 2, pb: 2 }}
               >
                 <Button
                   sx={{
