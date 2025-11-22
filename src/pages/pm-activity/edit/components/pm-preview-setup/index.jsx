@@ -22,6 +22,7 @@ import PmUserCircleIcon from "../../../../../assets/icons/PmUserCircleIcon";
 import PmEditReschedulerIcon from "../../../../../assets/icons/PMEditReshedulerIcon";
 import ReschedulePopup from "../edit-reschedule";
 import { actionPMScheduleData } from "../../../../../store/pm-activity";
+import ListComponents from "../../../../../components/list-components";
 
 export default function PMActivityPreviewSetUp() {
   const theme = useTheme();
@@ -45,18 +46,18 @@ export default function PMActivityPreviewSetUp() {
       pm_details: {
         title: pmScheduleData?.selected_asset_id
           ? // Find the selected asset and get its description
-            pmScheduleData?.assets.find(
-              (asset) => asset.asset_id === pmScheduleData.selected_asset_id
-            )?.asset_name
+          pmScheduleData?.assets.find(
+            (asset) => asset.asset_id === pmScheduleData.selected_asset_id
+          )?.asset_name
           : "",
         frequency: pmScheduleData?.pm_details?.frequency,
         schedule_start_date: pmScheduleData?.pm_details?.schedule_start_date,
         status: pmScheduleData?.pm_details?.status,
         location: pmScheduleData?.selected_asset_id
           ? // Find the selected asset and get its description
-            pmScheduleData?.assets.find(
-              (asset) => asset.asset_id === pmScheduleData.selected_asset_id
-            )?.location
+          pmScheduleData?.assets.find(
+            (asset) => asset.asset_id === pmScheduleData.selected_asset_id
+          )?.location
           : "",
       },
     };
@@ -67,7 +68,7 @@ export default function PMActivityPreviewSetUp() {
 
   const columns = [
     {
-      flex: 0.3,
+      flex: 0.1,
       field: "activity",
       headerName: "Activity #",
       width: 100,
@@ -84,7 +85,7 @@ export default function PMActivityPreviewSetUp() {
       },
     },
     {
-      flex: 0.3,
+      flex: 0.1,
       field: "date_time",
       headerName: "Date & Time",
       editable: false,
@@ -110,7 +111,7 @@ export default function PMActivityPreviewSetUp() {
       },
     },
     {
-      flex: 0.3,
+      flex: 0.1,
       field: "status",
       headerName: "Status",
       renderCell: (params) => {
@@ -136,7 +137,7 @@ export default function PMActivityPreviewSetUp() {
       },
     },
     {
-      flex: 0.3,
+      flex: 0.1,
       field: "completed_date",
       headerName: "Completed Date",
       editable: true,
@@ -152,8 +153,8 @@ export default function PMActivityPreviewSetUp() {
               >
                 {params.row.completed_date && params.row.completed_date !== null
                   ? moment(params.row.completed_date, "YYYY-MM-DD").format(
-                      "DD MMM YYYY"
-                    )
+                    "DD MMM YYYY"
+                  )
                   : ""}
               </TypographyComponent>
             ) : (
@@ -164,7 +165,7 @@ export default function PMActivityPreviewSetUp() {
       },
     },
     {
-      flex: 0.3,
+      flex: 0.1,
       field: "supervision_by",
       headerName: "Supervision By",
       description: "This column has a value getter and is not sortable.",
@@ -182,8 +183,7 @@ export default function PMActivityPreviewSetUp() {
       },
     },
     {
-      flex: 0.3,
-
+      flex: 0.1,
       field: "time",
       headerName: "Time",
       editable: true,
@@ -191,8 +191,8 @@ export default function PMActivityPreviewSetUp() {
         return (
           <Stack sx={{ height: "100%", justifyContent: "center" }}>
             {params?.row?.time &&
-            params?.row?.time !== null &&
-            !["Open"].includes(params.row.time) ? (
+              params?.row?.time !== null &&
+              !["Open"].includes(params.row.time) ? (
               <TypographyComponent
                 color={theme.palette.grey.primary}
                 fontSize={14}
@@ -211,14 +211,13 @@ export default function PMActivityPreviewSetUp() {
       },
     },
     {
-      flex: 0.4,
-
+      flex: 0.1,
       field: "additional_info",
       headerName: "Additional Information",
       editable: true,
     },
     {
-      flex: 0.5,
+      flex: 0.2,
       field: "actions",
       headerName: "Actions",
       editable: true,
@@ -280,233 +279,209 @@ export default function PMActivityPreviewSetUp() {
   };
 
   return (
-    <Box>
-      <Card sx={{ p: 3, borderRadius: 3, boxShadow: "none" }}>
-        {/* Schedule Details */}
-        <Stack>
-          <Typography fontSize={16} fontWeight={600} mb={2}>
-            Schedule Details
-          </Typography>
-        </Stack>
+    <React.Fragment>
+      {/* Schedule Details */}
+      <Stack>
+        <Typography fontSize={16} fontWeight={600} mb={2}>
+          Schedule Details
+        </Typography>
+      </Stack>
 
-        <Grid
-          spacing={4}
-          mb={3}
-          direction="row"
-          sx={{
-            borderRadius: "16px",
-            padding: "24px",
-            border: `1px solid ${theme.palette.grey[300]}`,
-            height: "100%",
-          }}
-          size={{ xs: 12, sm: 12, md: 8 }}
-        >
-          <Grid container spacing={4} sx={{ width: "100%" }}>
-            <Grid size={{ xs: 12, sm: 12, md: 4 }}>
-              <Typography
-                fontSize={14}
-                fontWeight={500}
-                variant="body2"
-                sx={{ color: theme.palette.grey[500] }}
-              >
-                PM Activity Title
-              </Typography>
-              <Typography fontSize={16} fontWeight={500}>
-                {pmScheduleData?.pm_details?.title || "N/A"}
-              </Typography>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 12, md: 2 }}>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                fontSize={14}
-                fontWeight={500}
-                sx={{ color: theme.palette.grey[500] }}
-              >
-                Frequency
-              </Typography>
-              <Typography fontSize={16} fontWeight={500}>
-                {pmScheduleData?.pm_details?.frequency || "N/A"}
-              </Typography>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 12, md: 3 }}>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                fontSize={14}
-                fontWeight={500}
-                sx={{ color: theme.palette.grey[500] }}
-              >
-                Schedule Start Date
-              </Typography>
-              <Typography fontSize={16} fontWeight={500}>
-                {pmScheduleData?.pm_details?.schedule_start_date
-                  ? formatDisplayDate(
-                      pmScheduleData.pm_details.schedule_start_date
-                    )
-                  : "N/A"}
-              </Typography>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 12, md: 2 }}>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                fontSize={14}
-                fontWeight={500}
-                sx={{ color: theme.palette.grey[500] }}
-              >
-                Status
-              </Typography>
-              <Typography fontSize={16} fontWeight={500}>
-                {pmScheduleData?.pm_details?.status || "N/A"}
-              </Typography>
-            </Grid>
+      <Grid
+        spacing={4}
+        mb={3}
+        direction="row"
+        sx={{
+          borderRadius: "16px",
+          padding: "24px",
+          border: `1px solid ${theme.palette.grey[300]}`,
+          height: "100%",
+        }}
+        size={{ xs: 12, sm: 12, md: 8 }}
+      >
+        <Grid container spacing={4} sx={{ width: "100%" }}>
+          <Grid size={{ xs: 12, sm: 12, md: 4 }}>
+            <Typography
+              fontSize={14}
+              fontWeight={500}
+              variant="body2"
+              sx={{ color: theme.palette.grey[500] }}
+            >
+              PM Activity Title
+            </Typography>
+            <Typography fontSize={16} fontWeight={500}>
+              {pmScheduleData?.pm_details?.title || "N/A"}
+            </Typography>
           </Grid>
-          <Divider sx={{ my: 3, width: "100%" }} />
-          <Grid>
-            {/* Second Row - Assets Section */}
-            <Grid size={{ xs: 12, sm: 12 }} spacing={4}>
-              <Grid size={{ xs: 12 }}>
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  sx={{ width: "100%", color: theme.palette.grey[500] }}
-                >
-                  <Typography fontSize={16} fontWeight={600}>
-                    Assets in this PM Activity
-                  </Typography>
-                  <Typography fontSize={16} fontWeight={600}>
-                    ( {pmScheduleData?.assets?.length} )
-                  </Typography>
-                </Stack>
-              </Grid>
+          <Grid size={{ xs: 12, sm: 12, md: 2 }}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              fontSize={14}
+              fontWeight={500}
+              sx={{ color: theme.palette.grey[500] }}
+            >
+              Frequency
+            </Typography>
+            <Typography fontSize={16} fontWeight={500}>
+              {pmScheduleData?.pm_details?.frequency || "N/A"}
+            </Typography>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 12, md: 3 }}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              fontSize={14}
+              fontWeight={500}
+              sx={{ color: theme.palette.grey[500] }}
+            >
+              Schedule Start Date
+            </Typography>
+            <Typography fontSize={16} fontWeight={500}>
+              {pmScheduleData?.pm_details?.schedule_start_date
+                ? formatDisplayDate(
+                  pmScheduleData.pm_details.schedule_start_date
+                )
+                : "N/A"}
+            </Typography>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 12, md: 2 }}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              fontSize={14}
+              fontWeight={500}
+              sx={{ color: theme.palette.grey[500] }}
+            >
+              Status
+            </Typography>
+            <Typography fontSize={16} fontWeight={500}>
+              {pmScheduleData?.pm_details?.status || "N/A"}
+            </Typography>
+          </Grid>
+        </Grid>
+        <Divider sx={{ my: 3, width: "100%" }} />
+        <Grid>
+          {/* Second Row - Assets Section */}
+          <Grid size={{ xs: 12, sm: 12 }} spacing={4}>
+            <Grid size={{ xs: 12 }}>
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{ width: "100%", color: theme.palette.grey[500] }}
+              >
+                <Typography fontSize={16} fontWeight={600}>
+                  Assets in this PM Activity
+                </Typography>
+                <Typography fontSize={16} fontWeight={600}>
+                  ( {pmScheduleData?.assets?.length} )
+                </Typography>
+              </Stack>
+            </Grid>
 
-              <Grid size={{ xs: 12, sm: 12 }}>
-                <Box
-                  sx={{
-                    borderRadius: "16px",
-                    minHeight: "80px",
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 2,
-                    my: 1,
-                    alignItems: "flex-start",
-                  }}
-                >
-                  {pmScheduleData?.assets?.length > 0 ? (
-                    pmScheduleData?.assets?.map((asset) => (
-                      <Stack
-                        sx={{
-                          background:
-                            pmScheduleData?.selected_asset_id ===
+            <Grid size={{ xs: 12, sm: 12 }}>
+              <Box
+                sx={{
+                  borderRadius: "16px",
+                  minHeight: "80px",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 2,
+                  my: 1,
+                  alignItems: "flex-start",
+                }}
+              >
+                {pmScheduleData?.assets?.length > 0 ? (
+                  pmScheduleData?.assets?.map((asset) => (
+                    <Stack
+                      sx={{
+                        background:
+                          pmScheduleData?.selected_asset_id ===
                             asset?.asset_id
-                              ? theme.palette.primary[600]
-                              : theme.palette.common.white,
-                          border:
-                            pmScheduleData?.selected_asset_id ===
+                            ? theme.palette.primary[600]
+                            : theme.palette.common.white,
+                        border:
+                          pmScheduleData?.selected_asset_id ===
                             asset?.asset_id
-                              ? "none"
-                              : `1px solid ${theme.palette.grey[500]}`,
-                          color:
-                            pmScheduleData?.selected_asset_id ===
+                            ? "none"
+                            : `1px solid ${theme.palette.grey[500]}`,
+                        color:
+                          pmScheduleData?.selected_asset_id ===
                             asset?.asset_id
-                              ? theme.palette.common.white
-                              : theme.palette.grey[500],
-                          borderRadius: "8px",
-                          padding: "8px 16px",
-                          cursor: "pointer",
-                        }}
-                        onClick={() => {
-                          let pmData = Object.assign({}, pmScheduleData);
-                          pmData.selected_asset_id = asset?.asset_id;
-                          let currentAssetIndex = pmData.assets.findIndex(
-                            (obj) => obj?.asset_id === asset?.asset_id
+                            ? theme.palette.common.white
+                            : theme.palette.grey[500],
+                        borderRadius: "8px",
+                        padding: "8px 16px",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => {
+                        let pmData = Object.assign({}, pmScheduleData);
+                        pmData.selected_asset_id = asset?.asset_id;
+                        let currentAssetIndex = pmData.assets.findIndex(
+                          (obj) => obj?.asset_id === asset?.asset_id
+                        );
+                        if (currentAssetIndex > -1) {
+                          setFrequencyExceptionsData(
+                            pmData.assets[currentAssetIndex]
+                              .frequency_exceptions
                           );
-                          if (currentAssetIndex > -1) {
-                            setFrequencyExceptionsData(
-                              pmData.assets[currentAssetIndex]
-                                .frequency_exceptions
-                            );
-                          }
+                        }
 
-                          dispatch(actionPMScheduleData(pmData));
-                        }}
-                      >
-                        <TypographyComponent fontSize={14} fontWeight={400}>
-                          {asset?.asset_name}
-                        </TypographyComponent>
-                      </Stack>
-                    ))
-                  ) : (
-                    <Typography color="text.secondary">
-                      No assets selected
-                    </Typography>
-                  )}
-                </Box>
-              </Grid>
+                        dispatch(actionPMScheduleData(pmData));
+                      }}
+                    >
+                      <TypographyComponent fontSize={14} fontWeight={400}>
+                        {asset?.asset_name}
+                      </TypographyComponent>
+                    </Stack>
+                  ))
+                ) : (
+                  <Typography color="text.secondary">
+                    No assets selected
+                  </Typography>
+                )}
+              </Box>
             </Grid>
           </Grid>
         </Grid>
+      </Grid>
 
-        <Stack>
-          <Typography fontSize={16} fontWeight={600} mb={2}>
-            {pmScheduleData?.selected_asset_id
-              ? // Find the selected asset and get its description
-                pmScheduleData.assets.find(
-                  (asset) => asset.asset_id === pmScheduleData.selected_asset_id
-                )?.asset_name + " PM Activity Schedule"
-              : "PM Activity Schedule"}
-          </Typography>
-        </Stack>
+      <Stack>
+        <Typography fontSize={16} fontWeight={600} mb={2}>
+          {pmScheduleData?.selected_asset_id
+            ? // Find the selected asset and get its description
+            pmScheduleData.assets.find(
+              (asset) => asset.asset_id === pmScheduleData.selected_asset_id
+            )?.asset_name + " PM Activity Schedule"
+            : "PM Activity Schedule"}
+        </Typography>
+      </Stack>
 
-        {/* Frequency Exceptions */}
-        {frequencyExceptionsData &&
+      {/* Frequency Exceptions */}
+      {frequencyExceptionsData &&
         frequencyExceptionsData !== null &&
         frequencyExceptionsData.length > 0 ? (
-          <Box sx={{ height: "330px", width: "100%" }}>
-            <DataGrid
-              sx={{
-                backgroundColor: "white",
-                overflowX: "auto",
-                border: `1px solid ${theme.palette.grey[300]}`,
-                borderRadius: "16px",
-                minWidth: "max-content",
-                "& .MuiDataGrid-virtualScroller": {
-                  overflowX: "auto !important", // enable horizontal scroll
-                },
-                // header container
-                "& .MuiDataGrid-columnHeaders": {
-                  backgroundColor: theme.palette.grey[50],
-                },
-
-                // every header cell
-                "& .MuiDataGrid-columnHeader": {
-                  backgroundColor: theme.palette.grey[50],
-                  fontWeight: "bold",
-                },
-
-                // header text
-                "& .MuiDataGrid-columnHeaderTitle": {
-                  fontWeight: "bold",
-                },
-              }}
-              rows={frequencyExceptionsData}
-              columns={columns}
-              disableRowSelectionOnClick
-              hideFooter
-            />
-          </Box>
-        ) : (
-          <Stack sx={{ height: 480 }}>
-            <EmptyContent
-              imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND}
-              title={"No Frequency Exceptions Found"}
-              subTitle={""}
-            />
-          </Stack>
-        )}
-      </Card>
+        <Box sx={{ height: "330px", width: "100%" }}>
+          <ListComponents
+            rows={frequencyExceptionsData}
+            columns={columns}
+            isCheckbox={false}
+            hasPagination={false}
+            onChange={(selectedIds) => {
+              console.log("Selected row IDs in UsersList:", selectedIds);
+            }}
+          />
+        </Box>
+      ) : (
+        <Stack sx={{ height: 480 }}>
+          <EmptyContent
+            imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND}
+            title={"No Frequency Exceptions Found"}
+            subTitle={""}
+          />
+        </Stack>
+      )}
 
       <ReschedulePopup
         open={rescheduleOpen}
@@ -546,6 +521,6 @@ export default function PMActivityPreviewSetUp() {
           }
         }}
       />
-    </Box>
+    </React.Fragment>
   );
 }

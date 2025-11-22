@@ -58,6 +58,7 @@ import {
 } from "../../../../../store/pm-activity";
 import ClockIcon from "../../../../../assets/icons/ClockIcon";
 import { compressFile, getFormData } from "../../../../../utils";
+import { BootstrapDialog } from "../../../../../components/common";
 
 export default function ReschedulePopup({
   open,
@@ -337,17 +338,12 @@ export default function ReschedulePopup({
   };
 
   return (
-    <Dialog
+    <BootstrapDialog
       fullWidth
       fullScreen={isMDDown}
-      maxWidth="md"
-      onClose={handleClose}
-      sx={{
-        "& .MuiDialog-paper": {
-          overflow: "visible",
-          borderRadius: 3,
-        },
-      }}
+      maxWidth={'xl'}
+      onClose={() => handleClose()}
+      sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
       scroll="paper"
       open={open}
     >
@@ -420,7 +416,7 @@ export default function ReschedulePopup({
                 padding: "24px",
               }}
             >
-              <Grid size={{ xs: 12, sm: 12, md: 3, lg: 3, xl: 3 }}>
+              <Grid size={{ xs: 6, sm: 6, md: 3, lg: 3, xl: 3 }}>
                 <TypographyComponent
                   fontSize={14}
                   fontWeight={500}
@@ -437,11 +433,11 @@ export default function ReschedulePopup({
                   title={selectedActivity?.pm_details?.title}
                 >
                   {_.truncate(selectedActivity?.pm_details?.title, {
-                    length: 20,
+                    length: 35,
                   })}
                 </TypographyComponent>
               </Grid>
-              <Grid size={{ xs: 12, sm: 12, md: 3, lg: 3, xl: 3 }}>
+              <Grid size={{ xs: 6, sm: 6, md: 3, lg: 3, xl: 3 }}>
                 <TypographyComponent
                   fontSize={14}
                   fontWeight={500}
@@ -457,7 +453,7 @@ export default function ReschedulePopup({
                   {selectedActivity?.pm_details?.frequency}
                 </TypographyComponent>
               </Grid>
-              <Grid size={{ xs: 12, sm: 12, md: 3, lg: 3, xl: 3 }}>
+              <Grid size={{ xs: 6, sm: 6, md: 3, lg: 3, xl: 3 }}>
                 <TypographyComponent
                   fontSize={14}
                   fontWeight={500}
@@ -477,7 +473,7 @@ export default function ReschedulePopup({
                     ).format("DD MMM YYYY")}
                 </TypographyComponent>
               </Grid>
-              <Grid size={{ xs: 12, sm: 12, md: 3, lg: 3, xl: 3 }}>
+              <Grid size={{ xs: 6, sm: 6, md: 3, lg: 3, xl: 3 }}>
                 <TypographyComponent
                   fontSize={14}
                   fontWeight={500}
@@ -666,7 +662,7 @@ export default function ReschedulePopup({
               )}
               {selectedActivity?.type === "markAsDone" && (
                 <React.Fragment>
-                  <Grid size={{ xs: 12, sm: 12, md: 3, lg: 3, xl: 3 }}>
+                  <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
                     <Controller
                       name="completion_date"
                       control={control}
@@ -727,7 +723,7 @@ export default function ReschedulePopup({
                     />
                   </Grid>
 
-                  <Grid size={{ xs: 12, sm: 12, md: 3, lg: 3, xl: 3 }}>
+                  <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
                     <Controller
                       name="completed_by"
                       control={control}
@@ -751,7 +747,7 @@ export default function ReschedulePopup({
                       )}
                     />
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 12, md: 3, lg: 3, xl: 3 }}>
+                  <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
                     <Controller
                       name="supervised_by"
                       control={control}
@@ -772,7 +768,7 @@ export default function ReschedulePopup({
                       )}
                     />
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 12, md: 3, lg: 3, xl: 3 }}>
+                  <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
                     <Controller
                       name="duration"
                       control={control}
@@ -826,7 +822,7 @@ export default function ReschedulePopup({
                       )}
                     />
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
+                  <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
                     <Controller
                       name="completion_notes"
                       control={control}
@@ -860,7 +856,7 @@ export default function ReschedulePopup({
                       )}
                     />
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
+                  <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
                     <SectionHeader
                       title="Upload Files"
                       show_progress={0}
@@ -1012,6 +1008,6 @@ export default function ReschedulePopup({
           )}
         </Button>
       </DialogActions>
-    </Dialog>
+    </BootstrapDialog>
   );
 }

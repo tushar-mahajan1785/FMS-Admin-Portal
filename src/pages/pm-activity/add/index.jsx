@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useForm, Controller, FormProvider } from "react-hook-form";
+import { useForm, FormProvider } from "react-hook-form";
 import {
   Drawer,
   Button,
@@ -7,19 +7,10 @@ import {
   Divider,
   CircularProgress,
   IconButton,
-  Grid,
   useTheme,
-  MenuItem,
-  Box,
-  List,
-  ListItem,
-  ListItemText,
-  Avatar,
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import CustomTextField from "../../../components/text-field";
-import FormLabel from "../../../components/form-label";
 import { ERROR, SERVER_ERROR, UNAUTHORIZED } from "../../../constants";
 import { useDispatch, useSelector } from "react-redux";
 import FormHeader from "../../../components/form-header";
@@ -389,22 +380,13 @@ export default function AddPMSchedule({ open, handleClose }) {
   return (
     <Drawer
       open={open}
-      anchor="right"
-      variant="temporary"
+      anchor='right'
+      variant='temporary'
       onClose={handleClose}
       ModalProps={{ keepMounted: true }}
-      sx={{
-        "& .MuiDrawer-paper": {
-          width: { xs: "100%", md: "100%", lg: "86%" },
-        },
-        overflow: "hidden",
-      }}
+      sx={{ '& .MuiDrawer-paper': { width: { xs: '100%', sm: '100%', md: '100%', lg: '100%', xl: '86%' } } }}
     >
-      <Stack
-        sx={{ height: "100%" }}
-        justifyContent={"flex-start"}
-        flexDirection={"column"}
-      >
+      <Stack sx={{ height: '100%' }} justifyContent={'flex-start'} flexDirection={'column'}>
         <FormHeader
           color={theme.palette.primary[600]}
           size={48}
@@ -422,19 +404,21 @@ export default function AddPMSchedule({ open, handleClose }) {
           <Stack
             sx={{
               px: 4,
-              pb: 4,
+              flexGrow: 1,
+              overflowY: 'auto'
             }}
           >
             {activeStep !== steps.length && getStepContent(activeStep)}
           </Stack>
+          <Divider sx={{ m: 2 }} />
           {activeStep == 1 ? (
             <>
-              <Divider sx={{ m: 2 }} />
+
               <Stack
                 direction="row"
                 justifyContent="space-between"
                 alignItems="center"
-                sx={{ p: 3 }}
+                sx={{ px: 2, pb: 2 }}
               >
                 <Button
                   sx={{
@@ -476,12 +460,11 @@ export default function AddPMSchedule({ open, handleClose }) {
             </>
           ) : (
             <React.Fragment>
-              <Divider sx={{ m: 2 }} />
               <Stack
                 direction="row"
                 justifyContent="space-between"
                 alignItems="center"
-                sx={{ p: 2 }}
+                sx={{ px: 2, pb: 2 }}
               >
                 <Button
                   sx={{
