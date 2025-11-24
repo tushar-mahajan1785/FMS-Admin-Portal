@@ -341,7 +341,7 @@ export default function ChecklistAssetTypes() {
             <Grid container spacing={3}>
                 {arrAssetTypesData && arrAssetTypesData?.length > 0 &&
                     arrAssetTypesData.map((objAsset) => (
-                        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4, xl: 4 }} key={objAsset.id}>
+                        <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 4 }} key={objAsset.id}>
                             <Card
                                 sx={{
                                     p: 3,

@@ -11,6 +11,7 @@ import FileXIcon from "../../../assets/icons/FileXIcon";
 import { useNavigate, useParams } from "react-router-dom";
 import ChevronLeftIcon from "../../../assets/icons/ChevronLeft";
 import AddIcon from '@mui/icons-material/Add';
+import AddChecklistAssetGroup from "./add";
 
 export default function ChecklistAssetGroups() {
     const theme = useTheme()
@@ -20,6 +21,7 @@ export default function ChecklistAssetGroups() {
     //Default Checklists Counts Array
     const [getCurrentAssetGroup, setGetCurrentAssetGroup] = useState(null)
     const [arrAssetGroupsData, setArrAssetGroupsData] = useState([])
+    const [openAddChecklistAssetGroup, setOpenAddChecklistAssetGroup] = useState(false)
 
     console.log('------assetId-------', assetId)
 
@@ -167,7 +169,8 @@ export default function ChecklistAssetGroups() {
                         size={'small'}
                         sx={{ textTransform: "capitalize", px: 2, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, borderColor: theme.palette.primary[600] }}
                         onClick={() => {
-                            // setOpenAddTicket(true)
+                            console.log('-------test--------')
+                            setOpenAddChecklistAssetGroup(true)
                         }}
                         variant='contained'
                     >
@@ -183,7 +186,7 @@ export default function ChecklistAssetGroups() {
             <Grid container spacing={3}>
                 {arrAssetGroupsData && arrAssetGroupsData?.length > 0 &&
                     arrAssetGroupsData.map((objAsset) => (
-                        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4, xl: 4 }} key={objAsset.id}>
+                        <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 4 }} key={objAsset.id}>
                             <Card
                                 sx={{
                                     p: 3,
@@ -215,7 +218,7 @@ export default function ChecklistAssetGroups() {
                                     <Box>
                                         <Stack sx={{ flexDirection: 'row', gap: 1, alignItems: 'center', padding: '4px 8px', borderRadius: '8px', background: theme.palette.success[50], border: `1px solid ${theme.palette.success[200]}` }}
                                             onClick={() => {
-                                                navigate(`view/${1}`)
+                                                navigate(`view/${objAsset?.id}`)
                                             }}>
                                             <EyeIcon size={'20'} stroke={theme.palette.success[600]} />
                                             <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.success[600] }}> View</TypographyComponent>
@@ -270,6 +273,12 @@ export default function ChecklistAssetGroups() {
                         </Grid>
                     ))}
             </Grid>
+            <AddChecklistAssetGroup
+                open={openAddChecklistAssetGroup}
+                handleClose={() => {
+                    setOpenAddChecklistAssetGroup(false)
+                }}
+            />
         </React.Fragment>
     </>)
 
