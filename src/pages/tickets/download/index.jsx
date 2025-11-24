@@ -16,7 +16,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import FormHeader from '../../../components/form-header';
 import KeyboardBackspaceIcon from '@mui/icons-material/KeyboardBackspace';
 
-export const TicketDownloadReport = () => {
+export default function TicketDownloadReport() {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { showSnackbar } = useSnackbar()
