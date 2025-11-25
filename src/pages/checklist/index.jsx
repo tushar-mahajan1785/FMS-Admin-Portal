@@ -7,7 +7,7 @@ export default function Checklist() {
     return (
         <Routes>
             <Route index element={<ChecklistAssetTypes />} />
-            <Route path="asset-groups/:assetId/view/:groupId" element={<ChecklistView />} />
+            <Route path="asset-groups/:assetId/view/:groupUuid" element={<ChecklistView />} />
             <Route path="asset-groups/:assetId" element={<ChecklistAssetGroups />} />
         </Routes>
     );
