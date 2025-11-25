@@ -1,14 +1,12 @@
-import { Box, Button, Card, Divider, Grid, IconButton, InputAdornment, Stack, useTheme } from "@mui/material";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { Box, Card, Divider, Grid, IconButton, InputAdornment, Stack, useTheme } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import MyBreadcrumbs from "../../../components/breadcrumb";
 import TypographyComponent from "../../../components/custom-typography";
 import BoxIcon from "../../../assets/icons/BoxIcon";
 import CheckboxIcon from "../../../assets/icons/CheckboxIcon";
 import ActivityIcon from "../../../assets/icons/ActivityIcon";
 import AlertTriangleIcon from "../../../assets/icons/AlertTriangleIcon";
-import EyeIcon from "../../../assets/icons/EyeIcon";
 import ArrowRightIcon from "../../../assets/icons/ArrowRightIcon";
-import ProgressBar from "../../../components/progress-bar";
 import { SearchInput, StyledLinearProgress } from "../../../components/common";
 import { getPercentage } from "../../../utils";
 import AssetIcon from "../../../assets/icons/AssetIcon";
@@ -16,10 +14,27 @@ import ClockIcon from "../../../assets/icons/ClockIcon";
 import FileXIcon from "../../../assets/icons/FileXIcon";
 import SearchIcon from "../../../assets/icons/SearchIcon";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { actionChecklistAssetTypeList, resetChecklistAssetTypeListResponse } from "../../../store/checklist";
+import { useBranch } from "../../../hooks/useBranch";
+import { ERROR, IMAGES_SCREEN_NO_DATA, SERVER_ERROR, UNAUTHORIZED } from "../../../constants";
+import { useAuth } from "../../../hooks/useAuth";
+import { useSnackbar } from "../../../hooks/useSnackbar";
+import FullScreenLoader from "../../../components/fullscreen-loader";
+import EmptyContent from "../../../components/empty_content";
 
 export default function ChecklistAssetTypes() {
     const theme = useTheme()
     const navigate = useNavigate()
+    const dispatch = useDispatch()
+    const branch = useBranch()
+    const { logout } = useAuth()
+    const { showSnackbar } = useSnackbar()
+
+    const NUMBER_OF_COLOR_CASES = 6;
+
+    //Stores
+    const { checklistAssetTypeList } = useSelector(state => state.checklistStore)
 
     //Default Checklists Counts Array
     const [getChecklistCounts] = useState([
@@ -32,6 +47,7 @@ export default function ChecklistAssetTypes() {
     const [searchQuery, setSearchQuery] = useState('')
     const [arrAssetTypesData, setArrAssetTypesData] = useState([])
     const [arrAssetTypesOriginalData, setArrAssetTypesOriginalData] = useState([])
+    const [loadingList, setLoadingList] = useState(false)
 
     const getColorAndBackgroundForAssetType = (index) => {
         let color = {
@@ -105,131 +121,183 @@ export default function ChecklistAssetTypes() {
         }
     }, [searchQuery])
 
+    /**
+     * Initial call Asset type list API
+     */
     useEffect(() => {
-        let data = [
-            {
-                "id": 1,
-                "asset_type_id": "1",
-                "title": "DG Sets",
-                "total_groups": "2",
-                "total_assets": "15",
-                "total_checklists": "36",
-                "total_completed": "12",
-                "total_overdue": "2",
-                "total_abnormal": "4",
-                "total_pending": "24",
-                "total_not_approved": "2"
-            },
-            {
-                "id": 2,
-                "asset_type_id": "2",
-                "title": "PAC Units",
-                "total_groups": "5",
-                "total_assets": "10",
-                "total_checklists": "20",
-                "total_completed": "12",
-                "total_overdue": "2",
-                "total_abnormal": "4",
-                "total_pending": "8",
-                "total_not_approved": "2",
-            },
-            {
-                "id": 3,
-                "asset_type_id": "3",
-                "title": "HVAC Systems",
-                "total_groups": "2",
-                "total_assets": "15",
-                "total_checklists": "36",
-                "total_completed": "12",
-                "total_overdue": "2",
-                "total_abnormal": "4",
-                "total_pending": "24",
-                "total_not_approved": "2"
-            },
-            {
-                "id": 4,
-                "asset_type_id": "4",
-                "title": "Chillers",
-                "total_groups": "3",
-                "total_assets": "12",
-                "total_checklists": "10",
-                "total_completed": "8",
-                "total_overdue": "2",
-                "total_abnormal": "4",
-                "total_pending": "1",
-                "total_not_approved": "1"
-            },
-            {
-                "id": 5,
-                "asset_type_id": "5",
-                "title": "RMU",
-                "total_groups": "3",
-                "total_assets": "12",
-                "total_checklists": "9",
-                "total_completed": "5",
-                "total_overdue": "2",
-                "total_abnormal": "4",
-                "total_pending": "4",
-                "total_not_approved": "2"
-            },
-            {
-                "id": 6,
-                "asset_type_id": "6",
-                "total_groups": "3",
-                "title": "CRAH",
-                "total_assets": "12",
-                "total_checklists": "9",
-                "total_completed": "6",
-                "total_overdue": "2",
-                "total_abnormal": "3",
-                "total_pending": "24",
-                "total_not_approved": "2"
-            },
-            {
-                "id": 7,
-                "asset_type_id": "7",
-                "title": "PSU",
-                "total_groups": "2",
-                "total_assets": "15",
-                "total_checklists": "36",
-                "total_completed": "12",
-                "total_overdue": "2",
-                "total_abnormal": "4",
-                "total_pending": "24",
-                "total_not_approved": "2"
+        if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null) {
+            setLoadingList(true)
+            dispatch(actionChecklistAssetTypeList({
+                branch_uuid: branch?.currentBranch?.uuid
+            }))
+        }
+    }, [branch?.currentBranch?.uuid])
+
+    /**
+     * useEffect
+     * @dependency : checklistAssetTypeList
+     * @type : HANDLE API RESULT
+     * @description : Handle the result of inventory category List API
+    */
+    useEffect(() => {
+        if (checklistAssetTypeList && checklistAssetTypeList !== null) {
+            dispatch(resetChecklistAssetTypeListResponse())
+            if (checklistAssetTypeList?.result === true) {
+
+                // Use map to iterate through the array and assign colors
+                const updatedAssetTypesData = checklistAssetTypeList?.response && checklistAssetTypeList?.response !== null && checklistAssetTypeList?.response?.length > 0 ? checklistAssetTypeList?.response?.map((asset, index) => {
+                    // 1. Calculate the cyclic index (0, 1, 2, 3, 4, 5, 0, 1, ...)
+                    const colorIndex = index % NUMBER_OF_COLOR_CASES;
+
+                    // 2. Get the color object for the cyclic index
+                    const colors = getColorAndBackgroundForAssetType(String(colorIndex));
+
+                    // 3. Return the updated asset object with the new colors
+                    return {
+                        ...asset,
+                        background_color: colors.backgroundColor,
+                        border_color: colors.color,
+                        icon_color: colors.backgroundColor,
+                        icon_background: theme.palette.common.white,
+                    };
+                }) : [];
+                setArrAssetTypesData(updatedAssetTypesData)
+                setArrAssetTypesOriginalData(updatedAssetTypesData)
+                setLoadingList(false)
+            } else {
+                setLoadingList(false)
+                // let data = [
+                //     {
+                //         "id": 1,
+                //         "asset_type_id": "1",
+                //         "title": "DG Sets",
+                //         "total_groups": "2",
+                //         "total_assets": "15",
+                //         "total_checklists": "36",
+                //         "total_completed": "12",
+                //         "total_overdue": "2",
+                //         "total_abnormal": "4",
+                //         "total_pending": "24",
+                //         "total_not_approved": "2"
+                //     },
+                //     {
+                //         "id": 2,
+                //         "asset_type_id": "2",
+                //         "title": "PAC Units",
+                //         "total_groups": "5",
+                //         "total_assets": "10",
+                //         "total_checklists": "20",
+                //         "total_completed": "12",
+                //         "total_overdue": "2",
+                //         "total_abnormal": "4",
+                //         "total_pending": "8",
+                //         "total_not_approved": "2",
+                //     },
+                //     {
+                //         "id": 3,
+                //         "asset_type_id": "3",
+                //         "title": "HVAC Systems",
+                //         "total_groups": "2",
+                //         "total_assets": "15",
+                //         "total_checklists": "36",
+                //         "total_completed": "12",
+                //         "total_overdue": "2",
+                //         "total_abnormal": "4",
+                //         "total_pending": "24",
+                //         "total_not_approved": "2"
+                //     },
+                //     {
+                //         "id": 4,
+                //         "asset_type_id": "4",
+                //         "title": "Chillers",
+                //         "total_groups": "3",
+                //         "total_assets": "12",
+                //         "total_checklists": "10",
+                //         "total_completed": "8",
+                //         "total_overdue": "2",
+                //         "total_abnormal": "4",
+                //         "total_pending": "1",
+                //         "total_not_approved": "1"
+                //     },
+                //     {
+                //         "id": 5,
+                //         "asset_type_id": "5",
+                //         "title": "RMU",
+                //         "total_groups": "3",
+                //         "total_assets": "12",
+                //         "total_checklists": "9",
+                //         "total_completed": "5",
+                //         "total_overdue": "2",
+                //         "total_abnormal": "4",
+                //         "total_pending": "4",
+                //         "total_not_approved": "2"
+                //     },
+                //     {
+                //         "id": 6,
+                //         "asset_type_id": "6",
+                //         "total_groups": "3",
+                //         "title": "CRAH",
+                //         "total_assets": "12",
+                //         "total_checklists": "9",
+                //         "total_completed": "6",
+                //         "total_overdue": "2",
+                //         "total_abnormal": "3",
+                //         "total_pending": "24",
+                //         "total_not_approved": "2"
+                //     },
+                //     {
+                //         "id": 7,
+                //         "asset_type_id": "7",
+                //         "title": "PSU",
+                //         "total_groups": "2",
+                //         "total_assets": "15",
+                //         "total_checklists": "36",
+                //         "total_completed": "12",
+                //         "total_overdue": "2",
+                //         "total_abnormal": "4",
+                //         "total_pending": "24",
+                //         "total_not_approved": "2"
+                //     }
+                // ];
+                // // Determine the number of unique color cases (0, 1, 2, 3, 4, 5)
+                // const NUMBER_OF_COLOR_CASES = 6;
+
+                // // Use map to iterate through the array and assign colors
+                // const updatedAssetTypesData = data && data !== null && data.length > 0 ? data?.map((asset, index) => {
+                //     const colorIndex = index % NUMBER_OF_COLOR_CASES;
+
+                //     // 2. Get the color object for the cyclic index
+                //     const colors = getColorAndBackgroundForAssetType(String(colorIndex));
+
+                //     // 3. Return the updated asset object with the new colors
+                //     return {
+                //         ...asset,
+                //         background_color: colors.backgroundColor,
+                //         border_color: colors.color,
+                //         icon_color: colors.backgroundColor,
+                //         icon_background: theme.palette.common.white,
+                //     };
+                // }) : [];
+                // setArrAssetTypesData(updatedAssetTypesData)
+                // setArrAssetTypesOriginalData(updatedAssetTypesData)
+                setArrAssetTypesData([])
+                setArrAssetTypesOriginalData[[]]
+                switch (checklistAssetTypeList?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetChecklistAssetTypeListResponse())
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: checklistAssetTypeList?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
             }
-        ];
-        // Determine the number of unique color cases (0, 1, 2, 3, 4, 5)
-        const NUMBER_OF_COLOR_CASES = 6;
-
-        // Use map to iterate through the array and assign colors
-        const updatedAssetTypesData = data && data !== null && data.length > 0 ? data?.map((asset, index) => {
-            // 1. Calculate the cyclic index (0, 1, 2, 3, 4, 5, 0, 1, ...)
-            const colorIndex = index % NUMBER_OF_COLOR_CASES;
-
-            // 2. Get the color object for the cyclic index
-            const colors = getColorAndBackgroundForAssetType(String(colorIndex));
-
-            // 3. Return the updated asset object with the new colors
-            return {
-                ...asset,
-                // The asset's main background_color gets the color property
-                background_color: colors.backgroundColor,
-
-                // The border_color gets the backgroundColor property
-                border_color: colors.color,
-
-                // The icon_color gets the color property
-                icon_color: colors.backgroundColor,
-
-                // The icon_background gets the backgroundColor property
-                icon_background: theme.palette.common.white,
-            };
-        }) : [];
-        setArrAssetTypesData(updatedAssetTypesData)
-        setArrAssetTypesOriginalData(updatedAssetTypesData)
-
-    }, [])
+        }
+    }, [checklistAssetTypeList])
 
     return (<>
         <React.Fragment>
@@ -285,7 +353,7 @@ export default function ChecklistAssetTypes() {
                                         mb: 0.5,
                                     }}
                                 >
-                                    {item.icon}
+                                    {item?.icon}
                                 </Box>
                                 <Stack>
                                     <TypographyComponent
@@ -293,14 +361,14 @@ export default function ChecklistAssetTypes() {
                                         fontWeight={400}
                                         sx={{ color: theme.palette.grey[650], lineHeight: "20px" }}
                                     >
-                                        {item.labelTop}
+                                        {item?.labelTop}
                                     </TypographyComponent>
                                     <TypographyComponent
                                         fontSize={14}
                                         fontWeight={400}
                                         sx={{ color: theme.palette.grey[650], lineHeight: "20px" }}
                                     >
-                                        {item.labelBottom}
+                                        {item?.labelBottom}
                                     </TypographyComponent>
                                 </Stack>
                             </Stack>
@@ -319,7 +387,7 @@ export default function ChecklistAssetTypes() {
                 ))}
             </Box>
             <Stack sx={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', my: 2 }}>
-                <TypographyComponent fontSize={16} fontWeight={600}>Assets Types Groups</TypographyComponent>
+                <TypographyComponent fontSize={16} fontWeight={600}>Asset Types Groups</TypographyComponent>
                 <SearchInput
                     id="search-assets"
                     placeholder="Search"
@@ -339,17 +407,19 @@ export default function ChecklistAssetTypes() {
                 />
             </Stack>
             <Grid container spacing={3}>
-                {arrAssetTypesData && arrAssetTypesData?.length > 0 &&
+                {loadingList ? (
+                    <FullScreenLoader open={true} />
+                ) : arrAssetTypesData && arrAssetTypesData?.length > 0 ?
                     arrAssetTypesData.map((objAsset) => (
-                        <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 4 }} key={objAsset.id}>
+                        <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 4 }} key={objAsset?.id}>
                             <Card
                                 sx={{
                                     p: 3,
                                     height: "100%",
                                     width: '100%',
                                     borderRadius: "16px",
-                                    border: `1px solid ${objAsset.border_color}`,
-                                    backgroundColor: objAsset.background_color,
+                                    border: `1px solid ${objAsset?.border_color}`,
+                                    backgroundColor: objAsset?.background_color,
                                     display: "flex",
                                     flexDirection: "column",
                                     justifyContent: "space-between",
@@ -362,17 +432,17 @@ export default function ChecklistAssetTypes() {
                                                 height: 64,
                                                 width: 64,
                                                 borderRadius: "8px",
-                                                backgroundColor: objAsset.icon_background,
+                                                backgroundColor: objAsset?.icon_background,
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
                                             }}
                                         >
-                                            <AssetIcon stroke={objAsset.border_color} size={18} />
+                                            <AssetIcon stroke={objAsset?.border_color} size={18} />
                                         </Box>
                                         <Box>
                                             <TypographyComponent fontSize={16} fontWeight={500}>
-                                                {objAsset.title}
+                                                {objAsset?.title}
                                             </TypographyComponent>
                                             <Stack flexDirection={'row'} sx={{ gap: '16px' }}>
                                                 <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>{objAsset?.total_groups} Groups</TypographyComponent>
@@ -403,14 +473,14 @@ export default function ChecklistAssetTypes() {
                                         <TypographyComponent fontSize={16} fontWeight={400} mb={1}>
                                             Today's Overall Progress
                                         </TypographyComponent>
-                                        <TypographyComponent fontSize={16} fontWeight={400} mb={1} sx={{ color: objAsset.border_color }}>
-                                            {Math.round(getPercentage(objAsset.total_completed, objAsset.total_checklists))}% Complete
+                                        <TypographyComponent fontSize={16} fontWeight={400} mb={1} sx={{ color: objAsset?.border_color }}>
+                                            {getPercentage(objAsset?.total_completed, objAsset?.total_checklists) ? Math.round(getPercentage(objAsset?.total_completed, objAsset?.total_checklists)) : 0}% Complete
                                         </TypographyComponent>
                                     </Stack>
 
                                     <Stack sx={{ width: '100%' }}>
                                         <Box sx={{ width: '100%', mr: 1 }}>
-                                            <StyledLinearProgress variant="determinate" value={getPercentage(objAsset.total_completed, objAsset.total_checklists)} bgColor={objAsset.border_color} />
+                                            <StyledLinearProgress variant="determinate" value={getPercentage(objAsset?.total_completed, objAsset?.total_checklists) ? getPercentage(objAsset?.total_completed, objAsset?.total_checklists) : 0} bgColor={objAsset?.border_color} />
                                         </Box>
                                     </Stack>
                                 </Box>
@@ -444,7 +514,12 @@ export default function ChecklistAssetTypes() {
 
                             </Card>
                         </Grid>
-                    ))}
+                    ))
+                    :
+                    <Stack sx={{ height: '100%', width: '100%', background: theme.palette.common.white, pb: 20, borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}` }}>
+                        <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Asset Types Found'} subTitle={''} />
+                    </Stack>
+                }
             </Grid>
         </React.Fragment>
     </>)

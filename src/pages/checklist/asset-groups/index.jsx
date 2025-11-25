@@ -12,90 +12,181 @@ import { useNavigate, useParams } from "react-router-dom";
 import ChevronLeftIcon from "../../../assets/icons/ChevronLeft";
 import AddIcon from '@mui/icons-material/Add';
 import AddChecklistAssetGroup from "./add";
+import { useDispatch, useSelector } from "react-redux";
+import { actionChecklistGroupList, resetChecklistGroupListResponse } from "../../../store/checklist";
+import { useBranch } from "../../../hooks/useBranch";
+import { useAuth } from "../../../hooks/useAuth";
+import { useSnackbar } from "../../../hooks/useSnackbar";
+import { ERROR, IMAGES_SCREEN_NO_DATA, SERVER_ERROR, UNAUTHORIZED } from "../../../constants";
+import FullScreenLoader from "../../../components/fullscreen-loader";
+import EmptyContent from "../../../components/empty_content";
 
 export default function ChecklistAssetGroups() {
     const theme = useTheme()
     const navigate = useNavigate()
     const { assetId } = useParams()
+    const dispatch = useDispatch()
+    const branch = useBranch()
+    const { logout } = useAuth()
+    const { showSnackbar } = useSnackbar()
+
+    //Stores
+    const { checklistGroupList } = useSelector(state => state.checklistStore)
 
     //Default Checklists Counts Array
     const [getCurrentAssetGroup, setGetCurrentAssetGroup] = useState(null)
     const [arrAssetGroupsData, setArrAssetGroupsData] = useState([])
     const [openAddChecklistAssetGroup, setOpenAddChecklistAssetGroup] = useState(false)
+    const [loadingList, setLoadingList] = useState(false)
 
-    console.log('------assetId-------', assetId)
-
+    /**
+     * Initial call Checklist group list API
+     */
     useEffect(() => {
-        let data = [
-            {
-                "id": 1,
-                "asset_type_id": "1",
-                "title": "DG Sets",
-                "total_groups": "2",
-                "total_assets": "15",
-                "total_checklists": "36",
-                "total_completed": "12",
-                "total_overdue": "2",
-                "total_abnormal": "4",
-                "total_pending": "24",
-                "total_not_approved": "2"
-            },
-            {
-                "id": 2,
-                "asset_type_id": "2",
-                "title": "PAC Units",
-                "total_groups": "5",
-                "total_assets": "10",
-                "total_checklists": "20",
-                "total_completed": "12",
-                "total_overdue": "2",
-                "total_abnormal": "4",
-                "total_pending": "8",
-                "total_not_approved": "2",
-            },
-            {
-                "id": 3,
-                "asset_type_id": "3",
-                "title": "HVAC Systems",
-                "total_groups": "2",
-                "total_assets": "15",
-                "total_checklists": "36",
-                "total_completed": "12",
-                "total_overdue": "2",
-                "total_abnormal": "4",
-                "total_pending": "24",
-                "total_not_approved": "2"
-            },
-            {
-                "id": 4,
-                "asset_type_id": "4",
-                "title": "Chillers",
-                "total_groups": "3",
-                "total_assets": "12",
-                "total_checklists": "10",
-                "total_completed": "8",
-                "total_overdue": "2",
-                "total_abnormal": "4",
-                "total_pending": "1",
-                "total_not_approved": "1"
-            }
-        ];
-        setGetCurrentAssetGroup({
-            "id": 1,
-            "asset_type_id": "1",
-            "title": "DG Checklist & Reading Report",
-            "total_groups": "2",
-            "total_assets": "15",
-            "total_checklists": "36",
-            "total_completed": "12",
-            "total_overdue": "2",
-            "total_abnormal": "4",
-            "total_pending": "24",
-            "total_not_approved": "2"
-        })
-        setArrAssetGroupsData(data)
+        if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && assetId && assetId !== null) {
+            setLoadingList(true)
+            dispatch(actionChecklistGroupList({
+                branch_uuid: branch?.currentBranch?.uuid,
+                asset_type_id: assetId
+            }))
+        }
 
-    }, [])
+    }, [branch?.currentBranch?.uuid, assetId])
+
+    /**
+       * useEffect
+       * @dependency : checklistGroupList
+       * @type : HANDLE API RESULT
+       * @description : Handle the result of checklist group List API
+      */
+    useEffect(() => {
+        if (checklistGroupList && checklistGroupList !== null) {
+            dispatch(resetChecklistGroupListResponse())
+            if (checklistGroupList?.result === true) {
+                setGetCurrentAssetGroup(checklistGroupList?.response)
+                if (checklistGroupList?.response?.group_data && checklistGroupList?.response?.group_data !== null && checklistGroupList?.response?.group_data.length > 0) {
+                    setArrAssetGroupsData(checklistGroupList?.response?.group_data)
+                } else {
+                    setArrAssetGroupsData([])
+                }
+
+                setLoadingList(false)
+            } else {
+                setLoadingList(false)
+                // let data = [
+                //     {
+                //         "id": 1,
+                //         "asset_type_id": "1",
+                //         "title": "DG Sets",
+                //         "total_groups": "2",
+                //         "total_assets": "15",
+                //         "total_checklists": "36",
+                //         "total_completed": "12",
+                //         "total_overdue": "2",
+                //         "total_abnormal": "4",
+                //         "total_pending": "24",
+                //         "total_not_approved": "2"
+                //     },
+                //     {
+                //         "id": 2,
+                //         "asset_type_id": "2",
+                //         "title": "PAC Units",
+                //         "total_groups": "5",
+                //         "total_assets": "10",
+                //         "total_checklists": "20",
+                //         "total_completed": "12",
+                //         "total_overdue": "2",
+                //         "total_abnormal": "4",
+                //         "total_pending": "8",
+                //         "total_not_approved": "2",
+                //     },
+                //     {
+                //         "id": 3,
+                //         "asset_type_id": "3",
+                //         "title": "HVAC Systems",
+                //         "total_groups": "2",
+                //         "total_assets": "15",
+                //         "total_checklists": "36",
+                //         "total_completed": "12",
+                //         "total_overdue": "2",
+                //         "total_abnormal": "4",
+                //         "total_pending": "24",
+                //         "total_not_approved": "2"
+                //     },
+                //     {
+                //         "id": 4,
+                //         "asset_type_id": "4",
+                //         "title": "Chillers",
+                //         "total_groups": "3",
+                //         "total_assets": "12",
+                //         "total_checklists": "10",
+                //         "total_completed": "8",
+                //         "total_overdue": "2",
+                //         "total_abnormal": "4",
+                //         "total_pending": "1",
+                //         "total_not_approved": "1"
+                //     },
+                //     {
+                //         "id": 5,
+                //         "asset_type_id": "5",
+                //         "title": "RMU",
+                //         "total_groups": "3",
+                //         "total_assets": "12",
+                //         "total_checklists": "9",
+                //         "total_completed": "5",
+                //         "total_overdue": "2",
+                //         "total_abnormal": "4",
+                //         "total_pending": "4",
+                //         "total_not_approved": "2"
+                //     },
+                //     {
+                //         "id": 6,
+                //         "asset_type_id": "6",
+                //         "total_groups": "3",
+                //         "title": "CRAH",
+                //         "total_assets": "12",
+                //         "total_checklists": "9",
+                //         "total_completed": "6",
+                //         "total_overdue": "2",
+                //         "total_abnormal": "3",
+                //         "total_pending": "24",
+                //         "total_not_approved": "2"
+                //     },
+                //     {
+                //         "id": 7,
+                //         "asset_type_id": "7",
+                //         "title": "PSU",
+                //         "total_groups": "2",
+                //         "total_assets": "15",
+                //         "total_checklists": "36",
+                //         "total_completed": "12",
+                //         "total_overdue": "2",
+                //         "total_abnormal": "4",
+                //         "total_pending": "24",
+                //         "total_not_approved": "2"
+                //     }
+                // ];
+
+                // setArrAssetGroupsData(data)
+                setGetCurrentAssetGroup(null)
+                setArrAssetGroupsData([])
+                switch (checklistGroupList?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetChecklistGroupListResponse())
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: checklistGroupList?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [checklistGroupList])
+
 
     return (<>
         <React.Fragment>
@@ -122,10 +213,9 @@ export default function ChecklistAssetGroups() {
                 <Stack sx={{ rowGap: 1 }}>
                     <Stack direction="row" gap={2} alignItems="center">
                         <TypographyComponent fontSize={16} fontWeight={500}>
-                            {getCurrentAssetGroup?.title}
+                            {`${getCurrentAssetGroup?.title && getCurrentAssetGroup?.title !== null ? getCurrentAssetGroup?.title : ''} Checklist & Reading Report`}
                         </TypographyComponent>
                         <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: '16px' }}>
-                            {/* <Stack flexDirection={'row'} sx={{ gap: '16px' }}> */}
                             <Stack sx={{ alignItems: 'center', justifyContent: 'center' }}>
                                 <Stack sx={{ background: theme.palette.common.black, height: '4px', width: '4px', borderRadius: '5px', alignItems: 'center' }}></Stack>
                             </Stack>
@@ -184,9 +274,11 @@ export default function ChecklistAssetGroups() {
                 <TypographyComponent fontSize={16} fontWeight={600}>Assets Groups</TypographyComponent>
             </Stack>
             <Grid container spacing={3}>
-                {arrAssetGroupsData && arrAssetGroupsData?.length > 0 &&
-                    arrAssetGroupsData.map((objAsset) => (
-                        <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 4 }} key={objAsset.id}>
+                {loadingList ? (
+                    <FullScreenLoader open={true} />
+                ) : arrAssetGroupsData && arrAssetGroupsData !== null && arrAssetGroupsData?.length > 0 ?
+                    arrAssetGroupsData?.map((objAsset) => (
+                        <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 4 }} key={objAsset?.id}>
                             <Card
                                 sx={{
                                     p: 3,
@@ -204,7 +296,7 @@ export default function ChecklistAssetGroups() {
                                     <Stack direction="row" gap={2} alignItems="center">
                                         <Box>
                                             <TypographyComponent fontSize={16} fontWeight={500}>
-                                                {objAsset.title}
+                                                {objAsset?.group_name}
                                             </TypographyComponent>
                                             <Stack flexDirection={'row'} sx={{ gap: '16px' }}>
                                                 <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>{objAsset?.total_assets} Assets</TypographyComponent>
@@ -216,9 +308,9 @@ export default function ChecklistAssetGroups() {
                                         </Box>
                                     </Stack>
                                     <Box>
-                                        <Stack sx={{ flexDirection: 'row', gap: 1, alignItems: 'center', padding: '4px 8px', borderRadius: '8px', background: theme.palette.success[50], border: `1px solid ${theme.palette.success[200]}` }}
+                                        <Stack sx={{ cursor: 'pointer', flexDirection: 'row', gap: 1, alignItems: 'center', padding: '4px 8px', borderRadius: '8px', background: theme.palette.success[50], border: `1px solid ${theme.palette.success[200]}` }}
                                             onClick={() => {
-                                                navigate(`view/${objAsset?.id}`)
+                                                navigate(`view/${objAsset?.group_uuid}`)
                                             }}>
                                             <EyeIcon size={'20'} stroke={theme.palette.success[600]} />
                                             <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.success[600] }}> View</TypographyComponent>
@@ -232,12 +324,12 @@ export default function ChecklistAssetGroups() {
                                             Today's Progress
                                         </TypographyComponent>
                                         <TypographyComponent fontSize={16} fontWeight={400} mb={1} sx={{ color: theme.palette.primary[600] }}>
-                                            {Math.round(getPercentage(objAsset.total_completed, objAsset.total_checklists))}% Complete
+                                            {getPercentage(objAsset?.total_completed, objAsset?.total_checklists) ? Math.round(getPercentage(objAsset?.total_completed, objAsset?.total_checklists)) : 0}% Complete
                                         </TypographyComponent>
                                     </Stack>
                                     <Stack sx={{ width: '100%' }}>
                                         <Box sx={{ width: '100%', mr: 1 }}>
-                                            <StyledLinearProgress variant="determinate" value={getPercentage(objAsset.total_completed, objAsset.total_checklists)} bgColor={theme.palette.primary[600]} />
+                                            <StyledLinearProgress variant="determinate" value={getPercentage(objAsset?.total_completed, objAsset?.total_checklists) ? getPercentage(objAsset?.total_completed, objAsset?.total_checklists) : 0} bgColor={theme.palette.primary[600]} />
                                         </Box>
                                     </Stack>
                                 </Box>
@@ -271,12 +363,24 @@ export default function ChecklistAssetGroups() {
 
                             </Card>
                         </Grid>
-                    ))}
+                    ))
+                    :
+                    <Stack sx={{ height: '100%', width: '100%', background: theme.palette.common.white, pb: 20, borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}` }}>
+                        <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Asset Groups Found'} subTitle={''} />
+                    </Stack>
+                }
             </Grid>
             <AddChecklistAssetGroup
                 open={openAddChecklistAssetGroup}
-                handleClose={() => {
+                handleClose={(data) => {
                     setOpenAddChecklistAssetGroup(false)
+                    if (data == 'save') {
+                        setLoadingList(true)
+                        dispatch(actionChecklistGroupList({
+                            branch_uuid: branch?.currentBranch?.uuid,
+                            asset_type_id: assetId
+                        }))
+                    }
                 }}
             />
         </React.Fragment>
