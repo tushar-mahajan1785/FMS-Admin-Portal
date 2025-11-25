@@ -1,10 +1,8 @@
-import { Box, Button, IconButton, InputAdornment, Paper, Stack, useTheme } from "@mui/material";
+import { Button, IconButton, InputAdornment, Stack, TextField, useTheme } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import TypographyComponent from "../../../components/custom-typography";
 import CheckboxIcon from "../../../assets/icons/CheckboxIcon";
 import AlertTriangleIcon from "../../../assets/icons/AlertTriangleIcon";
-import ClockIcon from "../../../assets/icons/ClockIcon";
-import FileXIcon from "../../../assets/icons/FileXIcon";
 import { useNavigate, useParams } from "react-router-dom";
 import ChevronLeftIcon from "../../../assets/icons/ChevronLeft";
 import moment from "moment";
@@ -22,18 +20,34 @@ import {
     TableHead,
     TableRow,
 } from '@mui/material';
+import EditCircleIcon from "../../../assets/icons/EditCircleIcon";
+import AddIcon from '@mui/icons-material/Add';
+import styled from "@emotion/styled";
+import { useDispatch, useSelector } from "react-redux";
+import { actionChecklistGroupDetails, resetChecklistGroupDetailsResponse } from "../../../store/checklist";
+import { useBranch } from "../../../hooks/useBranch";
+import { ERROR, SERVER_ERROR, UNAUTHORIZED } from "../../../constants";
+import { useAuth } from "../../../hooks/useAuth";
+import { useSnackbar } from "../../../hooks/useSnackbar";
 
 export default function ChecklistView() {
     const theme = useTheme()
     const navigate = useNavigate()
-    const { assetId, groupId } = useParams()
+    const dispatch = useDispatch()
+    const branch = useBranch()
+    const { logout } = useAuth()
+    const { showSnackbar } = useSnackbar()
+    const { assetId, groupUuid } = useParams()
+
+    //Stores
+    const { checklistGroupDetails } = useSelector(state => state.checklistStore)
 
     //Default Checklists Counts Array
     const [getCurrentAssetGroup, setGetCurrentAssetGroup] = useState(null)
-    const [selectedStartDate, setSelectedStartDate] = useState(null)
+    const [selectedStartDate, setSelectedStartDate] = useState(moment().format('DD/MM/YYYY'))
     const [getChecklistDetails] = useState({
         parameters: [
-            { "id": 1, "name": "Temperature", "parent_id": 0, "sub_name": "Temp", "is_mandatory": 1, "input_type": "Number (with range)", "min": "50", "max": "150", "unit": "celsius", "default_value": '' },
+            { "id": 1, "name": "Temperature Teture Temperature Temperature Terature Temperature Temperature Temperature Temperature Temperature", "parent_id": 0, "sub_name": "Temp", "is_mandatory": 1, "input_type": "Number (with range)", "min": "50", "max": "150", "unit": "celsius", "default_value": '' },
             { "id": 2, "name": "IP Voltage", "parent_id": 0, "sub_name": null, "input_type": "", "parameter_type": "Grouping", "default_value": '' },
             { "id": 4, "name": "Current", "parent_id": 0, "sub_name": null, "input_type": "", "parameter_type": "Grouping", "default_value": '' },
             { "id": 5, "name": "Flow Rate", "parent_id": 0, "sub_name": "Flow", "input_type": "Yes/No", "options": ["Yes", "No"], "is_mandatory": 1, "default_value": '' },
@@ -57,6 +71,7 @@ export default function ChecklistView() {
                         "asset_id": 1,
                         "asset_name": "Asset 1-1",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "12" },
                             { "parameter_id": 20, "value": "34" },
@@ -75,6 +90,7 @@ export default function ChecklistView() {
                         "asset_id": 2,
                         "asset_name": "Asset 1-2",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "4" },
                             { "parameter_id": 20, "value": "5" },
@@ -93,6 +109,7 @@ export default function ChecklistView() {
                         "asset_id": 3,
                         "asset_name": "Asset 1-3",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -111,6 +128,7 @@ export default function ChecklistView() {
                         "asset_id": 4,
                         "asset_name": "Asset 1-4",
                         "status": 'Overdue',
+                        "is_view": 0,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -129,6 +147,7 @@ export default function ChecklistView() {
                         "asset_id": 5,
                         "asset_name": "Asset 1-5",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -147,6 +166,7 @@ export default function ChecklistView() {
                         "asset_id": 6,
                         "asset_name": "Asset 1-6",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -165,6 +185,7 @@ export default function ChecklistView() {
                         "asset_id": 7,
                         "asset_name": "Asset 1-7",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -183,6 +204,7 @@ export default function ChecklistView() {
                         "asset_id": 8,
                         "asset_name": "Asset 1-8",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -208,6 +230,7 @@ export default function ChecklistView() {
                         "asset_id": 1,
                         "asset_name": "Asset 2-1",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -226,6 +249,7 @@ export default function ChecklistView() {
                         "asset_id": 2,
                         "asset_name": "Asset 2-2",
                         "status": 'Overdue',
+                        "is_view": 0,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -244,6 +268,7 @@ export default function ChecklistView() {
                         "asset_id": 3,
                         "asset_name": "Asset 2-3",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -262,6 +287,7 @@ export default function ChecklistView() {
                         "asset_id": 4,
                         "asset_name": "Asset 2-4",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -280,6 +306,7 @@ export default function ChecklistView() {
                         "asset_id": 5,
                         "asset_name": "Asset 2-5",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -298,6 +325,7 @@ export default function ChecklistView() {
                         "asset_id": 6,
                         "asset_name": "Asset 2-6",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -316,6 +344,7 @@ export default function ChecklistView() {
                         "asset_id": 7,
                         "asset_name": "Asset 2-7",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -334,6 +363,7 @@ export default function ChecklistView() {
                         "asset_id": 8,
                         "asset_name": "Asset 2-8",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -359,6 +389,7 @@ export default function ChecklistView() {
                         "asset_id": 1,
                         "asset_name": "Asset 3-1",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -377,6 +408,7 @@ export default function ChecklistView() {
                         "asset_id": 2,
                         "asset_name": "Asset 3-2",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -395,6 +427,7 @@ export default function ChecklistView() {
                         "asset_id": 3,
                         "asset_name": "Asset 3-3",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -413,6 +446,7 @@ export default function ChecklistView() {
                         "asset_id": 4,
                         "asset_name": "Asset 3-4",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -431,6 +465,7 @@ export default function ChecklistView() {
                         "asset_id": 5,
                         "asset_name": "Asset 3-5",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -449,6 +484,7 @@ export default function ChecklistView() {
                         "asset_id": 6,
                         "asset_name": "Asset 3-6",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -467,6 +503,7 @@ export default function ChecklistView() {
                         "asset_id": 7,
                         "asset_name": "Asset 3-7",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -485,6 +522,7 @@ export default function ChecklistView() {
                         "asset_id": 8,
                         "asset_name": "Asset 3-8",
                         "status": 'Overdue',
+                        "is_view": 1,
                         "values": [
                             { "parameter_id": 1, "value": "" },
                             { "parameter_id": 20, "value": "" },
@@ -565,57 +603,121 @@ export default function ChecklistView() {
     })
     const [selectedTimeSlot, setSelectedTimeSlot] = useState(getChecklistDetails.times[0]);
 
-
     useEffect(() => {
-        setSelectedTimeSlot(getChecklistDetails.times[0])
-        setGetCurrentAssetGroup({
-            "id": 1,
-            "asset_type_id": "1",
-            "asset_type": "DG",
-            "asset_group": "DG Set Tower 1",
-            "location": 'Vodafone India Pvt Ltd',
-            "total_groups": "2",
-            "total_assets": "15",
-            "total_checklists": "36",
-            "total_completed": "12",
-            "total_overdue": "2",
-            "total_abnormal": "4",
-            "total_pending": "24",
-            "total_not_approved": "2",
-            "times": [
-                {
-                    uuid: 'ghghj-huyghhgh',
-                    frm: '12:00',
-                    to: '02:00'
-                },
-                {
-                    uuid: 'ghsdddj-huyghhgh',
-                    frm: '02:00',
-                    to: '04:00'
-                },
-                {
-                    uuid: 'ghghj-huyg678hhyhhgh',
-                    frm: '04:00',
-                    to: '06:00'
-                },
-                {
-                    uuid: 'ghffffghj-444dfff',
-                    frm: '06:00',
-                    to: '08:00'
-                },
-                {
-                    uuid: 'ghgddfr887hj-huyg555hhgh',
-                    frm: '08:00',
-                    to: '10:00'
-                },
-            ]
-        })
 
-    }, [])
+
+        dispatch(actionChecklistGroupDetails({
+            branch_uuid: branch?.currentBranch?.uuid,
+            asset_type_id: assetId,
+            group_uuid: groupUuid,
+            date: selectedStartDate && selectedStartDate !== null ? moment(selectedStartDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : moment().format('YYYY-MM-DD')
+        }))
+    }, [branch?.currentBranch?.uuid, groupUuid])
+
+
+    /**
+        * useEffect
+        * @dependency : checklistGroupDetails
+        * @type : HANDLE API RESULT
+        * @description : Handle the result of checklist group List API
+       */
+    useEffect(() => {
+        if (checklistGroupDetails && checklistGroupDetails !== null) {
+            dispatch(resetChecklistGroupDetailsResponse())
+            if (checklistGroupDetails?.result === true) {
+                setGetCurrentAssetGroup(checklistGroupDetails?.response)
+
+                // setLoadingList(false)
+            } else {
+                // setLoadingList(false)
+
+                setSelectedTimeSlot(getChecklistDetails.times[0])
+                setGetCurrentAssetGroup({
+                    "id": 1,
+                    "asset_type_id": "1",
+                    "asset_type": "DG",
+                    "asset_group": "DG Set Tower 1",
+                    "location": 'Vodafone India Pvt Ltd',
+                    "total_groups": "2",
+                    "total_assets": "15",
+                    "total_checklists": "36",
+                    "total_completed": "12",
+                    "total_overdue": "2",
+                    "total_abnormal": "4",
+                    "total_pending": "24",
+                    "total_not_approved": "2",
+                    "times": [
+                        {
+                            uuid: 'ghghj-huyghhgh',
+                            frm: '12:00',
+                            to: '02:00'
+                        },
+                        {
+                            uuid: 'ghsdddj-huyghhgh',
+                            frm: '02:00',
+                            to: '04:00'
+                        },
+                        {
+                            uuid: 'ghghj-huyg678hhyhhgh',
+                            frm: '04:00',
+                            to: '06:00'
+                        },
+                        {
+                            uuid: 'ghffffghj-444dfff',
+                            frm: '06:00',
+                            to: '08:00'
+                        },
+                        {
+                            uuid: 'ghgddfr887hj-huyg555hhgh',
+                            frm: '08:00',
+                            to: '10:00'
+                        },
+                    ]
+                })
+                switch (checklistGroupDetails?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetChecklistGroupDetailsResponse())
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: checklistGroupDetails?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [checklistGroupDetails])
+
+
+    // --- Custom Styling ---
+    const StyledTextField = styled(TextField)({
+        '& .MuiOutlinedInput-root': {
+            height: '35px', // Adjust height to fit table cells better
+            borderRadius: 0,
+            '& fieldset': {
+                borderColor: '#c0c0c0', // Light grey border
+            },
+            '&:hover fieldset': {
+                borderColor: '#909090', // Slightly darker on hover
+            },
+            '&.Mui-focused fieldset': {
+                borderColor: '#2196f3', // Blue on focus
+                borderWidth: 1,
+            },
+            '& .MuiInputBase-input': {
+                padding: '8px 10px', // Adjust padding inside input
+                textAlign: 'center', // Center text as in your image
+            }
+        },
+    });
+
 
 
     console.log('------assetId-------', assetId)
-    console.log('------groupId-------', groupId)
+    console.log('------groupUuid-------', groupUuid)
 
     return (<>
         <React.Fragment>
@@ -643,7 +745,7 @@ export default function ChecklistView() {
                     <Stack direction="row" gap={2} justifyContent={'space-between'} sx={{ width: '100%' }}>
                         <Stack>
                             <TypographyComponent fontSize={16} fontWeight={500}>
-                                {`${getCurrentAssetGroup?.asset_type} Checklist & Reading Report - ${getCurrentAssetGroup?.asset_group}`}
+                                {`${getCurrentAssetGroup?.asset_type_name && getCurrentAssetGroup?.asset_type_name !== null ? getCurrentAssetGroup?.asset_type_name : ''} Checklist & Reading Report - ${getCurrentAssetGroup?.group_name && getCurrentAssetGroup?.group_name !== null ? getCurrentAssetGroup?.group_name : ''}`}
                             </TypographyComponent>
                             <Stack flexDirection={'row'} columnGap={0.5} sx={{ mb: 1.5 }}>
                                 <TypographyComponent fontSize={14} fontWeight={400} color={theme.palette.grey[600]}>
@@ -680,6 +782,7 @@ export default function ChecklistView() {
                                     }
                                     value={selectedStartDate}
                                     selected={selectedStartDate ? moment(selectedStartDate, 'DD/MM/YYYY').toDate() : null}
+                                    maxDate={moment().toDate()}
                                     showYearDropdown={true}
                                     onChange={date => {
                                         const formattedDate = moment(date).format('DD/MM/YYYY')
@@ -692,7 +795,12 @@ export default function ChecklistView() {
                                     size={'small'}
                                     sx={{ textTransform: "capitalize", px: 2, gap: 1, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, border: `1px solid ${theme.palette.primary[600]}` }}
                                     onClick={() => {
-                                        // setOpenAddInventoryPopup(true)
+                                        dispatch(actionChecklistGroupDetails({
+                                            branch_uuid: branch?.currentBranch?.uuid,
+                                            asset_type_id: assetId,
+                                            group_uuid: groupUuid,
+                                            date: moment(selectedStartDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
+                                        }))
                                     }}
                                     variant='outlined'
                                 >
@@ -740,24 +848,33 @@ export default function ChecklistView() {
                 </Stack>
             </Stack>
             <TableContainer
-                component={Paper}
                 sx={{
                     maxHeight: '600px',
                     maxWidth: '100%',
                     overflow: 'auto',
+                    background: theme.palette.grey[50],
+                    my: 1
                 }}
             >
-                <Table stickyHeader>
-                    <TableHead>
+                <Table stickyHeader sx={{
+                    borderCollapse: "separate",        // REQUIRED for spacing
+                    borderSpacing: "8px 0",           // Horizontal gap (12px)
+                    tableLayout: "fixed",
+                    background: theme.palette.grey[50]
+                }}>
+                    <TableHead sx={{ background: theme.palette.grey[50] }}>
                         <TableRow>
                             <TableCell
                                 sx={{
                                     position: 'sticky',
                                     left: 0,
                                     zIndex: 100,
-                                    background: '#fff',
+                                    background: theme.palette.common.white,
                                     fontWeight: 'bold',
-                                    minWidth: 300
+                                    width: 300,
+                                    border: `1px solid ${theme.palette.divider}`,
+                                    borderRadius: '8px',
+                                    p: '15px 24px',
                                 }}
                             >
                                 Parameter
@@ -766,32 +883,62 @@ export default function ChecklistView() {
                             {selectedTimeSlot?.schedules.map((asset) => (
                                 <TableCell
                                     key={asset}
-                                    align="center"
                                     sx={{
-                                        backgroundColor: theme.palette.primary[50],
+                                        backgroundColor: theme.palette.success[50],
                                         color: theme.palette.grey[600],
+                                        border: `1px solid ${theme.palette.success[600]}`,
+                                        borderRadius: '8px',
                                         fontWeight: 'bold',
-                                        minWidth: 200,
+                                        width: 255,
+                                        p: '15px 24px',
                                     }}
                                 >
-                                    {asset?.asset_name}
+                                    <Stack sx={{ flexDirection: 'row', width: '100%', justifyContent: 'space-between' }}>
+                                        <Stack>{asset?.asset_name}</Stack>
+                                        <Stack><AlertTriangleIcon stroke={theme.palette.warning[600]} /></Stack>
+                                    </Stack>
                                 </TableCell>
                             ))}
                         </TableRow>
                     </TableHead>
 
                     <TableBody>
+                        <TableRow>
+                            <TableCell sx={{
+                                position: 'sticky',
+                                top: 0,
+                                zIndex: 100,
+                                minHeight: '8px',
+                                py: 0,
+                                border: 0
+                            }}>
+                                <Stack sx={{ height: '8px' }}></Stack>
+                            </TableCell>
+                        </TableRow>
                         {getChecklistDetails?.parameters.filter(p => p.parameter_type !== 'Grouping').map((row, i) => (
                             <TableRow key={i}>
                                 <TableCell
                                     sx={{
                                         position: 'sticky',
                                         left: 0,
-                                        background: '#f5f5f5',
+                                        p: '15px 24px',
+                                        background: theme.palette.common.white,
                                         zIndex: 1,
+                                        borderTop: i == 0 ? `1px solid ${theme.palette.divider}` : '',
+                                        borderBottom: `1px solid ${theme.palette.divider}`,
+                                        borderLeft: `1px solid ${theme.palette.divider}`,
+                                        borderRight: `1px solid ${theme.palette.divider}`,
+                                        borderTopLeftRadius: i == 0 ? '8px' : 'none',
+                                        borderTopRightRadius: i == 0 ? '8px' : 'none',
+                                        borderBottomLeftRadius: i === getChecklistDetails?.parameters?.length - 1 ? '8px' : '',
+                                        borderBottomRightRadius: i == getChecklistDetails?.parameters?.length - 1 ? '8px' : '',
                                     }}
                                 >
-                                    {row.name} <span style={{ color: 'red' }}>*</span>
+                                    <Stack sx={{ flexDirection: 'row' }}>
+                                        {row.name}
+                                        <span style={{ color: 'red' }}>*</span>
+                                    </Stack>
+
                                 </TableCell>
                                 {selectedTimeSlot?.schedules.map((timeSlot) => {
                                     // Find the value object for the current parameter in the current time slot
@@ -799,18 +946,117 @@ export default function ChecklistView() {
                                     const value = paramValue ? paramValue.value : '';
 
                                     return (
-                                        <TableCell key={`${timeSlot.id}-${timeSlot.time}`} align="center">
+                                        <TableCell key={`${timeSlot?.id}-${timeSlot?.asset_name}`}
+                                            sx={{
+                                                alignItems: 'flex-start',
+                                                p: '15px 24px',
+                                                borderTop: i == 0 ? `1px solid ${theme.palette.success[600]}` : '',
+                                                borderBottom: `1px solid ${theme.palette.grey[300]}`,
+                                                background: theme.palette.success[50],
+                                                borderLeft: `1px solid ${theme.palette.success[600]}`,
+                                                borderRight: `1px solid ${theme.palette.success[600]}`,
+                                                borderTopLeftRadius: i == 0 ? '8px' : 'none',
+                                                borderTopRightRadius: i == 0 ? '8px' : 'none',
+                                                borderBottomLeftRadius: i === getChecklistDetails?.parameters?.length - 1 ? '8px' : '',
+                                                borderBottomRightRadius: i == getChecklistDetails?.parameters?.length - 1 ? '8px' : '',
+                                            }}>
                                             {/* Placeholder for the Input Field (like a TextField) */}
-                                            {value}
+                                            {
+                                                timeSlot?.is_view == 1 ?
+                                                    <>
+                                                        {value}
+                                                    </>
+                                                    :
+                                                    <StyledTextField
+                                                        required
+                                                        variant="outlined"
+                                                        size="small"
+                                                        defaultValue={value}
+                                                    />
+                                            }
+
                                         </TableCell>
                                     );
                                 })}
                             </TableRow>
                         ))}
+                        <TableRow>
+                            <TableCell
+                                sx={{
+                                    position: 'sticky',
+                                    left: 0,
+                                    zIndex: 100,
+                                    background: theme.palette.common.white,
+                                    fontWeight: 'bold',
+                                    width: 300,
+                                    borderBottom: `1px solid ${theme.palette.grey[300]}`,
+                                    borderLeft: `1px solid ${theme.palette.grey[300]}`,
+                                    borderRight: `1px solid ${theme.palette.grey[300]}`,
+                                    borderBottomLeftRadius: '8px',
+                                    borderBottomRightRadius: '8px',
+                                }}
+                            >
+                                Approval Actions
+                            </TableCell>
+                            {selectedTimeSlot?.schedules.map((asset, assetIndex) => {
+                                return (
+                                    <React.Fragment>
+                                        <TableCell
+                                            key={`${assetIndex}-${asset?.asset_name}`}
+                                            align="center"
+                                            sx={{
+                                                backgroundColor: 'transparent',
+                                                fontWeight: 'bold',
+                                                minWidth: 255,
+                                                p: '15px 24px',
+                                                background: theme.palette.success[50],
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                // borderTop: i == 0 ? `1px solid ${theme.palette.success[600]}` : '',
+                                                borderBottom: `1px solid ${theme.palette.success[600]}`,
+                                                borderLeft: `1px solid ${theme.palette.success[600]}`,
+                                                borderRight: `1px solid ${theme.palette.success[600]}`,
+                                                // borderTopLeftRadius: i == 0 ? '8px' : 'none',
+                                                // borderTopRightRadius: i == 0 ? '8px' : 'none',
+                                                borderBottomLeftRadius: '8px',
+                                                borderBottomRightRadius: '8px',
+
+                                            }}
+                                        >
+
+                                            <Stack sx={{ flexDirection: 'row', justifyContent: 'center', gap: 0.8, width: '100%' }}>
+                                                <Button
+                                                    size={'small'}
+                                                    sx={{ textTransform: "capitalize", px: 6, borderRadius: '4px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 14, fontWeight: 500, borderColor: theme.palette.primary[600] }}
+                                                    onClick={() => {
+                                                        // setOpenAddTicket(true)
+                                                    }}
+                                                    variant='contained'
+                                                >
+                                                    {/* <AddIcon sx={{ color: 'white', fontSize: { xs: '20px', sm: '20px', md: '22px' } }} /> */}
+                                                    Approve
+                                                </Button>
+                                                {
+                                                    asset?.is_view == 1 ?
+                                                        <IconButton sx={{ border: `1px solid ${theme.palette.primary[600]}`, borderRadius: '4px' }}>
+                                                            <EditCircleIcon stroke={theme.palette.grey[700]} size={22} />
+                                                        </IconButton>
+                                                        :
+                                                        <IconButton sx={{ border: `1px solid ${theme.palette.primary[600]}`, borderRadius: '4px' }}>
+                                                            <AddIcon />
+                                                        </IconButton>
+                                                }
+
+                                            </Stack>
+                                        </TableCell>
+                                    </React.Fragment>
+                                )
+                            })}
+                        </TableRow>
                     </TableBody>
                 </Table>
             </TableContainer>
-        </React.Fragment>
+        </React.Fragment >
     </>)
 
 }
