@@ -1,5 +1,5 @@
-import { Button, IconButton, InputAdornment, MenuItem, Stack, TextField, useTheme } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { Button, IconButton, InputAdornment, MenuItem, Stack, useTheme } from "@mui/material";
+import React, { useCallback, useEffect, useState } from "react";
 import TypographyComponent from "../../../components/custom-typography";
 import CheckboxIcon from "../../../assets/icons/CheckboxIcon";
 import AlertTriangleIcon from "../../../assets/icons/AlertTriangleIcon";
@@ -21,15 +21,15 @@ import {
     TableRow,
 } from '@mui/material';
 import EditCircleIcon from "../../../assets/icons/EditCircleIcon";
-import AddIcon from '@mui/icons-material/Add';
 import { useDispatch, useSelector } from "react-redux";
-import { actionChecklistGroupDetails, resetChecklistGroupDetailsResponse } from "../../../store/checklist";
+import { actionChecklistGroupDetails, actionChecklistGroupHistoryAdd, resetChecklistGroupDetailsResponse, resetChecklistGroupHistoryAddResponse } from "../../../store/checklist";
 import { useBranch } from "../../../hooks/useBranch";
 import { ERROR, SERVER_ERROR, UNAUTHORIZED } from "../../../constants";
 import { useAuth } from "../../../hooks/useAuth";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import CircleDashedIcon from "../../../assets/icons/CircleDashedIcon";
-import { useForm, FormProvider, useFormContext } from "react-hook-form";
+import { useForm, FormProvider, useFormContext, Controller } from "react-hook-form";
+import CloseIcon from "../../../assets/icons/CloseIcon";
 
 export default function ChecklistView() {
     const theme = useTheme()
@@ -43,570 +43,16 @@ export default function ChecklistView() {
     const methods = useForm();
 
     //Stores
-    const { checklistGroupDetails } = useSelector(state => state.checklistStore)
+    const { checklistGroupDetails, checklistGroupHistoryAdd } = useSelector(state => state.checklistStore)
 
     //Default Checklists Counts Array
     const [getCurrentAssetGroup, setGetCurrentAssetGroup] = useState(null)
     const [selectedStartDate, setSelectedStartDate] = useState(moment().format('DD/MM/YYYY'))
-    const [getChecklistDetails, setGetChecklistDetails] = useState({
-        parameters: [
-            { "id": 1, "name": "Temperature Teture Temperature Temperature Terature Temperature Temperature Temperature Temperature Temperature", "parent_id": 0, "sub_name": "Temp", "is_mandatory": 1, "input_type": "Number (with range)", "min": "50", "max": "150", "unit": "celsius", "default_value": '' },
-            { "id": 2, "name": "IP Voltage", "parent_id": 0, "sub_name": null, "input_type": "", "parameter_type": "Grouping", "default_value": '' },
-            { "id": 4, "name": "Current", "parent_id": 0, "sub_name": null, "input_type": "", "parameter_type": "Grouping", "default_value": '' },
-            { "id": 5, "name": "Flow Rate", "parent_id": 0, "sub_name": "Flow", "input_type": "Yes/No", "options": ["Yes", "No"], "is_mandatory": 1, "default_value": '' },
-            { "id": 6, "name": "Vibration Level", "parent_id": 0, "sub_name": "Vib", "input_type": "Free Text", "is_mandatory": 0, "default_value": '' },
-            { "id": 7, "name": "Oil Level", "parent_id": 0, "sub_name": "Oil", "input_type": "Multiple Choice", "options": ["A", "B", "C"], "default_value": '' },
-            { "id": 8, "name": "Free service", "parent_id": 0, "sub_name": "Service", "input_type": "Free Text", "is_mandatory": 0, "default_value": '' },
-            { "id": 20, "name": "IP Voltage - RN", "parent_id": 2, "sub_name": "RN", "input_type": "Free Text", "is_mandatory": 1, "default_value": '' },
-            { "id": 21, "name": "IP Voltage - YN", "parent_id": 2, "sub_name": "YN", "input_type": "Free Text", "is_mandatory": 1, "default_value": '' },
-            { "id": 22, "name": "IP Voltage - BN", "parent_id": 2, "sub_name": "BN", "input_type": "Free Text", "is_mandatory": 1, "default_value": '' },
-            { "id": 40, "name": "Current - R", "parent_id": 4, "sub_name": "R", "input_type": "Set per sub-reading", "default_value": '' },
-            { "id": 41, "name": "Current - Y", "parent_id": 4, "sub_name": "Y", "input_type": "Set per sub-reading", "is_mandatory": 1, "default_value": '' },
-            { "id": 42, "name": "Current - B", "parent_id": 4, "sub_name": "B", "input_type": "Set per sub-reading", "default_value": '' }
-        ],
-        times: [
-            {
-                uuid: 'ghghj-huyghhgh',
-                from: '12:00',
-                to: '01:00',
-                schedules: [
-                    {
-                        "asset_id": 1,
-                        "asset_name": "Asset 1-1",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "12" },
-                            { "parameter_id": 20, "value": "34" },
-                            { "parameter_id": 21, "value": "43" },
-                            { "parameter_id": 22, "value": "45" },
-                            { "parameter_id": 40, "value": "43" },
-                            { "parameter_id": 41, "value": "34" },
-                            { "parameter_id": 42, "value": "22" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 2,
-                        "asset_name": "Asset 1-2",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "4" },
-                            { "parameter_id": 20, "value": "5" },
-                            { "parameter_id": 21, "value": "6" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 3,
-                        "asset_name": "Asset 1-3",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 4,
-                        "asset_name": "Asset 1-4",
-                        "status": 'Overdue',
-                        "is_view": 0,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 5,
-                        "asset_name": "Asset 1-5",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 6,
-                        "asset_name": "Asset 1-6",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 7,
-                        "asset_name": "Asset 1-7",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 8,
-                        "asset_name": "Asset 1-8",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                ]
-            },
-            {
-                uuid: 'ghsdddj-huyghhgh',
-                from: '01:00',
-                to: '02:00',
-                schedules: [
-                    {
-                        "asset_id": 1,
-                        "asset_name": "Asset 2-1",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 2,
-                        "asset_name": "Asset 2-2",
-                        "status": 'Overdue',
-                        "is_view": 0,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 3,
-                        "asset_name": "Asset 2-3",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 4,
-                        "asset_name": "Asset 2-4",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 5,
-                        "asset_name": "Asset 2-5",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 6,
-                        "asset_name": "Asset 2-6",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 7,
-                        "asset_name": "Asset 2-7",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 8,
-                        "asset_name": "Asset 2-8",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                ]
-            },
-            {
-                uuid: 'ghghj-huyg678hhyhhgh',
-                from: '02:00',
-                to: '03:00',
-                schedules: [
-                    {
-                        "asset_id": 1,
-                        "asset_name": "Asset 3-1",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 2,
-                        "asset_name": "Asset 3-2",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 3,
-                        "asset_name": "Asset 3-3",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 4,
-                        "asset_name": "Asset 3-4",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 5,
-                        "asset_name": "Asset 3-5",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 6,
-                        "asset_name": "Asset 3-6",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 7,
-                        "asset_name": "Asset 3-7",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                    {
-                        "asset_id": 8,
-                        "asset_name": "Asset 3-8",
-                        "status": 'Overdue',
-                        "is_view": 1,
-                        "values": [
-                            { "parameter_id": 1, "value": "" },
-                            { "parameter_id": 20, "value": "" },
-                            { "parameter_id": 21, "value": "" },
-                            { "parameter_id": 22, "value": "" },
-                            { "parameter_id": 40, "value": "" },
-                            { "parameter_id": 41, "value": "" },
-                            { "parameter_id": 42, "value": "" },
-                            { "parameter_id": 5, "value": "" },
-                            { "parameter_id": 6, "value": "" },
-                            { "parameter_id": 7, "value": "" },
-                            { "parameter_id": 8, "value": "" }
-                        ]
-                    },
-                ]
-            },
-            {
-                uuid: 'ghffffghj-444dfff',
-                from: '03:00',
-                to: '04:00'
-            },
-            {
-                uuid: 'ghgddfr887hj-huyg555hhgh',
-                from: '04:00',
-                to: '05:00'
-            },
-            {
-                uuid: 'ghgerthj-huyghhgh',
-                from: '12:00',
-                to: '01:00'
-            },
-            {
-                uuid: 'ghsd444ddj-huyghhgh',
-                from: '01:00',
-                to: '02:00'
-            },
-            {
-                uuid: 'ghghj-hu666yg678hhyhhgh',
-                from: '02:00',
-                to: '03:00'
-            },
-            {
-                uuid: 'ghff234ffghj-444dfff',
-                from: '03:00',
-                to: '04:00'
-            },
-            // {
-            //     uuid: 'ghgddfr887hj-hudfgyg555hhgh',
-            //     from: '04:00',
-            //     to: '05:00'
-            // },
-            // {
-            //     uuid: 'gh345ghj-huyghhgh',
-            //     from: '05:00',
-            //     to: '06:00'
-            // },
-            // {
-            //     uuid: 'ghsdddj-h789uyghhgh',
-            //     from: '06:00',
-            //     to: '07:00'
-            // },
-            // {
-            //     uuid: 'ghg345hj-huyg678hhyhhgh',
-            //     from: '07:00',
-            //     to: '08:00'
-            // },
-            // {
-            //     uuid: 'ghf345fffghj-44dfg4dfff',
-            //     from: '08:00',
-            //     to: '09:00'
-            // },
-            // {
-            //     uuid: 'ghgddfr887hj-huyg5dfg55hhgh',
-            //     from: '09:00',
-            //     to: '10:00'
-            // },
-        ]
-    })
+    const [getChecklistDetails, setGetChecklistDetails] = useState(null)
+    const [selectedTimeUuid, setSelectedTimeUuid] = useState(null)
 
     useEffect(() => {
-
+        setSelectedTimeUuid(null)
         dispatch(actionChecklistGroupDetails({
             branch_uuid: branch?.currentBranch?.uuid,
             asset_type_id: assetId,
@@ -643,15 +89,16 @@ export default function ChecklistView() {
         const { assets, checklist_json, asset_checklist_json } = assetGroup;
         const { parameters, times } = checklist_json;
 
-        return times?.map((time, index) => ({
-            ...time,
-            is_selected: index == 0 ? true : false,
+
+        return times?.map((timeObj, index) => ({
+            ...timeObj,
+            is_selected: selectedTimeUuid && selectedTimeUuid !== null && selectedTimeUuid == timeObj?.uuid && index != 0 ? true : (index == 0 && selectedTimeUuid == null ? true : false),
             schedules: assets?.map(asset => ({
                 asset_id: asset?.asset_id,
                 asset_name: asset?.asset_name,
                 status: "",
                 is_view: 1,
-                values: getParameters(asset?.asset_id, time?.uuid, asset_checklist_json) && getParameters(asset?.asset_id, time?.uuid, asset_checklist_json) !== null && getParameters(asset?.asset_id, time?.uuid, asset_checklist_json)?.length > 0 ? getParameters(asset?.asset_id, time?.uuid, asset_checklist_json) : parameters.map(param => ({
+                values: getParameters(asset?.asset_id, timeObj?.uuid, asset_checklist_json) && getParameters(asset?.asset_id, timeObj?.uuid, asset_checklist_json) !== null && getParameters(asset?.asset_id, timeObj?.uuid, asset_checklist_json)?.length > 0 ? getParameters(asset?.asset_id, timeObj?.uuid, asset_checklist_json) : parameters.map(param => ({
                     parameter_id: param.id,
                     value: "",
                     max: param.max,
@@ -679,15 +126,15 @@ export default function ChecklistView() {
         const { assets, checklist_json } = assetGroup;
         const { parameters, times } = checklist_json;
 
-        return times.map((time, index) => ({
-            ...time,
+        return times?.map((timeObj, index) => ({
+            ...timeObj,
             is_selected: index == 0 ? true : false,
-            schedules: assets.map(asset => ({
+            schedules: assets?.map(asset => ({
                 asset_id: asset.asset_id,
                 asset_name: asset.asset_name,
                 status: "",
                 is_view: 1,
-                values: parameters.map(param => ({
+                values: parameters?.map(param => ({
                     parameter_id: param.id,
                     value: "",
                     max: param.max,
@@ -728,6 +175,43 @@ export default function ChecklistView() {
 
     }, [getCurrentAssetGroup])
 
+    /**
+     * function checks the length of edit mode in checklist
+     * @returns true/false
+     */
+    const getEditModeCount = () => {
+        let count = 0;
+
+        getChecklistDetails?.times?.forEach((time) => {
+            time?.schedules?.forEach((asset) => {
+                console.log('-----------')
+                if (asset.is_view === 0) {
+                    count += 1; // or count++
+                }
+            });
+        });
+        if (Number(count) > 0) {
+            return true
+        }
+        return false
+    }
+
+    /**
+     * Function return true is selectedStartDate is today
+     */
+    const isToday = useCallback(() => {
+        if (!selectedStartDate) return false;
+
+        const selectedDate = new Date(moment(selectedStartDate, 'DD/MM/YYYY').format('YYYY-MM-DD'));
+        const today = new Date();
+
+        // Format both dates to YYYY-MM-DD for accurate comparison
+        const format = (d) =>
+            `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+                d.getDate()
+            ).padStart(2, "0")}`;
+        return format(selectedDate) === format(today);
+    }, [selectedStartDate]);
 
     /**
         * useEffect
@@ -4107,79 +3591,428 @@ export default function ChecklistView() {
     }, [checklistGroupDetails])
 
     /**
+    * useEffect
+    * @dependency : checklistGroupHistoryAdd
+    * @type : HANDLE API RESULT
+    * @description : Handle the result of checklist group history/asset save API
+    */
+    useEffect(() => {
+        if (checklistGroupHistoryAdd && checklistGroupHistoryAdd !== null) {
+            dispatch(resetChecklistGroupHistoryAddResponse())
+            if (checklistGroupHistoryAdd?.result === true) {
+                // setLoadingSubmit(false)
+                methods.reset()
+                showSnackbar({ message: checklistGroupHistoryAdd.message, severity: "success" })
+                dispatch(actionChecklistGroupDetails({
+                    branch_uuid: branch?.currentBranch?.uuid,
+                    asset_type_id: assetId,
+                    group_uuid: groupUuid,
+                    date: selectedStartDate && selectedStartDate !== null ? moment(selectedStartDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : moment().format('YYYY-MM-DD')
+                }))
+                // handleClose('save')
+            } else {
+                // setLoadingSubmit(false)
+                switch (checklistGroupHistoryAdd?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        showSnackbar({ message: checklistGroupHistoryAdd.message, severity: "error" })
+                        dispatch(resetChecklistGroupHistoryAddResponse())
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: checklistGroupHistoryAdd.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [checklistGroupHistoryAdd])
+
+    /**
+ * Check if a time slot is enabled based on current time
+ * @param {string} from - start time in HH:mm format
+ * @param {string} to - end time in HH:mm format
+ * @returns {boolean} - true if time slot is available (clickable), false if in future
+ */
+    const isTimeSlotEnabled = (from, to) => {
+        const now = new Date();
+
+        // Parse from time
+        const [fromHour, fromMinute] = from.split(':').map(Number);
+        const fromTime = new Date();
+        fromTime.setHours(fromHour, fromMinute, 0, 0);
+
+        // Parse to time
+        const [toHour, toMinute] = to.split(':').map(Number);
+        const toTime = new Date();
+        toTime.setHours(toHour, toMinute, 0, 0);
+
+        // Logic: enable if now >= from
+        return now >= fromTime;
+
+        // Optional: if you want to disable after 'to' as well
+        // return now >= fromTime && now <= toTime;
+    };
+
+
+    // const handleValueUpdate = (assetId, params, value) => {
+    //     console.log('---------assetId--------', assetId)
+    //     console.log('---------params--------', params)
+    //     console.log('---------value--------', value)
+    //     let objParams = Object.assign({}, params)
+    //     objParams.value = value
+
+    //     let objChecklists = Object.assign({}, getChecklistDetails)
+    //     let arrTimes = Object.assign([], objChecklists?.times)
+
+    //     let currentTimesIndex = arrTimes.findIndex(t => t.is_selected == true)
+    //     let currentTimes = arrTimes.find(t => t.is_selected == true)
+
+    //     let objTimes = Object.assign({}, currentTimes)
+    //     let arrAssets = Object.assign([], objTimes?.schedules)
+
+    //     let getCurrentAssetIndex = arrAssets.findIndex(s => s.asset_id == assetId)
+    //     let getCurrentAsset = arrAssets.find(s => s.asset_id == assetId)
+
+    //     let objAsset = Object.assign({}, getCurrentAsset)
+    //     let arrParameters = Object.assign([], objAsset?.values)
+    //     let getParameterIndex = arrParameters.findIndex(p => p.parameter_id == params?.parameter_id)
+    //     arrParameters[getParameterIndex] = objParams
+    //     objAsset.values = arrParameters
+    //     arrAssets[getCurrentAssetIndex] = objAsset
+    //     objTimes.schedules = arrAssets
+    //     arrTimes[currentTimesIndex] = objTimes
+    //     objChecklists.times = arrTimes
+    //     setGetChecklistDetails(objChecklists)
+    // }
+
+    // const handleValueUpdate = (assetId, params, value) => {
+    //     setGetChecklistDetails(prev => {
+    //         return {
+    //             ...prev,
+    //             times: prev.times.map(time => {
+    //                 if (!time.is_selected) return time;
+
+    //                 return {
+    //                     ...time,
+    //                     schedules: time.schedules.map(asset => {
+    //                         if (asset.asset_id !== assetId) return asset;
+
+    //                         return {
+    //                             ...asset,
+    //                             values: asset.values.map(v =>
+    //                                 v.parameter_id === params.parameter_id
+    //                                     ? { ...v, value }
+    //                                     : v
+    //                             )
+    //                         };
+    //                     })
+    //                 };
+    //             })
+    //         };
+    //     });
+    // };
+
+
+    /**
      * Function to return fields with validations
      * @param {*} params, value
      * @returns 
      */
-    const FieldRenderer = ({ params, value }) => {
-        const { register, formState: { errors } } = useFormContext();
+    // const FieldRenderer = ({ params, value, assetId }) => {
+    //     const { control, register, formState: { errors } } = useFormContext();
 
-        const fieldName = params?.name;
+    //     // Dynamic + unique field name 
+    //     // const fieldName = `${assetId}_${params.parameter_id}`;
+    //     const fieldName = `${params.name}`;
+
+    //     // Validation rules
+    //     const validationRules = {
+    //         required: params?.is_mandatory ? `${params?.name} is required` : false,
+    //         min: params?.min
+    //             ? { value: Number(params.min), message: `Value should be between ${params.min} and ${params.max}` }
+    //             : undefined,
+    //         max: params?.max
+    //             ? { value: Number(params.max), message: `Value should be between ${params.min} and ${params.max}` }
+    //             : undefined,
+    //     };
+
+    //     switch (params?.input_type) {
+
+    //         // ---------------- TEXT INPUT ----------------
+    //         case "Text Input":
+    //             return (
+    //                 <CustomTextField
+    //                     fullWidth
+    //                     defaultValue={value ?? ""}
+    //                     placeholder={`Enter ${params?.name}`}
+    //                     {...register(fieldName, validationRules)}
+    //                     error={!!errors[fieldName]}
+    //                     helperText={errors[fieldName]?.message}
+    //                 />
+    //             );
+
+    //         // ---------------- NUMBER INPUT ----------------
+    //         case "Number (with range)":
+    //             return (
+    //                 <CustomTextField
+    //                     fullWidth
+    //                     type="number"
+    //                     size="small"
+    //                     defaultValue={value ?? ""}
+    //                     InputProps={{
+    //                         endAdornment: (
+    //                             <InputAdornment position='end'>
+    //                                 {/* <IconButton
+    //                                     edge='end'
+    //                                     onMouseDown={e => e.preventDefault()}
+    //                                 > */}
+    //                                 {params?.unit}
+    //                                 {/* </IconButton> */}
+    //                             </InputAdornment>
+    //                         )
+    //                     }}
+    //                     placeholder={`Enter ${params?.name}`}
+    //                     {...register(fieldName, validationRules)}
+    //                     error={!!errors[fieldName]}
+    //                     helperText={errors[fieldName]?.message}
+    //                 />
+    //             );
+
+    //         // ---------------- DROPDOWN INPUT ----------------
+    //         case "Multiple Choice":
+    //         case "Yes/No":
+    //             return (
+    //                 <Controller
+    //                     control={control}
+    //                     name={fieldName}
+    //                     defaultValue={value ?? ""}
+    //                     rules={validationRules}
+    //                     render={({ field }) => (
+    //                         <CustomTextField
+    //                             select
+    //                             fullWidth
+    //                             {...field}
+    //                             error={!!errors[fieldName]}
+    //                             helperText={errors[fieldName]?.message}
+    //                         >
+    //                             <MenuItem value="">
+    //                                 <em>Select Option</em>
+    //                             </MenuItem>
+
+    //                             {params.options?.map((opt, i) => (
+    //                                 <MenuItem key={i} value={opt}>
+    //                                     {opt}
+    //                                 </MenuItem>
+    //                             ))}
+    //                         </CustomTextField>
+    //                     )}
+    //                 />
+    //             );
+    //         // return (
+    //         //     <CustomTextField
+    //         //         select
+    //         //         fullWidth
+    //         //         defaultValue={value ?? ""}
+    //         //         placeholder={`Select ${params?.name}`}
+    //         //         {...register(fieldName, validationRules)}
+    //         //         error={!!errors[fieldName]}
+    //         //         helperText={errors[fieldName]?.message}
+    //         //     >
+    //         //         <MenuItem value="">
+    //         //             <em>Select Option</em>
+    //         //         </MenuItem>
+
+    //         //         {params.options?.map((option, index) => (
+    //         //             <MenuItem key={index} value={option}>
+    //         //                 {option}
+    //         //             </MenuItem>
+    //         //         ))}
+    //         //     </CustomTextField>
+    //         // );
+
+    //         default:
+    //             return null;
+    //     }
+    // };
+
+
+    const FieldRenderer = ({ params, value, assetId }) => {
+        const { control, formState: { errors } } = useFormContext();
+
+        const fieldName = `${params.name}`;
 
         const validationRules = {
             required: params?.is_mandatory ? `${params?.name} is required` : false,
-            min: params?.min ? { value: Number(params.min), message: `Value should be between Min ${params.min} and Max ${params.max}` } : undefined,
-            max: params?.max ? { value: Number(params.max), message: `Value should be between Min ${params.min} and Max ${params.max}` } : undefined,
+            min: params?.min
+                ? { value: Number(params.min), message: `Value should be between ${params.min} and ${params.max}` }
+                : undefined,
+            max: params?.max
+                ? { value: Number(params.max), message: `Value should be between ${params.min} and ${params.max}` }
+                : undefined,
         };
 
-        switch (params?.input_type) {
+        return (
+            <Controller
+                name={fieldName}
+                control={control}
+                defaultValue={value ?? ""}
+                rules={validationRules}
+                render={({ field }) => {
+                    switch (params?.input_type) {
 
-            case 'Text Input':
-                return (
-                    <CustomTextField
-                        fullWidth
-                        defaultValue={value ?? ""}
-                        placeholder={`Enter ${fieldName}`}
-                        {...register(fieldName, validationRules)}
-                        error={!!errors[fieldName]}
-                        helperText={errors[fieldName]?.message}
-                    />
-                );
+                        // ---------------- TEXT INPUT ----------------
+                        case "Text Input":
+                            return (
+                                <CustomTextField
+                                    fullWidth
+                                    placeholder={`Enter ${params?.name}`}
+                                    {...field}
+                                    error={!!errors[fieldName]}
+                                    helperText={errors[fieldName]?.message}
+                                />
+                            );
 
-            case 'Number (with range)':
-                return (
-                    <CustomTextField
-                        type="number"
-                        size="small"
-                        defaultValue={value}
-                        placeholder={`Enter ${fieldName}`}
-                        {...register(fieldName, validationRules)}
-                        error={!!errors[fieldName]}
-                        helperText={errors[fieldName]?.message}
-                    />
-                );
+                        // ---------------- NUMBER INPUT ----------------
+                        case "Number (with range)":
+                            return (
+                                <CustomTextField
+                                    fullWidth
+                                    type="number"
+                                    size="small"
+                                    placeholder={`Enter ${params?.name}`}
+                                    {...field}
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                {params?.unit}
+                                            </InputAdornment>
+                                        )
+                                    }}
+                                    error={!!errors[fieldName]}
+                                    helperText={errors[fieldName]?.message}
+                                />
+                            );
 
-            case 'Multiple Choice':
-            case 'Yes/No':
-                return (
-                    <CustomTextField
-                        select
-                        fullWidth
-                        defaultValue={value ?? ""}
-                        placeholder={`Enter ${fieldName}`}
-                        {...register(fieldName, validationRules)}
-                        error={!!errors[fieldName]}
-                        helperText={errors[fieldName]?.message}
-                    >
-                        <MenuItem value="">
-                            <em>Select Option</em>
-                        </MenuItem>
+                        // ---------------- SELECT INPUT ----------------
+                        case "Multiple Choice":
+                        case "Yes/No":
+                            return (
+                                <CustomTextField
+                                    select
+                                    fullWidth
+                                    {...field}
+                                    error={!!errors[fieldName]}
+                                    helperText={errors[fieldName]?.message}
+                                >
+                                    <MenuItem value="">
+                                        <em>Select Option</em>
+                                    </MenuItem>
 
-                        {params.options?.map((option, index) => (
-                            <MenuItem key={index} value={option}>
-                                {option}
-                            </MenuItem>
-                        ))}
-                    </CustomTextField>
-                );
+                                    {params.options?.map((opt, index) => (
+                                        <MenuItem key={index} value={opt}>
+                                            {opt}
+                                        </MenuItem>
+                                    ))}
+                                </CustomTextField>
+                            );
 
-            default:
-                return null;
-        }
+                        default:
+                            return null;
+                    }
+                }}
+            />
+        );
     };
 
-    const onSubmit = () => {
+
+    const onSubmit = (formData) => {
+
+        let objChecklists = Object.assign({}, getChecklistDetails)
+        let arrTimes = Object.assign([], objChecklists?.times)
+
+        // let currentTimesIndex = arrTimes.findIndex(t => t.is_selected == true)
+        let currentTimes = arrTimes.find(t => t.is_selected == true)
+
+        let objTimes = Object.assign({}, currentTimes)
+        let arrAssets = Object.assign([], objTimes?.schedules)
+
+        // let getCurrentAssetIndex = arrAssets.findIndex(s => s.is_view == 0)
+        let getCurrentAsset = arrAssets.find(s => s.is_view == 0)
+        let currentValues = Object.assign([], getCurrentAsset?.values)
+
+        const updatedValues = currentValues.map(param => {
+            // Construct the dynamic fieldName
+            // const fieldName = `${getCurrentAsset.asset_id}_${param.parameter_id}`;
+            const fieldName = `${param.name}`;
+
+            return {
+                ...param,
+                is_view: 1,
+                value: formData[fieldName] ?? param.value
+            };
+        });
+
+
+        console.log('--------formData--------', formData)
         //Call save api
+        // setGetChecklistDetails(prev => {
+        //     return {
+        //         ...prev,
+        //         times: prev.times.map(time => {
+        //             if (!time.is_selected) return time;
+
+        //             // Update only the selected time block
+        //             return {
+        //                 ...time,
+        //                 schedules: time.schedules.map(asset => {
+
+        //                     const updatedValues = asset.values.map(param => {
+        //                         // Construct the dynamic fieldName
+        //                         const fieldName = `${asset.asset_id}_${param.parameter_id}`;
+
+        //                         return {
+        //                             ...param,
+        //                             is_view: 1,
+        //                             value: formData[fieldName] ?? param.value
+        //                         };
+        //                     });
+
+        //                     return {
+        //                         ...asset,
+        //                         values: updatedValues
+        //                     };
+        //                 })
+        //             };
+        //         })
+        //     };
+        // });
+        let objData = {
+            "asset_type_id": Number(assetId),
+            "asset_id": getCurrentAsset?.asset_id,
+            "group_uuid": groupUuid,
+            "date": selectedStartDate && selectedStartDate !== null ? moment(selectedStartDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : moment().format('YYYY-MM-DD'),
+            "checklist_json": {
+                "asset_id": getCurrentAsset?.asset_id,
+                "asset_name": getCurrentAsset?.asset_name,
+                "status": getCurrentAsset?.status,
+                "is_view": 0,
+                "times": [
+                    {
+                        "to": currentTimes?.to,
+                        "from": currentTimes?.from,
+                        "uuid": currentTimes?.uuid,
+                        "is_selected": true,
+                        "values": updatedValues || []
+                    }
+                ]
+            }
+        }
+
+        console.log('--------objData----@@@@@@@@@@------', objData)
+        dispatch(actionChecklistGroupHistoryAdd(objData))
     }
 
     return (<>
@@ -4294,37 +4127,63 @@ export default function ChecklistView() {
                         {
                             getChecklistDetails && getChecklistDetails !== null && getChecklistDetails?.times && getChecklistDetails?.times !== null && getChecklistDetails?.times.length > 0 ?
                                 getChecklistDetails?.times?.map((objData, index) => {
+                                    const isEnabled = isTimeSlotEnabled(objData.from, objData.to);
+
                                     return (<Stack
                                         key={index}
                                         sx={{
-                                            cursor: 'pointer', justifyContent: 'center', minWidth: '175px', flexDirection: 'row', gap: 1, p: '10px 16px', borderRadius: '8px', background:
-                                                // selectedTimeSlot?.uuid === objData?.uuid ?
-                                                objData?.is_selected == true ?
-                                                    theme.palette.common.black : theme.palette.common.white
+                                            cursor: isEnabled == true ? 'pointer' : '', justifyContent: 'center', minWidth: '175px', flexDirection: 'row', gap: 1, p: '10px 16px', borderRadius: '8px',
+                                            background: isEnabled == true ?
+                                                (objData?.is_selected == true ? theme.palette.common.black : theme.palette.common.white)
+                                                : 'transparent'
                                         }}
                                         onClick={() => {
-                                            let details = Object.assign({}, getChecklistDetails)
-                                            let arrTimes = Object.assign([], details?.times)
-                                            const updatedTimes = arrTimes.map(time => {
-                                                if (time?.uuid === objData?.uuid) {
-                                                    return { ...time, is_selected: true };
-                                                }
-                                                return { ...time, is_selected: false };
-                                            });
-                                            details.times = updatedTimes
-                                            setGetChecklistDetails(details)
-                                            methods.reset()
-                                            // let getCurrentTimeSlot = getChecklistDetails?.times.find(obj => obj?.uuid === objData?.uuid)
-                                            // setSelectedTimeSlot(getCurrentTimeSlot)
+                                            if (isEnabled == true) {
+                                                let details = Object.assign({}, getChecklistDetails)// shallow copy
+                                                let arrTimes = details?.times || [];
+
+                                                const updatedTimes = arrTimes.map(time => {
+                                                    const isSelected = time?.uuid === objData?.uuid;
+
+                                                    setSelectedTimeUuid(objData?.uuid)
+
+                                                    // Update all assets in this time's schedules
+                                                    const updatedSchedules = time?.schedules.map(asset => ({
+                                                        ...asset,
+                                                        is_view: 1, // mark all assets as viewed
+                                                        values: asset.values.map(param => ({
+                                                            ...param,
+                                                            is_view: 1 // optionally mark all values as viewed
+                                                        }))
+                                                    }));
+
+                                                    return {
+                                                        ...time,
+                                                        is_selected: isSelected, // mark current time selected
+                                                        schedules: updatedSchedules
+                                                    };
+                                                });
+                                                details.times = updatedTimes;
+                                                setGetChecklistDetails(details);
+                                                methods.reset()
+                                            }
+
                                         }}
                                     >
                                         {
-                                            // selectedTimeSlot?.uuid === objData?.uuid ?
-                                            objData?.is_selected == true ?
-                                                <CircleDashedIcon />
-                                                :
-                                                <CheckboxIcon size={24} />
+                                            isEnabled == true ?
+                                                <>
+                                                    {
+                                                        // selectedTimeSlot?.uuid === objData?.uuid ?
+                                                        objData?.is_selected == true ?
+                                                            <CircleDashedIcon />
+                                                            :
+                                                            <CheckboxIcon size={24} />
+                                                    }
+                                                </>
+                                                : <></>
                                         }
+
                                         <TypographyComponent fontSize={16} fontWeight={400}
                                             sx={{
                                                 color:
@@ -4376,13 +4235,13 @@ export default function ChecklistView() {
 
                                     </TableCell>
                                     {/* Time Slot Headers (00:00, 02:00, ...) */}
-                                    {getChecklistDetails?.times.find(t => t.is_selected == true)?.schedules.map((asset, indexAsset) => (
+                                    {getChecklistDetails && getChecklistDetails !== null && getChecklistDetails?.times && getChecklistDetails?.times !== null && getChecklistDetails?.times.length > 0 && getChecklistDetails?.times?.find(t => t.is_selected == true)?.schedules?.map((asset, indexAsset) => (
                                         <TableCell
                                             key={indexAsset}
                                             sx={{
-                                                backgroundColor: theme.palette.success[50],
+                                                backgroundColor: theme.palette.common.white,// theme.palette.success[50],
                                                 color: theme.palette.grey[600],
-                                                border: `1px solid ${theme.palette.success[600]}`,
+                                                border: `1px solid ${theme.palette.grey[300]}`,//`1px solid ${theme.palette.success[600]}`,
                                                 borderRadius: '8px',
                                                 fontWeight: 'bold',
                                                 width: 255,
@@ -4440,34 +4299,35 @@ export default function ChecklistView() {
 
                                         </TableCell>
                                         {/* {selectedTimeSlot?.schedules.map((timeSlot) => { */}
-                                        {getChecklistDetails?.times.find(t => t.is_selected == true)?.schedules.map((timeSlot) => {
+                                        {getChecklistDetails && getChecklistDetails !== null && getChecklistDetails?.times && getChecklistDetails?.times !== null && getChecklistDetails?.times.length > 0 && getChecklistDetails?.times.find(t => t.is_selected == true)?.schedules.map((objAsset) => {
                                             // Find the value object for the current parameter in the current time slot
-                                            const paramValue = timeSlot?.values?.find(v => v.parameter_id === row.id);
+                                            const paramValue = objAsset?.values?.find(v => v.parameter_id === row.id);
                                             const value = paramValue ? paramValue.value : '';
 
                                             return (
-                                                <TableCell key={`${timeSlot?.id}-${timeSlot?.asset_name}`}
+                                                <TableCell key={`${objAsset?.id}-${objAsset?.asset_name}`}
                                                     sx={{
                                                         alignItems: 'flex-start',
                                                         p: '15px 24px',
-                                                        borderTop: i == 0 ? `1px solid ${theme.palette.success[600]}` : '',
+                                                        borderTop: i == 0 ?
+                                                            `1px solid ${theme.palette.grey[300]}`// `1px solid ${theme.palette.success[600]}`
+                                                            : '',
                                                         borderBottom: `1px solid ${theme.palette.grey[300]}`,
-                                                        background: theme.palette.success[50],
-                                                        borderLeft: `1px solid ${theme.palette.success[600]}`,
-                                                        borderRight: `1px solid ${theme.palette.success[600]}`,
+                                                        background: theme.palette.common.white,//theme.palette.success[50],
+                                                        borderLeft: `1px solid ${theme.palette.grey[300]}`,// `1px solid ${theme.palette.success[600]}`
+                                                        borderRight: `1px solid ${theme.palette.grey[300]}`,// `1px solid ${theme.palette.success[600]}`
                                                         borderTopLeftRadius: i == 0 ? '8px' : 'none',
                                                         borderTopRightRadius: i == 0 ? '8px' : 'none',
                                                     }}>
                                                     {/* Placeholder for the Input Field (like a TextField) */}
                                                     {
-                                                        timeSlot?.is_view == 1 ?
+                                                        objAsset?.is_view == 1 ?
                                                             <>
-                                                                <TypographyComponent sx={{ color: theme.palette.grey[900] }} fontSize={14} fontWeight={400}>{value}</TypographyComponent>
+                                                                <TypographyComponent sx={{ color: theme.palette.grey[900] }} fontSize={14} fontWeight={400}>{value && value !== null ? `${value} ${paramValue?.input_type == 'Number (with range)' ? (paramValue?.unit && paramValue?.unit !== null ? paramValue?.unit : '') : '--'}` : '--'} </TypographyComponent>
                                                             </>
                                                             :
                                                             <>
-                                                                <FieldRenderer params={paramValue} value={value} />
-                                                                {/* {getFieldsPerInputType(paramValue, value)} */}
+                                                                <FieldRenderer key={`${i}-${objAsset?.asset_id}`} params={paramValue} value={value} assetId={objAsset?.asset_id} />
                                                             </>
                                                     }
 
@@ -4476,116 +4336,153 @@ export default function ChecklistView() {
                                         })}
                                     </TableRow>
                                 ))}
-                                <TableRow>
-                                    <TableCell
-                                        sx={{
-                                            position: 'sticky',
-                                            left: 0,
-                                            zIndex: 100,
-                                            background: theme.palette.common.white,
-                                            fontWeight: 'bold',
-                                            width: 300,
-                                            borderBottom: `1px solid ${theme.palette.grey[300]}`,
-                                            borderLeft: `1px solid ${theme.palette.grey[300]}`,
-                                            borderRight: `1px solid ${theme.palette.grey[300]}`,
-                                            borderBottomLeftRadius: '8px',
-                                            borderBottomRightRadius: '8px',
-                                        }}
-                                    >
-                                        Approval Actions
-                                    </TableCell>
-                                    {/* {selectedTimeSlot?.schedules.map((asset, assetIndex) => { */}
-                                    {getChecklistDetails?.times.find(t => t.is_selected == true)?.schedules.map((asset, assetIndex) => {
-                                        return (
-                                            <React.Fragment>
-                                                <TableCell
-                                                    key={`${assetIndex}-${asset?.asset_name}`}
-                                                    align="center"
-                                                    sx={{
-                                                        backgroundColor: 'transparent',
-                                                        fontWeight: 'bold',
-                                                        minWidth: 255,
-                                                        p: '15px 24px',
-                                                        background: theme.palette.success[50],
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        borderBottom: `1px solid ${theme.palette.success[600]}`,
-                                                        borderLeft: `1px solid ${theme.palette.success[600]}`,
-                                                        borderRight: `1px solid ${theme.palette.success[600]}`,
-                                                        borderBottomLeftRadius: '8px',
-                                                        borderBottomRightRadius: '8px',
+                                {
+                                    isToday() == true ?
+                                        <TableRow>
+                                            <TableCell
+                                                sx={{
+                                                    position: 'sticky',
+                                                    left: 0,
+                                                    zIndex: 100,
+                                                    background: theme.palette.common.white,
+                                                    fontWeight: 'bold',
+                                                    width: 300,
+                                                    borderBottom: `1px solid ${theme.palette.grey[300]}`,
+                                                    borderLeft: `1px solid ${theme.palette.grey[300]}`,
+                                                    borderRight: `1px solid ${theme.palette.grey[300]}`,
+                                                    borderBottomLeftRadius: '8px',
+                                                    borderBottomRightRadius: '8px',
+                                                }}
+                                            >
+                                                Approval Actions
+                                            </TableCell>
+                                            {/* {selectedTimeSlot?.schedules.map((asset, assetIndex) => { */}
+                                            {getChecklistDetails && getChecklistDetails !== null && getChecklistDetails?.times && getChecklistDetails?.times !== null && getChecklistDetails?.times.length > 0 && getChecklistDetails?.times.find(t => t.is_selected == true)?.schedules.map((asset, assetIndex) => {
+                                                return (
+                                                    <React.Fragment>
+                                                        <TableCell
+                                                            key={`${assetIndex}-${asset?.asset_name}`}
+                                                            align="center"
+                                                            sx={{
+                                                                backgroundColor: 'transparent',
+                                                                fontWeight: 'bold',
+                                                                minWidth: 255,
+                                                                p: '15px 24px',
+                                                                background: theme.palette.common.white,//theme.palette.success[50],
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                borderBottom: `1px solid ${theme.palette.grey[300]}`,// `1px solid ${theme.palette.success[600]}`
+                                                                borderLeft: `1px solid ${theme.palette.grey[300]}`,// `1px solid ${theme.palette.success[600]}`
+                                                                borderRight: `1px solid ${theme.palette.grey[300]}`,// `1px solid ${theme.palette.success[600]}`
+                                                                borderBottomLeftRadius: '8px',
+                                                                borderBottomRightRadius: '8px',
 
-                                                    }}
-                                                >
-
-                                                    <Stack sx={{ flexDirection: 'row', justifyContent: 'center', gap: 0.8, width: '100%' }}>
-                                                        <Button
-                                                            size={'small'}
-                                                            sx={{ textTransform: "capitalize", px: 6, borderRadius: '4px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 14, fontWeight: 500, borderColor: theme.palette.primary[600] }}
-                                                            onClick={() => {
-                                                                // setOpenAddTicket(true)
                                                             }}
-                                                            variant='contained'
                                                         >
-                                                            {/* <AddIcon sx={{ color: 'white', fontSize: { xs: '20px', sm: '20px', md: '22px' } }} /> */}
-                                                            Approve
-                                                        </Button>
-                                                        {
-                                                            asset?.is_view == 1 ?
-                                                                <IconButton sx={{ border: `1px solid ${theme.palette.primary[600]}`, borderRadius: '4px' }}
-                                                                    onClick={() => {
-                                                                        // methods.reset()
-                                                                        let details = Object.assign({}, getChecklistDetails)
-                                                                        let arrTimes = Object.assign([], details?.times)
-                                                                        let currentTime = arrTimes?.find(t => t.is_selected == true)
-                                                                        let currentTimeIndex = arrTimes?.findIndex(t => t.is_selected == true)
 
-                                                                        let arrSchedules = Object.assign([], currentTime?.schedules)
+                                                            <Stack sx={{ flexDirection: 'row', justifyContent: 'center', gap: 1, width: '100%' }}>
 
-                                                                        let currentAsset = arrSchedules?.find(a => a.asset_id == asset?.asset_id)
-                                                                        currentAsset.is_view = 0
-                                                                        let currentAssetIndex = arrSchedules?.findIndex(a => a.asset_id == asset?.asset_id)
-                                                                        arrSchedules[currentAssetIndex] = currentAsset
-                                                                        currentTime.schedules = arrSchedules
-                                                                        arrTimes[currentTimeIndex] = currentTime
-                                                                        details.times = arrTimes
-                                                                        setGetChecklistDetails(details)
-                                                                    }}>
-                                                                    <EditCircleIcon stroke={theme.palette.grey[700]} size={22} />
-                                                                </IconButton>
-                                                                :
-                                                                <IconButton sx={{ border: `1px solid ${theme.palette.primary[600]}`, borderRadius: '4px' }}
-                                                                    onClick={() => {
-                                                                        methods.handleSubmit(onSubmit)()
+                                                                {
+                                                                    asset?.is_view == 1 ?
+                                                                        <>
+                                                                            <Button
+                                                                                size={'small'}
+                                                                                sx={{ textTransform: "capitalize", px: asset?.is_view == 0 ? 4 : 6, borderRadius: '4px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 14, fontWeight: 500, borderColor: theme.palette.primary[600] }}
+                                                                                onClick={() => {
+                                                                                    // setOpenAddTicket(true)
+                                                                                }}
+                                                                                variant='contained'
+                                                                            >
+                                                                                {/* <AddIcon sx={{ color: 'white', fontSize: { xs: '20px', sm: '20px', md: '22px' } }} /> */}
+                                                                                Approve
+                                                                            </Button>
+                                                                            <Button disabled={getEditModeCount()} sx={{ columnGap: 0.5, px: 2, border: getEditModeCount() ? `1px solid ${theme.palette.grey[300]}` : `1px solid ${theme.palette.primary[600]}`, background: getEditModeCount() ? theme.palette.grey[300] : '', color: getEditModeCount() ? theme.palette.grey[600] : theme.palette.primary[600], textTransform: 'capitalize', borderRadius: '4px' }}
+                                                                                onClick={() => {
+                                                                                    // methods.reset()
+
+                                                                                    let details = Object.assign({}, getChecklistDetails)
+                                                                                    let arrTimes = Object.assign([], details?.times)
+                                                                                    let currentTime = arrTimes?.find(t => t.is_selected == true)
+                                                                                    let currentTimeIndex = arrTimes?.findIndex(t => t.is_selected == true)
+
+                                                                                    let arrSchedules = Object.assign([], currentTime?.schedules)
+
+                                                                                    let currentAsset = arrSchedules?.find(a => a.asset_id == asset?.asset_id)
+                                                                                    currentAsset.is_view = 0
+                                                                                    let currentAssetIndex = arrSchedules?.findIndex(a => a.asset_id == asset?.asset_id)
+                                                                                    arrSchedules[currentAssetIndex] = currentAsset
+                                                                                    currentTime.schedules = arrSchedules
+                                                                                    arrTimes[currentTimeIndex] = currentTime
+                                                                                    details.times = arrTimes
+                                                                                    setGetChecklistDetails(details)
+                                                                                }}>
+                                                                                <EditCircleIcon stroke={getEditModeCount() ? theme.palette.grey[600] : theme.palette.primary[600]} size={18} /> Edit
+                                                                            </Button>
+                                                                        </>
+                                                                        :
+                                                                        <>
+                                                                            <Button
+                                                                                title={'Cancel'}
+                                                                                sx={{ columnGap: 0.5, px: 6, color: theme.palette.primary[600], border: `1px solid ${theme.palette.primary[600]}`, background: theme.palette.common.white, textTransform: 'capitalize', borderRadius: '4px' }}
+                                                                                onClick={() => {
+                                                                                    let details = Object.assign({}, getChecklistDetails)
+                                                                                    let arrTimes = Object.assign([], details?.times)
+                                                                                    let currentTime = arrTimes?.find(t => t.is_selected == true)
+                                                                                    let currentTimeIndex = arrTimes?.findIndex(t => t.is_selected == true)
+
+                                                                                    let arrSchedules = Object.assign([], currentTime?.schedules)
+
+                                                                                    let currentAsset = arrSchedules?.find(a => a.asset_id == asset?.asset_id)
+                                                                                    currentAsset.is_view = 1
+                                                                                    let currentAssetIndex = arrSchedules?.findIndex(a => a.asset_id == asset?.asset_id)
+                                                                                    arrSchedules[currentAssetIndex] = currentAsset
+                                                                                    currentTime.schedules = arrSchedules
+                                                                                    arrTimes[currentTimeIndex] = currentTime
+                                                                                    details.times = arrTimes
+                                                                                    setGetChecklistDetails(details)
+
+                                                                                    methods.reset()
+                                                                                }}
+                                                                            >
+                                                                                <CloseIcon stroke={theme.palette.primary[600]} size={10} />
+                                                                                Cancel
+                                                                            </Button>
+                                                                            <Button sx={{ columnGap: 0.5, px: 6, color: theme.palette.common.white, background: theme.palette.success[600], textTransform: 'capitalize', borderRadius: '4px' }}
+                                                                                onClick={() => {
+                                                                                    methods.handleSubmit(onSubmit)()
 
 
-                                                                        // let details = Object.assign({}, getChecklistDetails)
-                                                                        // let arrTimes = Object.assign([], details?.times)
-                                                                        // let currentTime = arrTimes?.find(t => t.is_selected == true)
-                                                                        // let currentTimeIndex = arrTimes?.findIndex(t => t.is_selected == true)
+                                                                                    // let details = Object.assign({}, getChecklistDetails)
+                                                                                    // let arrTimes = Object.assign([], details?.times)
+                                                                                    // let currentTime = arrTimes?.find(t => t.is_selected == true)
+                                                                                    // let currentTimeIndex = arrTimes?.findIndex(t => t.is_selected == true)
 
-                                                                        // let arrSchedules = Object.assign([], currentTime?.schedules)
+                                                                                    // let arrSchedules = Object.assign([], currentTime?.schedules)
 
-                                                                        // let currentAsset = arrSchedules?.find(a => a.asset_id == asset?.asset_id)
-                                                                        // currentAsset.is_view = 1
-                                                                        // let currentAssetIndex = arrSchedules?.findIndex(a => a.asset_id == asset?.asset_id)
-                                                                        // arrSchedules[currentAssetIndex] = currentAsset
-                                                                        // currentTime.schedules = arrSchedules
-                                                                        // arrTimes[currentTimeIndex] = currentTime
-                                                                        // details.times = arrTimes
-                                                                        // setGetChecklistDetails(details)
-                                                                    }}
-                                                                >
-                                                                    <AddIcon />
-                                                                </IconButton>
-                                                        }
+                                                                                    // let currentAsset = arrSchedules?.find(a => a.asset_id == asset?.asset_id)
+                                                                                    // currentAsset.is_view = 1
+                                                                                    // let currentAssetIndex = arrSchedules?.findIndex(a => a.asset_id == asset?.asset_id)
+                                                                                    // arrSchedules[currentAssetIndex] = currentAsset
+                                                                                    // currentTime.schedules = arrSchedules
+                                                                                    // arrTimes[currentTimeIndex] = currentTime
+                                                                                    // details.times = arrTimes
+                                                                                    // setGetChecklistDetails(details)
+                                                                                }}
+                                                                            >
+                                                                                Save
+                                                                            </Button>
+                                                                        </>
+                                                                }
 
-                                                    </Stack>
-                                                </TableCell>
-                                            </React.Fragment>
-                                        )
-                                    })}
-                                </TableRow>
+                                                            </Stack>
+                                                        </TableCell>
+                                                    </React.Fragment>
+                                                )
+                                            })}
+                                        </TableRow>
+                                        :
+                                        <></>
+                                }
                             </TableBody>
                         </Table>
                     </TableContainer>

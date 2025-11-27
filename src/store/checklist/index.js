@@ -6,7 +6,8 @@ import {
     API_CHECKLIST_GROUP_LIST,
     API_CHECKLIST_GROUP_ADD,
     API_CHECKLIST_GROUP_ASSET_LIST,
-    API_CHECKLIST_GROUP_DETAILS
+    API_CHECKLIST_GROUP_DETAILS,
+    API_CHECKLIST_GROUP_HISTORY_ADD
 } from "../../common/api/constants";
 
 export const actionChecklistAssetTypeList = createAsyncThunk('checklist/actionChecklistAssetTypeList', async (params) => {
@@ -57,6 +58,15 @@ export const actionChecklistGroupDetails = createAsyncThunk('checklist/actionChe
         return error
     }
 })
+export const actionChecklistGroupHistoryAdd = createAsyncThunk('checklist/actionChecklistGroupHistoryAdd', async (params) => {
+    try {
+        const response = await axiosApi.post(API_CHECKLIST_GROUP_HISTORY_ADD, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
 
 
 
@@ -67,7 +77,8 @@ export const checklistStore = createSlice({
         checklistGroupList: null,
         checklistGroupAdd: null,
         checklistGroupAssetList: null,
-        checklistGroupDetails: null
+        checklistGroupDetails: null,
+        checklistGroupHistoryAdd: null
     },
 
     reducers: {
@@ -85,6 +96,9 @@ export const checklistStore = createSlice({
         },
         resetChecklistGroupDetailsResponse: (state) => {
             state.checklistGroupDetails = null
+        },
+        resetChecklistGroupHistoryAddResponse: (state) => {
+            state.checklistGroupHistoryAdd = null
         },
 
     },
@@ -105,6 +119,9 @@ export const checklistStore = createSlice({
             .addCase(actionChecklistGroupDetails.fulfilled, (state, action) => {
                 state.checklistGroupDetails = action.payload
             })
+            .addCase(actionChecklistGroupHistoryAdd.fulfilled, (state, action) => {
+                state.checklistGroupHistoryAdd = action.payload
+            })
 
     }
 })
@@ -114,7 +131,8 @@ export const {
     resetChecklistGroupListResponse,
     resetChecklistGroupAddResponse,
     resetChecklistGroupAssetListResponse,
-    resetChecklistGroupDetailsResponse
+    resetChecklistGroupDetailsResponse,
+    resetChecklistGroupHistoryAddResponse
 } =
     checklistStore.actions
 
