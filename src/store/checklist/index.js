@@ -7,7 +7,8 @@ import {
     API_CHECKLIST_GROUP_ADD,
     API_CHECKLIST_GROUP_ASSET_LIST,
     API_CHECKLIST_GROUP_DETAILS,
-    API_CHECKLIST_GROUP_HISTORY_ADD
+    API_CHECKLIST_GROUP_HISTORY_ADD,
+    API_CHECKLIST_GROUP_ASSET_APPROVE
 } from "../../common/api/constants";
 
 export const actionChecklistAssetTypeList = createAsyncThunk('checklist/actionChecklistAssetTypeList', async (params) => {
@@ -67,6 +68,15 @@ export const actionChecklistGroupHistoryAdd = createAsyncThunk('checklist/action
         return error
     }
 })
+export const actionChecklistGroupAssetApprove = createAsyncThunk('checklist/actionChecklistGroupAssetApprove', async (params) => {
+    try {
+        const response = await axiosApi.post(API_CHECKLIST_GROUP_ASSET_APPROVE, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
 
 
 
@@ -78,7 +88,8 @@ export const checklistStore = createSlice({
         checklistGroupAdd: null,
         checklistGroupAssetList: null,
         checklistGroupDetails: null,
-        checklistGroupHistoryAdd: null
+        checklistGroupHistoryAdd: null,
+        checklistGroupAssetApprove: null
     },
 
     reducers: {
@@ -99,6 +110,9 @@ export const checklistStore = createSlice({
         },
         resetChecklistGroupHistoryAddResponse: (state) => {
             state.checklistGroupHistoryAdd = null
+        },
+        resetChecklistGroupAssetApproveResponse: (state) => {
+            state.checklistGroupAssetApprove = null
         },
 
     },
@@ -122,6 +136,9 @@ export const checklistStore = createSlice({
             .addCase(actionChecklistGroupHistoryAdd.fulfilled, (state, action) => {
                 state.checklistGroupHistoryAdd = action.payload
             })
+            .addCase(actionChecklistGroupAssetApprove.fulfilled, (state, action) => {
+                state.checklistGroupAssetApprove = action.payload
+            })
 
     }
 })
@@ -132,7 +149,8 @@ export const {
     resetChecklistGroupAddResponse,
     resetChecklistGroupAssetListResponse,
     resetChecklistGroupDetailsResponse,
-    resetChecklistGroupHistoryAddResponse
+    resetChecklistGroupHistoryAddResponse,
+    resetChecklistGroupAssetApproveResponse
 } =
     checklistStore.actions
 

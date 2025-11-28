@@ -349,3 +349,5 @@ export const API_CHECKLIST_GROUP_DETAILS = `${BASE}/checklist-group/details`
 
 export const API_CHECKLIST_GROUP_HISTORY_ADD = `${BASE}/checklist-group-history/add-or-edit`
 
+export const API_CHECKLIST_GROUP_ASSET_APPROVE = `${BASE}/checklist-group-history/approve`
+
