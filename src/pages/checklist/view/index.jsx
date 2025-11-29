@@ -783,6 +783,7 @@ export default function ChecklistView() {
                         gap: 1,
                         p: '10px 16px',
                         borderRadius: '8px',
+                        alignItems: 'center',
                         background: objData?.is_selected
                             ? theme.palette.common.black : theme.palette.common.white
                     }}
@@ -818,6 +819,7 @@ export default function ChecklistView() {
                         justifyContent: 'center',
                         minWidth: '175px',
                         flexDirection: 'row',
+                        alignItems: 'center',
                         gap: 1,
                         p: '10px 16px',
                         borderRadius: '8px',
@@ -857,6 +859,7 @@ export default function ChecklistView() {
                         justifyContent: 'center',
                         minWidth: '175px',
                         flexDirection: 'row',
+                        alignItems: 'center',
                         gap: 1,
                         p: '10px 16px',
                         borderRadius: '8px',
@@ -896,6 +899,7 @@ export default function ChecklistView() {
                         justifyContent: 'center',
                         minWidth: '175px',
                         flexDirection: 'row',
+                        alignItems: 'center',
                         gap: 1,
                         p: '10px 16px',
                         borderRadius: '8px',
@@ -935,6 +939,7 @@ export default function ChecklistView() {
                         justifyContent: 'center',
                         minWidth: '175px',
                         flexDirection: 'row',
+                        alignItems: 'center',
                         gap: 1,
                         p: '10px 16px',
                         borderRadius: '8px',
@@ -974,6 +979,7 @@ export default function ChecklistView() {
                         justifyContent: 'center',
                         minWidth: '175px',
                         flexDirection: 'row',
+                        alignItems: 'center',
                         gap: 1,
                         p: '10px 16px',
                         borderRadius: '8px',
@@ -1005,6 +1011,7 @@ export default function ChecklistView() {
                         justifyContent: 'center',
                         minWidth: '175px',
                         flexDirection: 'row',
+                        alignItems: 'center',
                         gap: 1,
                         p: '10px 16px',
                         borderRadius: '8px',
@@ -1077,7 +1084,6 @@ export default function ChecklistView() {
                             </Stack>
                         </Stack>
                         <Stack sx={{ flexDirection: { xs: 'column', sm: 'row', md: 'row', lg: 'row' }, alignItems: { xs: 'flex-start', sm: 'center', md: 'center' }, gap: '16px' }}>
-
                             <DatePickerWrapper>
                                 <DatePicker
                                     id='start_date'
@@ -1116,7 +1122,7 @@ export default function ChecklistView() {
                                     title="Click to load checklist for selected date"
                                     size={'small'}
                                     disabled={loadingChecklist}
-                                    sx={{ textTransform: "capitalize", px: 2, gap: 1, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, border: `1px solid ${theme.palette.primary[600]}` }}
+                                    sx={{ textTransform: "capitalize", textWrap: 'nowrap', px: 2, gap: 1, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, border: `1px solid ${theme.palette.primary[600]}` }}
                                     onClick={() => {
                                         setIsInitialLoad(true)
                                         if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && groupUuid && groupUuid !== null) {
