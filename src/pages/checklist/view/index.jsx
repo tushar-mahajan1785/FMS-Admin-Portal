@@ -123,7 +123,7 @@ export default function ChecklistView() {
 
     }, [branch?.currentBranch?.uuid, groupUuid])
 
-    // console.log('-----getChecklistDetails--------', getChecklistDetails)
+    console.log('-----getChecklistDetails--------', getChecklistDetails)
 
     /**
      * Function to find and return previously filled parameters
@@ -336,7 +336,6 @@ export default function ChecklistView() {
 
         getChecklistDetails?.times?.forEach((time) => {
             time?.schedules?.forEach((asset) => {
-                console.log('-----------')
                 if (asset.is_view === 0) {
                     count += 1; // or count++
                 }
