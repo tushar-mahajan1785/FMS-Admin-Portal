@@ -1,5 +1,6 @@
-import { Button, CircularProgress, IconButton, InputAdornment, MenuItem, Stack, useTheme } from "@mui/material";
-import React, { useCallback, useEffect, useState } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { Box, Button, CircularProgress, IconButton, InputAdornment, MenuItem, Stack, useMediaQuery, useTheme } from "@mui/material";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import TypographyComponent from "../../../components/custom-typography";
 import CheckboxIcon from "../../../assets/icons/CheckboxIcon";
 import AlertTriangleIcon from "../../../assets/icons/AlertTriangleIcon";
@@ -24,7 +25,7 @@ import EditCircleIcon from "../../../assets/icons/EditCircleIcon";
 import { useDispatch, useSelector } from "react-redux";
 import { actionChecklistGroupAssetApprove, actionChecklistGroupDetails, actionChecklistGroupHistoryAdd, resetChecklistGroupAssetApproveResponse, resetChecklistGroupDetailsResponse, resetChecklistGroupHistoryAddResponse } from "../../../store/checklist";
 import { useBranch } from "../../../hooks/useBranch";
-import { ERROR, SERVER_ERROR, UNAUTHORIZED } from "../../../constants";
+import { ERROR, IMAGES_SCREEN_NO_DATA, SERVER_ERROR, UNAUTHORIZED } from "../../../constants";
 import { useAuth } from "../../../hooks/useAuth";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import CircleDashedIcon from "../../../assets/icons/CircleDashedIcon";
@@ -33,6 +34,7 @@ import CloseIcon from "../../../assets/icons/CloseIcon";
 import { isCurrentTimeInRange, isFutureTimeRange } from "../../../utils";
 import AlertCircleIcon from "../../../assets/icons/AlertCircleIcon";
 import AlertPopup from "../../../components/alert-confirm";
+import EmptyContent from "../../../components/empty_content";
 
 export default function ChecklistView() {
     const theme = useTheme()
@@ -42,6 +44,9 @@ export default function ChecklistView() {
     const { logout } = useAuth()
     const { showSnackbar } = useSnackbar()
     const { assetId, groupUuid } = useParams()
+    const scrollRef = useRef(null);
+
+    const isSMDown = useMediaQuery(theme.breakpoints.down('sm'))
 
     const methods = useForm();
 
@@ -56,16 +61,58 @@ export default function ChecklistView() {
     const [openAssetApprovalPopup, setOpenAssetApprovalPopup] = useState(false)
     const [loadingApprove, setLoadingApprove] = useState(false)
     const [currentAssetApprovalDetails, setCurrentAssetApprovalDetails] = useState(null)
+    const [loadingChecklist, setLoadingChecklist] = useState(false)
+    const [isInitialLoad, setIsInitialLoad] = useState(false)
+    const [loadingSubmit, setLoadingSubmit] = useState(false)
+
+    //Scroll times to current selected time
+    const getScrollTargetIndex = () => {
+        // Check if the times array exists
+        if (!getChecklistDetails || !getChecklistDetails.times) return -1;
+
+        // Find the index where is_selected is true
+        return getChecklistDetails.times.findIndex(timeSlot => timeSlot.is_selected === true);
+    };
+
 
     useEffect(() => {
+        //set initial scroll state
+        setIsInitialLoad(true)
+
         return () => {
             setSelectedTimeUuid(null)
             setCurrentAssetApprovalDetails(null)
         }
     }, [])
 
+    //Scroll times on update of getChecklistDetails & isInitialLoad as true
+    useEffect(() => {
+        if (isInitialLoad === true) {
+            // 1. Get the target index
+            const index = getScrollTargetIndex();
+            if (index === -1) return;
+
+            // 2. Perform the scroll logic
+            const container = scrollRef.current;
+            const slots = container?.children;
+            if (!slots || !slots[index]) return;
+
+            container.scrollTo({
+                left: slots[index].offsetLeft - (isSMDown ? 100 : 520),
+                behavior: "smooth"
+            });
+
+            // 3. Set the flag to false
+            setIsInitialLoad(false)
+        }
+    }, [getChecklistDetails])
+
+    /**
+     * Call checklistGroupDetails API
+     */
     useEffect(() => {
         if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && groupUuid && groupUuid !== null) {
+            setLoadingChecklist(true)
             dispatch(actionChecklistGroupDetails({
                 branch_uuid: branch?.currentBranch?.uuid,
                 asset_type_id: assetId,
@@ -74,9 +121,9 @@ export default function ChecklistView() {
             }))
         }
 
-    }, [branch?.currentBranch?.uuid, groupUuid, selectedStartDate])
+    }, [branch?.currentBranch?.uuid, groupUuid])
 
-    console.log('-----getChecklistDetails--------', getChecklistDetails)
+    // console.log('-----getChecklistDetails--------', getChecklistDetails)
 
     /**
      * Function to find and return previously filled parameters
@@ -90,12 +137,9 @@ export default function ChecklistView() {
         let getCurrentSchedules = assets_json?.find(obj => obj?.asset_id == asset_id)
         if (getCurrentSchedules && getCurrentSchedules !== null) {
             parameters = getCurrentSchedules?.times?.find(obj => obj?.uuid == String(time_uuid))
-
         }
         return parameters && parameters !== null ? parameters?.values : null
     }
-    console.log('------selectedTimeUuid----', selectedTimeUuid)
-
 
     /**
      * Function to get Asset Status
@@ -205,38 +249,6 @@ export default function ChecklistView() {
         }));
     };
 
-    // const prepareAssetWiseJson = (assetGroup) => {
-    //     const { assets, checklist_json, asset_checklist_json } = assetGroup;
-    //     const { parameters, times } = checklist_json;
-
-    //     console.log('------selectedTimeUuid--@@@@@@--', selectedTimeUuid)
-    //     return times?.map((timeObj, index) => ({
-    //         ...timeObj,
-    //         is_selected: selectedTimeUuid && selectedTimeUuid !== null && selectedTimeUuid == timeObj?.uuid && index != 0 ? true : (index == 0 && selectedTimeUuid == null ? true : false),
-    //         schedules: assets?.map(asset => ({
-    //             asset_id: asset?.asset_id,
-    //             asset_name: asset?.asset_name,
-    //             status: "",
-    //             is_view: 1,
-    //             values: getParameters(asset?.asset_id, timeObj?.uuid, asset_checklist_json) && getParameters(asset?.asset_id, timeObj?.uuid, asset_checklist_json) !== null && getParameters(asset?.asset_id, timeObj?.uuid, asset_checklist_json)?.length > 0 ? getParameters(asset?.asset_id, timeObj?.uuid, asset_checklist_json) : parameters.map(param => ({
-    //                 parameter_id: param.id,
-    //                 value: "",
-    //                 max: param.max,
-    //                 min: param.min,
-    //                 name: param.name,
-    //                 unit: param.unit,
-    //                 options: param.options,
-    //                 sequence: param.sequence,
-    //                 sub_name: param.sub_name,
-    //                 parent_id: param.parent_id,
-    //                 input_type: param.input_type,
-    //                 is_mandatory: param.is_mandatory,
-    //                 default_value: param.default_value
-    //             }))
-    //         }))
-    //     }));
-    // };
-
     /**
      * function to generate times json along with corresponding - Assets, Parameters from assets, parameters, times
      * @param {*} assetGroup 
@@ -292,7 +304,7 @@ export default function ChecklistView() {
     };
 
     /**
-     * on updation of getCurrentAssetGroup prepare the times json
+     * on updating of getCurrentAssetGroup prepare the times json
      */
     useEffect(() => {
         if (getCurrentAssetGroup && getCurrentAssetGroup !== null) {
@@ -363,3356 +375,13 @@ export default function ChecklistView() {
         if (checklistGroupDetails && checklistGroupDetails !== null) {
             dispatch(resetChecklistGroupDetailsResponse())
             if (checklistGroupDetails?.result === true) {
+                setLoadingChecklist(false)
                 let response = Object.assign({}, checklistGroupDetails?.response)
-                // response.asset_checklist_json = [
-                //     {
-                //         "asset_id": 3,
-                //         "asset_name": "Solar energy equipment",
-                //         "status": "",
-                //         "times": [
-                //             {
-                //                 "to": "02:00",
-                //                 "from": "00:00",
-                //                 "uuid": "0d9bcdbe-57cd-4353-90d7-905e13bd6f9a",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "04:00",
-                //                 "from": "02:00",
-                //                 "uuid": "718fb2ce-6edb-4fe3-a29a-bb9ffc77daad",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "06:00",
-                //                 "from": "04:00",
-                //                 "uuid": "cf761e5e-699b-4293-bc66-4e62919fe63f",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "08:00",
-                //                 "from": "06:00",
-                //                 "uuid": "01eeef1e-19f8-4256-bb3a-5d0b8c93016e",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "10:00",
-                //                 "from": "08:00",
-                //                 "uuid": "e7344dc1-adac-4086-b912-05990fa2e4ca",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "12:00",
-                //                 "from": "10:00",
-                //                 "uuid": "f6bf1534-def0-4e77-b2bd-9fcc344a69b8",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "14:00",
-                //                 "from": "12:00",
-                //                 "uuid": "841d7ffb-b902-4496-baf1-68b9ae4fb35a",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "16:00",
-                //                 "from": "14:00",
-                //                 "uuid": "863127f8-9e2c-44ec-a228-f2f68225ebc3",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "18:00",
-                //                 "from": "16:00",
-                //                 "uuid": "03a5a940-8eac-496c-b78f-6b599f6cfa41",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "20:00",
-                //                 "from": "18:00",
-                //                 "uuid": "f6a91510-2bea-4971-9408-7356b8cc7e55",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "22:00",
-                //                 "from": "20:00",
-                //                 "uuid": "7de48ea1-34c6-4cfa-b7ce-25f19e8296b0",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "00:00",
-                //                 "from": "22:00",
-                //                 "uuid": "63162d05-08c0-429a-b4e5-13f6e8419279",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             }
-                //         ]
-                //     },
-                //     {
-                //         "asset_id": 4,
-                //         "asset_name": " MBC (Miniature Circuit Breaker)",
-                //         "status": "",
-                //         "times": [
-                //             {
-                //                 "to": "02:00",
-                //                 "from": "00:00",
-                //                 "uuid": "0d9bcdbe-57cd-4353-90d7-905e13bd6f9a",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "04:00",
-                //                 "from": "02:00",
-                //                 "uuid": "718fb2ce-6edb-4fe3-a29a-bb9ffc77daad",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "06:00",
-                //                 "from": "04:00",
-                //                 "uuid": "cf761e5e-699b-4293-bc66-4e62919fe63f",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "08:00",
-                //                 "from": "06:00",
-                //                 "uuid": "01eeef1e-19f8-4256-bb3a-5d0b8c93016e",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "10:00",
-                //                 "from": "08:00",
-                //                 "uuid": "e7344dc1-adac-4086-b912-05990fa2e4ca",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "12:00",
-                //                 "from": "10:00",
-                //                 "uuid": "f6bf1534-def0-4e77-b2bd-9fcc344a69b8",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "14:00",
-                //                 "from": "12:00",
-                //                 "uuid": "841d7ffb-b902-4496-baf1-68b9ae4fb35a",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "16:00",
-                //                 "from": "14:00",
-                //                 "uuid": "863127f8-9e2c-44ec-a228-f2f68225ebc3",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "18:00",
-                //                 "from": "16:00",
-                //                 "uuid": "03a5a940-8eac-496c-b78f-6b599f6cfa41",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "20:00",
-                //                 "from": "18:00",
-                //                 "uuid": "f6a91510-2bea-4971-9408-7356b8cc7e55",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "22:00",
-                //                 "from": "20:00",
-                //                 "uuid": "7de48ea1-34c6-4cfa-b7ce-25f19e8296b0",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "00:00",
-                //                 "from": "22:00",
-                //                 "uuid": "63162d05-08c0-429a-b4e5-13f6e8419279",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             }
-                //         ]
-                //     },
-                //     {
-                //         "asset_id": 9,
-                //         "asset_name": "Electric vehicles (EVs)",
-                //         "status": "",
-                //         "times": [
-                //             {
-                //                 "to": "02:00",
-                //                 "from": "00:00",
-                //                 "uuid": "0d9bcdbe-57cd-4353-90d7-905e13bd6f9a",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "04:00",
-                //                 "from": "02:00",
-                //                 "uuid": "718fb2ce-6edb-4fe3-a29a-bb9ffc77daad",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "06:00",
-                //                 "from": "04:00",
-                //                 "uuid": "cf761e5e-699b-4293-bc66-4e62919fe63f",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "08:00",
-                //                 "from": "06:00",
-                //                 "uuid": "01eeef1e-19f8-4256-bb3a-5d0b8c93016e",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "10:00",
-                //                 "from": "08:00",
-                //                 "uuid": "e7344dc1-adac-4086-b912-05990fa2e4ca",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "12:00",
-                //                 "from": "10:00",
-                //                 "uuid": "f6bf1534-def0-4e77-b2bd-9fcc344a69b8",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "14:00",
-                //                 "from": "12:00",
-                //                 "uuid": "841d7ffb-b902-4496-baf1-68b9ae4fb35a",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "16:00",
-                //                 "from": "14:00",
-                //                 "uuid": "863127f8-9e2c-44ec-a228-f2f68225ebc3",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "18:00",
-                //                 "from": "16:00",
-                //                 "uuid": "03a5a940-8eac-496c-b78f-6b599f6cfa41",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "20:00",
-                //                 "from": "18:00",
-                //                 "uuid": "f6a91510-2bea-4971-9408-7356b8cc7e55",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "22:00",
-                //                 "from": "20:00",
-                //                 "uuid": "7de48ea1-34c6-4cfa-b7ce-25f19e8296b0",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             },
-                //             {
-                //                 "to": "00:00",
-                //                 "from": "22:00",
-                //                 "uuid": "63162d05-08c0-429a-b4e5-13f6e8419279",
-                //                 "values": [
-                //                     {
-                //                         "parameter_id": 1,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Temperature",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 1,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 2,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Pressure",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "ASDFG"
-                //                         ],
-                //                         "sequence": 2,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Multiple Choice",
-                //                         "is_mandatory": 1,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 3,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Flow Rate",
-                //                         "unit": "",
-                //                         "options": "Number (with range)",
-                //                         "sequence": 3,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Number (with range)",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 4,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Vibration Level",
-                //                         "unit": "",
-                //                         "options": [
-
-                //                         ],
-                //                         "sequence": 4,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Text Input",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     },
-                //                     {
-                //                         "parameter_id": 5,
-                //                         "value": "",
-                //                         "max": "",
-                //                         "min": "",
-                //                         "name": "Oil Level",
-                //                         "unit": "",
-                //                         "options": [
-                //                             "Yes",
-                //                             "No"
-                //                         ],
-                //                         "sequence": 5,
-                //                         "sub_name": "",
-                //                         "parent_id": 0,
-                //                         "input_type": "Yes/No",
-                //                         "is_mandatory": 0,
-                //                         "default_value": ""
-                //                     }
-                //                 ]
-                //             }
-                //         ]
-                //     }
-                // ]
                 setGetCurrentAssetGroup(response)
-
-                // setLoadingList(false)
             } else {
-                // setLoadingList(false)
+                setLoadingChecklist(false)
                 setGetCurrentAssetGroup(null)
                 setGetChecklistDetails(null)
-                // setSelectedTimeSlot(getChecklistDetails.times[0])
-                // setGetCurrentAssetGroup({
-                //     "id": 1,
-                //     "asset_type_id": "1",
-                //     "asset_type": "DG",
-                //     "asset_group": "DG Set Tower 1",
-                //     "location": 'Vodafone India Pvt Ltd',
-                //     "total_groups": "2",
-                //     "total_assets": "15",
-                //     "total_checklists": "36",
-                //     "total_completed": "12",
-                //     "total_overdue": "2",
-                //     "total_abnormal": "4",
-                //     "total_pending": "24",
-                //     "total_not_approved": "2",
-                //     "times": [
-                //         {
-                //             uuid: 'ghghj-huyghhgh',
-                //             frm: '12:00',
-                //             to: '02:00'
-                //         },
-                //         {
-                //             uuid: 'ghsdddj-huyghhgh',
-                //             frm: '02:00',
-                //             to: '04:00'
-                //         },
-                //         {
-                //             uuid: 'ghghj-huyg678hhyhhgh',
-                //             frm: '04:00',
-                //             to: '06:00'
-                //         },
-                //         {
-                //             uuid: 'ghffffghj-444dfff',
-                //             frm: '06:00',
-                //             to: '08:00'
-                //         },
-                //         {
-                //             uuid: 'ghgddfr887hj-huyg555hhgh',
-                //             frm: '08:00',
-                //             to: '10:00'
-                //         },
-                //     ]
-                // })
                 switch (checklistGroupDetails?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -3740,18 +409,18 @@ export default function ChecklistView() {
         if (checklistGroupHistoryAdd && checklistGroupHistoryAdd !== null) {
             dispatch(resetChecklistGroupHistoryAddResponse())
             if (checklistGroupHistoryAdd?.result === true) {
-                // setLoadingSubmit(false)
+                setLoadingSubmit(false)
                 methods.reset()
                 showSnackbar({ message: checklistGroupHistoryAdd.message, severity: "success" })
+                setLoadingChecklist(true)
                 dispatch(actionChecklistGroupDetails({
                     branch_uuid: branch?.currentBranch?.uuid,
                     asset_type_id: assetId,
                     group_uuid: groupUuid,
                     date: selectedStartDate && selectedStartDate !== null ? moment(selectedStartDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : moment().format('YYYY-MM-DD')
                 }))
-                // handleClose('save')
             } else {
-                // setLoadingSubmit(false)
+                setLoadingSubmit(false)
                 switch (checklistGroupHistoryAdd?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -3785,13 +454,13 @@ export default function ChecklistView() {
                 showSnackbar({ message: checklistGroupAssetApprove.message, severity: "success" })
                 setOpenAssetApprovalPopup(false)
                 setCurrentAssetApprovalDetails(null)
+                setLoadingChecklist(true)
                 dispatch(actionChecklistGroupDetails({
                     branch_uuid: branch?.currentBranch?.uuid,
                     asset_type_id: assetId,
                     group_uuid: groupUuid,
                     date: selectedStartDate && selectedStartDate !== null ? moment(selectedStartDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : moment().format('YYYY-MM-DD')
                 }))
-                // handleClose('save')
             } else {
                 setLoadingApprove(false)
                 switch (checklistGroupAssetApprove?.status) {
@@ -3833,318 +502,114 @@ export default function ChecklistView() {
 
         // Logic: enable if now >= from
         return isToday() == true ? (now >= fromTime) : true;
-
-        // Optional: if you want to disable after 'to' as well
-        // return now >= fromTime && now <= toTime;
     };
 
-    const updateTimesStatus = (timesArray) => {
+    /**
+     * Function to Update Times Status as per its Assets Status
+     * @param {*} timesArray 
+     * @returns 
+     */
+    const updateTimesStatus = (timesArray = []) => {
+        if (!Array.isArray(timesArray) || timesArray.length === 0) return [];
+
         return timesArray.map(timeSlot => {
-            const schedules = timeSlot.schedules;
+            const schedules = timeSlot?.schedules;
 
-            if (!schedules || schedules.length === 0) {
-                return { ...timeSlot, status: timeSlot.status || null };
+            // No schedules → keep existing status
+            if (!Array.isArray(schedules) || schedules.length === 0) {
+                return { ...timeSlot, status: timeSlot?.status || "", is_abnormal_approved: 0 };
             }
 
-            const statuses = schedules?.map(schedule => schedule?.status);
-            const ApprovedAbnormalLength = schedules && schedules !== null && schedules.length > 0 ? schedules?.filter(a => a.is_abnormal_approved == 1).length : 0
-            const ApprovedLength = schedules && schedules !== null && schedules.length > 0 ? schedules?.filter(a => a.status == 'Approved').length : 0
-            const AbnormalLength = schedules && schedules !== null && schedules.length > 0 ? schedules.filter(a => a.status == 'Abnormal').length : 0
-            const ActiveLength = schedules && schedules !== null && schedules.length > 0 ? schedules.filter(a => a.status == 'Active').length : 0
+            // Extract status info
+            const statuses = schedules.map(s => s?.status ?? "");
+            const abnormalApprovedCount = schedules.filter(s => s?.is_abnormal_approved == 1).length;
+            const approvedCount = schedules.filter(s => s?.status === "Approved").length;
 
-            const hasApprovedAbnormal = statuses.some(status => status.is_abnormal_approved == 1);
-            const hasApproved = statuses.some(status => status === "Approved");
-            const hasActive = statuses.some(status => status === "Active");
-            // const hasNull = statuses.some(status => status === null);
-            const hasEmpty = statuses.some(status => status == "");
+            const hasApprovedAbnormal = abnormalApprovedCount > 0;
+            const hasApproved = statuses.includes("Approved");
+            const hasActive = statuses.includes("Active");
+            const hasEmpty = statuses.includes("");
+            const hasAbnormal = statuses.includes("Abnormal");
+            const totalSchedules = schedules.length;
 
+            //
+            // ----------------------------- LOGIC USING IF / ELSE IF ---------------------------------
+            //
 
-
-            // Get only non-null statuses
-            const nonNullStatuses = statuses.filter(status =>
-                status !== null && status !== undefined
-            );
-
-            const hasAbnormal = nonNullStatuses.some(status => status === "Abnormal");
-            // const allApproved = nonNullStatuses.every(status => status === "Approved");
-
-            // If all statuses are null, keep existing status
-            // if (nonNullStatuses.length === 0) {
-            //     return { ...timeSlot, status: timeSlot.status || null };
-            // }
-
-            if (ApprovedAbnormalLength > 0) {
+            // 1️⃣ Any abnormal-approved present
+            if (hasApprovedAbnormal) {
                 if (hasApproved && hasAbnormal) {
-                    // console.log('---------------C------------------------------')
-                    // console.log('----------------------------------------------------')
-                    return { ...timeSlot, status: 'Abnormal', is_abnormal_approved: 0 };
+                    return { ...timeSlot, status: "Abnormal", is_abnormal_approved: 0 };
                 } else if (hasApproved && hasActive) {
-                    // console.log('---------------C------------------------------')
-                    // console.log('----------------------------------------------------')
-                    return { ...timeSlot, status: 'Active', is_abnormal_approved: 0 };
+                    return { ...timeSlot, status: "Active", is_abnormal_Approved: 0 };
                 } else {
-                    return { ...timeSlot, status: 'Approved', is_abnormal_approved: 1 };
+                    return { ...timeSlot, status: "Approved", is_abnormal_approved: 1 };
                 }
-
             }
 
-            if (ApprovedLength === statuses?.length) {
-                return { ...timeSlot, status: 'Approved', is_abnormal_approved: 0 };
+            // 2️⃣ All statuses are Approved
+            else if (approvedCount === totalSchedules) {
+                return { ...timeSlot, status: "Approved", is_abnormal_approved: 0 };
             }
 
-
-            console.log('---------------------------------------------')
-            console.log('---------hasApprovedAbnormal-----------', hasApprovedAbnormal)
-            console.log('---------hasApproved-----------', hasApproved)
-            console.log('----------hasActive----------', hasActive)
-            // console.log('-----------hasNull---------', hasNull)
-            console.log('---------hasAbnormal----------', hasAbnormal)
-            // console.log('-----------allApproved---------', allApproved)
-
-            if ((hasApproved && !hasApprovedAbnormal) && hasAbnormal && hasActive) {
-                // console.log('---------------C------------------------------')
-                // console.log('----------------------------------------------------')
-                return { ...timeSlot, status: 'Abnormal', is_abnormal_approved: 0 };
-            }
-            if ((hasApproved && !hasApprovedAbnormal) && hasAbnormal) {
-                // console.log('---------------C------------------------------')
-                // console.log('----------------------------------------------------')
-                return { ...timeSlot, status: 'Abnormal', is_abnormal_approved: 0 };
-            }
-            if ((hasApproved && !hasApprovedAbnormal) && hasActive) {
-                // console.log('---------------C------------------------------')
-                // console.log('----------------------------------------------------')
-                return { ...timeSlot, status: 'Active', is_abnormal_approved: 0 };
+            // 3️⃣ Approved + Abnormal (+ maybe Active)
+            else if (hasApproved && hasAbnormal && hasActive) {
+                return { ...timeSlot, status: "Abnormal", is_abnormal_approved: 0 };
             }
 
-            // Specific condition: Approved + (null OR Active)
-            if ((hasApproved && !hasApprovedAbnormal) && (hasEmpty || hasActive)) {
-                // console.log('---------------A------------------------------')
-                // console.log('----------------------------------------------------')
-                return { ...timeSlot, status: 'Active', is_abnormal_approved: 0 };
+            else if (hasApproved && hasAbnormal) {
+                return { ...timeSlot, status: "Abnormal", is_abnormal_approved: 0 };
+            }
+
+            // 4️⃣ Approved + Active
+            else if (hasApproved && hasActive) {
+                return { ...timeSlot, status: "Active", is_abnormal_approved: 0 };
+            }
+
+            // 6️⃣ Abnormal + (Empty or Active)
+            else if (hasAbnormal && (hasEmpty && hasActive)) {
+                return { ...timeSlot, status: "Abnormal", is_abnormal_approved: 0 };
             }
 
 
-            if (hasAbnormal && (hasEmpty || hasActive)) {
-                // console.log('---------------A------------------------------')
-                // console.log('----------------------------------------------------')
-                return { ...timeSlot, status: 'Abnormal', is_abnormal_approved: 0 };
+            // 6️⃣ Abnormal + (Empty or Active)
+            else if (hasAbnormal && hasActive) {
+                return { ...timeSlot, status: "Abnormal", is_abnormal_approved: 0 };
+            }
+            else if (hasAbnormal && hasEmpty) {
+                return { ...timeSlot, status: "Abnormal", is_abnormal_approved: 0 };
             }
 
-
-            if ((hasApproved && !hasApprovedAbnormal) && hasEmpty) {
-                // console.log('---------------C------------------------------')
-                // console.log('----------------------------------------------------')
-                return { ...timeSlot, status: 'Pending', is_abnormal_approved: 0 };
+            // 7️⃣ Active + Empty → Pending
+            else if (hasActive && hasEmpty) {
+                return { ...timeSlot, status: "Pending", is_abnormal_approved: 0 };
+            }
+            // 7️⃣ Approved → Pending
+            else if (hasApproved && hasEmpty) {
+                return { ...timeSlot, status: "Pending", is_abnormal_approved: 0 };
             }
 
-            if (hasEmpty) {
-                // console.log('--------------B------------------------------')
-                // console.log('----------------------------------------------------')
-                return { ...timeSlot, status: '', is_abnormal_approved: 0 };
-            }
-            if (!hasApproved && hasActive) {
-                return { ...timeSlot, status: 'Active', is_abnormal_approved: 0 };
-            }
-            if (!hasApproved && hasAbnormal) {
-                return { ...timeSlot, status: 'Abnormal', is_abnormal_approved: 0 };
+            // 8️⃣ Only Empty
+            else if (hasEmpty) {
+                return { ...timeSlot, status: "", is_abnormal_approved: 0 };
             }
 
+            // 9️⃣ Only Active (no Approved, no Abnormal)
+            else if (!hasApproved && hasActive) {
+                return { ...timeSlot, status: "Active", is_abnormal_approved: 0 };
+            }
 
+            // 🔟 Only Abnormal (no Approved)
+            else if (!hasApproved && hasAbnormal) {
+                return { ...timeSlot, status: "Abnormal", is_abnormal_approved: 0 };
+            }
 
-
-            // if (hasAbnormal) {
-            //     console.log('---------------D------------------------------')
-            //     console.log('----------------------------------------------------')
-            //     return { ...timeSlot, status: "Abnormal", is_abnormal_approved: 0 };
-            // } else if (allApproved) {
-            //     console.log('---------------E------------------------------')
-            //     console.log('----------------------------------------------------')
-            //     return { ...timeSlot, status: "Approved", is_abnormal_approved: 0 };
-            // } else {
-            //     console.log('---------------F------------------------------')
-            //     console.log('----------------------------------------------------')
-            return { ...timeSlot, status: "", is_abnormal_approved: 0 };
-            // }
+            // 🔚 Default case
+            else {
+                return { ...timeSlot, status: "", is_abnormal_approved: 0 };
+            }
         });
-    }
-
-    // const handleValueUpdate = (assetId, params, value) => {
-    //     console.log('---------assetId--------', assetId)
-    //     console.log('---------params--------', params)
-    //     console.log('---------value--------', value)
-    //     let objParams = Object.assign({}, params)
-    //     objParams.value = value
-
-    //     let objChecklists = Object.assign({}, getChecklistDetails)
-    //     let arrTimes = Object.assign([], objChecklists?.times)
-
-    //     let currentTimesIndex = arrTimes.findIndex(t => t.is_selected == true)
-    //     let currentTimes = arrTimes.find(t => t.is_selected == true)
-
-    //     let objTimes = Object.assign({}, currentTimes)
-    //     let arrAssets = Object.assign([], objTimes?.schedules)
-
-    //     let getCurrentAssetIndex = arrAssets.findIndex(s => s.asset_id == assetId)
-    //     let getCurrentAsset = arrAssets.find(s => s.asset_id == assetId)
-
-    //     let objAsset = Object.assign({}, getCurrentAsset)
-    //     let arrParameters = Object.assign([], objAsset?.values)
-    //     let getParameterIndex = arrParameters.findIndex(p => p.parameter_id == params?.parameter_id)
-    //     arrParameters[getParameterIndex] = objParams
-    //     objAsset.values = arrParameters
-    //     arrAssets[getCurrentAssetIndex] = objAsset
-    //     objTimes.schedules = arrAssets
-    //     arrTimes[currentTimesIndex] = objTimes
-    //     objChecklists.times = arrTimes
-    //     setGetChecklistDetails(objChecklists)
-    // }
-
-    // const handleValueUpdate = (assetId, params, value) => {
-    //     setGetChecklistDetails(prev => {
-    //         return {
-    //             ...prev,
-    //             times: prev.times.map(time => {
-    //                 if (!time.is_selected) return time;
-
-    //                 return {
-    //                     ...time,
-    //                     schedules: time.schedules.map(asset => {
-    //                         if (asset.asset_id !== assetId) return asset;
-
-    //                         return {
-    //                             ...asset,
-    //                             values: asset.values.map(v =>
-    //                                 v.parameter_id === params.parameter_id
-    //                                     ? { ...v, value }
-    //                                     : v
-    //                             )
-    //                         };
-    //                     })
-    //                 };
-    //             })
-    //         };
-    //     });
-    // };
-
-
-
-    // const FieldRenderer = ({ params, value, assetId }) => {
-    //     const { control, register, formState: { errors } } = useFormContext();
-
-    //     // Dynamic + unique field name 
-    //     // const fieldName = `${assetId}_${params.parameter_id}`;
-    //     const fieldName = `${params.name}`;
-
-    //     // Validation rules
-    //     const validationRules = {
-    //         required: params?.is_mandatory ? `${params?.name} is required` : false,
-    //         min: params?.min
-    //             ? { value: Number(params.min), message: `Value should be between ${params.min} and ${params.max}` }
-    //             : undefined,
-    //         max: params?.max
-    //             ? { value: Number(params.max), message: `Value should be between ${params.min} and ${params.max}` }
-    //             : undefined,
-    //     };
-
-    //     switch (params?.input_type) {
-
-    //         // ---------------- TEXT INPUT ----------------
-    //         case "Text Input":
-    //             return (
-    //                 <CustomTextField
-    //                     fullWidth
-    //                     defaultValue={value ?? ""}
-    //                     placeholder={`Enter ${params?.name}`}
-    //                     {...register(fieldName, validationRules)}
-    //                     error={!!errors[fieldName]}
-    //                     helperText={errors[fieldName]?.message}
-    //                 />
-    //             );
-
-    //         // ---------------- NUMBER INPUT ----------------
-    //         case "Number (with range)":
-    //             return (
-    //                 <CustomTextField
-    //                     fullWidth
-    //                     type="number"
-    //                     size="small"
-    //                     defaultValue={value ?? ""}
-    //                     InputProps={{
-    //                         endAdornment: (
-    //                             <InputAdornment position='end'>
-    //                                 {/* <IconButton
-    //                                     edge='end'
-    //                                     onMouseDown={e => e.preventDefault()}
-    //                                 > */}
-    //                                 {params?.unit}
-    //                                 {/* </IconButton> */}
-    //                             </InputAdornment>
-    //                         )
-    //                     }}
-    //                     placeholder={`Enter ${params?.name}`}
-    //                     {...register(fieldName, validationRules)}
-    //                     error={!!errors[fieldName]}
-    //                     helperText={errors[fieldName]?.message}
-    //                 />
-    //             );
-
-    //         // ---------------- DROPDOWN INPUT ----------------
-    //         case "Multiple Choice":
-    //         case "Yes/No":
-    //             return (
-    //                 <Controller
-    //                     control={control}
-    //                     name={fieldName}
-    //                     defaultValue={value ?? ""}
-    //                     rules={validationRules}
-    //                     render={({ field }) => (
-    //                         <CustomTextField
-    //                             select
-    //                             fullWidth
-    //                             {...field}
-    //                             error={!!errors[fieldName]}
-    //                             helperText={errors[fieldName]?.message}
-    //                         >
-    //                             <MenuItem value="">
-    //                                 <em>Select Option</em>
-    //                             </MenuItem>
-
-    //                             {params.options?.map((opt, i) => (
-    //                                 <MenuItem key={i} value={opt}>
-    //                                     {opt}
-    //                                 </MenuItem>
-    //                             ))}
-    //                         </CustomTextField>
-    //                     )}
-    //                 />
-    //             );
-    //         // return (
-    //         //     <CustomTextField
-    //         //         select
-    //         //         fullWidth
-    //         //         defaultValue={value ?? ""}
-    //         //         placeholder={`Select ${params?.name}`}
-    //         //         {...register(fieldName, validationRules)}
-    //         //         error={!!errors[fieldName]}
-    //         //         helperText={errors[fieldName]?.message}
-    //         //     >
-    //         //         <MenuItem value="">
-    //         //             <em>Select Option</em>
-    //         //         </MenuItem>
-
-    //         //         {params.options?.map((option, index) => (
-    //         //             <MenuItem key={index} value={option}>
-    //         //                 {option}
-    //         //             </MenuItem>
-    //         //         ))}
-    //         //     </CustomTextField>
-    //         // );
-
-    //         default:
-    //             return null;
-    //     }
-    // };
+    };
 
     /**
      * Function to return fields with validations
@@ -4239,25 +704,24 @@ export default function ChecklistView() {
         );
     };
 
-
+    /**
+     * OnSubmit the Asset
+     */
     const onSubmit = (formData) => {
-
+        setIsInitialLoad(true)
         let objChecklists = Object.assign({}, getChecklistDetails)
         let arrTimes = Object.assign([], objChecklists?.times)
 
-        // let currentTimesIndex = arrTimes.findIndex(t => t.is_selected == true)
         let currentTimes = arrTimes.find(t => t.is_selected == true)
 
         let objTimes = Object.assign({}, currentTimes)
         let arrAssets = Object.assign([], objTimes?.schedules)
 
-        // let getCurrentAssetIndex = arrAssets.findIndex(s => s.is_view == 0)
         let getCurrentAsset = arrAssets.find(s => s.is_view == 0)
         let currentValues = Object.assign([], getCurrentAsset?.values)
 
         const updatedValues = currentValues.map(param => {
             // Construct the dynamic fieldName
-            // const fieldName = `${getCurrentAsset.asset_id}_${param.parameter_id}`;
             const fieldName = `${param.name}`;
 
             return {
@@ -4267,40 +731,6 @@ export default function ChecklistView() {
             };
         });
 
-
-        console.log('--------formData--------', formData)
-        //Call save api
-        // setGetChecklistDetails(prev => {
-        //     return {
-        //         ...prev,
-        //         times: prev.times.map(time => {
-        //             if (!time.is_selected) return time;
-
-        //             // Update only the selected time block
-        //             return {
-        //                 ...time,
-        //                 schedules: time.schedules.map(asset => {
-
-        //                     const updatedValues = asset.values.map(param => {
-        //                         // Construct the dynamic fieldName
-        //                         const fieldName = `${asset.asset_id}_${param.parameter_id}`;
-
-        //                         return {
-        //                             ...param,
-        //                             is_view: 1,
-        //                             value: formData[fieldName] ?? param.value
-        //                         };
-        //                     });
-
-        //                     return {
-        //                         ...asset,
-        //                         values: updatedValues
-        //                     };
-        //                 })
-        //             };
-        //         })
-        //     };
-        // });
         let objData = {
             "asset_type_id": Number(assetId),
             "asset_id": getCurrentAsset?.asset_id,
@@ -4322,13 +752,15 @@ export default function ChecklistView() {
                 ]
             }
         }
-
-        console.log('--------objData----@@@@@@@@@@------', objData)
+        setLoadingSubmit(true)
         dispatch(actionChecklistGroupHistoryAdd(objData))
     }
 
-
-    // Usage in main component
+    /**
+     * 
+     * @param {*} param
+     * @returns Times Component as per Status
+     */
     const TimeSlotBox = ({
         objData,
         isEnabled,
@@ -4486,7 +918,8 @@ export default function ChecklistView() {
                         sx={{
                             color: objData?.is_selected
                                 ? theme.palette.common.white
-                                : isFutureTimeInRange ? theme.palette.grey[500] : isCurrentTimeInRange ? theme.palette.grey[500] : theme.palette.error[600]
+                                : isFutureTimeInRange && isToday ? theme.palette.grey[500] : isCurrentTimeInRange && isToday ? theme.palette.grey[500] : theme.palette.error[600]
+
                         }}
                     >
                         {`${objData?.from}-${objData?.to}`}
@@ -4680,26 +1113,30 @@ export default function ChecklistView() {
                             </DatePickerWrapper>
                             <Stack>
                                 <Button
+                                    title="Click to load checklist for selected date"
                                     size={'small'}
+                                    disabled={loadingChecklist}
                                     sx={{ textTransform: "capitalize", px: 2, gap: 1, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, border: `1px solid ${theme.palette.primary[600]}` }}
                                     onClick={() => {
-                                        dispatch(actionChecklistGroupDetails({
-                                            branch_uuid: branch?.currentBranch?.uuid,
-                                            asset_type_id: assetId,
-                                            group_uuid: groupUuid,
-                                            date: moment(selectedStartDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-                                        }))
+                                        setIsInitialLoad(true)
+                                        if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && groupUuid && groupUuid !== null) {
+                                            setLoadingChecklist(true)
+                                            dispatch(actionChecklistGroupDetails({
+                                                branch_uuid: branch?.currentBranch?.uuid,
+                                                asset_type_id: assetId,
+                                                group_uuid: groupUuid,
+                                                date: selectedStartDate && selectedStartDate !== null ? moment(selectedStartDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : moment().format('YYYY-MM-DD')
+                                            }))
+                                        }
                                     }}
                                     variant='outlined'
                                 >
-                                    <GenerateReportIcon />
-                                    Generate Report
+                                    <GenerateReportIcon /> Load Checklist
                                 </Button>
                             </Stack>
-
-
                             <Stack>
                                 <Button
+                                    title="Click to export checklist for selected date"
                                     size={'small'}
                                     sx={{ textTransform: "capitalize", px: 2, gap: 1, borderRadius: '8px', backgroundColor: theme.palette.common.white, color: theme.palette.primary[600], fontSize: 16, fontWeight: 600, border: `1px solid ${theme.palette.primary[600]}`, boxShadow: 'none' }}
                                     onClick={() => {
@@ -4713,442 +1150,387 @@ export default function ChecklistView() {
                             </Stack>
                         </Stack>
                     </Stack>
-
-                    <Stack sx={{ flexDirection: 'row', gap: 2, background: theme.palette.primary[50], padding: '8px', borderRadius: '8px', width: '100%', overflowX: 'scroll', scrollbarWidth: 'thin' }}>
-                        {/* {
-                            getChecklistDetails && getChecklistDetails !== null && getChecklistDetails?.times && getChecklistDetails?.times !== null && getChecklistDetails?.times.length > 0 ?
-                                getChecklistDetails?.times?.map((objData, index) => {
-                                    const isEnabled = isTimeSlotEnabled(objData.from, objData.to);
-
-                                    return (<Stack
-                                        key={index}
-                                        sx={{
-                                            cursor: isEnabled == true ? 'pointer' : '', justifyContent: 'center', minWidth: '175px', flexDirection: 'row', gap: 1, p: '10px 16px', borderRadius: '8px',
-                                            background: isEnabled == true ?
-                                                (objData?.is_selected == true ? theme.palette.common.black : theme.palette.common.white)
-                                                : isToday() == true ? 'transparent' : theme.palette.common.white
-                                        }}
-                                        onClick={() => {
-                                            if (isEnabled == true) {
-                                                let details = Object.assign({}, getChecklistDetails)// shallow copy
-                                                let arrTimes = details?.times || [];
-
-                                                const updatedTimes = arrTimes.map(time => {
-                                                    const isSelected = time?.uuid === objData?.uuid;
-
-                                                    setSelectedTimeUuid(objData?.uuid)
-
-                                                    // Update all assets in this time's schedules
-                                                    const updatedSchedules = time?.schedules.map(asset => ({
-                                                        ...asset,
-                                                        is_view: 1, // mark all assets as viewed
-                                                        values: asset.values.map(param => ({
-                                                            ...param,
-                                                            is_view: 1 // optionally mark all values as viewed
-                                                        }))
-                                                    }));
-
-                                                    return {
-                                                        ...time,
-                                                        is_selected: isSelected, // mark current time selected
-                                                        schedules: updatedSchedules
-                                                    };
-                                                });
-                                                details.times = updatedTimes;
-                                                setGetChecklistDetails(details);
-                                                methods.reset()
-                                            }
-
-                                        }}
-                                    >
-                                        {
-                                            isEnabled == true ?
-                                                <>
-                                                    {
-                                                        isCurrentTimeInRange(objData.from, objData.to) ?
-                                                            <CircleDashedIcon />
-                                                            :
-                                                            <CheckboxIcon size={24} />
-                                                    }
-                                                </>
-                                                : <></>
-                                        }
-                                        <TypographyComponent fontSize={16} fontWeight={400} sx={{
-                                            color:
-                                                objData?.is_selected == true ?
-                                                    theme.palette.common.white : theme.palette.grey[500]
-                                        }}>
-                                            {`${objData?.from}-${objData?.to}`}
-                                        </TypographyComponent>
-                                    </Stack>)
-                                })
-                                :
-                                <></>
-                        } */}
-                        {
-                            getChecklistDetails && getChecklistDetails?.times?.length > 0 ?
-                                getChecklistDetails.times.map((objData) => {
-                                    const isEnabled = isTimeSlotEnabled(objData.from, objData.to);
-                                    const currentInRange = isCurrentTimeInRange(objData.from, objData.to);
-                                    const futureRange = isFutureTimeRange(objData.from, objData.to);
-
-                                    return (
-                                        <TimeSlotBox
-                                            key={objData.uuid}
-                                            objData={objData}
-                                            isEnabled={isEnabled}
-                                            theme={theme}
-                                            isToday={isToday()} // pass from parent
-                                            isCurrentTimeInRange={currentInRange} // pass from parent
-                                            isFutureTimeInRange={futureRange} // pass from parent
-                                            onClick={() => {
-                                                if (isEnabled == true) {
-                                                    let details = Object.assign({}, getChecklistDetails)// shallow copy
-                                                    let arrTimes = details?.times || [];
-
-                                                    const updatedTimes = arrTimes.map(time => {
-                                                        const isSelected = time?.uuid === objData?.uuid;
-
-                                                        setSelectedTimeUuid(objData?.uuid)
-
-                                                        // Update all assets in this time's schedules
-                                                        const updatedSchedules = time?.schedules.map(asset => ({
-                                                            ...asset,
-                                                            is_view: 1, // mark all assets as viewed
-                                                            values: asset.values.map(param => ({
-                                                                ...param,
-                                                                is_view: 1 // optionally mark all values as viewed
-                                                            }))
-                                                        }));
-
-                                                        return {
-                                                            ...time,
-                                                            is_selected: isSelected, // mark current time selected
-                                                            schedules: updatedSchedules
-                                                        };
-                                                    });
-                                                    details.times = updatedTimes;
-                                                    setGetChecklistDetails(details);
-                                                    methods.reset()
-                                                }
-
-                                            }}
-                                        />
-                                    );
-                                })
-                                : null
-                        }
-                    </Stack>
-
-                </Stack>
-            </Stack>
-            <FormProvider {...methods}>
-                <form onSubmit={methods.handleSubmit(onSubmit)}>
-                    <TableContainer
-                        sx={{
-                            maxHeight: '600px',
-                            maxWidth: '100%',
-                            overflow: 'auto',
-                            background: theme.palette.grey[50],
-                            my: 1
-                        }}
-                    >
-                        <Table stickyHeader sx={{
-                            borderCollapse: "separate",        // REQUIRED for spacing
-                            borderSpacing: "8px 0",           // Horizontal gap (12px)
-                            tableLayout: "fixed",
-                            background: theme.palette.grey[50]
-                        }}>
-                            <TableHead sx={{ background: theme.palette.grey[50] }}>
-                                <TableRow>
-                                    <TableCell
-                                        sx={{
-                                            position: 'sticky',
-                                            left: 0,
-                                            zIndex: 100,
-                                            background: theme.palette.common.white,
-                                            width: 300,
-                                            border: `1px solid ${theme.palette.divider}`,
-                                            borderRadius: '8px',
-                                            p: '15px 24px',
-                                        }}
-                                    >
-                                        <TypographyComponent sx={{ color: theme.palette.grey[900] }} fontSize={14} fontWeight={500}>Parameters</TypographyComponent>
-
-                                    </TableCell>
-                                    {/* Time Slot Headers (00:00, 02:00, ...) */}
-                                    {getChecklistDetails && getChecklistDetails !== null && getChecklistDetails?.times && getChecklistDetails?.times !== null && getChecklistDetails?.times.length > 0 && getChecklistDetails?.times?.find(t => t.is_selected == true)?.schedules?.map((asset, indexAsset) => (
-                                        <TableCell
-                                            key={indexAsset}
-                                            sx={{
-                                                backgroundColor: asset?.status == 'Approved' ? theme.palette.success[50] : theme.palette.common.white,// theme.palette.success[50],
-                                                color: theme.palette.grey[600],
-                                                border: asset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`,//`1px solid ${theme.palette.success[600]}`,
-                                                borderRadius: '8px',
-                                                fontWeight: 'bold',
-                                                width: 255,
-                                                p: '15px 24px',
-                                            }}
-                                        >
-                                            <Stack sx={{ flexDirection: 'row', width: '100%', justifyContent: 'space-between' }}>
-                                                <Stack><TypographyComponent sx={{ color: theme.palette.grey[900] }} fontSize={14} fontWeight={500}>{asset?.asset_name}</TypographyComponent></Stack>
-                                                {
-                                                    asset?.status == 'Abnormal' || (asset?.status == 'Approved' && asset.is_abnormal_approved == 1) ?
-                                                        <Stack><AlertTriangleIcon stroke={theme.palette.warning[600]} /></Stack>
-                                                        :
-                                                        <></>
-                                                }
-
-                                            </Stack>
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            </TableHead>
-
-                            <TableBody>
-                                <TableRow>
-                                    <TableCell sx={{
-                                        position: 'sticky',
-                                        top: 0,
-                                        zIndex: 100,
-                                        minHeight: '8px',
-                                        py: 0,
-                                        border: 0
-                                    }}>
-                                        <Stack sx={{ height: '8px' }}></Stack>
-                                    </TableCell>
-                                </TableRow>
-                                {getChecklistDetails?.parameters?.filter(p => p?.parameter_type !== 'Grouping').map((row, i) => (
-                                    <TableRow key={i}>
-                                        <TableCell
-                                            sx={{
-                                                position: 'sticky',
-                                                left: 0,
-                                                p: '15px 24px',
-                                                background: theme.palette.common.white,
-                                                zIndex: 1,
-                                                borderTop: i == 0 ? `1px solid ${theme.palette.divider}` : '',
-                                                borderBottom: `1px solid ${theme.palette.divider}`,
-                                                borderLeft: `1px solid ${theme.palette.divider}`,
-                                                borderRight: `1px solid ${theme.palette.divider}`,
-                                                borderTopLeftRadius: i == 0 ? '8px' : 'none',
-                                                borderTopRightRadius: i == 0 ? '8px' : 'none',
-                                            }}
-                                        >
-                                            <Stack sx={{ flexDirection: 'row' }}>
-                                                <TypographyComponent sx={{ color: theme.palette.grey[900] }} fontSize={14} fontWeight={400}> {row.name}</TypographyComponent>
-                                                {
-                                                    row.is_mandatory == 1 ?
-                                                        <span style={{ color: 'red' }}>*</span>
-                                                        :
-                                                        <></>
-                                                }
-                                            </Stack>
-
-                                        </TableCell>
-                                        {/* {selectedTimeSlot?.schedules.map((timeSlot) => { */}
-                                        {getChecklistDetails && getChecklistDetails !== null && getChecklistDetails?.times && getChecklistDetails?.times !== null && getChecklistDetails?.times.length > 0 && getChecklistDetails?.times.find(t => t.is_selected == true)?.schedules.map((objAsset) => {
-                                            // Find the value object for the current parameter in the current time slot
-                                            const paramValue = objAsset?.values?.find(v => v.parameter_id === row.id);
-                                            const value = paramValue ? paramValue.value : '';
+                    {
+                        loadingChecklist == false ?
+                            <Stack ref={scrollRef} sx={{ flexDirection: 'row', gap: 2, background: theme.palette.primary[50], padding: '8px', borderRadius: '8px', width: '100%', overflowX: 'scroll', scrollbarWidth: 'thin' }}>
+                                {
+                                    getChecklistDetails && getChecklistDetails?.times?.length > 0 ?
+                                        getChecklistDetails.times.map((objData) => {
+                                            const isEnabled = isTimeSlotEnabled(objData.from, objData.to);
+                                            const currentInRange = isCurrentTimeInRange(objData.from, objData.to);
+                                            const futureRange = isFutureTimeRange(objData.from, objData.to);
 
                                             return (
-                                                <TableCell key={`${objAsset?.id}-${objAsset?.asset_name}`}
-                                                    sx={{
-                                                        alignItems: 'flex-start',
-                                                        p: '15px 24px',
-                                                        borderTop: i == 0 ?
-                                                            objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`// `1px solid ${theme.palette.success[600]}`
-                                                            : '',
-                                                        borderBottom: `1px solid ${theme.palette.grey[300]}`,
-                                                        background: objAsset?.status == 'Approved' ? theme.palette.success[50] : theme.palette.common.white,//theme.palette.success[50],
-                                                        borderLeft: objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`,// `1px solid ${theme.palette.success[600]}`
-                                                        borderRight: objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`,// `1px solid ${theme.palette.success[600]}`
-                                                        borderTopLeftRadius: i == 0 ? '8px' : 'none',
-                                                        borderTopRightRadius: i == 0 ? '8px' : 'none',
-                                                    }}>
-                                                    {/* Placeholder for the Input Field (like a TextField) */}
-                                                    {
-                                                        objAsset?.is_view == 1 ?
-                                                            <>
-                                                                <TypographyComponent sx={{ color: theme.palette.grey[900] }} fontSize={14} fontWeight={400}>{value && value !== null ? `${value} ${paramValue?.input_type == 'Number (with range)' ? (paramValue?.unit && paramValue?.unit !== null ? paramValue?.unit : '') : ''}` : '--'} </TypographyComponent>
-                                                            </>
-                                                            :
-                                                            <>
-                                                                <FieldRenderer key={`${i}-${objAsset?.asset_id}`} params={paramValue} value={value} assetId={objAsset?.asset_id} />
-                                                            </>
-                                                    }
+                                                <Box
+                                                    key={objData.uuid}
+                                                    sx={{ display: "inline-block" }}
+                                                >
+                                                    <TimeSlotBox
+                                                        key={objData.uuid}
+                                                        objData={objData}
+                                                        isEnabled={isEnabled}
+                                                        theme={theme}
+                                                        isToday={isToday()}
+                                                        isCurrentTimeInRange={currentInRange}
+                                                        isFutureTimeInRange={futureRange}
+                                                        onClick={() => {
+                                                            setIsInitialLoad(false)
+                                                            if (isEnabled == true) {
+                                                                let details = Object.assign({}, getChecklistDetails)
+                                                                let arrTimes = details?.times || [];
 
-                                                </TableCell>
+                                                                const updatedTimes = arrTimes.map(time => {
+                                                                    const isSelected = time?.uuid === objData?.uuid;
+
+                                                                    setSelectedTimeUuid(objData?.uuid)
+
+                                                                    // Update all assets in this time's schedules
+                                                                    const updatedSchedules = time?.schedules.map(asset => ({
+                                                                        ...asset,
+                                                                        is_view: 1, // mark all assets as viewed
+                                                                        values: asset.values.map(param => ({
+                                                                            ...param,
+                                                                            is_view: 1 // optionally mark all values as viewed
+                                                                        }))
+                                                                    }));
+
+                                                                    return {
+                                                                        ...time,
+                                                                        is_selected: isSelected, // mark current time selected
+                                                                        schedules: updatedSchedules
+                                                                    };
+                                                                });
+                                                                details.times = updatedTimes;
+                                                                setGetChecklistDetails(details);
+                                                                methods.reset()
+                                                            }
+
+                                                        }}
+                                                    />
+                                                </Box>
                                             );
-                                        })}
-                                    </TableRow>
-                                ))}
-                                {
-                                    isToday() == true ?
-                                        <TableRow>
-                                            <TableCell
-                                                sx={{
-                                                    position: 'sticky',
-                                                    left: 0,
-                                                    zIndex: 100,
-                                                    background: theme.palette.common.white,
-                                                    fontWeight: 'bold',
-                                                    width: 300,
-                                                    borderBottom: `1px solid ${theme.palette.grey[300]}`,
-                                                    borderLeft: `1px solid ${theme.palette.grey[300]}`,
-                                                    borderRight: `1px solid ${theme.palette.grey[300]}`,
-                                                    borderBottomLeftRadius: '8px',
-                                                    borderBottomRightRadius: '8px',
-                                                }}
-                                            >
-                                                Approval Actions
-                                            </TableCell>
-                                            {/* {selectedTimeSlot?.schedules.map((asset, assetIndex) => { */}
-                                            {getChecklistDetails && getChecklistDetails !== null && getChecklistDetails?.times && getChecklistDetails?.times !== null && getChecklistDetails?.times.length > 0 && getChecklistDetails?.times.find(t => t.is_selected == true)?.schedules.map((asset, assetIndex) => {
-                                                return (
-                                                    <React.Fragment>
+                                        })
+                                        : null
+                                }
+                            </Stack>
+                            :
+                            <></>
+                    }
+                </Stack>
+            </Stack>
+            {
+                loadingChecklist ?
+                    <Stack sx={{ height: '600px', alignItems: 'center', rowGap: 1, justifyContent: 'center' }}>
+                        <CircularProgress sx={{ color: theme.palette.grey[900] }} />
+                        <TypographyComponent
+                            fontSize={22}
+                            fontWeight={500}
+                            sx={{ mt: 2, color: theme.palette.grey[900] }}
+                        >
+                            Loading....
+                        </TypographyComponent>
+                    </Stack>
+                    :
+                    <>
+                        {
+                            getChecklistDetails && getChecklistDetails !== null && getChecklistDetails?.times && getChecklistDetails?.times !== null && getChecklistDetails?.times?.length > 0 ?
+                                <FormProvider {...methods}>
+                                    <form onSubmit={methods.handleSubmit(onSubmit)}>
+                                        <TableContainer
+                                            sx={{
+                                                maxHeight: '600px',
+                                                maxWidth: '100%',
+                                                overflow: 'auto',
+                                                background: theme.palette.grey[50],
+                                                my: 1
+                                            }}
+                                        >
+                                            <Table stickyHeader sx={{
+                                                borderCollapse: "separate",
+                                                borderSpacing: "8px 0",
+                                                tableLayout: "fixed",
+                                                background: theme.palette.grey[50]
+                                            }}>
+                                                <TableHead sx={{ background: theme.palette.grey[50] }}>
+                                                    <TableRow>
                                                         <TableCell
-                                                            key={`${assetIndex}-${asset?.asset_name}`}
-                                                            align="center"
                                                             sx={{
-                                                                backgroundColor: 'transparent',
-                                                                fontWeight: 'bold',
-                                                                minWidth: 255,
+                                                                position: 'sticky',
+                                                                left: 0,
+                                                                zIndex: 100,
+                                                                background: theme.palette.common.white,
+                                                                width: 300,
+                                                                border: `1px solid ${theme.palette.divider}`,
+                                                                borderRadius: '8px',
                                                                 p: '15px 24px',
-                                                                background: asset?.status == 'Approved' ? theme.palette.success[50] : theme.palette.common.white,//theme.palette.success[50],
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                borderBottom: asset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`,// `1px solid ${theme.palette.success[600]}`
-                                                                borderLeft: asset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`,// `1px solid ${theme.palette.success[600]}`
-                                                                borderRight: asset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`,// `1px solid ${theme.palette.success[600]}`
-                                                                borderBottomLeftRadius: '8px',
-                                                                borderBottomRightRadius: '8px',
-
                                                             }}
                                                         >
+                                                            <TypographyComponent sx={{ color: theme.palette.grey[900] }} fontSize={14} fontWeight={500}>Parameters</TypographyComponent>
 
-                                                            <Stack sx={{ flexDirection: 'row', justifyContent: 'center', gap: 1, width: '100%' }}>
-
-                                                                {
-                                                                    asset?.is_view == 1 ?
-                                                                        <>
-                                                                            <Button
-                                                                                size={'small'}
-                                                                                disabled={asset?.status == 'Approved' ? true : false}
-                                                                                sx={{ textTransform: "capitalize", px: asset?.is_view == 0 ? 4 : 6, borderRadius: '4px', backgroundColor: asset?.status == 'Approved' ? theme.palette.grey[300] : theme.palette.primary[600], color: asset?.status == 'Approved' ? theme.palette.grey[600] : theme.palette.common.white, fontSize: 14, fontWeight: 500, borderColor: theme.palette.primary[600] }}
-                                                                                onClick={() => {
-                                                                                    setOpenAssetApprovalPopup(true)
-                                                                                    let objData = {
-                                                                                        asset_id: asset?.asset_id,
-                                                                                        title: `Approve ${asset?.asset_name}`,
-                                                                                        text: `Are you sure you want to approve this asset? This action cannot be undone.`
-                                                                                    }
-                                                                                    setCurrentAssetApprovalDetails(objData)
-                                                                                }}
-                                                                                variant='contained'
-                                                                            >
-                                                                                {/* <AddIcon sx={{ color: 'white', fontSize: { xs: '20px', sm: '20px', md: '22px' } }} /> */}
-                                                                                Approve
-                                                                            </Button>
-                                                                            {
-                                                                                asset?.status !== 'Approved' ?
-                                                                                    <Button disabled={getEditModeCount()} sx={{ columnGap: 0.5, px: 2, border: getEditModeCount() ? `1px solid ${theme.palette.grey[300]}` : `1px solid ${theme.palette.primary[600]}`, background: getEditModeCount() ? theme.palette.grey[300] : '', color: getEditModeCount() ? theme.palette.grey[600] : theme.palette.primary[600], textTransform: 'capitalize', borderRadius: '4px' }}
-                                                                                        onClick={() => {
-                                                                                            // methods.reset()
-
-                                                                                            let details = Object.assign({}, getChecklistDetails)
-                                                                                            let arrTimes = Object.assign([], details?.times)
-                                                                                            let currentTime = arrTimes?.find(t => t.is_selected == true)
-                                                                                            let currentTimeIndex = arrTimes?.findIndex(t => t.is_selected == true)
-
-                                                                                            let arrSchedules = Object.assign([], currentTime?.schedules)
-
-                                                                                            let currentAsset = arrSchedules?.find(a => a.asset_id == asset?.asset_id)
-                                                                                            currentAsset.is_view = 0
-                                                                                            let currentAssetIndex = arrSchedules?.findIndex(a => a.asset_id == asset?.asset_id)
-                                                                                            arrSchedules[currentAssetIndex] = currentAsset
-                                                                                            currentTime.schedules = arrSchedules
-                                                                                            arrTimes[currentTimeIndex] = currentTime
-                                                                                            details.times = arrTimes
-                                                                                            setGetChecklistDetails(details)
-                                                                                        }}>
-                                                                                        <EditCircleIcon stroke={getEditModeCount() ? theme.palette.grey[600] : theme.palette.primary[600]} size={18} /> Edit
-                                                                                    </Button>
-                                                                                    :
-                                                                                    <></>
-                                                                            }
-
-                                                                        </>
-                                                                        :
-                                                                        <>
-                                                                            <Button
-                                                                                title={'Cancel'}
-                                                                                sx={{ columnGap: 0.5, px: 6, color: theme.palette.primary[600], border: `1px solid ${theme.palette.primary[600]}`, background: theme.palette.common.white, textTransform: 'capitalize', borderRadius: '4px' }}
-                                                                                onClick={() => {
-                                                                                    let details = Object.assign({}, getChecklistDetails)
-                                                                                    let arrTimes = Object.assign([], details?.times)
-                                                                                    let currentTime = arrTimes?.find(t => t.is_selected == true)
-                                                                                    let currentTimeIndex = arrTimes?.findIndex(t => t.is_selected == true)
-
-                                                                                    let arrSchedules = Object.assign([], currentTime?.schedules)
-
-                                                                                    let currentAsset = arrSchedules?.find(a => a.asset_id == asset?.asset_id)
-                                                                                    currentAsset.is_view = 1
-                                                                                    let currentAssetIndex = arrSchedules?.findIndex(a => a.asset_id == asset?.asset_id)
-                                                                                    arrSchedules[currentAssetIndex] = currentAsset
-                                                                                    currentTime.schedules = arrSchedules
-                                                                                    arrTimes[currentTimeIndex] = currentTime
-                                                                                    details.times = arrTimes
-                                                                                    setGetChecklistDetails(details)
-
-                                                                                    methods.reset()
-                                                                                }}
-                                                                            >
-                                                                                <CloseIcon stroke={theme.palette.primary[600]} size={10} />
-                                                                                Cancel
-                                                                            </Button>
-                                                                            <Button sx={{ columnGap: 0.5, px: 6, color: theme.palette.common.white, background: theme.palette.success[600], textTransform: 'capitalize', borderRadius: '4px' }}
-                                                                                onClick={() => {
-                                                                                    methods.handleSubmit(onSubmit)()
-
-
-                                                                                    // let details = Object.assign({}, getChecklistDetails)
-                                                                                    // let arrTimes = Object.assign([], details?.times)
-                                                                                    // let currentTime = arrTimes?.find(t => t.is_selected == true)
-                                                                                    // let currentTimeIndex = arrTimes?.findIndex(t => t.is_selected == true)
-
-                                                                                    // let arrSchedules = Object.assign([], currentTime?.schedules)
-
-                                                                                    // let currentAsset = arrSchedules?.find(a => a.asset_id == asset?.asset_id)
-                                                                                    // currentAsset.is_view = 1
-                                                                                    // let currentAssetIndex = arrSchedules?.findIndex(a => a.asset_id == asset?.asset_id)
-                                                                                    // arrSchedules[currentAssetIndex] = currentAsset
-                                                                                    // currentTime.schedules = arrSchedules
-                                                                                    // arrTimes[currentTimeIndex] = currentTime
-                                                                                    // details.times = arrTimes
-                                                                                    // setGetChecklistDetails(details)
-                                                                                }}
-                                                                            >
-                                                                                Save
-                                                                            </Button>
-                                                                        </>
-                                                                }
-
-                                                            </Stack>
                                                         </TableCell>
-                                                    </React.Fragment>
-                                                )
-                                            })}
-                                        </TableRow>
-                                        :
-                                        <></>
-                                }
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                </form>
-            </FormProvider>
+                                                        {/* Time Slot Headers (00:00, 02:00, ...) */}
+                                                        {getChecklistDetails && getChecklistDetails !== null && getChecklistDetails?.times && getChecklistDetails?.times !== null && getChecklistDetails?.times.length > 0 && getChecklistDetails?.times?.find(t => t.is_selected == true)?.schedules?.map((asset, indexAsset) => (
+                                                            <TableCell
+                                                                key={indexAsset}
+                                                                sx={{
+                                                                    backgroundColor: asset?.status == 'Approved' ? theme.palette.success[50] : theme.palette.common.white,// theme.palette.success[50],
+                                                                    color: theme.palette.grey[600],
+                                                                    border: asset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`,//`1px solid ${theme.palette.success[600]}`,
+                                                                    borderRadius: '8px',
+                                                                    fontWeight: 'bold',
+                                                                    width: 255,
+                                                                    p: '15px 24px',
+                                                                }}
+                                                            >
+                                                                <Stack sx={{ flexDirection: 'row', width: '100%', justifyContent: 'space-between' }}>
+                                                                    <Stack><TypographyComponent sx={{ color: theme.palette.grey[900] }} fontSize={14} fontWeight={500}>{asset?.asset_name}</TypographyComponent></Stack>
+                                                                    {
+                                                                        asset?.status == 'Abnormal' || (asset?.status == 'Approved' && asset.is_abnormal_approved == 1) ?
+                                                                            <Stack><AlertTriangleIcon stroke={theme.palette.warning[600]} /></Stack>
+                                                                            :
+                                                                            <></>
+                                                                    }
+
+                                                                </Stack>
+                                                            </TableCell>
+                                                        ))}
+                                                    </TableRow>
+                                                </TableHead>
+                                                <TableBody>
+                                                    <TableRow>
+                                                        <TableCell sx={{
+                                                            position: 'sticky',
+                                                            top: 0,
+                                                            zIndex: 100,
+                                                            minHeight: '8px',
+                                                            py: 0,
+                                                            border: 0
+                                                        }}>
+                                                            <Stack sx={{ height: '8px' }}></Stack>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                    {getChecklistDetails?.parameters?.filter(p => p?.parameter_type !== 'Grouping').map((row, i) => (
+                                                        <TableRow key={i}>
+                                                            <TableCell
+                                                                sx={{
+                                                                    position: 'sticky',
+                                                                    left: 0,
+                                                                    p: '15px 24px',
+                                                                    background: theme.palette.common.white,
+                                                                    zIndex: 1,
+                                                                    borderTop: i == 0 ? `1px solid ${theme.palette.divider}` : '',
+                                                                    borderBottom: `1px solid ${theme.palette.divider}`,
+                                                                    borderLeft: `1px solid ${theme.palette.divider}`,
+                                                                    borderRight: `1px solid ${theme.palette.divider}`,
+                                                                    borderTopLeftRadius: i == 0 ? '8px' : 'none',
+                                                                    borderTopRightRadius: i == 0 ? '8px' : 'none',
+                                                                }}
+                                                            >
+                                                                <Stack sx={{ flexDirection: 'row' }}>
+                                                                    <TypographyComponent sx={{ color: theme.palette.grey[900] }} fontSize={14} fontWeight={400}> {row.name}</TypographyComponent>
+                                                                    {
+                                                                        row.is_mandatory == 1 ?
+                                                                            <span style={{ color: 'red' }}>*</span>
+                                                                            :
+                                                                            <></>
+                                                                    }
+                                                                </Stack>
+
+                                                            </TableCell>
+                                                            {getChecklistDetails && getChecklistDetails !== null && getChecklistDetails?.times && getChecklistDetails?.times !== null && getChecklistDetails?.times.length > 0 && getChecklistDetails?.times.find(t => t.is_selected == true)?.schedules.map((objAsset) => {
+                                                                // Find the value object for the current parameter in the current time slot
+                                                                const paramValue = objAsset?.values?.find(v => v.parameter_id === row.id);
+                                                                const value = paramValue ? paramValue.value : '';
+
+                                                                return (
+                                                                    <TableCell key={`${objAsset?.id}-${objAsset?.asset_name}`}
+                                                                        sx={{
+                                                                            alignItems: 'flex-start',
+                                                                            p: '15px 24px',
+                                                                            borderTop: i == 0 ?
+                                                                                objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`// `1px solid ${theme.palette.success[600]}`
+                                                                                : '',
+                                                                            borderBottom: `1px solid ${theme.palette.grey[300]}`,
+                                                                            background: objAsset?.status == 'Approved' ? theme.palette.success[50] : theme.palette.common.white,//theme.palette.success[50],
+                                                                            borderLeft: objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`,// `1px solid ${theme.palette.success[600]}`
+                                                                            borderRight: objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`,// `1px solid ${theme.palette.success[600]}`
+                                                                            borderTopLeftRadius: i == 0 ? '8px' : 'none',
+                                                                            borderTopRightRadius: i == 0 ? '8px' : 'none',
+                                                                        }}>
+                                                                        {/* Placeholder for the Input Field (like a TextField) */}
+                                                                        {
+                                                                            objAsset?.is_view == 1 ?
+                                                                                <>
+                                                                                    <TypographyComponent sx={{ color: theme.palette.grey[900] }} fontSize={14} fontWeight={400}>{value && value !== null ? `${value} ${paramValue?.input_type == 'Number (with range)' ? (paramValue?.unit && paramValue?.unit !== null ? paramValue?.unit : '') : ''}` : '--'} </TypographyComponent>
+                                                                                </>
+                                                                                :
+                                                                                <>
+                                                                                    <FieldRenderer key={`${i}-${objAsset?.asset_id}`} params={paramValue} value={value} assetId={objAsset?.asset_id} />
+                                                                                </>
+                                                                        }
+
+                                                                    </TableCell>
+                                                                );
+                                                            })}
+                                                        </TableRow>
+                                                    ))}
+                                                    {
+                                                        isToday() == true ?
+                                                            <TableRow>
+                                                                <TableCell
+                                                                    sx={{
+                                                                        position: 'sticky',
+                                                                        left: 0,
+                                                                        zIndex: 100,
+                                                                        background: theme.palette.common.white,
+                                                                        fontWeight: 'bold',
+                                                                        width: 300,
+                                                                        borderBottom: `1px solid ${theme.palette.grey[300]}`,
+                                                                        borderLeft: `1px solid ${theme.palette.grey[300]}`,
+                                                                        borderRight: `1px solid ${theme.palette.grey[300]}`,
+                                                                        borderBottomLeftRadius: '8px',
+                                                                        borderBottomRightRadius: '8px',
+                                                                    }}
+                                                                >
+                                                                    Approval Actions
+                                                                </TableCell>
+                                                                {getChecklistDetails && getChecklistDetails !== null && getChecklistDetails?.times && getChecklistDetails?.times !== null && getChecklistDetails?.times.length > 0 && getChecklistDetails?.times.find(t => t.is_selected == true)?.schedules.map((asset, assetIndex) => {
+                                                                    return (
+                                                                        <React.Fragment>
+                                                                            <TableCell
+                                                                                key={`${assetIndex}-${asset?.asset_name}`}
+                                                                                align="center"
+                                                                                sx={{
+                                                                                    backgroundColor: 'transparent',
+                                                                                    fontWeight: 'bold',
+                                                                                    minWidth: 255,
+                                                                                    p: '15px 24px',
+                                                                                    background: asset?.status == 'Approved' ? theme.palette.success[50] : theme.palette.common.white,//theme.palette.success[50],
+                                                                                    alignItems: 'center',
+                                                                                    justifyContent: 'center',
+                                                                                    borderBottom: asset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`,// `1px solid ${theme.palette.success[600]}`
+                                                                                    borderLeft: asset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`,// `1px solid ${theme.palette.success[600]}`
+                                                                                    borderRight: asset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`,// `1px solid ${theme.palette.success[600]}`
+                                                                                    borderBottomLeftRadius: '8px',
+                                                                                    borderBottomRightRadius: '8px',
+
+                                                                                }}
+                                                                            >
+
+                                                                                <Stack sx={{ flexDirection: 'row', justifyContent: 'center', gap: 1, width: '100%' }}>
+
+                                                                                    {
+                                                                                        asset?.is_view == 1 ?
+                                                                                            <>
+                                                                                                <Button
+                                                                                                    size={'small'}
+                                                                                                    disabled={asset?.status == 'Approved' || asset?.status == '' ? true : false}
+                                                                                                    sx={{ cursor: asset?.status == 'Approved' || asset?.status == '' ? 'default' : 'pointer', textTransform: "capitalize", px: asset?.is_view == 0 ? 4 : 6, borderRadius: '4px', backgroundColor: asset?.status == 'Approved' || asset?.status == '' ? theme.palette.grey[300] : theme.palette.primary[600], color: asset?.status == 'Approved' || asset?.status == '' ? theme.palette.grey[600] : theme.palette.common.white, fontSize: 14, fontWeight: 500, borderColor: theme.palette.primary[600] }}
+                                                                                                    onClick={() => {
+                                                                                                        setOpenAssetApprovalPopup(true)
+                                                                                                        let objData = {
+                                                                                                            asset_id: asset?.asset_id,
+                                                                                                            title: `Approve ${asset?.asset_name}`,
+                                                                                                            text: `Are you sure you want to approve this asset? This action cannot be undone.`
+                                                                                                        }
+                                                                                                        setCurrentAssetApprovalDetails(objData)
+                                                                                                    }}
+                                                                                                    variant='contained'
+                                                                                                >
+                                                                                                    {/* <AddIcon sx={{ color: 'white', fontSize: { xs: '20px', sm: '20px', md: '22px' } }} /> */}
+                                                                                                    Approve
+                                                                                                </Button>
+                                                                                                {
+                                                                                                    asset?.status !== 'Approved' ?
+                                                                                                        <Button disabled={getEditModeCount()} sx={{ columnGap: 0.5, px: 2, border: getEditModeCount() ? `1px solid ${theme.palette.grey[300]}` : `1px solid ${theme.palette.primary[600]}`, background: getEditModeCount() ? theme.palette.grey[300] : '', color: getEditModeCount() ? theme.palette.grey[600] : theme.palette.primary[600], textTransform: 'capitalize', borderRadius: '4px' }}
+                                                                                                            onClick={() => {
+                                                                                                                // methods.reset()
+
+                                                                                                                let details = Object.assign({}, getChecklistDetails)
+                                                                                                                let arrTimes = Object.assign([], details?.times)
+                                                                                                                let currentTime = arrTimes?.find(t => t.is_selected == true)
+                                                                                                                let currentTimeIndex = arrTimes?.findIndex(t => t.is_selected == true)
+
+                                                                                                                let arrSchedules = Object.assign([], currentTime?.schedules)
+
+                                                                                                                let currentAsset = arrSchedules?.find(a => a.asset_id == asset?.asset_id)
+                                                                                                                currentAsset.is_view = 0
+                                                                                                                let currentAssetIndex = arrSchedules?.findIndex(a => a.asset_id == asset?.asset_id)
+                                                                                                                arrSchedules[currentAssetIndex] = currentAsset
+                                                                                                                currentTime.schedules = arrSchedules
+                                                                                                                arrTimes[currentTimeIndex] = currentTime
+                                                                                                                details.times = arrTimes
+                                                                                                                setGetChecklistDetails(details)
+                                                                                                            }}>
+                                                                                                            <EditCircleIcon stroke={getEditModeCount() ? theme.palette.grey[600] : theme.palette.primary[600]} size={18} /> Edit
+                                                                                                        </Button>
+                                                                                                        :
+                                                                                                        <></>
+                                                                                                }
+
+                                                                                            </>
+                                                                                            :
+                                                                                            <>
+                                                                                                <Button
+                                                                                                    title={'Cancel'}
+                                                                                                    sx={{ columnGap: 0.5, px: 6, color: theme.palette.primary[600], border: `1px solid ${theme.palette.primary[600]}`, background: theme.palette.common.white, textTransform: 'capitalize', borderRadius: '4px' }}
+                                                                                                    onClick={() => {
+                                                                                                        let details = Object.assign({}, getChecklistDetails)
+                                                                                                        let arrTimes = Object.assign([], details?.times)
+                                                                                                        let currentTime = arrTimes?.find(t => t.is_selected == true)
+                                                                                                        let currentTimeIndex = arrTimes?.findIndex(t => t.is_selected == true)
+
+                                                                                                        let arrSchedules = Object.assign([], currentTime?.schedules)
+
+                                                                                                        let currentAsset = arrSchedules?.find(a => a.asset_id == asset?.asset_id)
+                                                                                                        currentAsset.is_view = 1
+                                                                                                        let currentAssetIndex = arrSchedules?.findIndex(a => a.asset_id == asset?.asset_id)
+                                                                                                        arrSchedules[currentAssetIndex] = currentAsset
+                                                                                                        currentTime.schedules = arrSchedules
+                                                                                                        arrTimes[currentTimeIndex] = currentTime
+                                                                                                        details.times = arrTimes
+                                                                                                        setGetChecklistDetails(details)
+
+                                                                                                        methods.reset()
+                                                                                                    }}
+                                                                                                >
+                                                                                                    <CloseIcon stroke={theme.palette.primary[600]} size={10} />
+                                                                                                    Cancel
+                                                                                                </Button>
+                                                                                                {loadingSubmit ?
+                                                                                                    <Button sx={{ backgroundColor: theme.palette.grey[300] }}>
+                                                                                                        <CircularProgress size={16} sx={{ color: theme.palette.grey[600] }} />
+                                                                                                    </Button>
+                                                                                                    :
+                                                                                                    <Button sx={{ columnGap: 0.5, px: 6, color: theme.palette.common.white, background: theme.palette.success[600], textTransform: 'capitalize', borderRadius: '4px' }}
+                                                                                                        onClick={() => {
+                                                                                                            methods.handleSubmit(onSubmit)()
+                                                                                                        }}
+                                                                                                    >
+                                                                                                        Save
+                                                                                                    </Button>
+                                                                                                }
+                                                                                            </>
+                                                                                    }
+                                                                                </Stack>
+                                                                            </TableCell>
+                                                                        </React.Fragment>
+                                                                    )
+                                                                })}
+                                                            </TableRow>
+                                                            :
+                                                            <></>
+                                                    }
+                                                </TableBody>
+                                            </Table>
+                                        </TableContainer>
+                                    </form>
+                                </FormProvider>
+                                :
+                                <Stack sx={{ borderRadius: '16px', mt: 2, pb: 2, height: { xs: '100%', sm: '100%', md: '500px', lg: '500px' }, background: theme.palette.common.white }}><EmptyContent mt={6} imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Checklist Found'} subTitle={''} /></Stack>
+                        }
+                    </>
+            }
             {
                 openAssetApprovalPopup &&
                 <AlertPopup
@@ -5181,7 +1563,6 @@ export default function ChecklistView() {
                     }
                 />
             }
-        </React.Fragment>
+        </React.Fragment >
     </>)
-
 }
