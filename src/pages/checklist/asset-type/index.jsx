@@ -301,7 +301,7 @@ export default function ChecklistAssetTypes() {
 
     return (<>
         <React.Fragment>
-            <Stack sx={{ flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'center' }}>
+            <Stack sx={{ flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'row' } }}>
                 <TypographyComponent color={theme.palette.text.primary} fontSize={24} fontWeight={500}>Checklist Management</TypographyComponent>
             </Stack>
             <Box
@@ -386,14 +386,14 @@ export default function ChecklistAssetTypes() {
                     </Card>
                 ))}
             </Box>
-            <Stack sx={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', my: 2 }}>
-                <TypographyComponent fontSize={16} fontWeight={600}>Asset Types Groups</TypographyComponent>
+            <Stack sx={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', my: 2, columnGap: 1 }}>
+                <TypographyComponent fontSize={16} fontWeight={600} sx={{ textWrap: 'nowrap' }}>Asset Types Groups</TypographyComponent>
                 <SearchInput
                     id="search-assets"
                     placeholder="Search"
                     variant="outlined"
                     size="small"
-                    sx={{ background: 'white', width: '507px' }}
+                    sx={{ background: 'white', minWidth: { xs: '180px', sm: '507px' } }}
                     onChange={(e) => {
                         setSearchQuery(e.target.value)
                     }}
@@ -414,7 +414,7 @@ export default function ChecklistAssetTypes() {
                         <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 4 }} key={objAsset?.id}>
                             <Card
                                 sx={{
-                                    p: 3,
+                                    p: { xs: 1.2, sm: 3 },
                                     height: "100%",
                                     width: '100%',
                                     borderRadius: "16px",

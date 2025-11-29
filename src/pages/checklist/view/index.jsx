@@ -1255,15 +1255,16 @@ export default function ChecklistView() {
                                                     <TableRow>
                                                         <TableCell
                                                             sx={{
-                                                                position: 'sticky',
-                                                                left: 0,
+                                                                position: { xs: '', sm: 'sticky' },
+                                                                left: { xs: '', sm: 0 },
                                                                 zIndex: 100,
                                                                 background: theme.palette.common.white,
                                                                 width: 300,
                                                                 border: `1px solid ${theme.palette.divider}`,
                                                                 borderRadius: '8px',
                                                                 p: '15px 24px',
-                                                            }}
+                                                            }
+                                                            }
                                                         >
                                                             <TypographyComponent sx={{ color: theme.palette.grey[900] }} fontSize={14} fontWeight={500}>Parameters</TypographyComponent>
 
@@ -1299,8 +1300,8 @@ export default function ChecklistView() {
                                                 <TableBody>
                                                     <TableRow>
                                                         <TableCell sx={{
-                                                            position: 'sticky',
-                                                            top: 0,
+                                                            position: { xs: '', sm: 'sticky' },
+                                                            top: { xs: '', sm: 0 },
                                                             zIndex: 100,
                                                             minHeight: '8px',
                                                             py: 0,
@@ -1313,8 +1314,8 @@ export default function ChecklistView() {
                                                         <TableRow key={i}>
                                                             <TableCell
                                                                 sx={{
-                                                                    position: 'sticky',
-                                                                    left: 0,
+                                                                    position: { xs: '', sm: 'sticky' },
+                                                                    left: { xs: '', sm: 0 },
                                                                     p: '15px 24px',
                                                                     background: theme.palette.common.white,
                                                                     zIndex: 1,
@@ -1379,8 +1380,8 @@ export default function ChecklistView() {
                                                             <TableRow>
                                                                 <TableCell
                                                                     sx={{
-                                                                        position: 'sticky',
-                                                                        left: 0,
+                                                                        position: { xs: '', sm: 'sticky' },
+                                                                        left: { xs: '', sm: 0 },
                                                                         zIndex: 100,
                                                                         background: theme.palette.common.white,
                                                                         fontWeight: 'bold',

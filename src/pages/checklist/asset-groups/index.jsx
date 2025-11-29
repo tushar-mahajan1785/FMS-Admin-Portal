@@ -190,7 +190,7 @@ export default function ChecklistAssetGroups() {
 
     return (<>
         <React.Fragment>
-            <Stack sx={{ flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'center', gap: 1, mb: 3 }}>
+            <Stack sx={{ flexDirection: { xs: 'row', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1, mb: 3 }}>
                 <Stack sx={{ cursor: 'pointer' }} onClick={() => {
                     navigate('/checklist')
                 }}>
@@ -206,12 +206,13 @@ export default function ChecklistAssetGroups() {
                 border: `1px solid ${theme.palette.primary[600]}`,
                 backgroundColor: theme.palette.common.white,
                 display: "flex",
-                flexDirection: "row",
+                flexDirection: { xs: 'column', sm: 'row' },
                 justifyContent: "space-between",
-                alignItems: 'center'
+                alignItems: { xs: 'flex-start', sm: 'center' },
+                rowGap: 2,
             }}>
-                <Stack sx={{ rowGap: 1 }}>
-                    <Stack direction="row" gap={2} alignItems="center">
+                <Stack sx={{ rowGap: 1, width: '100%', }}>
+                    <Stack direction={{ xs: 'column', sm: 'column', md: 'row' }} gap={1} alignItems={{ sm: 'flex-start', md: 'center' }}>
                         <TypographyComponent fontSize={16} fontWeight={500}>
                             {`${getCurrentAssetGroup?.title && getCurrentAssetGroup?.title !== null ? getCurrentAssetGroup?.title : ''} Checklist & Reading Report`}
                         </TypographyComponent>
@@ -231,35 +232,44 @@ export default function ChecklistAssetGroups() {
                             {/* </Stack> */}
                         </Stack>
                     </Stack>
-                    <Stack direction="row" spacing={2.5} sx={{ textWrap: 'wrap', }}>
-                        <Stack sx={{ flexDirection: 'row', alignItems: 'center', borderRadius: '8px' }}>
-                            <CheckboxIcon size={'20'} stroke={theme.palette.success[600]} />
-                            <TypographyComponent fontSize={14} fontWeight={400} sx={{ ml: 1, color: theme.palette.success[600] }}>{getCurrentAssetGroup?.total_completed} Completed</TypographyComponent>
-                        </Stack>
-                        <Stack sx={{ flexDirection: 'row', alignItems: 'center', borderRadius: '8px' }}>
-                            <AlertTriangleIcon size={'20'} stroke={theme.palette.error[600]} />
-                            <TypographyComponent fontSize={14} fontWeight={400} sx={{ ml: 1, color: theme.palette.error[600] }}>{getCurrentAssetGroup?.total_overdue} Overdue</TypographyComponent>
-                        </Stack>
-                        <Stack sx={{ flexDirection: 'row', alignItems: 'center', borderRadius: '8px' }}>
-                            <AlertTriangleIcon size={'20'} stroke={theme.palette.warning[600]} />
-                            <TypographyComponent fontSize={14} fontWeight={400} sx={{ ml: 1, color: theme.palette.warning[600] }}>{getCurrentAssetGroup?.total_abnormal} Abnormal</TypographyComponent>
-                        </Stack>
-                        <Stack sx={{ flexDirection: 'row', alignItems: 'center', borderRadius: '8px' }}>
-                            <ClockIcon size={'18'} stroke={theme.palette.warning[600]} />
-                            <TypographyComponent fontSize={14} fontWeight={400} sx={{ ml: 1, color: theme.palette.warning[600] }}>{getCurrentAssetGroup?.total_pending} Pending</TypographyComponent>
-                        </Stack>
-                        <Stack sx={{ flexDirection: 'row', alignItems: 'center', borderRadius: '8px' }}>
-                            <FileXIcon size={'20'} stroke={theme.palette.grey[600]} />
-                            <TypographyComponent fontSize={14} fontWeight={400} sx={{ ml: 1, color: theme.palette.grey[600] }}>{getCurrentAssetGroup?.total_not_approved} Not Approved</TypographyComponent>
-                        </Stack>
-                    </Stack>
+                    <Grid container rowGap={1} sx={{ width: '100%' }}>
+                        <Grid size={{ xs: 6, sm: 4, md: 2, lg: 2, xl: 1.2 }}>
+                            <Stack sx={{ flexDirection: 'row', alignItems: 'center', borderRadius: '8px' }}>
+                                <CheckboxIcon size={'20'} stroke={theme.palette.success[600]} />
+                                <TypographyComponent fontSize={14} fontWeight={400} sx={{ ml: 1, color: theme.palette.success[600] }}>{getCurrentAssetGroup?.total_completed} Completed</TypographyComponent>
+                            </Stack>
+                        </Grid>
+                        <Grid size={{ xs: 6, sm: 4, md: 2, lg: 2, xl: 1.2 }}>
+                            <Stack sx={{ flexDirection: 'row', alignItems: 'center', borderRadius: '8px' }}>
+                                <AlertTriangleIcon size={'20'} stroke={theme.palette.error[600]} />
+                                <TypographyComponent fontSize={14} fontWeight={400} sx={{ ml: 1, color: theme.palette.error[600] }}>{getCurrentAssetGroup?.total_overdue} Overdue</TypographyComponent>
+                            </Stack>
+                        </Grid>
+                        <Grid size={{ xs: 6, sm: 4, md: 2, lg: 2, xl: 1.2 }}>
+                            <Stack sx={{ flexDirection: 'row', alignItems: 'center', borderRadius: '8px' }}>
+                                <AlertTriangleIcon size={'20'} stroke={theme.palette.warning[600]} />
+                                <TypographyComponent fontSize={14} fontWeight={400} sx={{ ml: 1, color: theme.palette.warning[600] }}>{getCurrentAssetGroup?.total_abnormal} Abnormal</TypographyComponent>
+                            </Stack>
+                        </Grid>
+                        <Grid size={{ xs: 6, sm: 4, md: 2, lg: 2, xl: 1.2 }}>
+                            <Stack sx={{ flexDirection: 'row', alignItems: 'center', borderRadius: '8px' }}>
+                                <ClockIcon size={'18'} stroke={theme.palette.warning[600]} />
+                                <TypographyComponent fontSize={14} fontWeight={400} sx={{ ml: 1, color: theme.palette.warning[600] }}>{getCurrentAssetGroup?.total_pending} Pending</TypographyComponent>
+                            </Stack>
+                        </Grid>
+                        <Grid size={{ xs: 6, sm: 4, md: 2.5, lg: 2, xl: 1.2 }}>
+                            <Stack sx={{ flexDirection: 'row', alignItems: 'center', borderRadius: '8px' }}>
+                                <FileXIcon size={'20'} stroke={theme.palette.grey[600]} />
+                                <TypographyComponent fontSize={14} fontWeight={400} sx={{ ml: 1, color: theme.palette.grey[600] }}>{getCurrentAssetGroup?.total_not_approved} Not Approved</TypographyComponent>
+                            </Stack>
+                        </Grid>
+                    </Grid>
                 </Stack>
                 <Stack>
                     <Button
                         size={'small'}
-                        sx={{ textTransform: "capitalize", px: 2, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, borderColor: theme.palette.primary[600] }}
+                        sx={{ textTransform: "capitalize", textWrap: 'nowrap', px: 2, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, borderColor: theme.palette.primary[600] }}
                         onClick={() => {
-                            console.log('-------test--------')
                             setOpenAddChecklistAssetGroup(true)
                         }}
                         variant='contained'
