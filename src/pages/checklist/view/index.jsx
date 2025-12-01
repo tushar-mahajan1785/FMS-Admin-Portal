@@ -35,6 +35,7 @@ import { isCurrentTimeInRange, isFutureTimeRange } from "../../../utils";
 import AlertCircleIcon from "../../../assets/icons/AlertCircleIcon";
 import AlertPopup from "../../../components/alert-confirm";
 import EmptyContent from "../../../components/empty_content";
+import ExcelJS from "exceljs";
 
 export default function ChecklistView() {
     const theme = useTheme()
@@ -479,6 +480,229 @@ export default function ChecklistView() {
             }
         }
     }, [checklistGroupAssetApprove])
+
+    const exportChecklistHorizontal = async (groupData) => {
+
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet("Checklist");
+
+        const { assets, checklist_json, asset_checklist_json } = groupData;
+
+        // -----------------------------
+        // 1️⃣ MERGE TIME SLOTS (MASTER + ASSET TIMES)
+        // -----------------------------
+        const masterTimeSlots = checklist_json?.times || [];
+
+        const assetTimeSlots = [];
+        asset_checklist_json.forEach(asset => {
+            asset.times?.forEach(t => {
+                if (!assetTimeSlots.find(x => x.uuid === t.uuid)) {
+                    assetTimeSlots.push(t);
+                }
+            });
+        });
+
+        // FINAL TIME SLOTS (NO MISSING)
+        const timeSlots = masterTimeSlots.map(m => {
+            const found = assetTimeSlots.find(a => a.uuid === m.uuid);
+            return found || m;  // missing → use master
+        });
+
+        const parameters = checklist_json?.parameters || [];
+
+        // -----------------------------
+        // 2️⃣ HEADER ROW — TIME-SLOT MERGED CELLS
+        // -----------------------------
+        let col = 2; // col1 = parameter name
+
+        timeSlots.forEach(slot => {
+            const startCol = col;
+            const endCol = col + assets.length - 1;
+
+            sheet.mergeCells(1, startCol, 1, endCol);
+            const cell = sheet.getCell(1, startCol);
+            cell.value = `${slot.from}-${slot.to}`;
+            cell.alignment = { horizontal: "center", vertical: "middle" };
+            cell.font = { bold: true };
+
+            col = endCol + 1;
+        });
+
+        // -----------------------------
+        // 3️⃣ SECOND ROW — ASSET NAMES
+        // -----------------------------
+        const assetHeaderRow = sheet.getRow(2);
+        assetHeaderRow.getCell(1).value = "Parameter";
+        assetHeaderRow.getCell(1).font = { bold: true };
+
+        let assetCol = 2;
+
+        timeSlots.forEach(() => {
+            assets.forEach(a => {
+                assetHeaderRow.getCell(assetCol).value = a.asset_name;
+                assetHeaderRow.getCell(assetCol).alignment = { horizontal: "center" };
+                assetHeaderRow.getCell(assetCol).font = { bold: true };
+                assetCol++;
+            });
+        });
+
+        // -----------------------------
+        // 4️⃣ PARAMETER ROWS WITH VALUES
+        // -----------------------------
+        parameters.forEach((param, index) => {
+            const row = sheet.getRow(index + 3);
+            row.getCell(1).value = param.name;
+            row.getCell(1).font = { bold: true };
+
+            let writeCol = 2;
+
+            timeSlots.forEach(slot => {
+                assets.forEach(a => {
+
+                    // find asset
+                    const assetRecord = asset_checklist_json.find(ac => ac.asset_id === a.asset_id);
+
+                    // find this slot for this asset
+                    const slotEntry = assetRecord?.times?.find(t => t.uuid === slot.uuid);
+
+                    // find value for this parameter
+                    const valObj = slotEntry?.values?.find(v => v.parameter_id === param.id);
+
+                    const value = valObj?.value
+                        ? `${valObj.value}${valObj.unit ? " " + valObj.unit : ""}`
+                        : "-";
+
+                    row.getCell(writeCol).value = value;
+                    row.getCell(writeCol).alignment = { horizontal: "center" };
+
+                    writeCol++;
+                });
+            });
+        });
+
+        // -----------------------------
+        // 5️⃣ Auto column width
+        // -----------------------------
+        sheet.columns.forEach(col => col.width = 15);
+
+        // -----------------------------
+        // 6️⃣ Export XLSX
+        // -----------------------------
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: "application/octet-stream" });
+
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "Checklist-Horizontal.xlsx";
+        link.click();
+    };
+
+    const exportVerticalDynamic = async (data, filename = "Checklist_Vertical.xlsx") => {
+
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet("Checklist");
+
+        const assets = data.assets;
+        const checklist = data.asset_checklist_json;
+
+        // ---------------------------------------------------------
+        // 1) Collect all parameters (unique)
+        // ---------------------------------------------------------
+        const params = [];
+
+        checklist.forEach(a => {
+            a.times.forEach(t => {
+                t.values.forEach(v => {
+                    if (!params.some(p => p.parameter_id === v.parameter_id)) {
+                        params.push({
+                            parameter_id: v.parameter_id,
+                            name: v.name,
+                            sequence: v.sequence
+                        });
+                    }
+                });
+            });
+        });
+
+        params.sort((a, b) => a.sequence - b.sequence);
+
+        // ---------------------------------------------------------
+        // 2) Header Row
+        // ---------------------------------------------------------
+        const header = ["Parameter"];
+        assets.forEach(a => header.push(a.asset_name));
+        sheet.addRow(header);
+
+        // ---------------------------------------------------------
+        // 3) Map parameter → asset → last available value
+        // ---------------------------------------------------------
+        const valueMap = {};
+
+        checklist.forEach(asset => {
+            asset.times.forEach(time => {
+                time.values.forEach(v => {
+                    if (!valueMap[v.parameter_id]) valueMap[v.parameter_id] = {};
+                    valueMap[v.parameter_id][asset.asset_id] = v.value || "";
+                });
+            });
+        });
+
+        // ---------------------------------------------------------
+        // 4) Fill rows
+        // ---------------------------------------------------------
+        params.forEach(p => {
+            const row = [p.name];
+
+            assets.forEach(asset => {
+                const value = valueMap?.[p.parameter_id]?.[asset.asset_id] || "";
+                row.push(value);
+            });
+
+            sheet.addRow(row);
+        });
+
+        // styling
+        sheet.columns.forEach(col => (col.width = 20));
+        sheet.getRow(1).font = { bold: true };
+
+        sheet.eachRow(row => {
+            row.eachCell(cell => {
+                cell.border = {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" }
+                };
+            });
+        });
+
+        // download file
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        });
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    // export excel
+    const exportChecklist = () => {
+        if (!getCurrentAssetGroup?.layout_type) {
+            return;
+        }
+
+        if (getCurrentAssetGroup.layout_type === "Horizontal") {
+            exportChecklistHorizontal(getCurrentAssetGroup, "Checklist_Horizontal.xlsx");
+        }
+        else if (getCurrentAssetGroup.layout_type === "Vertical") {
+            exportVerticalDynamic(getCurrentAssetGroup, "Checklist_Vertical.xlsx");
+        }
+    };
 
     /**
      * Check if a time slot is enabled based on current time
@@ -1144,9 +1368,7 @@ export default function ChecklistView() {
                                     title="Click to export checklist for selected date"
                                     size={'small'}
                                     sx={{ textTransform: "capitalize", px: 2, gap: 1, borderRadius: '8px', backgroundColor: theme.palette.common.white, color: theme.palette.primary[600], fontSize: 16, fontWeight: 600, border: `1px solid ${theme.palette.primary[600]}`, boxShadow: 'none' }}
-                                    onClick={() => {
-                                        // setOpenAddInventoryPopup(true)
-                                    }}
+                                    onClick={exportChecklist}
                                     variant='outlined'
                                 >
                                     <ExportIcon stroke={theme.palette.primary[600]} />
