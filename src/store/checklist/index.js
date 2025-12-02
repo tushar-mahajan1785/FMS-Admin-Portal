@@ -8,7 +8,8 @@ import {
     API_CHECKLIST_GROUP_ASSET_LIST,
     API_CHECKLIST_GROUP_DETAILS,
     API_CHECKLIST_GROUP_HISTORY_ADD,
-    API_CHECKLIST_GROUP_ASSET_APPROVE
+    API_CHECKLIST_GROUP_ASSET_APPROVE,
+    API_CHECKLIST_ALL_GROUP_DETAILS
 } from "../../common/api/constants";
 
 export const actionChecklistAssetTypeList = createAsyncThunk('checklist/actionChecklistAssetTypeList', async (params) => {
@@ -78,6 +79,16 @@ export const actionChecklistGroupAssetApprove = createAsyncThunk('checklist/acti
     }
 })
 
+export const actionChecklistGroupAllGroupDetails = createAsyncThunk('checklist/actionChecklistGroupAllGroupDetails', async (params) => {
+    try {
+        const response = await axiosApi.post(API_CHECKLIST_ALL_GROUP_DETAILS, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+
 
 
 export const checklistStore = createSlice({
@@ -89,7 +100,8 @@ export const checklistStore = createSlice({
         checklistGroupAssetList: null,
         checklistGroupDetails: null,
         checklistGroupHistoryAdd: null,
-        checklistGroupAssetApprove: null
+        checklistGroupAssetApprove: null,
+        checklistGroupAllGroupDetails: null
     },
 
     reducers: {
@@ -113,6 +125,9 @@ export const checklistStore = createSlice({
         },
         resetChecklistGroupAssetApproveResponse: (state) => {
             state.checklistGroupAssetApprove = null
+        },
+        resetChecklistGroupAllGroupDetailsResponse: (state) => {
+            state.checklistGroupAllGroupDetails = null
         },
 
     },
@@ -139,6 +154,9 @@ export const checklistStore = createSlice({
             .addCase(actionChecklistGroupAssetApprove.fulfilled, (state, action) => {
                 state.checklistGroupAssetApprove = action.payload
             })
+            .addCase(actionChecklistGroupAllGroupDetails.fulfilled, (state, action) => {
+                state.checklistGroupAllGroupDetails = action.payload
+            })
 
     }
 })
@@ -150,7 +168,8 @@ export const {
     resetChecklistGroupAssetListResponse,
     resetChecklistGroupDetailsResponse,
     resetChecklistGroupHistoryAddResponse,
-    resetChecklistGroupAssetApproveResponse
+    resetChecklistGroupAssetApproveResponse,
+    resetChecklistGroupAllGroupDetailsResponse
 } =
     checklistStore.actions
 

@@ -1,4 +1,5 @@
-import { Box, Button, Card, Divider, Grid, Stack, useTheme } from "@mui/material";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { Box, Button, Card, CircularProgress, Divider, Grid, IconButton, InputAdornment, Stack, useTheme } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import TypographyComponent from "../../../components/custom-typography";
 import CheckboxIcon from "../../../assets/icons/CheckboxIcon";
@@ -13,13 +14,20 @@ import ChevronLeftIcon from "../../../assets/icons/ChevronLeft";
 import AddIcon from '@mui/icons-material/Add';
 import AddChecklistAssetGroup from "./add";
 import { useDispatch, useSelector } from "react-redux";
-import { actionChecklistGroupList, resetChecklistGroupListResponse } from "../../../store/checklist";
+import { actionChecklistGroupAllGroupDetails, actionChecklistGroupList, resetChecklistGroupAllGroupDetailsResponse, resetChecklistGroupListResponse } from "../../../store/checklist";
 import { useBranch } from "../../../hooks/useBranch";
 import { useAuth } from "../../../hooks/useAuth";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import { ERROR, IMAGES_SCREEN_NO_DATA, SERVER_ERROR, UNAUTHORIZED } from "../../../constants";
 import FullScreenLoader from "../../../components/fullscreen-loader";
 import EmptyContent from "../../../components/empty_content";
+import moment from "moment";
+import DatePickerWrapper from "../../../components/datapicker-wrapper";
+import DatePicker from "react-datepicker";
+import CustomTextField from "../../../components/text-field";
+import CalendarIcon from "../../../assets/icons/CalendarIcon";
+import ExcelJS from "exceljs";
+import GenerateReportIcon from "../../../assets/icons/GenerateReportIcon";
 
 export default function ChecklistAssetGroups() {
     const theme = useTheme()
@@ -31,13 +39,16 @@ export default function ChecklistAssetGroups() {
     const { showSnackbar } = useSnackbar()
 
     //Stores
-    const { checklistGroupList } = useSelector(state => state.checklistStore)
+    const { checklistGroupList, checklistGroupAllGroupDetails } = useSelector(state => state.checklistStore)
 
     //Default Checklists Counts Array
     const [getCurrentAssetGroup, setGetCurrentAssetGroup] = useState(null)
     const [arrAssetGroupsData, setArrAssetGroupsData] = useState([])
     const [openAddChecklistAssetGroup, setOpenAddChecklistAssetGroup] = useState(false)
     const [loadingList, setLoadingList] = useState(false)
+    const [selectedStartDate, setSelectedStartDate] = useState(moment().format('DD/MM/YYYY'))
+    const [loadingChecklist, setLoadingChecklist] = useState(false)
+    // const [getChecklistGroupExcelDetails, setGetChecklistGroupExcelDetails] = useState(null)
 
     /**
      * Initial call Checklist group list API
@@ -52,6 +63,247 @@ export default function ChecklistAssetGroups() {
         }
 
     }, [branch?.currentBranch?.uuid, assetId])
+
+    /**
+     * function to export excel for Vertical Layout
+     * @param {*} data 
+     * @param {*} filename 
+     * @returns 
+     */
+    const exportVerticalDynamic = async (dataArray, filename = "Checklist_Group_Vertical.xlsx") => {
+        try {
+            // --------------------------------------------------
+            // VALIDATE INPUT
+            // --------------------------------------------------
+            if (!Array.isArray(dataArray) || dataArray.length === 0) {
+                console.error("exportVerticalDynamic ERROR: dataArray is not an array", dataArray);
+                return;
+            }
+
+            const workbook = new ExcelJS.Workbook();
+
+            // --------------------------------------------------
+            // LOOP THROUGH ALL GROUP OBJECTS
+            // --------------------------------------------------
+            for (let g = 0; g < dataArray.length; g++) {
+                const data = dataArray[g] || {};
+
+                // Sheet Name (max 31 chars)
+                const sheetName =
+                    data?.group_name ||
+                    data?.asset_type_name ||
+                    `Group_${g + 1}`;
+
+                const sheet = workbook.addWorksheet(sheetName.substring(0, 31));
+
+                // --------------------------------------------------
+                // Extract Values
+                // --------------------------------------------------
+                const checklist = data?.asset_checklist_json ?? [];
+                const parameters = data?.checklist_json?.parameters ?? [];
+
+                if (!Array.isArray(checklist) || checklist.length === 0) continue;
+
+                const parents = parameters.filter(p => p?.parent_id === 0);
+                const children = parameters.filter(p => p?.parent_id !== 0);
+
+                const branchName =
+                    data?.branch_name
+                        ? `${data.branch_name}${data?.branch_location ? `, ${data.branch_location}` : ""}`
+                        : "Branch";
+
+                const date = selectedStartDate
+                    ? moment(selectedStartDate, "DD/MM/YYYY").format("DD-MM-YYYY")
+                    : new Date().toLocaleDateString();
+
+                const timeSlots = checklist[0]?.times ?? [];
+
+                // --------------------------------------------------
+                // BUILD HEADER ROWS
+                // --------------------------------------------------
+                let rowA = ["Assets"];
+                let rowB = ["Parameters"];
+                let rowC = [""];
+
+                const assetBlocks = checklist.map(asset => {
+                    const blocks = parents.map(parent => {
+                        const childList = children.filter(c => c?.parent_id === parent?.id);
+                        return {
+                            parent,
+                            childList,
+                            childCount: childList.length || 1
+                        };
+                    });
+
+                    const totalCols = blocks.reduce((sum, b) => sum + b.childCount, 0);
+
+                    return {
+                        asset,
+                        blocks,
+                        totalCols
+                    };
+                });
+
+                assetBlocks.forEach(block => {
+                    // Row A → asset name repeated N times
+                    rowA.push(...Array(block.totalCols).fill(block.asset?.asset_name ?? "Asset"));
+
+                    // Row B → parent names
+                    block.blocks.forEach(b => {
+                        rowB.push(...Array(b.childCount).fill(b.parent?.name ?? ""));
+                    });
+
+                    // Row C → child names OR blank if no children
+                    block.blocks.forEach(b => {
+                        if (b.childList.length === 0) {
+                            rowC.push("");
+                        } else {
+                            b.childList.forEach(c => rowC.push(c?.sub_name || c?.name || ""));
+                        }
+                    });
+                });
+
+                const totalCols = rowA.length;
+
+                // --------------------------------------------------
+                // ADD BRANCH + DATE ROWS
+                // --------------------------------------------------
+                sheet.spliceRows(1, 0, ["".padStart(totalCols)]);
+                sheet.spliceRows(2, 0, ["".padStart(totalCols)]);
+
+                sheet.mergeCells(1, 1, 1, totalCols);
+                sheet.getCell(1, 1).value = branchName;
+                sheet.getCell(1, 1).alignment = { horizontal: "center", vertical: "middle" };
+                sheet.getCell(1, 1).font = { bold: true, size: 16 };
+
+                sheet.mergeCells(2, 1, 2, totalCols);
+                sheet.getCell(2, 1).value = `Date:- ${date}`;
+                sheet.getCell(2, 1).alignment = { horizontal: "center", vertical: "middle" };
+                sheet.getCell(2, 1).font = { bold: true, size: 12 };
+
+                // --------------------------------------------------
+                // ADD HEADER ROWS (A, B, C)
+                // --------------------------------------------------
+                const rowARef = sheet.addRow(rowA);
+                const rowBRef = sheet.addRow(rowB);
+                const rowCRef = sheet.addRow(rowC);
+
+                rowARef.font = { bold: true };
+                rowBRef.font = { bold: true };
+                rowCRef.font = { bold: true };
+
+                // --------------------------------------------------
+                // MERGE CELLS FOR ASSETS + PARENT GROUPS
+                // --------------------------------------------------
+                let cursor = 2;
+
+                // Merge Row A
+                assetBlocks.forEach(block => {
+                    const start = cursor;
+                    const end = cursor + block.totalCols - 1;
+                    sheet.mergeCells(3, start, 3, end);
+                    cursor = end + 1;
+                });
+
+                // Merge Row B (parent groups)
+                cursor = 2;
+                assetBlocks.forEach(block => {
+                    block.blocks.forEach(b => {
+                        const start = cursor;
+                        const end = cursor + b.childCount - 1;
+                        sheet.mergeCells(4, start, 4, end);
+                        cursor = end + 1;
+                    });
+                });
+
+                // --------------------------------------------------
+                // ADD DATA ROWS
+                // --------------------------------------------------
+                let currentRow = 6;
+
+                timeSlots.forEach(time => {
+                    const row = sheet.getRow(currentRow);
+                    row.getCell(1).value = `${time?.from ?? ""}-${time?.to ?? ""}`;
+
+                    let col = 2;
+
+                    assetBlocks.forEach(block => {
+                        const asset = block.asset;
+                        const slot = asset?.times?.find(t => t?.uuid === time?.uuid);
+
+                        // If no time slot exists for this asset ⇒ fill blanks
+                        if (!slot) {
+                            for (let i = 0; i < block.totalCols; i++) {
+                                row.getCell(col).value = "-";
+                                col++;
+                            }
+                            return;
+                        }
+
+                        block.blocks.forEach(b => {
+                            if (b.childList.length === 0) {
+                                // parent without children
+                                const v = slot?.values?.find(x => x?.parameter_id === b.parent?.id);
+                                row.getCell(col).value = v?.value ?? "-";
+                                col++;
+                            } else {
+                                b.childList.forEach(child => {
+                                    const v = slot?.values?.find(x => x?.parameter_id === child?.id);
+                                    row.getCell(col).value = v?.value ?? "-";
+                                    col++;
+                                });
+                            }
+                        });
+                    });
+
+                    currentRow++;
+                });
+
+                // --------------------------------------------------
+                // STYLING + BORDERS
+                // --------------------------------------------------
+                sheet.eachRow(row => {
+                    row.eachCell(cell => {
+                        cell.border = {
+                            top: { style: "thin" },
+                            left: { style: "thin" },
+                            bottom: { style: "thin" },
+                            right: { style: "thin" }
+                        };
+                        cell.alignment = {
+                            horizontal: "center",
+                            vertical: "middle",
+                            wrapText: true
+                        };
+                    });
+                });
+
+                // --------------------------------------------------
+                // AUTO-WIDTH
+                // --------------------------------------------------
+                sheet.columns.forEach(col => {
+                    col.width = 15;
+                });
+            }
+
+            // --------------------------------------------------
+            // DOWNLOAD FILE
+            // --------------------------------------------------
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], {
+                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            });
+
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+            URL.revokeObjectURL(link.href);
+
+        } catch (err) {
+            console.error("EXPORT ERROR:", err);
+        }
+    };
 
     /**
        * useEffect
@@ -69,105 +321,9 @@ export default function ChecklistAssetGroups() {
                 } else {
                     setArrAssetGroupsData([])
                 }
-
                 setLoadingList(false)
             } else {
                 setLoadingList(false)
-                // let data = [
-                //     {
-                //         "id": 1,
-                //         "asset_type_id": "1",
-                //         "title": "DG Sets",
-                //         "total_groups": "2",
-                //         "total_assets": "15",
-                //         "total_checklists": "36",
-                //         "total_completed": "12",
-                //         "total_overdue": "2",
-                //         "total_abnormal": "4",
-                //         "total_pending": "24",
-                //         "total_not_approved": "2"
-                //     },
-                //     {
-                //         "id": 2,
-                //         "asset_type_id": "2",
-                //         "title": "PAC Units",
-                //         "total_groups": "5",
-                //         "total_assets": "10",
-                //         "total_checklists": "20",
-                //         "total_completed": "12",
-                //         "total_overdue": "2",
-                //         "total_abnormal": "4",
-                //         "total_pending": "8",
-                //         "total_not_approved": "2",
-                //     },
-                //     {
-                //         "id": 3,
-                //         "asset_type_id": "3",
-                //         "title": "HVAC Systems",
-                //         "total_groups": "2",
-                //         "total_assets": "15",
-                //         "total_checklists": "36",
-                //         "total_completed": "12",
-                //         "total_overdue": "2",
-                //         "total_abnormal": "4",
-                //         "total_pending": "24",
-                //         "total_not_approved": "2"
-                //     },
-                //     {
-                //         "id": 4,
-                //         "asset_type_id": "4",
-                //         "title": "Chillers",
-                //         "total_groups": "3",
-                //         "total_assets": "12",
-                //         "total_checklists": "10",
-                //         "total_completed": "8",
-                //         "total_overdue": "2",
-                //         "total_abnormal": "4",
-                //         "total_pending": "1",
-                //         "total_not_approved": "1"
-                //     },
-                //     {
-                //         "id": 5,
-                //         "asset_type_id": "5",
-                //         "title": "RMU",
-                //         "total_groups": "3",
-                //         "total_assets": "12",
-                //         "total_checklists": "9",
-                //         "total_completed": "5",
-                //         "total_overdue": "2",
-                //         "total_abnormal": "4",
-                //         "total_pending": "4",
-                //         "total_not_approved": "2"
-                //     },
-                //     {
-                //         "id": 6,
-                //         "asset_type_id": "6",
-                //         "total_groups": "3",
-                //         "title": "CRAH",
-                //         "total_assets": "12",
-                //         "total_checklists": "9",
-                //         "total_completed": "6",
-                //         "total_overdue": "2",
-                //         "total_abnormal": "3",
-                //         "total_pending": "24",
-                //         "total_not_approved": "2"
-                //     },
-                //     {
-                //         "id": 7,
-                //         "asset_type_id": "7",
-                //         "title": "PSU",
-                //         "total_groups": "2",
-                //         "total_assets": "15",
-                //         "total_checklists": "36",
-                //         "total_completed": "12",
-                //         "total_overdue": "2",
-                //         "total_abnormal": "4",
-                //         "total_pending": "24",
-                //         "total_not_approved": "2"
-                //     }
-                // ];
-
-                // setArrAssetGroupsData(data)
                 setGetCurrentAssetGroup(null)
                 setArrAssetGroupsData([])
                 switch (checklistGroupList?.status) {
@@ -187,17 +343,114 @@ export default function ChecklistAssetGroups() {
         }
     }, [checklistGroupList])
 
+    /**
+         * useEffect
+         * @dependency : checklistGroupAllGroupDetails
+         * @type : HANDLE API RESULT
+         * @description : Handle the result of checklist group List API
+        */
+    useEffect(() => {
+        if (checklistGroupAllGroupDetails && checklistGroupAllGroupDetails !== null) {
+            dispatch(resetChecklistGroupAllGroupDetailsResponse())
+            if (checklistGroupAllGroupDetails?.result === true) {
+                setLoadingChecklist(false)
+                let response = Object.assign([], checklistGroupAllGroupDetails?.response)
+                if (response && response !== null && response.length > 0) {
+                    exportVerticalDynamic(response, "Checklist_Group_Download.xlsx");
+                } else {
+                    showSnackbar({ message: 'No Group data found for Excel Export', severity: "error" })
+                }
+            } else {
+                setLoadingChecklist(false)
+                switch (checklistGroupAllGroupDetails?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetChecklistGroupAllGroupDetailsResponse())
+                        showSnackbar({ message: checklistGroupAllGroupDetails?.message, severity: "error" })
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: checklistGroupAllGroupDetails?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [checklistGroupAllGroupDetails])
 
     return (<>
         <React.Fragment>
-            <Stack sx={{ flexDirection: { xs: 'row', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1, mb: 3 }}>
-                <Stack sx={{ cursor: 'pointer' }} onClick={() => {
-                    navigate('/checklist')
-                }}>
-                    <ChevronLeftIcon size={26} />
+            <Stack sx={{ flexDirection: { xs: 'column', sm: 'column', md: 'row' }, justifyContent: 'space-between' }}>
+                <Stack sx={{ flexDirection: { xs: 'row', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1, mb: 3 }}>
+                    <Stack sx={{ cursor: 'pointer' }} onClick={() => {
+                        navigate('/checklist')
+                    }}>
+                        <ChevronLeftIcon size={26} />
+                    </Stack>
+                    <TypographyComponent color={theme.palette.text.primary} fontSize={18} fontWeight={400}>Back to Asset Types</TypographyComponent>
                 </Stack>
-                <TypographyComponent color={theme.palette.text.primary} fontSize={18} fontWeight={400}>Back to Asset Types</TypographyComponent>
+
+                <Stack sx={{ flexDirection: { xs: 'column', sm: 'row', md: 'row', lg: 'row' }, alignItems: { xs: 'flex-start', sm: 'center', md: 'center' }, gap: '16px' }}>
+                    <DatePickerWrapper>
+                        <DatePicker
+                            id='start_date'
+                            placeholderText='Start Date'
+                            customInput={
+                                <CustomTextField
+                                    size='small'
+                                    fullWidth
+                                    sx={{ width: { xs: '300px', sm: '200px' } }}
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position='end'>
+                                                <IconButton
+                                                    edge='end'
+                                                    onMouseDown={e => e.preventDefault()}
+                                                >
+                                                    <CalendarIcon />
+                                                </IconButton>
+                                            </InputAdornment>
+                                        )
+                                    }}
+                                />
+                            }
+                            value={selectedStartDate}
+                            selected={selectedStartDate ? moment(selectedStartDate, 'DD/MM/YYYY').toDate() : null}
+                            maxDate={moment().toDate()}
+                            showYearDropdown={true}
+                            onChange={date => {
+                                const formattedDate = moment(date).format('DD/MM/YYYY')
+                                setSelectedStartDate(formattedDate)
+                            }}
+                        />
+                    </DatePickerWrapper>
+                    <Stack>
+                        <Button
+                            title="Click to load checklist for selected date"
+                            size={'small'}
+                            disabled={loadingChecklist}
+                            sx={{ textTransform: "capitalize", textWrap: 'nowrap', px: 2, gap: 1, borderRadius: '8px', backgroundColor: loadingChecklist ? theme.palette.grey[300] : theme.palette.primary[600], color: loadingChecklist ? theme.palette.grey[600] : theme.palette.common.white, fontSize: 16, fontWeight: 600, border: loadingChecklist ? `1px solid ${theme.palette.grey[400]}` : `1px solid ${theme.palette.primary[600]}` }}
+                            onClick={() => {
+                                if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && assetId && assetId !== null) {
+                                    setLoadingChecklist(true)
+                                    dispatch(actionChecklistGroupAllGroupDetails({
+                                        branch_uuid: branch?.currentBranch?.uuid,
+                                        asset_type_id: assetId,
+                                        date: selectedStartDate && selectedStartDate !== null ? moment(selectedStartDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : moment().format('YYYY-MM-DD')
+                                    }))
+                                }
+                            }}
+                            variant='outlined'
+                        >
+                            {loadingChecklist ? <CircularProgress size={16} sx={{ color: theme.palette.grey[600] }} /> : <GenerateReportIcon />}
+                            Export
+                        </Button>
+                    </Stack>
+                </Stack>
             </Stack>
+
             <Stack sx={{
                 p: '12px',
                 height: "100%",
