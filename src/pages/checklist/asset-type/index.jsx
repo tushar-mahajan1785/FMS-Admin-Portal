@@ -37,9 +37,9 @@ export default function ChecklistAssetTypes() {
     const { checklistAssetTypeList } = useSelector(state => state.checklistStore)
 
     //Default Checklists Counts Array
-    const [getChecklistCounts] = useState([
-        { labelTop: "Total", labelBottom: "Checklist Groups", key: 'total_items', value: 0, icon: <BoxIcon size={'24'} stroke={theme.palette.primary[600]} />, color: theme.palette.primary[50] },
-        { labelTop: "Total", labelBottom: "Assets", key: 'in_stock_items', value: 0, icon: <CheckboxIcon size={'24'} stroke={theme.palette.primary[600]} />, color: theme.palette.primary[50] },
+    const [getChecklistCounts, setGetChecklistCounts] = useState([
+        { labelTop: "Total", labelBottom: "Checklist Groups", key: 'total_groups', value: 0, icon: <BoxIcon size={'24'} stroke={theme.palette.primary[600]} />, color: theme.palette.primary[50] },
+        { labelTop: "Total", labelBottom: "Assets", key: 'total_assets', value: 0, icon: <CheckboxIcon size={'24'} stroke={theme.palette.primary[600]} />, color: theme.palette.primary[50] },
         { labelTop: "Completed", labelBottom: "Today", key: 'out_of_stock_items', value: 0, icon: <ActivityIcon size={'24'} stroke={theme.palette.primary[600]} />, color: theme.palette.primary[50] },
         { labelTop: "Pending", labelBottom: "Today", key: 'critical_items', value: 0, icon: <AlertTriangleIcon size={'24'} stroke={theme.palette.primary[600]} />, color: theme.palette.primary[50] },
         { labelTop: "Overdue", labelBottom: "Checklists", key: 'critical_items', value: 0, icon: <AlertTriangleIcon size={'24'} stroke={theme.palette.primary[600]} />, color: theme.palette.primary[50] },
@@ -145,7 +145,7 @@ export default function ChecklistAssetTypes() {
             if (checklistAssetTypeList?.result === true) {
 
                 // Use map to iterate through the array and assign colors
-                const updatedAssetTypesData = checklistAssetTypeList?.response && checklistAssetTypeList?.response !== null && checklistAssetTypeList?.response?.length > 0 ? checklistAssetTypeList?.response?.map((asset, index) => {
+                const updatedAssetTypesData = checklistAssetTypeList?.response?.asset_types && checklistAssetTypeList?.response?.asset_types !== null && checklistAssetTypeList?.response?.asset_types?.length > 0 ? checklistAssetTypeList?.response?.asset_types?.map((asset, index) => {
                     // 1. Calculate the cyclic index (0, 1, 2, 3, 4, 5, 0, 1, ...)
                     const colorIndex = index % NUMBER_OF_COLOR_CASES;
 
@@ -163,125 +163,31 @@ export default function ChecklistAssetTypes() {
                 }) : [];
                 setArrAssetTypesData(updatedAssetTypesData)
                 setArrAssetTypesOriginalData(updatedAssetTypesData)
+
+                let objData = checklistAssetTypeList?.response?.overall_totals
+                setGetChecklistCounts(prevArr =>
+                    prevArr.map(item => ({
+                        ...item,
+                        value: objData[item.key] !== undefined ? objData[item.key] : 0
+                    }))
+                );
                 setLoadingList(false)
             } else {
                 setLoadingList(false)
-                // let data = [
-                //     {
-                //         "id": 1,
-                //         "asset_type_id": "1",
-                //         "title": "DG Sets",
-                //         "total_groups": "2",
-                //         "total_assets": "15",
-                //         "total_checklists": "36",
-                //         "total_completed": "12",
-                //         "total_overdue": "2",
-                //         "total_abnormal": "4",
-                //         "total_pending": "24",
-                //         "total_not_approved": "2"
-                //     },
-                //     {
-                //         "id": 2,
-                //         "asset_type_id": "2",
-                //         "title": "PAC Units",
-                //         "total_groups": "5",
-                //         "total_assets": "10",
-                //         "total_checklists": "20",
-                //         "total_completed": "12",
-                //         "total_overdue": "2",
-                //         "total_abnormal": "4",
-                //         "total_pending": "8",
-                //         "total_not_approved": "2",
-                //     },
-                //     {
-                //         "id": 3,
-                //         "asset_type_id": "3",
-                //         "title": "HVAC Systems",
-                //         "total_groups": "2",
-                //         "total_assets": "15",
-                //         "total_checklists": "36",
-                //         "total_completed": "12",
-                //         "total_overdue": "2",
-                //         "total_abnormal": "4",
-                //         "total_pending": "24",
-                //         "total_not_approved": "2"
-                //     },
-                //     {
-                //         "id": 4,
-                //         "asset_type_id": "4",
-                //         "title": "Chillers",
-                //         "total_groups": "3",
-                //         "total_assets": "12",
-                //         "total_checklists": "10",
-                //         "total_completed": "8",
-                //         "total_overdue": "2",
-                //         "total_abnormal": "4",
-                //         "total_pending": "1",
-                //         "total_not_approved": "1"
-                //     },
-                //     {
-                //         "id": 5,
-                //         "asset_type_id": "5",
-                //         "title": "RMU",
-                //         "total_groups": "3",
-                //         "total_assets": "12",
-                //         "total_checklists": "9",
-                //         "total_completed": "5",
-                //         "total_overdue": "2",
-                //         "total_abnormal": "4",
-                //         "total_pending": "4",
-                //         "total_not_approved": "2"
-                //     },
-                //     {
-                //         "id": 6,
-                //         "asset_type_id": "6",
-                //         "total_groups": "3",
-                //         "title": "CRAH",
-                //         "total_assets": "12",
-                //         "total_checklists": "9",
-                //         "total_completed": "6",
-                //         "total_overdue": "2",
-                //         "total_abnormal": "3",
-                //         "total_pending": "24",
-                //         "total_not_approved": "2"
-                //     },
-                //     {
-                //         "id": 7,
-                //         "asset_type_id": "7",
-                //         "title": "PSU",
-                //         "total_groups": "2",
-                //         "total_assets": "15",
-                //         "total_checklists": "36",
-                //         "total_completed": "12",
-                //         "total_overdue": "2",
-                //         "total_abnormal": "4",
-                //         "total_pending": "24",
-                //         "total_not_approved": "2"
-                //     }
-                // ];
-                // // Determine the number of unique color cases (0, 1, 2, 3, 4, 5)
-                // const NUMBER_OF_COLOR_CASES = 6;
-
-                // // Use map to iterate through the array and assign colors
-                // const updatedAssetTypesData = data && data !== null && data.length > 0 ? data?.map((asset, index) => {
-                //     const colorIndex = index % NUMBER_OF_COLOR_CASES;
-
-                //     // 2. Get the color object for the cyclic index
-                //     const colors = getColorAndBackgroundForAssetType(String(colorIndex));
-
-                //     // 3. Return the updated asset object with the new colors
-                //     return {
-                //         ...asset,
-                //         background_color: colors.backgroundColor,
-                //         border_color: colors.color,
-                //         icon_color: colors.backgroundColor,
-                //         icon_background: theme.palette.common.white,
-                //     };
-                // }) : [];
-                // setArrAssetTypesData(updatedAssetTypesData)
-                // setArrAssetTypesOriginalData(updatedAssetTypesData)
                 setArrAssetTypesData([])
                 setArrAssetTypesOriginalData[[]]
+                let objData = {
+                    total_assets: 0,
+                    out_of_stock_items: 0,
+                    critical_items: 0,
+                    total_groups: 0
+                }
+                setGetChecklistCounts(prevArr =>
+                    prevArr.map(item => ({
+                        ...item,
+                        value: objData[item.key] !== undefined ? objData[item.key] : 0
+                    }))
+                );
                 switch (checklistAssetTypeList?.status) {
                     case UNAUTHORIZED:
                         logout()

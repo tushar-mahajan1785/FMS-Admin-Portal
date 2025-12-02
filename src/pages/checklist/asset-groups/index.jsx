@@ -287,8 +287,8 @@ export default function ChecklistAssetGroups() {
                 {loadingList ? (
                     <FullScreenLoader open={true} />
                 ) : arrAssetGroupsData && arrAssetGroupsData !== null && arrAssetGroupsData?.length > 0 ?
-                    arrAssetGroupsData?.map((objAsset) => (
-                        <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 4 }} key={objAsset?.id}>
+                    arrAssetGroupsData?.map((objAsset, index) => (
+                        <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 4 }} key={`${objAsset?.id}-${index}`}>
                             <Card
                                 sx={{
                                     p: 3,
