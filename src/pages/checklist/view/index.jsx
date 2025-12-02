@@ -75,7 +75,6 @@ export default function ChecklistView() {
         return getChecklistDetails.times.findIndex(timeSlot => timeSlot.is_selected === true);
     };
 
-
     useEffect(() => {
         //set initial scroll state
         setIsInitialLoad(true)
@@ -123,8 +122,6 @@ export default function ChecklistView() {
         }
 
     }, [branch?.currentBranch?.uuid, groupUuid])
-
-    console.log('-----getChecklistDetails--------', getChecklistDetails)
 
     /**
      * Function to find and return previously filled parameters
@@ -481,57 +478,82 @@ export default function ChecklistView() {
         }
     }, [checklistGroupAssetApprove])
 
+    /**
+     * function to export excel for horizontal layout
+     * @param {*} groupData 
+     */
     const exportChecklistHorizontal = async (groupData) => {
 
         const workbook = new ExcelJS.Workbook();
         const sheet = workbook.addWorksheet("Checklist");
 
-        const { assets, checklist_json, asset_checklist_json } = groupData;
+        const { assets, checklist_json, asset_checklist_json, branch_name, branch_location } = groupData;
 
-        // -----------------------------
-        // 1️⃣ MERGE TIME SLOTS (MASTER + ASSET TIMES)
-        // -----------------------------
+        // ---------------------------
+        // DATE FORMAT
+        // ---------------------------
+        const formattedDate = selectedStartDate
+            ? moment(selectedStartDate, 'DD/MM/YYYY').format('DD-MM-YYYY')
+            : new Date().toLocaleDateString();
+
+        // ---------------------------
+        // 1️⃣ TIME SLOT MERGING (MASTER + ASSET TIMES)
+        // ---------------------------
         const masterTimeSlots = checklist_json?.times || [];
-
         const assetTimeSlots = [];
-        asset_checklist_json.forEach(asset => {
-            asset.times?.forEach(t => {
+
+        if (!asset_checklist_json?.length) {
+            showSnackbar({ message: 'No Data found to export excel', severity: "error" })
+            return
+        };
+
+        asset_checklist_json?.forEach(asset => {
+            asset?.times?.forEach(t => {
                 if (!assetTimeSlots.find(x => x.uuid === t.uuid)) {
                     assetTimeSlots.push(t);
                 }
             });
         });
 
-        // FINAL TIME SLOTS (NO MISSING)
         const timeSlots = masterTimeSlots.map(m => {
             const found = assetTimeSlots.find(a => a.uuid === m.uuid);
-            return found || m;  // missing → use master
+            return found || m;
         });
 
         const parameters = checklist_json?.parameters || [];
 
-        // -----------------------------
-        // 2️⃣ HEADER ROW — TIME-SLOT MERGED CELLS
-        // -----------------------------
-        let col = 2; // col1 = parameter name
+        // =============================
+        // IMPORTANT: PUSH 3 EMPTY ROWS
+        // row1 = Branch Name (later merged)
+        // row2 = Date (later merged)
+        // row3 = Time Slot row
+        // =============================
+        sheet.addRow([]);
+        sheet.addRow([]);
+        sheet.addRow([]);
+
+        // ---------------------------
+        // 2️⃣ HEADER ROW — TIME SLOTS MERGED
+        // ---------------------------
+        let col = 2; // Column 1 is Parameter
 
         timeSlots.forEach(slot => {
             const startCol = col;
             const endCol = col + assets.length - 1;
 
-            sheet.mergeCells(1, startCol, 1, endCol);
-            const cell = sheet.getCell(1, startCol);
+            sheet.mergeCells(3, startCol, 3, endCol);
+            const cell = sheet.getCell(3, startCol);
             cell.value = `${slot.from}-${slot.to}`;
-            cell.alignment = { horizontal: "center", vertical: "middle" };
             cell.font = { bold: true };
+            cell.alignment = { horizontal: "center", vertical: "middle" };
 
             col = endCol + 1;
         });
 
-        // -----------------------------
-        // 3️⃣ SECOND ROW — ASSET NAMES
-        // -----------------------------
-        const assetHeaderRow = sheet.getRow(2);
+        // ---------------------------
+        // 3️⃣ ASSET NAME ROW (Row 4)
+        // ---------------------------
+        const assetHeaderRow = sheet.addRow([]);
         assetHeaderRow.getCell(1).value = "Parameter";
         assetHeaderRow.getCell(1).font = { bold: true };
 
@@ -546,11 +568,11 @@ export default function ChecklistView() {
             });
         });
 
-        // -----------------------------
+        // ---------------------------
         // 4️⃣ PARAMETER ROWS WITH VALUES
-        // -----------------------------
-        parameters.forEach((param, index) => {
-            const row = sheet.getRow(index + 3);
+        // ---------------------------
+        parameters.forEach((param) => {
+            const row = sheet.addRow([]);
             row.getCell(1).value = param.name;
             row.getCell(1).font = { bold: true };
 
@@ -559,18 +581,12 @@ export default function ChecklistView() {
             timeSlots.forEach(slot => {
                 assets.forEach(a => {
 
-                    // find asset
                     const assetRecord = asset_checklist_json.find(ac => ac.asset_id === a.asset_id);
-
-                    // find this slot for this asset
                     const slotEntry = assetRecord?.times?.find(t => t.uuid === slot.uuid);
 
-                    // find value for this parameter
                     const valObj = slotEntry?.values?.find(v => v.parameter_id === param.id);
 
-                    const value = valObj?.value
-                        ? `${valObj.value}${valObj.unit ? " " + valObj.unit : ""}`
-                        : "-";
+                    const value = valObj?.value ? `${valObj.value}` : "-";
 
                     row.getCell(writeCol).value = value;
                     row.getCell(writeCol).alignment = { horizontal: "center" };
@@ -580,93 +596,29 @@ export default function ChecklistView() {
             });
         });
 
-        // -----------------------------
-        // 5️⃣ Auto column width
-        // -----------------------------
-        sheet.columns.forEach(col => col.width = 15);
+        // ---------------------------
+        // 5️⃣ NOW WE KNOW EXACT LAST COLUMN
+        // CENTER BRANCH NAME + DATE
+        // ---------------------------
+        const lastColumn = sheet.getRow(4).cellCount;
 
-        // -----------------------------
-        // 6️⃣ Export XLSX
-        // -----------------------------
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { type: "application/octet-stream" });
+        // Branch Name Row = Row 1
+        sheet.mergeCells(1, 1, 1, lastColumn);
+        sheet.getCell(1, 1).value = branch_name && branch_name !== null ? `${branch_name} ${branch_location && branch_location !== null ? `, ${branch_location}` : ''} ` : "Branch";
+        sheet.getCell(1, 1).font = { bold: true, size: 14 };
+        sheet.getCell(1, 1).alignment = { horizontal: "center", vertical: "middle" };
 
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "Checklist-Horizontal.xlsx";
-        link.click();
-    };
+        // Date Row = Row 2
+        sheet.mergeCells(2, 1, 2, lastColumn);
+        sheet.getCell(2, 1).value = `Date:- ${formattedDate}`;
+        sheet.getCell(2, 1).font = { bold: true, size: 12 };
+        sheet.getCell(2, 1).alignment = { horizontal: "center", vertical: "middle" };
 
-    const exportVerticalDynamic = async (data, filename = "Checklist_Vertical.xlsx") => {
-
-        const workbook = new ExcelJS.Workbook();
-        const sheet = workbook.addWorksheet("Checklist");
-
-        const assets = data.assets;
-        const checklist = data.asset_checklist_json;
-
-        // ---------------------------------------------------------
-        // 1) Collect all parameters (unique)
-        // ---------------------------------------------------------
-        const params = [];
-
-        checklist.forEach(a => {
-            a.times.forEach(t => {
-                t.values.forEach(v => {
-                    if (!params.some(p => p.parameter_id === v.parameter_id)) {
-                        params.push({
-                            parameter_id: v.parameter_id,
-                            name: v.name,
-                            sequence: v.sequence
-                        });
-                    }
-                });
-            });
-        });
-
-        params.sort((a, b) => a.sequence - b.sequence);
-
-        // ---------------------------------------------------------
-        // 2) Header Row
-        // ---------------------------------------------------------
-        const header = ["Parameter"];
-        assets.forEach(a => header.push(a.asset_name));
-        sheet.addRow(header);
-
-        // ---------------------------------------------------------
-        // 3) Map parameter → asset → last available value
-        // ---------------------------------------------------------
-        const valueMap = {};
-
-        checklist.forEach(asset => {
-            asset.times.forEach(time => {
-                time.values.forEach(v => {
-                    if (!valueMap[v.parameter_id]) valueMap[v.parameter_id] = {};
-                    valueMap[v.parameter_id][asset.asset_id] = v.value || "";
-                });
-            });
-        });
-
-        // ---------------------------------------------------------
-        // 4) Fill rows
-        // ---------------------------------------------------------
-        params.forEach(p => {
-            const row = [p.name];
-
-            assets.forEach(asset => {
-                const value = valueMap?.[p.parameter_id]?.[asset.asset_id] || "";
-                row.push(value);
-            });
-
-            sheet.addRow(row);
-        });
-
-        // styling
-        sheet.columns.forEach(col => (col.width = 20));
-        sheet.getRow(1).font = { bold: true };
-
-        sheet.eachRow(row => {
-            row.eachCell(cell => {
+        // ---------------------------
+        // 6️⃣ BORDERS ON ALL CELLS
+        // ---------------------------
+        sheet.eachRow({ includeEmpty: true }, row => {
+            row.eachCell({ includeEmpty: true }, cell => {
                 cell.border = {
                     top: { style: "thin" },
                     left: { style: "thin" },
@@ -676,7 +628,260 @@ export default function ChecklistView() {
             });
         });
 
-        // download file
+        // ---------------------------
+        // 7️⃣ Auto column width
+        // ---------------------------
+        sheet.columns.forEach(col => (col.width = 15));
+
+        // ---------------------------
+        // 8️⃣ Export file
+        // ---------------------------
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: "application/octet-stream" });
+
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "Checklist-Horizontal.xlsx";
+        link.click();
+    };
+
+    /**
+     * function to export excel for Vertical Layout
+     * @param {*} data 
+     * @param {*} filename 
+     * @returns 
+     */
+    const exportVerticalDynamic = async (data, filename = "Checklist_Vertical.xlsx") => {
+
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet("Checklist");
+
+        // ---------------------------------------
+        // Extract Data
+        // ---------------------------------------
+        const checklist = data?.asset_checklist_json || [];
+        const parameters = data?.checklist_json?.parameters || [];
+
+        const branchName =
+            data?.branch_name && data?.branch_name !== null
+                ? `${data.branch_name}${data?.branch_location ? `, ${data?.branch_location}` : ""}`
+                : "Branch";
+
+        const date = selectedStartDate
+            ? moment(selectedStartDate, 'DD/MM/YYYY').format('DD-MM-YYYY')
+            : new Date().toLocaleDateString();
+
+        if (!checklist?.length) {
+            showSnackbar({ message: 'No Data found to export excel', severity: "error" })
+            return
+        };
+
+        const parents = parameters?.filter(p => p.parent_id === 0);
+        const children = parameters?.filter(p => p.parent_id !== 0);
+
+        const timeSlots = checklist[0]?.times || [];
+
+        // ---------------------------------------
+        // BUILD HEADER ROWS
+        // ---------------------------------------
+        let headerRowA = ["Assets"];
+        let headerRowB = ["Parameters"];
+        let headerRowC = [""];
+
+        const assetBlocks = checklist.map(asset => {
+            const blocks = parents.map(parent => {
+                const childList = children.filter(c => c.parent_id === parent.id);
+                return {
+                    parent,
+                    childList,
+                    childCount: childList.length || 1
+                };
+            });
+
+            const totalCols = blocks.reduce((s, b) => s + b.childCount, 0);
+            return {
+                assetEntry: asset,
+                blocks,
+                totalCols
+            };
+        });
+
+        assetBlocks.forEach(block => {
+            headerRowA.push(...Array(block.totalCols).fill(block.assetEntry.asset_name));
+
+            block.blocks.forEach(b => {
+                headerRowB.push(...Array(b.childCount).fill(b.parent.name));
+
+                if (b.childList.length === 0) {
+                    headerRowC.push("");
+                } else {
+                    b.childList.forEach(c => headerRowC.push(c.sub_name || c.name));
+                }
+            });
+        });
+
+        const totalCols = headerRowA.length;
+
+        // ---------------------------------------
+        // INSERT HEADER ROWS
+        // ---------------------------------------
+        const rowA = sheet.addRow(headerRowA);
+        const rowB = sheet.addRow(headerRowB);
+        const rowC = sheet.addRow(headerRowC);
+
+        rowA.font = { bold: true };
+        rowB.font = { bold: true };
+        rowC.font = { bold: true };
+
+        // ---------------------------------------
+        // INSERT BRANCH + DATE TOP ROWS
+        // ---------------------------------------
+        sheet.spliceRows(1, 0, ["".padStart(totalCols)]);
+        sheet.spliceRows(2, 0, ["".padStart(totalCols)]);
+
+        sheet.mergeCells(1, 1, 1, totalCols);
+        sheet.getCell(1, 1).value = branchName;
+        sheet.getCell(1, 1).alignment = { horizontal: "center", vertical: "middle" };
+        sheet.getCell(1, 1).font = { bold: true, size: 16 };
+
+        sheet.mergeCells(2, 1, 2, totalCols);
+        sheet.getCell(2, 1).value = `Date:- ${date}`;
+        sheet.getCell(2, 1).alignment = { horizontal: "center", vertical: "middle" };
+        sheet.getCell(2, 1).font = { bold: true, size: 12 };
+
+        // ---------------------------------------
+        // MERGE HEADER BLOCK CELLS
+        // ---------------------------------------
+        let colCursor = 2;
+
+        // Merge asset-name row
+        assetBlocks.forEach(block => {
+            const start = colCursor;
+            const end = colCursor + block.totalCols - 1;
+            sheet.mergeCells(3, start, 3, end);
+            colCursor = end + 1;
+        });
+
+        // Merge parent row
+        colCursor = 2;
+        assetBlocks.forEach(block => {
+            block.blocks.forEach(b => {
+                const start = colCursor;
+                const end = colCursor + b.childCount - 1;
+                sheet.mergeCells(4, start, 4, end);
+                colCursor = end + 1;
+            });
+        });
+
+        // ---------------------------------------
+        // DATA ROWS
+        // ---------------------------------------
+        let currentRow = 6;
+
+        timeSlots.forEach(time => {
+            const row = sheet.getRow(currentRow);
+            row.getCell(1).value = `${time.from}-${time.to}`;
+
+            let writeCol = 2;
+
+            assetBlocks.forEach(block => {
+                const asset = block.assetEntry;
+                const slot = asset?.times?.find(t => t.uuid === time.uuid);
+
+                if (!slot) {
+                    for (let i = 0; i < block.totalCols; i++) {
+                        row.getCell(writeCol).value = "-";
+                        writeCol++;
+                    }
+                    return;
+                }
+
+                block.blocks.forEach(b => {
+                    if (b.childList.length === 0) {
+                        // parent has no children
+                        const v = slot.values.find(x => x?.parameter_id === b.parent.id);
+
+                        row.getCell(writeCol).value = "-";
+
+                        if (v) {
+                            row.getCell(writeCol).value = v.unit
+                                // ? `${v.value} ${v.unit}`
+                                ? `${v.value}`
+                                : v.value;
+                        }
+
+                        writeCol++;
+                    } else {
+                        // parent has children
+                        b.childList.forEach(child => {
+                            const v = slot.values.find(x => x?.parameter_id === child.id);
+
+                            row.getCell(writeCol).value = "-";
+
+                            if (v) {
+                                row.getCell(writeCol).value = v.unit
+                                    // ? `${v.value} ${v.unit} `
+                                    ? `${v.value}`
+                                    : v.value;
+                            }
+
+                            writeCol++;
+                        });
+                    }
+                });
+            });
+
+            currentRow++;
+        });
+
+        // ---------------------------------------
+        // STYLING
+        // ---------------------------------------
+        sheet.eachRow(row => {
+            row.eachCell(cell => {
+                cell.border = {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" }
+                };
+                cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+            });
+        });
+
+        // ---------------------------------------
+        // SMART AUTO-WIDTH (tight)
+        // ---------------------------------------
+        sheet.columns.forEach((column, index) => {
+            const parent = sheet.getRow(4).getCell(index + 1).value;
+            const child = sheet.getRow(5).getCell(index + 1).value;
+
+            if (index === 0) {
+                column.width = 22;
+                return;
+            }
+
+            const parentName = parent ? parent.toString() : "";
+            const childName = child ? child.toString() : "";
+
+            // Parent with NO child
+            if (childName === "" && parentName !== "") {
+                column.width = Math.max(parentName.length + 1, 10);
+                return;
+            }
+
+            // Child column
+            if (childName !== "") {
+                column.width = Math.max(childName.length + 1, 4);
+                return;
+            }
+
+            column.width = 12;
+        });
+
+        // ---------------------------------------
+        // DOWNLOAD
+        // ---------------------------------------
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], {
             type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -690,14 +895,17 @@ export default function ChecklistView() {
         URL.revokeObjectURL(url);
     };
 
-    // export excel
+    /**
+     * function to call export checklist function as per Layout Selection
+     * @returns 
+     */
     const exportChecklist = () => {
         if (!getCurrentAssetGroup?.layout_type) {
             return;
         }
 
         if (getCurrentAssetGroup.layout_type === "Horizontal") {
-            exportChecklistHorizontal(getCurrentAssetGroup, "Checklist_Horizontal.xlsx");
+            exportChecklistHorizontal(getCurrentAssetGroup);
         }
         else if (getCurrentAssetGroup.layout_type === "Vertical") {
             exportVerticalDynamic(getCurrentAssetGroup, "Checklist_Vertical.xlsx");
@@ -842,15 +1050,15 @@ export default function ChecklistView() {
     const FieldRenderer = ({ params, value }) => {
         const { control, formState: { errors } } = useFormContext();
 
-        const fieldName = `${params.name}`;
+        const fieldName = `${params.name} `;
 
         const validationRules = {
             required: params?.is_mandatory ? `${params?.name} is required` : false,
             min: params?.min
-                ? { value: Number(params.min), message: `Value should be between ${params.min} and ${params.max}` }
+                ? { value: Number(params.min), message: `Value should be between ${params.min} and ${params.max} ` }
                 : undefined,
             max: params?.max
-                ? { value: Number(params.max), message: `Value should be between ${params.min} and ${params.max}` }
+                ? { value: Number(params.max), message: `Value should be between ${params.min} and ${params.max} ` }
                 : undefined,
         };
 
@@ -868,7 +1076,7 @@ export default function ChecklistView() {
                             return (
                                 <CustomTextField
                                     fullWidth
-                                    placeholder={`Enter ${params?.name}`}
+                                    placeholder={`Enter ${params?.name} `}
                                     {...field}
                                     error={!!errors[fieldName]}
                                     helperText={errors[fieldName]?.message}
@@ -882,7 +1090,7 @@ export default function ChecklistView() {
                                     fullWidth
                                     type="number"
                                     size="small"
-                                    placeholder={`Enter ${params?.name}`}
+                                    placeholder={`Enter ${params?.name} `}
                                     {...field}
                                     InputProps={{
                                         endAdornment: (
@@ -945,7 +1153,7 @@ export default function ChecklistView() {
 
         const updatedValues = currentValues.map(param => {
             // Construct the dynamic fieldName
-            const fieldName = `${param.name}`;
+            const fieldName = `${param.name} `;
 
             return {
                 ...param,
@@ -1029,7 +1237,7 @@ export default function ChecklistView() {
                                 : theme.palette.grey[500]
                         }}
                     >
-                        {`${objData?.from}-${objData?.to}`}
+                        {`${objData?.from} -${objData?.to} `}
                     </TypographyComponent>
                 </Stack>
             );
@@ -1068,7 +1276,7 @@ export default function ChecklistView() {
                                 : theme.palette.grey[500]
                         }}
                     >
-                        {`${objData?.from}-${objData?.to}`}
+                        {`${objData?.from} -${objData?.to} `}
                     </TypographyComponent>
                 </Stack>
             );
@@ -1086,7 +1294,7 @@ export default function ChecklistView() {
                         gap: 1,
                         p: '10px 16px',
                         borderRadius: '8px',
-                        border: objData?.is_selected == false ? `1px solid ${theme.palette.primary[600]}` : 'none',
+                        border: objData?.is_selected == false ? `1px solid ${theme.palette.primary[600]} ` : 'none',
                         background: objData?.is_selected
                             ? theme.palette.common.black : 'transparent'
                     }}
@@ -1109,7 +1317,7 @@ export default function ChecklistView() {
                                 : theme.palette.grey[500]
                         }}
                     >
-                        {`${objData?.from}-${objData?.to}`}
+                        {`${objData?.from} -${objData?.to} `}
                     </TypographyComponent>
                 </Stack>
             );
@@ -1149,7 +1357,7 @@ export default function ChecklistView() {
 
                         }}
                     >
-                        {`${objData?.from}-${objData?.to}`}
+                        {`${objData?.from} -${objData?.to} `}
                     </TypographyComponent>
                 </Stack>
             );
@@ -1166,7 +1374,7 @@ export default function ChecklistView() {
                         gap: 1,
                         p: '10px 16px',
                         borderRadius: '8px',
-                        border: objData?.is_selected == false ? `1px solid ${theme.palette.primary[600]}` : 'none',
+                        border: objData?.is_selected == false ? `1px solid ${theme.palette.primary[600]} ` : 'none',
                         background: objData?.is_selected
                             ? theme.palette.common.black : 'transparent'
                     }}
@@ -1189,7 +1397,7 @@ export default function ChecklistView() {
                                 : theme.palette.grey[500]
                         }}
                     >
-                        {`${objData?.from}-${objData?.to}`}
+                        {`${objData?.from} -${objData?.to} `}
                     </TypographyComponent>
                 </Stack>
             );
@@ -1206,7 +1414,7 @@ export default function ChecklistView() {
                         gap: 1,
                         p: '10px 16px',
                         borderRadius: '8px',
-                        border: objData?.is_selected == false ? `1px solid ${theme.palette.primary[600]}` : 'none',
+                        border: objData?.is_selected == false ? `1px solid ${theme.palette.primary[600]} ` : 'none',
                         background: objData?.is_selected
                             ? theme.palette.common.black : 'transparent'
                     }}
@@ -1221,7 +1429,7 @@ export default function ChecklistView() {
                                 : theme.palette.grey[500]
                         }}
                     >
-                        {`${objData?.from}-${objData?.to}`}
+                        {`${objData?.from} -${objData?.to} `}
                     </TypographyComponent>
                 </Stack>
             );
@@ -1261,7 +1469,7 @@ export default function ChecklistView() {
                                 : theme.palette.grey[500]
                         }}
                     >
-                        {`${objData?.from}-${objData?.to}`}
+                        {`${objData?.from} -${objData?.to} `}
                     </TypographyComponent>
                 </Stack>
             );
@@ -1284,7 +1492,7 @@ export default function ChecklistView() {
                 height: "100%",
                 width: '100%',
                 borderRadius: "16px",
-                border: `1px solid ${theme.palette.primary[600]}`,
+                border: `1px solid ${theme.palette.primary[600]} `,
                 backgroundColor: theme.palette.common.white,
                 display: "flex",
                 flexDirection: "row",
@@ -1295,14 +1503,14 @@ export default function ChecklistView() {
                     <Stack flexDirection={{ xs: 'column', sm: 'column', md: 'column', lg: 'row' }} gap={2} justifyContent={'space-between'} sx={{ width: '100%' }}>
                         <Stack>
                             <TypographyComponent fontSize={16} fontWeight={500}>
-                                {`${getCurrentAssetGroup?.asset_type_name && getCurrentAssetGroup?.asset_type_name !== null ? getCurrentAssetGroup?.asset_type_name : ''} Checklist & Reading Report - ${getCurrentAssetGroup?.group_name && getCurrentAssetGroup?.group_name !== null ? getCurrentAssetGroup?.group_name : ''}`}
+                                {`${getCurrentAssetGroup?.asset_type_name && getCurrentAssetGroup?.asset_type_name !== null ? getCurrentAssetGroup?.asset_type_name : ''} Checklist & Reading Report - ${getCurrentAssetGroup?.group_name && getCurrentAssetGroup?.group_name !== null ? getCurrentAssetGroup?.group_name : ''} `}
                             </TypographyComponent>
                             <Stack flexDirection={'row'} columnGap={0.5} sx={{ mb: 1.5 }}>
                                 <TypographyComponent fontSize={14} fontWeight={400} color={theme.palette.grey[600]}>
                                     Location:
                                 </TypographyComponent>
                                 <TypographyComponent fontSize={14} fontWeight={500}>
-                                    {getCurrentAssetGroup?.location}
+                                    {getCurrentAssetGroup?.branch_name && getCurrentAssetGroup?.branch_name !== null ? `${getCurrentAssetGroup?.branch_name} ${getCurrentAssetGroup?.branch_location && getCurrentAssetGroup?.branch_location !== null ? `, ${getCurrentAssetGroup?.branch_location}` : ''} ` : ''}
                                 </TypographyComponent>
                             </Stack>
                         </Stack>
@@ -1345,7 +1553,7 @@ export default function ChecklistView() {
                                     title="Click to load checklist for selected date"
                                     size={'small'}
                                     disabled={loadingChecklist}
-                                    sx={{ textTransform: "capitalize", textWrap: 'nowrap', px: 2, gap: 1, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, border: `1px solid ${theme.palette.primary[600]}` }}
+                                    sx={{ textTransform: "capitalize", textWrap: 'nowrap', px: 2, gap: 1, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, border: `1px solid ${theme.palette.primary[600]} ` }}
                                     onClick={() => {
                                         setIsInitialLoad(true)
                                         if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && groupUuid && groupUuid !== null) {
@@ -1367,7 +1575,7 @@ export default function ChecklistView() {
                                 <Button
                                     title="Click to export checklist for selected date"
                                     size={'small'}
-                                    sx={{ textTransform: "capitalize", px: 2, gap: 1, borderRadius: '8px', backgroundColor: theme.palette.common.white, color: theme.palette.primary[600], fontSize: 16, fontWeight: 600, border: `1px solid ${theme.palette.primary[600]}`, boxShadow: 'none' }}
+                                    sx={{ textTransform: "capitalize", px: 2, gap: 1, borderRadius: '8px', backgroundColor: theme.palette.common.white, color: theme.palette.primary[600], fontSize: 16, fontWeight: 600, border: `1px solid ${theme.palette.primary[600]} `, boxShadow: 'none' }}
                                     onClick={exportChecklist}
                                     variant='outlined'
                                 >
@@ -1487,7 +1695,7 @@ export default function ChecklistView() {
                                                                 zIndex: 100,
                                                                 background: theme.palette.common.white,
                                                                 width: 300,
-                                                                border: `1px solid ${theme.palette.divider}`,
+                                                                border: `1px solid ${theme.palette.divider} `,
                                                                 borderRadius: '8px',
                                                                 p: '15px 24px',
                                                             }
@@ -1503,7 +1711,7 @@ export default function ChecklistView() {
                                                                 sx={{
                                                                     backgroundColor: asset?.status == 'Approved' ? theme.palette.success[50] : theme.palette.common.white,// theme.palette.success[50],
                                                                     color: theme.palette.grey[600],
-                                                                    border: asset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`,//`1px solid ${theme.palette.success[600]}`,
+                                                                    border: asset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]} ` : `1px solid ${theme.palette.grey[300]} `,//`1px solid ${ theme.palette.success[600] } `,
                                                                     borderRadius: '8px',
                                                                     fontWeight: 'bold',
                                                                     width: 255,
@@ -1546,10 +1754,10 @@ export default function ChecklistView() {
                                                                     p: '15px 24px',
                                                                     background: theme.palette.common.white,
                                                                     zIndex: 1,
-                                                                    borderTop: i == 0 ? `1px solid ${theme.palette.divider}` : '',
-                                                                    borderBottom: `1px solid ${theme.palette.divider}`,
-                                                                    borderLeft: `1px solid ${theme.palette.divider}`,
-                                                                    borderRight: `1px solid ${theme.palette.divider}`,
+                                                                    borderTop: i == 0 ? `1px solid ${theme.palette.divider} ` : '',
+                                                                    borderBottom: `1px solid ${theme.palette.divider} `,
+                                                                    borderLeft: `1px solid ${theme.palette.divider} `,
+                                                                    borderRight: `1px solid ${theme.palette.divider} `,
                                                                     borderTopLeftRadius: i == 0 ? '8px' : 'none',
                                                                     borderTopRightRadius: i == 0 ? '8px' : 'none',
                                                                 }}
@@ -1571,17 +1779,17 @@ export default function ChecklistView() {
                                                                 const value = paramValue ? paramValue.value : '';
 
                                                                 return (
-                                                                    <TableCell key={`${objAsset?.id}-${objAsset?.asset_name}`}
+                                                                    <TableCell key={`${objAsset?.id} -${objAsset?.asset_name} `}
                                                                         sx={{
                                                                             alignItems: 'flex-start',
                                                                             p: '15px 24px',
                                                                             borderTop: i == 0 ?
-                                                                                objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`// `1px solid ${theme.palette.success[600]}`
+                                                                                objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]} ` : `1px solid ${theme.palette.grey[300]} `// `1px solid ${ theme.palette.success[600] } `
                                                                                 : '',
-                                                                            borderBottom: `1px solid ${theme.palette.grey[300]}`,
+                                                                            borderBottom: `1px solid ${theme.palette.grey[300]} `,
                                                                             background: objAsset?.status == 'Approved' ? theme.palette.success[50] : theme.palette.common.white,//theme.palette.success[50],
-                                                                            borderLeft: objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`,// `1px solid ${theme.palette.success[600]}`
-                                                                            borderRight: objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`,// `1px solid ${theme.palette.success[600]}`
+                                                                            borderLeft: objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]} ` : `1px solid ${theme.palette.grey[300]} `,// `1px solid ${ theme.palette.success[600] } `
+                                                                            borderRight: objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]} ` : `1px solid ${theme.palette.grey[300]} `,// `1px solid ${ theme.palette.success[600] } `
                                                                             borderTopLeftRadius: i == 0 ? '8px' : 'none',
                                                                             borderTopRightRadius: i == 0 ? '8px' : 'none',
                                                                         }}>
@@ -1589,11 +1797,11 @@ export default function ChecklistView() {
                                                                         {
                                                                             objAsset?.is_view == 1 ?
                                                                                 <>
-                                                                                    <TypographyComponent sx={{ color: theme.palette.grey[900] }} fontSize={14} fontWeight={400}>{value && value !== null ? `${value} ${paramValue?.input_type == 'Number (with range)' ? (paramValue?.unit && paramValue?.unit !== null ? paramValue?.unit : '') : ''}` : '--'} </TypographyComponent>
+                                                                                    <TypographyComponent sx={{ color: theme.palette.grey[900] }} fontSize={14} fontWeight={400}>{value && value !== null ? `${value} ${paramValue?.input_type == 'Number (with range)' ? (paramValue?.unit && paramValue?.unit !== null ? paramValue?.unit : '') : ''} ` : '--'} </TypographyComponent>
                                                                                 </>
                                                                                 :
                                                                                 <>
-                                                                                    <FieldRenderer key={`${i}-${objAsset?.asset_id}`} params={paramValue} value={value} assetId={objAsset?.asset_id} />
+                                                                                    <FieldRenderer key={`${i} -${objAsset?.asset_id} `} params={paramValue} value={value} assetId={objAsset?.asset_id} />
                                                                                 </>
                                                                         }
 
@@ -1613,9 +1821,9 @@ export default function ChecklistView() {
                                                                         background: theme.palette.common.white,
                                                                         fontWeight: 'bold',
                                                                         width: 300,
-                                                                        borderBottom: `1px solid ${theme.palette.grey[300]}`,
-                                                                        borderLeft: `1px solid ${theme.palette.grey[300]}`,
-                                                                        borderRight: `1px solid ${theme.palette.grey[300]}`,
+                                                                        borderBottom: `1px solid ${theme.palette.grey[300]} `,
+                                                                        borderLeft: `1px solid ${theme.palette.grey[300]} `,
+                                                                        borderRight: `1px solid ${theme.palette.grey[300]} `,
                                                                         borderBottomLeftRadius: '8px',
                                                                         borderBottomRightRadius: '8px',
                                                                     }}
@@ -1626,7 +1834,7 @@ export default function ChecklistView() {
                                                                     return (
                                                                         <React.Fragment>
                                                                             <TableCell
-                                                                                key={`${assetIndex}-${asset?.asset_name}`}
+                                                                                key={`${assetIndex} -${asset?.asset_name} `}
                                                                                 align="center"
                                                                                 sx={{
                                                                                     backgroundColor: 'transparent',
@@ -1636,9 +1844,9 @@ export default function ChecklistView() {
                                                                                     background: asset?.status == 'Approved' ? theme.palette.success[50] : theme.palette.common.white,//theme.palette.success[50],
                                                                                     alignItems: 'center',
                                                                                     justifyContent: 'center',
-                                                                                    borderBottom: asset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`,// `1px solid ${theme.palette.success[600]}`
-                                                                                    borderLeft: asset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`,// `1px solid ${theme.palette.success[600]}`
-                                                                                    borderRight: asset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]}` : `1px solid ${theme.palette.grey[300]}`,// `1px solid ${theme.palette.success[600]}`
+                                                                                    borderBottom: asset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]} ` : `1px solid ${theme.palette.grey[300]} `,// `1px solid ${ theme.palette.success[600] } `
+                                                                                    borderLeft: asset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]} ` : `1px solid ${theme.palette.grey[300]} `,// `1px solid ${ theme.palette.success[600] } `
+                                                                                    borderRight: asset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]} ` : `1px solid ${theme.palette.grey[300]} `,// `1px solid ${ theme.palette.success[600] } `
                                                                                     borderBottomLeftRadius: '8px',
                                                                                     borderBottomRightRadius: '8px',
 
@@ -1658,8 +1866,8 @@ export default function ChecklistView() {
                                                                                                         setOpenAssetApprovalPopup(true)
                                                                                                         let objData = {
                                                                                                             asset_id: asset?.asset_id,
-                                                                                                            title: `Approve ${asset?.asset_name}`,
-                                                                                                            text: `Are you sure you want to approve this asset? This action cannot be undone.`
+                                                                                                            title: `Approve ${asset?.asset_name} `,
+                                                                                                            text: `Are you sure you want to approve this asset ? This action cannot be undone.`
                                                                                                         }
                                                                                                         setCurrentAssetApprovalDetails(objData)
                                                                                                     }}
@@ -1670,7 +1878,7 @@ export default function ChecklistView() {
                                                                                                 </Button>
                                                                                                 {
                                                                                                     asset?.status !== 'Approved' ?
-                                                                                                        <Button disabled={getEditModeCount()} sx={{ columnGap: 0.5, px: 2, border: getEditModeCount() ? `1px solid ${theme.palette.grey[300]}` : `1px solid ${theme.palette.primary[600]}`, background: getEditModeCount() ? theme.palette.grey[300] : '', color: getEditModeCount() ? theme.palette.grey[600] : theme.palette.primary[600], textTransform: 'capitalize', borderRadius: '4px' }}
+                                                                                                        <Button disabled={getEditModeCount()} sx={{ columnGap: 0.5, px: 2, border: getEditModeCount() ? `1px solid ${theme.palette.grey[300]} ` : `1px solid ${theme.palette.primary[600]} `, background: getEditModeCount() ? theme.palette.grey[300] : '', color: getEditModeCount() ? theme.palette.grey[600] : theme.palette.primary[600], textTransform: 'capitalize', borderRadius: '4px' }}
                                                                                                             onClick={() => {
                                                                                                                 // methods.reset()
 
@@ -1701,7 +1909,7 @@ export default function ChecklistView() {
                                                                                             <>
                                                                                                 <Button
                                                                                                     title={'Cancel'}
-                                                                                                    sx={{ columnGap: 0.5, px: 6, color: theme.palette.primary[600], border: `1px solid ${theme.palette.primary[600]}`, background: theme.palette.common.white, textTransform: 'capitalize', borderRadius: '4px' }}
+                                                                                                    sx={{ columnGap: 0.5, px: 6, color: theme.palette.primary[600], border: `1px solid ${theme.palette.primary[600]} `, background: theme.palette.common.white, textTransform: 'capitalize', borderRadius: '4px' }}
                                                                                                     onClick={() => {
                                                                                                         let details = Object.assign({}, getChecklistDetails)
                                                                                                         let arrTimes = Object.assign([], details?.times)
