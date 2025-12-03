@@ -151,14 +151,14 @@ export const TableTheme = createTheme({
 })
 
 // Styled Progress Bar
-export const StyledLinearProgress = styled(LinearProgress)(({ theme }) => ({
+export const StyledLinearProgress = styled(LinearProgress)(({ theme, bgColor = theme.palette.primary[600] }) => ({
   height: 6,
   borderRadius: 8,
   flex: 1, // allows it to stretch in row
   backgroundColor: theme.palette.grey[200],
   "& .MuiLinearProgress-bar": {
     borderRadius: 8,
-    backgroundColor: theme.palette.primary[600], // purple from theme
+    backgroundColor: bgColor, // purple from theme
   },
 }));
 

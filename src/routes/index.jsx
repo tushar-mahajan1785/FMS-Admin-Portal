@@ -13,8 +13,7 @@ import Settings from "../pages/setting";
 import AdminSetting from "../pages/admin-setting";
 import ConfigureShiftList from "../pages/configure-shift";
 import ManageGroups from "../pages/manage-groups";
-import { Tickets } from "../pages/tickets";
-import { TicketList } from "../pages/tickets/all";
+import Tickets from "../pages/tickets";
 import ManageShift from "../pages/manage-shift";
 import Documents from "../pages/documents";
 import Inventory from "../pages/inventory";
@@ -23,6 +22,7 @@ import PmActivity from "../pages/pm-activity";
 import InventoryCategory from "../pages/inventory-category";
 import DocumentCategories from "../pages/document-categories";
 import CategoriesDetails from "../pages/documents/categories-details";
+import Checklist from "../pages/checklist";
 
 const routes = [
   {
@@ -161,6 +161,12 @@ const routes = [
     permission: "DOCUMENT_CATEGORIES",
     protected: true,
   },
+  {
+    path: "/checklist/*",
+    element: <Checklist />,
+    permission: "CHECKLIST",
+    protected: true,
+  }
 ];
 
 export default routes;

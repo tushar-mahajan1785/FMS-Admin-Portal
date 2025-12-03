@@ -20,12 +20,14 @@ import AlertCircleIcon from "../../../assets/icons/AlertCircleIcon"
 import CustomChip from "../../../components/custom-chip"
 import DeleteIcon from "../../../assets/icons/DeleteIcon"
 import EditIcon from "../../../assets/icons/EditIcon"
+import { useBranch } from "../../../hooks/useBranch";
 
 export default function AdminSettingList() {
     const { showSnackbar } = useSnackbar()
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout, hasPermission } = useAuth()
+    const branch = useBranch()
 
     // store
     const { settingList, deleteSetting } = useSelector(state => state.settingStore)
@@ -114,8 +116,13 @@ export default function AdminSettingList() {
      */
     useEffect(() => {
         setLoadingList(true)
-        dispatch(actionSettingList({ entity_type: 'admin' }))
-    }, [])
+        if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null) {
+            dispatch(actionSettingList({
+                branch_uuid: branch?.currentBranch?.uuid,
+                entity_type: 'branch'
+            }))
+        }
+    }, [branch?.currentBranch?.uuid])
 
     // handle search function
     const handleSearchQueryChange = event => {
@@ -195,7 +202,12 @@ export default function AdminSettingList() {
                 setOpenDeleteSettingPopup(false)
                 setLoadingDelete(false)
                 showSnackbar({ message: deleteSetting?.message, severity: "success" })
-                dispatch(actionSettingList({ entity_type: 'admin' }))
+                if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null) {
+                    dispatch(actionSettingList({
+                        branch_uuid: branch?.currentBranch?.uuid,
+                        entity_type: 'branch'
+                    }))
+                }
             } else {
                 setLoadingDelete(false)
                 switch (deleteSetting?.status) {
@@ -282,7 +294,12 @@ export default function AdminSettingList() {
                 dataObj={settingData}
                 handleClose={(data) => {
                     if (data && data !== null && data === 'save') {
-                        dispatch(actionSettingList({ entity_type: 'admin' }))
+                        if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null) {
+                            dispatch(actionSettingList({
+                                branch_uuid: branch?.currentBranch?.uuid,
+                                entity_type: 'branch'
+                            }))
+                        }
                     }
                     setOpenAddSettingPopup(false)
                     setSettingData(null)

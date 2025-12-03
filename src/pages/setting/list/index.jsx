@@ -213,7 +213,8 @@ export default function SettingList() {
                 setLoadingDelete(false)
                 showSnackbar({ message: deleteSetting?.message, severity: "success" })
                 dispatch(actionSettingList({
-                    branch_uuid: branch?.currentBranch?.uuid
+                    branch_uuid: branch?.currentBranch?.uuid,
+                    entity_type: 'branch'
                 }))
             } else {
                 setLoadingDelete(false)
@@ -306,7 +307,8 @@ export default function SettingList() {
                 handleClose={(data) => {
                     if (data && data !== null && data === 'save') {
                         dispatch(actionSettingList({
-                            branch_uuid: branch?.currentBranch?.uuid
+                            branch_uuid: branch?.currentBranch?.uuid,
+                            entity_type: 'branch'
                         }))
                     }
                     setOpenAddSettingPopup(false)

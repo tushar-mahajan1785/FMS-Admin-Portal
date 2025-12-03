@@ -1,12 +1,12 @@
 import SvgIcon from '@mui/material/SvgIcon';
 
 const ReportsIcon = (props) => {
-    const { stroke = "#101828", size = 16, ...rest } = props;
+    const { stroke = "#101828", size = 18, ...rest } = props;
 
     return (
         <SvgIcon
             {...rest}
-            viewBox="0 0 16 16"
+            viewBox="0 0 18 18"
             fill="none"
             style={{ fontSize: size, color: 'transparent' }}
         >

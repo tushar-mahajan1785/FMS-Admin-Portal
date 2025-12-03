@@ -335,3 +335,21 @@ export const API_UPLOAD_DOCUMENTS_CATEGORIES_DELETE = `${BASE}/document/remove`
 export const API_UPLOAD_DOCUMENTS_CATEGORIES_ARCHIVE = `${BASE}/document/archive`
 
 export const API_UPLOAD_DOCUMENTS_CATEGORIES_RESTORE = `${BASE}/document/restore`
+
+//Checklist
+export const API_CHECKLIST_ASSET_TYPE_LIST = `${BASE}/checklist-group/asset-type-list`
+
+export const API_CHECKLIST_GROUP_LIST = `${BASE}/checklist-group/list`
+
+export const API_CHECKLIST_GROUP_ADD = `${BASE}/checklist-group/add`
+
+export const API_CHECKLIST_GROUP_ASSET_LIST = `${BASE}/checklist-group/asset-list`
+
+export const API_CHECKLIST_GROUP_DETAILS = `${BASE}/checklist-group/details`
+
+export const API_CHECKLIST_GROUP_HISTORY_ADD = `${BASE}/checklist-group-history/add-or-edit`
+
+export const API_CHECKLIST_GROUP_ASSET_APPROVE = `${BASE}/checklist-group-history/approve`
+
+export const API_CHECKLIST_ALL_GROUP_DETAILS = `${BASE}/checklist-group/all-group-details`
+

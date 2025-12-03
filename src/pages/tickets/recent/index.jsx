@@ -29,7 +29,7 @@ import { ViewTicket } from '../view';
 import moment from 'moment';
 import { getFormattedDuration } from '../../../utils';
 
-export const RecentTicket = () => {
+export default function RecentTicket() {
   const theme = useTheme()
   const dispatch = useDispatch()
   const { logout, hasPermission } = useAuth()

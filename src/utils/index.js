@@ -3,6 +3,7 @@ import { CRYPTO_SECRET_KEY } from "../common/api/constants";
 import imageCompression from 'browser-image-compression';
 import CustomChip from "../components/custom-chip";
 import React from "react";
+import moment from "moment";
 
 /**
  *Function  Handle Server Error
@@ -263,5 +264,44 @@ export const getCurrentStatusColor = (status) => {
   }
   return color
 }
+
+/*
+* Generate Percentage function
+*/
+export const getPercentage = (value, total) => {
+  let count = (Number(value) / Number(total))
+  let percentage = count * Number(100)
+
+  return percentage
+}
+
+export const isCurrentTimeInRange = (from, to) => {
+  const now = moment();
+  const start = moment(from, "HH:mm");
+  const end = moment(to, "HH:mm");
+
+  // Handle normal ranges
+  if (start.isBefore(end)) {
+    return now.isBetween(start, end, null, '[)');
+  }
+
+  // Handle overnight range like 21:00–04:00
+  return now.isAfter(start) || now.isBefore(end);
+};
+
+export const isFutureTimeRange = (from, to) => {
+  const now = moment();
+  const start = moment(from, "HH:mm");
+  const end = moment(to, "HH:mm");
+
+  // ⚠ If the range is overnight (e.g., 21:00–04:00)
+  if (start.isAfter(end)) {
+    // Future only if now is BEFORE start
+    return now.isBefore(start);
+  }
+
+  // Normal case: time range within same day
+  return now.isBefore(start);
+};
 
 
