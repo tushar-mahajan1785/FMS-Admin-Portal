@@ -164,7 +164,7 @@ const routes = [
   {
     path: "/checklist/*",
     element: <Checklist />,
-    permission: "DASHBOARD",
+    permission: "CHECKLIST",
     protected: true,
   }
 ];

@@ -105,6 +105,6 @@ export const sideMenuItems = [
     title: "Checklist",
     path: "/checklist",
     icon: ReportsIcon,
-    permission: "DASHBOARD",
+    permission: "CHECKLIST",
   },
 ];

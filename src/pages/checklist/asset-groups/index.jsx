@@ -35,7 +35,7 @@ export default function ChecklistAssetGroups() {
     const { assetId } = useParams()
     const dispatch = useDispatch()
     const branch = useBranch()
-    const { logout } = useAuth()
+    const { logout, hasPermission } = useAuth()
     const { showSnackbar } = useSnackbar()
 
     //Stores
@@ -392,63 +392,70 @@ export default function ChecklistAssetGroups() {
                     <TypographyComponent color={theme.palette.text.primary} fontSize={18} fontWeight={400}>Back to Asset Types</TypographyComponent>
                 </Stack>
 
-                <Stack sx={{ flexDirection: { xs: 'column', sm: 'row', md: 'row', lg: 'row' }, alignItems: { xs: 'flex-start', sm: 'center', md: 'center' }, gap: '16px' }}>
-                    <DatePickerWrapper>
-                        <DatePicker
-                            id='start_date'
-                            placeholderText='Start Date'
-                            customInput={
-                                <CustomTextField
-                                    size='small'
-                                    fullWidth
-                                    sx={{ width: { xs: '300px', sm: '200px' } }}
-                                    InputProps={{
-                                        endAdornment: (
-                                            <InputAdornment position='end'>
-                                                <IconButton
-                                                    edge='end'
-                                                    onMouseDown={e => e.preventDefault()}
-                                                >
-                                                    <CalendarIcon />
-                                                </IconButton>
-                                            </InputAdornment>
-                                        )
+                {
+                    hasPermission('CHECKLIST_EXPORT') ?
+                        <Stack sx={{ flexDirection: { xs: 'column', sm: 'row', md: 'row', lg: 'row' }, alignItems: { xs: 'flex-start', sm: 'center', md: 'center' }, gap: '16px' }}>
+                            <DatePickerWrapper>
+                                <DatePicker
+                                    id='start_date'
+                                    placeholderText='Start Date'
+                                    customInput={
+                                        <CustomTextField
+                                            size='small'
+                                            fullWidth
+                                            sx={{ width: { xs: '300px', sm: '200px' } }}
+                                            InputProps={{
+                                                endAdornment: (
+                                                    <InputAdornment position='end'>
+                                                        <IconButton
+                                                            edge='end'
+                                                            onMouseDown={e => e.preventDefault()}
+                                                        >
+                                                            <CalendarIcon />
+                                                        </IconButton>
+                                                    </InputAdornment>
+                                                )
+                                            }}
+                                        />
+                                    }
+                                    value={selectedStartDate}
+                                    selected={selectedStartDate ? moment(selectedStartDate, 'DD/MM/YYYY').toDate() : null}
+                                    maxDate={moment().toDate()}
+                                    showYearDropdown={true}
+                                    onChange={date => {
+                                        const formattedDate = moment(date).format('DD/MM/YYYY')
+                                        setSelectedStartDate(formattedDate)
                                     }}
                                 />
-                            }
-                            value={selectedStartDate}
-                            selected={selectedStartDate ? moment(selectedStartDate, 'DD/MM/YYYY').toDate() : null}
-                            maxDate={moment().toDate()}
-                            showYearDropdown={true}
-                            onChange={date => {
-                                const formattedDate = moment(date).format('DD/MM/YYYY')
-                                setSelectedStartDate(formattedDate)
-                            }}
-                        />
-                    </DatePickerWrapper>
-                    <Stack>
-                        <Button
-                            title="Click to load checklist for selected date"
-                            size={'small'}
-                            disabled={loadingChecklist}
-                            sx={{ textTransform: "capitalize", textWrap: 'nowrap', px: 2, gap: 1, borderRadius: '8px', backgroundColor: loadingChecklist ? theme.palette.grey[300] : theme.palette.primary[600], color: loadingChecklist ? theme.palette.grey[600] : theme.palette.common.white, fontSize: 16, fontWeight: 600, border: loadingChecklist ? `1px solid ${theme.palette.grey[400]}` : `1px solid ${theme.palette.primary[600]}` }}
-                            onClick={() => {
-                                if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && assetId && assetId !== null) {
-                                    setLoadingChecklist(true)
-                                    dispatch(actionChecklistGroupAllGroupDetails({
-                                        branch_uuid: branch?.currentBranch?.uuid,
-                                        asset_type_id: assetId,
-                                        date: selectedStartDate && selectedStartDate !== null ? moment(selectedStartDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : moment().format('YYYY-MM-DD')
-                                    }))
-                                }
-                            }}
-                            variant='outlined'
-                        >
-                            {loadingChecklist ? <CircularProgress size={16} sx={{ color: theme.palette.grey[600] }} /> : <GenerateReportIcon />}
-                            Export
-                        </Button>
-                    </Stack>
-                </Stack>
+                            </DatePickerWrapper>
+                            <Stack>
+                                <Button
+                                    title="Click to load checklist for selected date"
+                                    size={'small'}
+                                    disabled={loadingChecklist}
+                                    sx={{ textTransform: "capitalize", textWrap: 'nowrap', px: 2, gap: 1, borderRadius: '8px', backgroundColor: loadingChecklist ? theme.palette.grey[300] : theme.palette.primary[600], color: loadingChecklist ? theme.palette.grey[600] : theme.palette.common.white, fontSize: 16, fontWeight: 600, border: loadingChecklist ? `1px solid ${theme.palette.grey[400]}` : `1px solid ${theme.palette.primary[600]}` }}
+                                    onClick={() => {
+                                        if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && assetId && assetId !== null) {
+                                            setLoadingChecklist(true)
+                                            dispatch(actionChecklistGroupAllGroupDetails({
+                                                branch_uuid: branch?.currentBranch?.uuid,
+                                                asset_type_id: assetId,
+                                                date: selectedStartDate && selectedStartDate !== null ? moment(selectedStartDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : moment().format('YYYY-MM-DD')
+                                            }))
+                                        }
+                                    }}
+                                    variant='outlined'
+                                >
+                                    {loadingChecklist ? <CircularProgress size={16} sx={{ color: theme.palette.grey[600] }} /> : <GenerateReportIcon />}
+                                    Export
+                                </Button>
+                            </Stack>
+                        </Stack>
+                        :
+                        <></>
+
+                }
+
             </Stack>
 
             <Stack sx={{
@@ -518,19 +525,25 @@ export default function ChecklistAssetGroups() {
                         </Grid>
                     </Grid>
                 </Stack>
-                <Stack>
-                    <Button
-                        size={'small'}
-                        sx={{ textTransform: "capitalize", textWrap: 'nowrap', px: 2, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, borderColor: theme.palette.primary[600] }}
-                        onClick={() => {
-                            setOpenAddChecklistAssetGroup(true)
-                        }}
-                        variant='contained'
-                    >
-                        <AddIcon sx={{ color: 'white', fontSize: { xs: '20px', sm: '20px', md: '22px' } }} />
-                        Create New Group
-                    </Button>
-                </Stack>
+                {
+                    hasPermission('CHECKLIST_GROUP_SAVE') ?
+                        <Stack>
+                            <Button
+                                size={'small'}
+                                sx={{ textTransform: "capitalize", textWrap: 'nowrap', px: 2, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, borderColor: theme.palette.primary[600] }}
+                                onClick={() => {
+                                    setOpenAddChecklistAssetGroup(true)
+                                }}
+                                variant='contained'
+                            >
+                                <AddIcon sx={{ color: 'white', fontSize: { xs: '20px', sm: '20px', md: '22px' } }} />
+                                Create New Group
+                            </Button>
+                        </Stack>
+                        :
+                        <></>
+                }
+
 
             </Stack>
             <Stack sx={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', my: 2 }}>

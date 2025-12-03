@@ -42,7 +42,7 @@ export default function ChecklistView() {
     const navigate = useNavigate()
     const dispatch = useDispatch()
     const branch = useBranch()
-    const { logout } = useAuth()
+    const { logout, hasPermission } = useAuth()
     const { showSnackbar } = useSnackbar()
     const { assetId, groupUuid } = useParams()
     const scrollRef = useRef(null);
@@ -1571,18 +1571,23 @@ export default function ChecklistView() {
                                     <GenerateReportIcon /> Load Checklist
                                 </Button>
                             </Stack>
-                            <Stack>
-                                <Button
-                                    title="Click to export checklist for selected date"
-                                    size={'small'}
-                                    sx={{ textTransform: "capitalize", px: 2, gap: 1, borderRadius: '8px', backgroundColor: theme.palette.common.white, color: theme.palette.primary[600], fontSize: 16, fontWeight: 600, border: `1px solid ${theme.palette.primary[600]} `, boxShadow: 'none' }}
-                                    onClick={exportChecklist}
-                                    variant='outlined'
-                                >
-                                    <ExportIcon stroke={theme.palette.primary[600]} />
-                                    Export
-                                </Button>
-                            </Stack>
+                            {
+                                hasPermission('CHECKLIST_EXPORT') ?
+                                    <Stack>
+                                        <Button
+                                            title="Click to export checklist for selected date"
+                                            size={'small'}
+                                            sx={{ textTransform: "capitalize", px: 2, gap: 1, borderRadius: '8px', backgroundColor: theme.palette.common.white, color: theme.palette.primary[600], fontSize: 16, fontWeight: 600, border: `1px solid ${theme.palette.primary[600]} `, boxShadow: 'none' }}
+                                            onClick={exportChecklist}
+                                            variant='outlined'
+                                        >
+                                            <ExportIcon stroke={theme.palette.primary[600]} />
+                                            Export
+                                        </Button>
+                                    </Stack>
+                                    :
+                                    <></>
+                            }
                         </Stack>
                     </Stack>
                     {
@@ -1858,26 +1863,33 @@ export default function ChecklistView() {
                                                                                     {
                                                                                         asset?.is_view == 1 ?
                                                                                             <>
-                                                                                                <Button
-                                                                                                    size={'small'}
-                                                                                                    disabled={asset?.status == 'Approved' || asset?.status == '' ? true : false}
-                                                                                                    sx={{ cursor: asset?.status == 'Approved' || asset?.status == '' ? 'default' : 'pointer', textTransform: "capitalize", px: asset?.is_view == 0 ? 4 : 6, borderRadius: '4px', backgroundColor: asset?.status == 'Approved' || asset?.status == '' ? theme.palette.grey[300] : theme.palette.primary[600], color: asset?.status == 'Approved' || asset?.status == '' ? theme.palette.grey[600] : theme.palette.common.white, fontSize: 14, fontWeight: 500, borderColor: theme.palette.primary[600] }}
-                                                                                                    onClick={() => {
-                                                                                                        setOpenAssetApprovalPopup(true)
-                                                                                                        let objData = {
-                                                                                                            asset_id: asset?.asset_id,
-                                                                                                            title: `Approve ${asset?.asset_name} `,
-                                                                                                            text: `Are you sure you want to approve this asset ? This action cannot be undone.`
-                                                                                                        }
-                                                                                                        setCurrentAssetApprovalDetails(objData)
-                                                                                                    }}
-                                                                                                    variant='contained'
-                                                                                                >
-                                                                                                    {/* <AddIcon sx={{ color: 'white', fontSize: { xs: '20px', sm: '20px', md: '22px' } }} /> */}
-                                                                                                    Approve
-                                                                                                </Button>
                                                                                                 {
-                                                                                                    asset?.status !== 'Approved' ?
+                                                                                                    hasPermission('CHECKLIST_APPROVAL') ?
+                                                                                                        <>
+                                                                                                            <Button
+                                                                                                                size={'small'}
+                                                                                                                disabled={asset?.status == 'Approved' || asset?.status == '' ? true : false}
+                                                                                                                sx={{ cursor: asset?.status == 'Approved' || asset?.status == '' ? 'default' : 'pointer', textTransform: "capitalize", px: asset?.is_view == 0 ? 4 : 6, borderRadius: '4px', backgroundColor: asset?.status == 'Approved' || asset?.status == '' ? theme.palette.grey[300] : theme.palette.primary[600], color: asset?.status == 'Approved' || asset?.status == '' ? theme.palette.grey[600] : theme.palette.common.white, fontSize: 14, fontWeight: 500, borderColor: theme.palette.primary[600] }}
+                                                                                                                onClick={() => {
+                                                                                                                    setOpenAssetApprovalPopup(true)
+                                                                                                                    let objData = {
+                                                                                                                        asset_id: asset?.asset_id,
+                                                                                                                        title: `Approve ${asset?.asset_name} `,
+                                                                                                                        text: `Are you sure you want to approve this asset ? This action cannot be undone.`
+                                                                                                                    }
+                                                                                                                    setCurrentAssetApprovalDetails(objData)
+                                                                                                                }}
+                                                                                                                variant='contained'
+                                                                                                            >
+                                                                                                                Approve
+                                                                                                            </Button>
+                                                                                                        </>
+                                                                                                        :
+                                                                                                        <></>
+                                                                                                }
+
+                                                                                                {
+                                                                                                    asset?.status !== 'Approved' && hasPermission('CHECKLIST_UPDATE') ?
                                                                                                         <Button disabled={getEditModeCount()} sx={{ columnGap: 0.5, px: 2, border: getEditModeCount() ? `1px solid ${theme.palette.grey[300]} ` : `1px solid ${theme.palette.primary[600]} `, background: getEditModeCount() ? theme.palette.grey[300] : '', color: getEditModeCount() ? theme.palette.grey[600] : theme.palette.primary[600], textTransform: 'capitalize', borderRadius: '4px' }}
                                                                                                             onClick={() => {
                                                                                                                 // methods.reset()
@@ -1933,19 +1945,27 @@ export default function ChecklistView() {
                                                                                                     <CloseIcon stroke={theme.palette.primary[600]} size={10} />
                                                                                                     Cancel
                                                                                                 </Button>
-                                                                                                {loadingSubmit ?
-                                                                                                    <Button sx={{ backgroundColor: theme.palette.grey[300] }}>
-                                                                                                        <CircularProgress size={16} sx={{ color: theme.palette.grey[600] }} />
-                                                                                                    </Button>
-                                                                                                    :
-                                                                                                    <Button sx={{ columnGap: 0.5, px: 6, color: theme.palette.common.white, background: theme.palette.success[600], textTransform: 'capitalize', borderRadius: '4px' }}
-                                                                                                        onClick={() => {
-                                                                                                            methods.handleSubmit(onSubmit)()
-                                                                                                        }}
-                                                                                                    >
-                                                                                                        Save
-                                                                                                    </Button>
+                                                                                                {
+                                                                                                    hasPermission('CHECKLIST_UPDATE') ?
+                                                                                                        <>
+                                                                                                            {loadingSubmit ?
+                                                                                                                <Button sx={{ backgroundColor: theme.palette.grey[300] }}>
+                                                                                                                    <CircularProgress size={16} sx={{ color: theme.palette.grey[600] }} />
+                                                                                                                </Button>
+                                                                                                                :
+                                                                                                                <Button sx={{ columnGap: 0.5, px: 6, color: theme.palette.common.white, background: theme.palette.success[600], textTransform: 'capitalize', borderRadius: '4px' }}
+                                                                                                                    onClick={() => {
+                                                                                                                        methods.handleSubmit(onSubmit)()
+                                                                                                                    }}
+                                                                                                                >
+                                                                                                                    Save
+                                                                                                                </Button>
+                                                                                                            }
+                                                                                                        </>
+                                                                                                        :
+                                                                                                        <></>
                                                                                                 }
+
                                                                                             </>
                                                                                     }
                                                                                 </Stack>
