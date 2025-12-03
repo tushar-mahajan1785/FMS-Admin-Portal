@@ -84,20 +84,20 @@ export const sideMenuItems = [
     ],
   },
   {
-    group: "Documents",
+    group: "Document Management",
     icon: ReportsIcon,
     items: [
-      {
-        title: "Documents",
-        path: "/documents",
-        icon: CircleIcon,
-        permission: "DOCUMENT",
-      },
       {
         title: "Document Categories",
         path: "/document-categories",
         icon: CircleIcon,
         permission: "DOCUMENT_CATEGORIES",
+      },
+      {
+        title: "Documents",
+        path: "/documents",
+        icon: CircleIcon,
+        permission: "DOCUMENT",
       }
     ],
   },
