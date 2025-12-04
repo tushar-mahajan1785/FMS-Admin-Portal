@@ -51,7 +51,7 @@ export default function ProtectedLayout() {
   const isSMDown = useMediaQuery(theme.breakpoints.down('sm'))
 
   const drawerWidth = Settings.drawerWidth ?? 240;
-  const shift = open && isDesktop;
+  const shift = open && isDesktop && user?.type !== 'Technician';
   const [anchorEl, setAnchorEl] = useState(null);
   const [openLogoutConfirm, setOpenLogoutConfirm] = useState(false);
   const [openChangePasswordPopup, setOpenChangePasswordPopup] = useState(false);
@@ -134,9 +134,14 @@ export default function ProtectedLayout() {
           })}
         >
           <Toolbar sx={{ alignItems: 'center' }}>
-            <IconButton color="inherit" edge="start" onClick={toggleDrawer} sx={{ mr: 2 }}>
-              <MenuIcon color="primary" />
-            </IconButton>
+            {
+              user?.type !== 'Technician' ?
+                <IconButton color="inherit" edge="start" onClick={toggleDrawer} sx={{ mr: 2 }}>
+                  <MenuIcon color="primary" />
+                </IconButton>
+                :
+                <></>
+            }
 
             {/* Show logo in AppBar only when drawer is CLOSED (for desktop) */}
             {!shift && Settings?.logo && (
@@ -248,8 +253,14 @@ export default function ProtectedLayout() {
           </Toolbar>
         </AppBar>
 
-        {/* Sidebar Drawer */}
-        <Sidebar open={open} onClose={() => setOpen(false)} />
+        {
+          user?.type !== 'Technician' ?
+            <>{/* Sidebar Drawer */}
+              <Sidebar open={open} onClose={() => setOpen(false)} /></>
+            :
+            <></>
+        }
+
 
         {/* Main (slides with AppBar) */}
         <Box

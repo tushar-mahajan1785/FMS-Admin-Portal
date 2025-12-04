@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Routes, Route } from "react-router-dom";
 import ProtectedLayout from "./layout/auth";
 import NotFoundPage from "./pages/not-found";
@@ -8,10 +9,12 @@ import ProtectedRoute from "./components/layout/ProtectedRoute";
 import { useAuth } from "./hooks/useAuth";
 import { useEffect, useState } from "react";
 import adminRoutes from "./routes/admin-routes";
+import BottomNav from "./components/bottom-navbar";
 
 export default function App() {
   const { user } = useAuth()
   const [routes, setRoutes] = useState(adminRoutes || [])
+  const [value, setValue] = useState(0);
 
   /**
   * Get Routes as per Role type Technician or other
@@ -47,7 +50,15 @@ export default function App() {
           ))}
         {/* Catch-all non existing / wrong path */}
         <Route path="*" element={<NotFoundPage />} />
+
       </Routes>
+      {
+        user?.type == 'Technician' ?
+          <BottomNav value={value} onChange={setValue} />
+          :
+          <></>
+      }
+
     </Provider>
   );
 }

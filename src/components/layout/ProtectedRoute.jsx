@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 // import routes from "../../routes/admin-routes";
