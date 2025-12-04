@@ -1263,7 +1263,7 @@ export default function ChecklistView() {
                         <>
                             {isCurrentTimeInRange
                                 ? <CircleDashedIcon />
-                                : <CheckboxIcon stroke={theme.palette.primary[600]} size={24} />
+                                : <CheckboxIcon stroke={theme.palette.success[600]} size={24} />
                             }
                         </>
                     )}
@@ -1384,7 +1384,7 @@ export default function ChecklistView() {
                         <>
                             {isCurrentTimeInRange
                                 ? <CircleDashedIcon />
-                                : <CheckboxIcon stroke={theme.palette.primary[600]} size={24} />
+                                : <CheckboxIcon stroke={theme.palette.success[600]} size={24} />
                             }
                         </>
                     )}
@@ -1456,7 +1456,7 @@ export default function ChecklistView() {
                         <>
                             {isCurrentTimeInRange
                                 ? <CircleDashedIcon />
-                                : <CheckboxIcon size={24} />
+                                : <CheckboxIcon size={24} stroke={theme.palette.success[600]} />
                             }
                         </>
                     )}
