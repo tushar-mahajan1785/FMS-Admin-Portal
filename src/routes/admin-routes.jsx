@@ -166,13 +166,7 @@ const adminRoutes = [
     element: <Checklist />,
     permission: "CHECKLIST",
     protected: true,
-  },
-  {
-    path: "/",
-    element: <DashboardPage />,
-    permission: "DASHBOARD",
-    protected: true,
-  },
+  }
 ];
 
 export default adminRoutes;
