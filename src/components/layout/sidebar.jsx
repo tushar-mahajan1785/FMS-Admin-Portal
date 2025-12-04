@@ -1,5 +1,5 @@
 // components/Sidebar.jsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Box,
     Collapse,
@@ -19,19 +19,33 @@ import { sideMenuItems } from "../../layout/side-menu";
 import Settings from "../../config/settings";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import { useAuth } from "../../hooks/useAuth";
+import { sideMenuItemsTechnician } from "../../layout/side-menu-technician";
 
 export default function Sidebar({ open, onClose }) {
     const isDesktop = useMediaQuery("(min-width:900px)");
     const variant = isDesktop ? "persistent" : "temporary";
     const theme = useTheme()
-    const { hasPermission } = useAuth()
+    const { hasPermission, user } = useAuth()
     const drawerWidth = Settings.drawerWidth ?? 240;
+    const [getSideMenusArray, setGetSideMenusArray] = useState([])
 
     const [openGroups, setOpenGroups] = useState({});
 
     const toggleGroup = (group) => {
         setOpenGroups((prev) => ({ ...prev, [group]: !prev[group] }));
     };
+
+    /**
+     * Get Side Menus as per Role type Technician or other
+     */
+    useEffect(() => {
+        if (user?.type && user?.type !== null && user?.type == 'Technician') {
+            setGetSideMenusArray(sideMenuItemsTechnician)
+        } else {
+            setGetSideMenusArray(sideMenuItems)
+        }
+
+    }, [user?.type])
 
     return (
         <Drawer
@@ -54,7 +68,7 @@ export default function Sidebar({ open, onClose }) {
             <Divider />
 
             <List>
-                {sideMenuItems.map((menu, idx) => {
+                {getSideMenusArray?.map((menu, idx) => {
                     // --- Direct menu item ---
                     if (menu.path) {
                         const selected = location.pathname === menu.path;
