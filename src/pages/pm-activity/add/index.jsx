@@ -26,6 +26,7 @@ import {
   actionPMScheduleAdd,
   actionPMScheduleData,
   resetPmScheduleAddAssetResponse,
+  resetPmScheduleDataResponse,
 } from "../../../store/pm-activity";
 import PMActivityPreviewSetUp from "./components/pm-preview-setup";
 import moment from "moment";
@@ -70,6 +71,7 @@ export default function AddPMSchedule({ open, handleClose }) {
           message: pmScheduleAdd?.message,
           severity: "success",
         });
+        dispatch(resetPmScheduleDataResponse())
       } else {
         setLoading(false);
         switch (pmScheduleAdd?.status) {

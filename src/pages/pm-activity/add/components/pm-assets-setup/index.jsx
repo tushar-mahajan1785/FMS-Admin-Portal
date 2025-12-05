@@ -70,7 +70,14 @@ export default function PMActivityAssetSetUp() {
     control,
     reset,
     formState: { errors },
-  } = useFormContext();
+  } = useFormContext({
+    defaultValues: {
+      pm_activity_title: "",
+      frequency: "",
+      status: "",
+      schedule_start_date: "",
+    },
+  });
 
   /**
    * 🔹 Local States
