@@ -266,6 +266,7 @@ export default function RecentTicket() {
    */
   useEffect(() => {
     if (page !== null) {
+      setLoadingList(true)
       dispatch(actionTicketsList({
         type: 'recent',
         branch_uuid: branch?.currentBranch?.uuid,

@@ -20,6 +20,7 @@ import toast from "react-hot-toast";
 import { useAuth } from "../../hooks/useAuth";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useBranch } from "../../hooks/useBranch";
+import FullScreenLoader from "../../components/fullscreen-loader";
 
 export default function ConfigureShiftList() {
     const theme = useTheme()
@@ -54,10 +55,12 @@ export default function ConfigureShiftList() {
     });
 
     const [loading, setLoading] = useState(false)
+    const [loadingList, setLoadingList] = useState(false)
 
     // initial render
     useEffect(() => {
         if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null) {
+            setLoadingList(true)
             dispatch(actionConfigureShiftList({
                 branch_uuid: branch?.currentBranch?.uuid
             }))
@@ -74,8 +77,10 @@ export default function ConfigureShiftList() {
         if (configureShiftList && configureShiftList !== null) {
             dispatch(resetConfigureShiftListResponse())
             if (configureShiftList?.result === true) {
+                setLoadingList(false)
                 setValue('shift_configure', configureShiftList?.response)
             } else {
+                setLoadingList(false)
                 switch (configureShiftList?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -255,213 +260,217 @@ export default function ConfigureShiftList() {
                 >
                     <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
                         <DatePickerWrapper>
-                            {fields.map((item, index) => (
-                                <Box key={item.id}>
-                                    <Grid
-                                        container
-                                        spacing={2}
+                            {
+                                loadingList ? (
+                                    <FullScreenLoader open={true} />
+                                ) :
+                                    fields.map((item, index) => (
+                                        <Box key={item.id}>
+                                            <Grid
+                                                container
+                                                spacing={2}
 
-                                    >
-                                        <Grid
-                                            size={{ xs: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
-                                            sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', my: 4, marginBottom: 1, paddingRight: 1 }}
-                                        >
-                                            <TypographyComponent fontSize={18} fontWeight={watch(`shift_configure.${index}.is_active`) ? 600 : 400} sx={{ color: watch(`shift_configure.${index}.is_active`) ? theme.palette.grey[700] : theme.palette.grey[400] }}>
-                                                {`Shift # ${index + 1}`}
-                                            </TypographyComponent>
-                                        </Grid>
-                                        <Grid size={{ xs: 10, sm: 10, md: 10, lg: 10, xl: 10 }}>
-                                            <Grid container spacing={'24px'}>
-                                                {/* shift description */}
-                                                <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
-                                                    <Controller
-                                                        name={`shift_configure.${index}.shift_name`}
-                                                        control={control}
-                                                        rules={{
-                                                            required: watch(`shift_configure.${index}.is_active`) ? 'Shift Description is required' : false,
-                                                            maxLength: {
-                                                                value: 255,
-                                                                message: 'Maximum length is 255 characters'
-                                                            },
-                                                        }}
-                                                        render={({ field }) => (
-                                                            <CustomTextField
-                                                                {...field}
-                                                                fullWidth
-                                                                label={<FormLabel label={`Shift Description`} required={true} />}
-                                                                error={!!errors.shift_configure?.[index]?.shift_name}
-                                                                inputProps={{ maxLength: 255 }}
-                                                                disabled={!watch(`shift_configure.${index}.is_active`)}
-                                                                helperText={errors.shift_configure?.[index]?.shift_name?.message}
-                                                            />
-                                                        )}
-                                                    />
+                                            >
+                                                <Grid
+                                                    size={{ xs: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+                                                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', my: 4, marginBottom: 1, paddingRight: 1 }}
+                                                >
+                                                    <TypographyComponent fontSize={18} fontWeight={watch(`shift_configure.${index}.is_active`) ? 600 : 400} sx={{ color: watch(`shift_configure.${index}.is_active`) ? theme.palette.grey[700] : theme.palette.grey[400] }}>
+                                                        {`Shift # ${index + 1}`}
+                                                    </TypographyComponent>
                                                 </Grid>
-                                                {/* short name */}
-                                                <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
-                                                    <Controller
-                                                        name={`shift_configure.${index}.short_name`}
-                                                        control={control}
-                                                        rules={{
-                                                            required: watch(`shift_configure.${index}.is_active`) ? 'Short Name is required' : false,
-                                                            maxLength: {
-                                                                value: 255,
-                                                                message: 'Maximum length is 255 characters'
-                                                            },
-                                                        }}
-                                                        render={({ field }) => (
-                                                            <CustomTextField
-                                                                {...field}
-                                                                fullWidth
-                                                                label={<FormLabel label={`Short Name`} required={true} />}
-                                                                error={!!errors.shift_configure?.[index]?.short_name}
-                                                                inputProps={{ maxLength: 255 }}
-                                                                disabled={!watch(`shift_configure.${index}.is_active`)}
-                                                                helperText={errors.shift_configure?.[index]?.short_name?.message}
-                                                            />
-                                                        )}
-                                                    />
-                                                </Grid>
-                                                {/* start time */}
-                                                <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
-                                                    <Controller
-                                                        name={`shift_configure.${index}.start_time`}
-                                                        control={control}
-                                                        rules={{
-                                                            required: watch(`shift_configure.${index}.is_active`) ? "Please select Start Time" : false
-                                                        }}
-                                                        render={({ field }) => (
-                                                            <DatePicker
-                                                                id={`start_time_${index}`}
-                                                                showTimeSelect
-                                                                showTimeSelectOnly
-                                                                timeIntervals={15}
-                                                                timeCaption="Start Time"
-                                                                dateFormat="HH:mm"
-                                                                value={field.value}
-                                                                selected={field?.value ? moment(field.value, 'HH:mm').toDate() : null}
-                                                                onChange={(date) => {
-                                                                    const formattedTime = moment(date).format('HH:mm');
-                                                                    field.onChange(formattedTime);
+                                                <Grid size={{ xs: 10, sm: 10, md: 10, lg: 10, xl: 10 }}>
+                                                    <Grid container spacing={'24px'}>
+                                                        {/* shift description */}
+                                                        <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
+                                                            <Controller
+                                                                name={`shift_configure.${index}.shift_name`}
+                                                                control={control}
+                                                                rules={{
+                                                                    required: watch(`shift_configure.${index}.is_active`) ? 'Shift Description is required' : false,
+                                                                    maxLength: {
+                                                                        value: 255,
+                                                                        message: 'Maximum length is 255 characters'
+                                                                    },
                                                                 }}
-                                                                disabled={!watch(`shift_configure.${index}.is_active`)}
-                                                                customInput={
+                                                                render={({ field }) => (
                                                                     <CustomTextField
-                                                                        size="small"
+                                                                        {...field}
                                                                         fullWidth
-                                                                        label={<FormLabel label="Start Time" required={true} />}
-                                                                        InputProps={{
-                                                                            startAdornment: (
-                                                                                <InputAdornment position="start">
-                                                                                    <IconButton edge="start" onMouseDown={(e) => e.preventDefault()}>
-                                                                                        <ClockIcon />
-                                                                                    </IconButton>
-                                                                                </InputAdornment>
-                                                                            ),
-                                                                        }}
-                                                                        error={Boolean(errors.shift_configure?.[index]?.start_time)}
-                                                                        {...(errors.shift_configure?.[index]?.start_time && {
-                                                                            helperText: errors.shift_configure[index].start_time.message,
-                                                                        })}
+                                                                        label={<FormLabel label={`Shift Description`} required={true} />}
+                                                                        error={!!errors.shift_configure?.[index]?.shift_name}
+                                                                        inputProps={{ maxLength: 255 }}
+                                                                        disabled={!watch(`shift_configure.${index}.is_active`)}
+                                                                        helperText={errors.shift_configure?.[index]?.shift_name?.message}
                                                                     />
-                                                                }
+                                                                )}
                                                             />
-                                                        )}
-                                                    />
-                                                </Grid>
+                                                        </Grid>
+                                                        {/* short name */}
+                                                        <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
+                                                            <Controller
+                                                                name={`shift_configure.${index}.short_name`}
+                                                                control={control}
+                                                                rules={{
+                                                                    required: watch(`shift_configure.${index}.is_active`) ? 'Short Name is required' : false,
+                                                                    maxLength: {
+                                                                        value: 255,
+                                                                        message: 'Maximum length is 255 characters'
+                                                                    },
+                                                                }}
+                                                                render={({ field }) => (
+                                                                    <CustomTextField
+                                                                        {...field}
+                                                                        fullWidth
+                                                                        label={<FormLabel label={`Short Name`} required={true} />}
+                                                                        error={!!errors.shift_configure?.[index]?.short_name}
+                                                                        inputProps={{ maxLength: 255 }}
+                                                                        disabled={!watch(`shift_configure.${index}.is_active`)}
+                                                                        helperText={errors.shift_configure?.[index]?.short_name?.message}
+                                                                    />
+                                                                )}
+                                                            />
+                                                        </Grid>
+                                                        {/* start time */}
+                                                        <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
+                                                            <Controller
+                                                                name={`shift_configure.${index}.start_time`}
+                                                                control={control}
+                                                                rules={{
+                                                                    required: watch(`shift_configure.${index}.is_active`) ? "Please select Start Time" : false
+                                                                }}
+                                                                render={({ field }) => (
+                                                                    <DatePicker
+                                                                        id={`start_time_${index}`}
+                                                                        showTimeSelect
+                                                                        showTimeSelectOnly
+                                                                        timeIntervals={15}
+                                                                        timeCaption="Start Time"
+                                                                        dateFormat="HH:mm"
+                                                                        value={field.value}
+                                                                        selected={field?.value ? moment(field.value, 'HH:mm').toDate() : null}
+                                                                        onChange={(date) => {
+                                                                            const formattedTime = moment(date).format('HH:mm');
+                                                                            field.onChange(formattedTime);
+                                                                        }}
+                                                                        disabled={!watch(`shift_configure.${index}.is_active`)}
+                                                                        customInput={
+                                                                            <CustomTextField
+                                                                                size="small"
+                                                                                fullWidth
+                                                                                label={<FormLabel label="Start Time" required={true} />}
+                                                                                InputProps={{
+                                                                                    startAdornment: (
+                                                                                        <InputAdornment position="start">
+                                                                                            <IconButton edge="start" onMouseDown={(e) => e.preventDefault()}>
+                                                                                                <ClockIcon />
+                                                                                            </IconButton>
+                                                                                        </InputAdornment>
+                                                                                    ),
+                                                                                }}
+                                                                                error={Boolean(errors.shift_configure?.[index]?.start_time)}
+                                                                                {...(errors.shift_configure?.[index]?.start_time && {
+                                                                                    helperText: errors.shift_configure[index].start_time.message,
+                                                                                })}
+                                                                            />
+                                                                        }
+                                                                    />
+                                                                )}
+                                                            />
+                                                        </Grid>
 
-                                                {/* end time */}
-                                                <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
-                                                    <Controller
-                                                        name={`shift_configure.${index}.end_time`}
-                                                        control={control}
-                                                        rules={{
-                                                            required: watch(`shift_configure.${index}.is_active`) ? "Please select End Time" : false
-                                                        }}
-                                                        render={({ field }) => (
-                                                            <DatePicker
-                                                                id={`end_time_${index}`}
-                                                                showTimeSelect
-                                                                showTimeSelectOnly
-                                                                timeIntervals={15}
-                                                                timeCaption="End Time"
-                                                                dateFormat="HH:mm"
-                                                                value={field.value}
-                                                                selected={field?.value ? moment(field.value, 'HH:mm').toDate() : null}
-                                                                onChange={(date) => {
-                                                                    const formattedTime = moment(date).format('HH:mm');
-                                                                    field.onChange(formattedTime);
+                                                        {/* end time */}
+                                                        <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
+                                                            <Controller
+                                                                name={`shift_configure.${index}.end_time`}
+                                                                control={control}
+                                                                rules={{
+                                                                    required: watch(`shift_configure.${index}.is_active`) ? "Please select End Time" : false
                                                                 }}
-                                                                disabled={!watch(`shift_configure.${index}.is_active`)}
-                                                                customInput={
-                                                                    <CustomTextField
-                                                                        size="small"
-                                                                        fullWidth
-                                                                        label={<FormLabel label="End Time" required={true} />}
-                                                                        InputProps={{
-                                                                            startAdornment: (
-                                                                                <InputAdornment position="start">
-                                                                                    <IconButton edge="start" onMouseDown={(e) => e.preventDefault()}>
-                                                                                        <ClockIcon />
-                                                                                    </IconButton>
-                                                                                </InputAdornment>
-                                                                            ),
+                                                                render={({ field }) => (
+                                                                    <DatePicker
+                                                                        id={`end_time_${index}`}
+                                                                        showTimeSelect
+                                                                        showTimeSelectOnly
+                                                                        timeIntervals={15}
+                                                                        timeCaption="End Time"
+                                                                        dateFormat="HH:mm"
+                                                                        value={field.value}
+                                                                        selected={field?.value ? moment(field.value, 'HH:mm').toDate() : null}
+                                                                        onChange={(date) => {
+                                                                            const formattedTime = moment(date).format('HH:mm');
+                                                                            field.onChange(formattedTime);
                                                                         }}
-                                                                        error={Boolean(errors.shift_configure?.[index]?.end_time)}
-                                                                        {...(errors.shift_configure?.[index]?.end_time && {
-                                                                            helperText: errors.shift_configure[index].end_time.message,
-                                                                        })}
+                                                                        disabled={!watch(`shift_configure.${index}.is_active`)}
+                                                                        customInput={
+                                                                            <CustomTextField
+                                                                                size="small"
+                                                                                fullWidth
+                                                                                label={<FormLabel label="End Time" required={true} />}
+                                                                                InputProps={{
+                                                                                    startAdornment: (
+                                                                                        <InputAdornment position="start">
+                                                                                            <IconButton edge="start" onMouseDown={(e) => e.preventDefault()}>
+                                                                                                <ClockIcon />
+                                                                                            </IconButton>
+                                                                                        </InputAdornment>
+                                                                                    ),
+                                                                                }}
+                                                                                error={Boolean(errors.shift_configure?.[index]?.end_time)}
+                                                                                {...(errors.shift_configure?.[index]?.end_time && {
+                                                                                    helperText: errors.shift_configure[index].end_time.message,
+                                                                                })}
+                                                                            />
+                                                                        }
                                                                     />
-                                                                }
+                                                                )}
                                                             />
+                                                        </Grid>
+                                                    </Grid>
+                                                </Grid>
+                                                <Grid
+                                                    size={{ xs: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+                                                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', my: 4, marginBottom: 1, paddingRight: 1 }}
+                                                >
+                                                    <Stack direction="row">
+                                                        <Controller
+                                                            name={`shift_configure.${index}.is_active`}
+                                                            control={control}
+                                                            render={({ field: { value, onChange } }) => (
+                                                                <FormControlLabel
+                                                                    labelPlacement="end"
+                                                                    sx={{
+                                                                        m: 0,
+                                                                        gap: 1,
+                                                                        '.MuiTypography-root': { fontWeight: 500, fontSize: 14 },
+                                                                    }}
+                                                                    control={
+                                                                        <AntSwitch
+                                                                            checked={value}
+                                                                            onChange={(e) => onChange(e.target.checked)}
+                                                                        />
+                                                                    }
+                                                                />
+                                                            )}
+                                                        />
+                                                        {fields.length > 1 && (
+                                                            <IconButton
+                                                                onClick={() => {
+                                                                    remove(index)
+                                                                    if (item?.uuid && item?.uuid !== null) {
+                                                                        dispatch(actionDeleteConfigureShift({ uuid: item?.uuid }))
+                                                                    }
+                                                                }}
+                                                                color="error">
+                                                                <DeleteIcon fontSize="medium" />
+                                                            </IconButton>
                                                         )}
-                                                    />
+                                                    </Stack>
                                                 </Grid>
                                             </Grid>
-                                        </Grid>
-                                        <Grid
-                                            size={{ xs: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
-                                            sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', my: 4, marginBottom: 1, paddingRight: 1 }}
-                                        >
-                                            <Stack direction="row">
-                                                <Controller
-                                                    name={`shift_configure.${index}.is_active`}
-                                                    control={control}
-                                                    render={({ field: { value, onChange } }) => (
-                                                        <FormControlLabel
-                                                            labelPlacement="end"
-                                                            sx={{
-                                                                m: 0,
-                                                                gap: 1,
-                                                                '.MuiTypography-root': { fontWeight: 500, fontSize: 14 },
-                                                            }}
-                                                            control={
-                                                                <AntSwitch
-                                                                    checked={value}
-                                                                    onChange={(e) => onChange(e.target.checked)}
-                                                                />
-                                                            }
-                                                        />
-                                                    )}
-                                                />
-                                                {fields.length > 1 && (
-                                                    <IconButton
-                                                        onClick={() => {
-                                                            remove(index)
-                                                            if (item?.uuid && item?.uuid !== null) {
-                                                                dispatch(actionDeleteConfigureShift({ uuid: item?.uuid }))
-                                                            }
-                                                        }}
-                                                        color="error">
-                                                        <DeleteIcon fontSize="medium" />
-                                                    </IconButton>
-                                                )}
-                                            </Stack>
-                                        </Grid>
-                                    </Grid>
-                                    <Divider sx={{ my: isSMDown ? 4 : 2, mx: 2 }} />
-                                </Box>
-                            ))}
+                                            <Divider sx={{ my: isSMDown ? 4 : 2, mx: 2 }} />
+                                        </Box>
+                                    ))}
                         </DatePickerWrapper>
                     </form>
                 </Stack>

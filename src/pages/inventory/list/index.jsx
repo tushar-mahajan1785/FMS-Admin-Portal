@@ -268,6 +268,7 @@ export default function InventoryList() {
     // Initial Render
     useEffect(() => {
         if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && page && page !== null) {
+            setLoadingList(true)
             dispatch(actionInventoryList({
                 stock_status: selectedStatus,
                 branch_uuid: branch?.currentBranch?.uuid,

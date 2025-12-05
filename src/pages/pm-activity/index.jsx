@@ -339,6 +339,7 @@ export default function PmActivity() {
         setTotal(pmScheduleList?.response?.total_pm_schedules);
         setLoadingList(false);
       } else {
+        setLoadingList(false);
         setTotal(null);
         setPmScheduleActivityData([])
         setOriginalPmActivityScheduleData([])
@@ -384,6 +385,7 @@ export default function PmActivity() {
    */
   useEffect(() => {
     if (page !== null) {
+      setLoadingList(true)
       dispatch(
         actionPMScheduleList({
           page: page,
