@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect } from "react";
 import { useTheme } from "@emotion/react";
-import { Grid } from "@mui/material";
+import { Grid, Stack } from "@mui/material";
 // import { actionMasterCountryCodeList } from "../../store/vendor";
 
 export default function TechnicianDashboard() {
@@ -17,11 +17,11 @@ export default function TechnicianDashboard() {
 
     return (
         <React.Fragment>
-            <Grid container spacing={3} sx={{
+            <Stack sx={{
                 background: theme.palette.common.white, padding: 3, borderRadius: '12px', border: `1px solid ${theme.palette.grey[200]}`
-            }} flexDirection={'row'} width={'100%'} mt={3}>
+            }} flexDirection={'row'} width={'100%'}>
                 Technician Dashboard
-            </Grid>
+            </Stack>
         </React.Fragment>
     );
 }
