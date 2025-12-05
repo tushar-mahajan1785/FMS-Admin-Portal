@@ -726,12 +726,13 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
             {frequencyExceptionsData &&
               frequencyExceptionsData !== null &&
               frequencyExceptionsData?.length > 0 ? (
-              <Box sx={{ height: "330px", width: "100%" }}>
+              <Box sx={{ height: "450px", width: "100%" }}>
                 <ListComponents
                   rows={frequencyExceptionsData}
                   columns={columns}
                   isCheckbox={false}
                   hasPagination={false}
+                  pageSizes={12}
                   onChange={(selectedIds) => {
                     console.log("Selected row IDs in UsersList:", selectedIds);
                   }}

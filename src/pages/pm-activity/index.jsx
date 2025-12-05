@@ -51,6 +51,7 @@ import {
   resetPmScheduleListResponse,
   actionDeletePmActivity,
   resetDeletePmActivityResponse,
+  resetPmScheduleDataResponse,
 } from "../../store/pm-activity";
 import {
   actionMasterAssetType,
@@ -1002,6 +1003,7 @@ export default function PmActivity() {
       <AddPMSchedule
         open={openAddPmSchedule}
         handleClose={() => {
+          dispatch(resetPmScheduleDataResponse())
           setOpenAddPmSchedule(false);
           dispatch(
             actionPMScheduleList({

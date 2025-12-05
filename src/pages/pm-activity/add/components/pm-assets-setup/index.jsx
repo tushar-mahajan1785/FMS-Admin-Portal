@@ -95,28 +95,31 @@ export default function PMActivityAssetSetUp() {
    */
   useEffect(() => {
     if (branch?.currentBranch?.client_uuid) {
-      reset();
       dispatch(
         actionMasterAssetType({
           client_uuid: branch.currentBranch.client_uuid,
         })
       );
     }
+    return (() => {
+      reset();
+    })
   }, [branch?.currentBranch]);
 
   /**
    * 🔹 Fetch asset-type-wise list when asset type changes
    */
   useEffect(() => {
-    if (branch?.currentBranch?.uuid && pmScheduleData?.asset_type) {
+    if (branch?.currentBranch?.uuid !== null && pmScheduleData?.asset_type !== null && pmScheduleData?.asset_type_id !== null) {
       dispatch(
         actionAssetTypeWiseList({
-          branch_uuid: branch.currentBranch.uuid,
-          asset_type: pmScheduleData.asset_type,
+          branch_uuid: branch?.currentBranch?.uuid,
+          asset_type: pmScheduleData?.asset_type,
+          asset_type_id: pmScheduleData?.asset_type_id
         })
       );
     }
-  }, [branch?.currentBranch, pmScheduleData?.asset_type]);
+  }, [branch?.currentBranch, pmScheduleData?.asset_type, pmScheduleData?.asset_type_id]);
 
   /**
    * 🔹 Handle Master Asset Type Response
@@ -130,7 +133,7 @@ export default function PMActivityAssetSetUp() {
       if (masterAssetType?.response?.length > 0) {
         const firstAsset = masterAssetType.response[0];
         setValue("asset_type", firstAsset?.id);
-        const updated = { ...pmScheduleData, asset_type: firstAsset?.name };
+        const updated = { ...pmScheduleData, asset_type: firstAsset?.name, asset_type_id: firstAsset?.id  };
         dispatch(actionPMScheduleData(updated));
       }
     } else {
@@ -385,7 +388,7 @@ export default function PMActivityAssetSetUp() {
                               updatedAssets.push({
                                 asset_id: asset.id,
                                 asset_type: asset.type,
-                                asset_type_id: updated.asset_type_id,
+                                asset_type_id: asset.asset_type_id,
                                 asset_description: asset.asset_description,
                                 location: asset.location,
                                 frequency_exceptions: [], // Initialize empty frequency exceptions
