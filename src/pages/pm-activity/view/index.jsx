@@ -331,7 +331,7 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
             color = "grey";
             break;
           case "Completed":
-            color = "primary";
+            color = "success";
             break;
           case "On Hold":
             color = "warning";
