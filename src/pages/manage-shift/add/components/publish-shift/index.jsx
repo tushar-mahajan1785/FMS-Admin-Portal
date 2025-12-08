@@ -28,7 +28,11 @@ export default function PublishShiftTable({
                             </TypographyComponent>
                         </Grid>
 
-                        <Grid size={{ xs: 10, sm: 10, md: 10, lg: 10, xl: 10 }} container >
+                        <Grid 
+                        size={{ xs: 10, sm: 10, md: 10, lg: 10, xl: 10 }} 
+                        container
+                        sx={{ flexWrap: "nowrap" }}
+                         >
                             {daysToDisplay.map((day, dayIndex) => {
                                 const dateKey = moment(day).format("YYYY-MM-DD");
                                 const selectedShortName = emp.shift_selection?.[dateKey];

@@ -304,4 +304,13 @@ export const isFutureTimeRange = (from, to) => {
   return now.isBefore(start);
 };
 
+export const parseScheduleStartDate = (schedule) => {
+  if (!schedule) return null;
+
+  const [startPart] = schedule.split(" - ");
+  const currentYear = moment().year();
+
+  const parsed = moment(`${startPart} ${currentYear}`, "D MMM YYYY");
+  return parsed.isValid() ? parsed : null;
+};
 

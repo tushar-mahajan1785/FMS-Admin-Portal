@@ -6,7 +6,7 @@ import { useAuth } from "../../../hooks/useAuth";
 import DeleteIcon from "../../../assets/icons/DeleteIcon"
 import EditIcon from "../../../assets/icons/EditIcon"
 import moment from "moment";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import TypographyComponent from "../../../components/custom-typography";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import UploadIcon from "../../../assets/icons/UploadIcon";
@@ -25,6 +25,7 @@ import AlertCircleIcon from "../../../assets/icons/AlertCircleIcon"
 import * as XLSX from "xlsx-js-style";
 import HeaderDays from "../add/components/header-days";
 import PublishShiftTable from "../add/components/publish-shift";
+import { parseScheduleStartDate } from "../../../utils";
 
 export default function ManageShiftDetails({ open, objData, page, handleClose }) {
     const theme = useTheme()
@@ -40,7 +41,6 @@ export default function ManageShiftDetails({ open, objData, page, handleClose })
 
     // state
     const [currentWeekStart, setCurrentWeekStart] = useState(moment().startOf("week"));
-    // state
     const [openDeleteManageShiftPopup, setOpenDeleteManageShiftPopup] = useState(false)
     const [viewLoadingDelete, setViewLoadingDelete] = useState(false)
     const [openEditManageShiftPopup, setOpenEditManageShiftPopup] = useState(false)
@@ -139,6 +139,14 @@ export default function ManageShiftDetails({ open, objData, page, handleClose })
         setSearchQuery(value)
     }
 
+    useEffect(() => {
+        const startDate = parseScheduleStartDate(objData?.schedule);
+
+        if (startDate) {
+            setCurrentWeekStart(startDate.clone().startOf("week"));
+        }
+    }, [objData?.schedule]);
+
     const handlePreviousWeek = () => {
         setCurrentWeekStart((prev) => moment(prev).subtract(1, "week"));
     };
@@ -147,30 +155,29 @@ export default function ManageShiftDetails({ open, objData, page, handleClose })
         setCurrentWeekStart((prev) => moment(prev).add(1, "week"));
     };
 
-    const weekRangeText = `${currentWeekStart.format("D MMM")} - ${moment(currentWeekStart)
+    const weekRangeText = `${currentWeekStart.format("D MMM")} - ${currentWeekStart
+        .clone()
         .endOf("week")
         .format("D MMM")}`;
 
-    // Calculate full week days based on currentWeekStart
     const weekdays = Array.from({ length: 7 }, (_, i) =>
-        moment(currentWeekStart).add(i, "days")
+        currentWeekStart.clone().add(i, "days")
     );
 
-    // Example code typically found outside your provided JSX:
+    const currentMonthStart = useMemo(() => {
+        const startDate = parseScheduleStartDate(objData?.schedule);
+        return startDate ? startDate.clone().startOf("month") : moment().startOf("month");
+    }, [objData?.schedule]);
 
-    // 1. Get the current date object (e.g., from the application state)
-    const currentDate = moment();
-
-    // 2. Set currentMonthStart to the first day of that month
-    const currentMonthStart = currentDate.clone().startOf('month');
-
-    // 3. Define monthDays based on this start date
-    const monthDays = Array.from({ length: currentDate.daysInMonth() }, (_, i) =>
-        currentMonthStart.clone().add(i, "days")
+    const monthDays = Array.from(
+        { length: currentMonthStart.daysInMonth() },
+        (_, i) => currentMonthStart.clone().add(i, "days")
     );
 
-    // 💡 Determine which days array to use
-    const daysToDisplay = manageShiftDetailData?.schedule_type === 'WEEKLY' ? weekdays : monthDays;
+    const daysToDisplay =
+        manageShiftDetailData?.schedule_type === "WEEKLY"
+            ? weekdays
+            : monthDays;
 
     // 🎨 Define your color map
     const displayColorMap = {
@@ -263,9 +270,10 @@ export default function ManageShiftDetails({ open, objData, page, handleClose })
                                 <Tooltip title="Edit" followCursor placement="top">
                                     <IconButton
                                         onClick={() => {
-                                            let objData = Object.assign({}, manageShiftDetailData)
-                                            objData.formType = 'edit'
-                                            setViewManageShiftData(objData)
+                                            let input = Object.assign({}, manageShiftDetailData)
+                                            input.formType = 'edit'
+                                            input.schedule = objData?.schedule
+                                            setViewManageShiftData(input)
                                             setOpenEditManageShiftPopup(true)
                                         }}
                                     >
