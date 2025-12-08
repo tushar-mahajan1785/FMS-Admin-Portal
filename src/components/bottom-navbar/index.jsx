@@ -69,7 +69,7 @@ export default function BottomNav({ value, onChange }) {
 
             >
                 <BottomNavigationAction label="Dashboard"
-                    icon={<DashboardIcon size={24} strokeWidth={isSelected(0) ? 1.5 : 1.2} stroke={isSelected(0) ? theme.palette.primary[600] : theme.palette.grey[400]} />}
+                    icon={<DashboardIcon size={22} strokeWidth={isSelected(0) ? 1.5 : 1.2} stroke={isSelected(0) ? theme.palette.primary[600] : theme.palette.grey[400]} />}
                 />
                 <BottomNavigationAction label="Checklists"
                     icon={
@@ -82,12 +82,12 @@ export default function BottomNav({ value, onChange }) {
                                 height: 16,
                             }
                         }}>
-                            <ClipboardIcon size={24} strokeWidth={isSelected(1) ? 1.8 : 1.5} stroke={isSelected(1) ? theme.palette.primary[600] : theme.palette.grey[400]} />
+                            <ClipboardIcon size={22} strokeWidth={isSelected(1) ? 1.8 : 1.5} stroke={isSelected(1) ? theme.palette.primary[600] : theme.palette.grey[400]} />
                         </Badge>
                     }
                 />
                 <BottomNavigationAction label="Assets"
-                    icon={<BoxPackedIcon size={24} strokeWidth={isSelected(2) ? 1.8 : 1.5} stroke={isSelected(2) ? theme.palette.primary[600] : theme.palette.grey[400]} />}
+                    icon={<BoxPackedIcon size={22} strokeWidth={isSelected(2) ? 1.8 : 1.5} stroke={isSelected(2) ? theme.palette.primary[600] : theme.palette.grey[400]} />}
                 />
                 <BottomNavigationAction label="Tickets"
                     icon={
@@ -100,12 +100,12 @@ export default function BottomNav({ value, onChange }) {
                                 height: 16,
                             }
                         }}>
-                            <TechnicianTicketIcon strokeWidth={isSelected(3) ? 1.8 : 1.5} size={24} stroke={isSelected(3) ? theme.palette.primary[600] : theme.palette.grey[400]} />
+                            <TechnicianTicketIcon strokeWidth={isSelected(3) ? 1.8 : 1.5} size={22} stroke={isSelected(3) ? theme.palette.primary[600] : theme.palette.grey[400]} />
                         </Badge>
                     }
                 />
                 <BottomNavigationAction label="Profile"
-                    icon={<ProfileIcon size={24} strokeWidth={isSelected(4) ? 1.8 : 1.5} stroke={isSelected(4) ? theme.palette.primary[600] : theme.palette.grey[400]} />}
+                    icon={<ProfileIcon size={22} strokeWidth={isSelected(4) ? 1.8 : 1.5} stroke={isSelected(4) ? theme.palette.primary[600] : theme.palette.grey[400]} />}
                 />
             </BottomNavigation>
         </Paper>
