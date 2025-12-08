@@ -282,44 +282,56 @@ export default function PMActivityEdit({ open, handleClose, objData }) {
   };
 
   const onStep1Submit = (data) => {
-    let pmData = Object.assign({}, pmScheduleData);
-    let objData = {
-      title: data?.pm_activity_title,
-      frequency: data?.frequency,
-      schedule_start_date: data?.schedule_start_date && data?.schedule_start_date !== null ? moment(data?.schedule_start_date, "DD/MM/YYYY").format("YYYY-MM-DD") : null,
-      status: data?.status,
-      // is_active: data?.is_active,
-    };
-    pmData.pm_details = objData;
+    // 1. Clone current store data safely
+    let pmData = structuredClone(pmScheduleData || {});
 
-    // Generate frequency dates for each selected asset separately
-    if (data && data?.frequency && data?.schedule_start_date) {
-      const assetsWithGeneratedDates =
-        pmData?.assets && pmData?.assets !== null && pmData?.assets.length > 0
-          ? pmData?.assets?.map((asset) => ({
-            ...asset,
-            frequency_exceptions: generateFrequencyDates(
-              data.frequency,
-              data.schedule_start_date
-            ),
-          }))
-          : [];
-
-      pmData.assets = assetsWithGeneratedDates;
-    } else {
-      console.error("Missing frequency or start date in data:", data);
-      // Ensure each asset has empty frequency_exceptions
-      pmData.assets =
-        pmData?.assets && pmData?.assets !== null && pmData?.assets.length > 0
-          ? pmData?.assets?.map((asset) => ({
-            ...asset,
-          }))
-          : [];
+    // 2. If API data exists, merge it before submit
+    if (objData) {
+      pmData = {
+        ...pmData,
+        id: objData.id,
+        uuid: objData.uuid,
+        client_id: objData.client_id,
+        branch_id: objData.branch_id,
+        activity_title: objData.activity_title,
+        frequency: objData.frequency,
+        schedule_start_date: objData.schedule_start_date,
+        status: objData.status,
+        assets: objData.assets ?? [],
+      };
     }
 
-    pmData.is_active = 1; // Set to 1 for preview step
-    pmData.selected_asset_id = pmData?.assets[0]?.asset_id || 0;
-    // Dispatch the data to Redux store
+    // 3. Update PM basic details from form
+    pmData.pm_details = {
+      title: data?.pm_activity_title,
+      frequency: data?.frequency,
+      schedule_start_date: data?.schedule_start_date
+        ? moment(data.schedule_start_date, "DD/MM/YYYY").format("YYYY-MM-DD")
+        : null,
+      status: data?.status,
+    };
+
+    // 4. Update assets logic: API data wins, otherwise generate
+    pmData.assets = (pmData.assets || []).map((asset) => {
+      const hasApiDates =
+        Array.isArray(asset.frequency_exceptions) &&
+        asset.frequency_exceptions.length > 0;
+
+      return {
+        ...asset,
+        frequency_exceptions: hasApiDates
+          ? asset.frequency_exceptions
+          : generateFrequencyDates(
+            data?.frequency,
+            data?.schedule_start_date
+          ),
+      };
+    });
+
+    // 5. Final required flags
+    pmData.is_active = 1;
+    pmData.selected_asset_id = pmData?.assets?.[0]?.asset_id || 0;
+
     dispatch(actionPMScheduleData(pmData));
     setActiveStep(1);
   };
