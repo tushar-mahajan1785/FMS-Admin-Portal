@@ -330,6 +330,7 @@ export default function ReschedulePopup({
       dispatch(actionPMScheduleMarkDone(formData));
     } else if (selectedActivity?.type === "reschedule") {
       handleClose(data, "save");
+      reset()
     }
   };
 
