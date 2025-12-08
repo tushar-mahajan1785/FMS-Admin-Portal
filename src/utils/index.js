@@ -316,4 +316,57 @@ export const getInitials = (fullName) => {
   return parts.map(part => part.charAt(0)).join('').toUpperCase().substring(0, 2);
 };
 
+/**
+ * Get color for Asset Type
+ * @param {*} index 
+ * @returns 
+ */
+export const getColorAndBackgroundForAssetType = (index) => {
+  let color = {
+    color: '#7F56D9',
+    backgroundColor: '#F9F5FF'
+  };
 
+  switch (String(index)) {
+    case '0':
+      color = {
+        color: '#7F56D9',
+        backgroundColor: '#F9F5FF'
+      };
+      break;
+    case '1':
+      color = {
+        color: '#039855',
+        backgroundColor: '#ECFDF3'
+      };
+      break;
+    case '2':
+      color = {
+        color: '#1E88E5',
+        backgroundColor: '#E3F2FD'
+      };
+      break;
+    case '3':
+      color = {
+        color: '#DC6803',
+        backgroundColor: '#FFFCF5'
+      };
+      break;
+    case '4':
+      color = {
+        color: '#039BE5',
+        backgroundColor: '#E1F5FE'
+      };
+      break;
+    case '5':
+      color = {
+        color: '#FFB300',
+        backgroundColor: '#FFF8E1'
+      };
+      break;
+    default:
+      // Fallback to the initial defined color if something unexpected happens
+      break;
+  }
+  return color;
+};
