@@ -304,4 +304,16 @@ export const isFutureTimeRange = (from, to) => {
   return now.isBefore(start);
 };
 
+/**
+ * Function to get Initials
+ * @param {*} fullName 
+ * @returns 
+ */
+export const getInitials = (fullName) => {
+  if (!fullName) return '';
+  const parts = fullName.split(' ').filter(p => p.length > 0);
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return parts.map(part => part.charAt(0)).join('').toUpperCase().substring(0, 2);
+};
+
 

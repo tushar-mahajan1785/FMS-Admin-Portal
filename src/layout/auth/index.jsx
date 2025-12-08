@@ -136,14 +136,9 @@ export default function ProtectedLayout() {
                 })}
               >
                 <Toolbar sx={{ alignItems: 'center' }}>
-                  {
-                    user?.type !== 'Technician' ?
-                      <IconButton color="inherit" edge="start" onClick={toggleDrawer} sx={{ mr: 2 }}>
-                        <MenuIcon color="primary" />
-                      </IconButton>
-                      :
-                      <></>
-                  }
+                  <IconButton color="inherit" edge="start" onClick={toggleDrawer} sx={{ mr: 2 }}>
+                    <MenuIcon color="primary" />
+                  </IconButton>
 
                   {/* Show logo in AppBar only when drawer is CLOSED (for desktop) */}
                   {!shift && Settings?.logo && (
@@ -258,29 +253,29 @@ export default function ProtectedLayout() {
             :
             <></>
         }
-
         {
           user?.type !== 'Technician' ?
-            <>{/* Sidebar Drawer */}
-              <Sidebar open={open} onClose={() => setOpen(false)} /></>
+            <>
+              {/* Sidebar Drawer */}
+              <Sidebar open={open} onClose={() => setOpen(false)} />
+            </>
             :
             <></>
         }
-
 
         {/* Main (slides with AppBar) */}
         <Box
           component={'main'}
           sx={(theme) => ({
             backgroundColor: theme.palette.grey[50],
-            p: 3,
+            p: user?.type !== 'Technician' ? 3 : '16px',
             transition: theme.transitions.create("margin", {
               easing: theme.transitions.easing.sharp,
               duration: theme.transitions.duration.leavingScreen,
             }),
             ...(shift && { ml: `${drawerWidth}px` }),
             width: '100%',
-            // height: '100%',
+            height: '100%',
             overflow: 'hidden'
           })}
         >

@@ -1,9 +1,9 @@
 // routes.js
 import Checklist from "../pages/checklist";
 import LoginPage from "../pages/login";
-import Profile from "../pages/profile";
 import TechnicianAsset from "../pages/technician/assets";
 import TechnicianDashboard from "../pages/technician/dashboard";
+import { TechnicianProfile } from "../pages/technician/profile";
 
 const technicianRoutes = [
     {
@@ -13,7 +13,7 @@ const technicianRoutes = [
     },
     {
         path: "/profile",
-        element: <Profile />,
+        element: <TechnicianProfile />,
         permission: "profile",
         protected: true,
     },
