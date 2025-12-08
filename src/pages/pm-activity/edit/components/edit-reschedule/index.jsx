@@ -334,6 +334,7 @@ export default function ReschedulePopup({
       dispatch(actionPMScheduleMarkDone(formData));
     } else if (selectedActivity?.type === "reschedule") {
       handleClose(data, "save");
+      reset()
     }
   };
 
@@ -552,7 +553,7 @@ export default function ReschedulePopup({
                       control={control}
                       render={({ field }) => {
 
-                        const scheduledDate = selectedActivity?.frequency_data?.scheduled_date;
+                        const scheduledDate = selectedActivity?.frequency_data?.date;
                         const frequency = selectedActivity?.pm_details?.frequency;
 
                         const scheduledMoment = scheduledDate

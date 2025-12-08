@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     Drawer,
     Box,
@@ -48,6 +48,7 @@ import * as XLSX from "xlsx-js-style";
 import HeaderDays from "./components/header-days";
 import PreviewShiftTable from "./components/preview-shift";
 import PublishShiftTable from "./components/publish-shift";
+import { parseScheduleStartDate } from "../../../utils";
 
 export default function CreateShiftDrawer({ open, objData, handleClose }) {
     const theme = useTheme()
@@ -259,6 +260,14 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
         setSearchQuery(value)
     }
 
+    useEffect(() => {
+        const startDate = parseScheduleStartDate(objData?.schedule);
+
+        if (startDate) {
+            setCurrentWeekStart(startDate.clone().startOf("week"));
+        }
+    }, [objData?.schedule]);
+
     const handlePreviousWeek = () => {
         setCurrentWeekStart((prev) => moment(prev).subtract(1, "week"));
     };
@@ -269,27 +278,27 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
 
     // Calculate full week days based on currentWeekStart
     const weekdays = Array.from({ length: 7 }, (_, i) =>
-        moment(currentWeekStart).add(i, "days")
+        currentWeekStart.clone().add(i, "days")
     );
 
-    // Example code typically found outside your provided JSX:
+    const currentMonthStart = useMemo(() => {
+        const startDate = parseScheduleStartDate(objData?.schedule);
+        return startDate ? startDate.clone().startOf("month") : moment().startOf("month");
+    }, [objData?.schedule]);
 
-    // 1. Get the current date object (e.g., from the application state)
-    const currentDate = moment();
-
-    // 2. Set currentMonthStart to the first day of that month
-    const currentMonthStart = currentDate.clone().startOf('month');
-
-    // 3. Define monthDays based on this start date
-    const monthDays = Array.from({ length: currentDate.daysInMonth() }, (_, i) =>
-        currentMonthStart.clone().add(i, "days")
+    const monthDays = Array.from(
+        { length: currentMonthStart.daysInMonth() },
+        (_, i) => currentMonthStart.clone().add(i, "days")
     );
 
-    // 💡 Determine which days array to use
-    const daysToDisplay = rosterData?.schedule_type === 'WEEKLY' ? weekdays : monthDays;
+    const daysToDisplay =
+        rosterData?.schedule_type === "WEEKLY"
+            ? weekdays
+            : monthDays;
 
     // You might need a more compact header for monthly view due to space constraints, e.g., 'Days'
-    const weekRangeText = `${currentWeekStart.format("D MMM")} - ${moment(currentWeekStart)
+    const weekRangeText = `${currentWeekStart.format("D MMM")} - ${currentWeekStart
+        .clone()
         .endOf("week")
         .format("D MMM")}`;
 
@@ -366,6 +375,28 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
             hex = hex.split("").map(ch => ch + ch).join("");
         }
         return hex;
+    };
+
+    const getBaseScheduleDate = () => {
+        if (!objData?.schedule) {
+            return moment();
+        }
+
+        const [startPart, endPart] = objData.schedule.split(" - ");
+        const currentYear = moment().year();
+
+        // Parse start date
+        let startDate = moment(`${startPart} ${currentYear}`, "D MMM YYYY");
+
+        // Parse end date
+        let endDate = moment(`${endPart} ${currentYear}`, "D MMM YYYY");
+
+        // ✅ Handle year crossover like: "28 Dec - 3 Jan"
+        if (endDate.isBefore(startDate)) {
+            endDate.add(1, "year");
+        }
+
+        return startDate;
     };
 
     return (
@@ -826,17 +857,20 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                             variant="contained"
                             disabled={activePage === "Publish" && loading}
                             onClick={() => {
+                                const baseDate = getBaseScheduleDate();
+
                                 if (activePage === "Preview") {
-                                    // ✅ Determine days to check (Weekdays or Month days)
+
+                                    // ✅ Use schedule-based days
                                     const daysToCheck =
                                         rosterData?.schedule_type === "MONTHLY"
                                             ? Array.from(
-                                                { length: moment().daysInMonth() },
-                                                (_, i) => moment().startOf("month").add(i, "days")
+                                                { length: baseDate.daysInMonth() },
+                                                (_, i) => baseDate.clone().startOf("month").add(i, "days")
                                             )
                                             : weekdays;
 
-                                    // ✅ Validate all shifts
+                                    // ✅ Validate shifts
                                     const allValid = employeeShiftScheduleMasterOption.every(emp => {
                                         if (emp.status !== "Active") return true;
 
@@ -847,12 +881,13 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                                     });
 
                                     if (!allValid) {
-                                        const msg =
-                                            rosterData?.schedule_type === "MONTHLY"
-                                                ? "Please select shift for all month days before publishing."
-                                                : "Please select shift for all weekdays before publishing.";
-
-                                        showSnackbar({ message: msg, severity: "error" });
+                                        showSnackbar({
+                                            message:
+                                                rosterData?.schedule_type === "MONTHLY"
+                                                    ? "Please select shift for all month days before publishing."
+                                                    : "Please select shift for all weekdays before publishing.",
+                                            severity: "error",
+                                        });
                                         return;
                                     }
 
@@ -864,34 +899,35 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                                         return;
                                     }
 
-                                    // ✅ Proceed to Publish
                                     setActivePage("Publish");
                                 } else {
-                                    // ✅ Final Publish Action
-                                    let dateRange =
+                                    // ✅ Date range now based on schedule
+                                    const dateRange =
                                         rosterData?.schedule_type === "MONTHLY"
-                                            ? `${moment().startOf("month").format("D MMM")} - ${moment()
+                                            ? `${baseDate.clone().startOf("month").format("D MMM")} - ${baseDate
+                                                .clone()
                                                 .endOf("month")
                                                 .format("D MMM")}`
                                             : `${moment(weekdays[0]).format("D MMM")} - ${moment(
                                                 weekdays[weekdays.length - 1]
                                             ).format("D MMM")}`;
+
                                     let input = {
                                         branch_uuid: branch?.currentBranch?.uuid,
                                         shift_schedule: employeeShiftScheduleMasterOption,
                                         roster_group_id: rosterData?.roster_group_id,
                                         schedule_type: rosterData?.schedule_type,
-                                        schedule_date_range: dateRange
+                                        schedule_date_range: dateRange,
                                     };
 
-                                    let updated = { ...input };
                                     if (objData?.formType === "edit" && objData?.uuid) {
-                                        updated.uuid = objData?.uuid;
+                                        input.uuid = objData.uuid;
                                     }
 
-                                    dispatch(actionAddEmployeeShiftSchedule(updated));
+                                    dispatch(actionAddEmployeeShiftSchedule(input));
                                 }
                             }}
+
                         >
                             {activePage === "Preview" ? "Preview" : loading ? (
                                 <CircularProgress size={18} sx={{ color: "white" }} />

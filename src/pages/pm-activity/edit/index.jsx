@@ -37,6 +37,7 @@ import {
   resetPmScheduleEditResponse,
 } from "../../../store/pm-activity";
 import PMActivityPreviewSetUp from "./components/pm-preview-setup";
+import moment from "moment";
 
 export default function PMActivityEdit({ open, handleClose, objData }) {
   const theme = useTheme();
@@ -107,11 +108,17 @@ export default function PMActivityEdit({ open, handleClose, objData }) {
   // Handle next step (go to preview)
   const handleNext = () => {
     setActiveStep(1);
+    let objData = Object.assign({}, pmScheduleData)
+    objData.is_active = 1
+    dispatch(actionPMScheduleData(objData))
   };
 
   // Handle back step (go back to form)
   const handleBack = () => {
     setActiveStep(0);
+    let objData = Object.assign({}, pmScheduleData)
+    objData.is_active = 0
+    dispatch(actionPMScheduleData(objData))
   };
   // Helper function to format date as "2025-11-05"
   const formatDate = (date) => {
@@ -279,9 +286,9 @@ export default function PMActivityEdit({ open, handleClose, objData }) {
     let objData = {
       title: data?.pm_activity_title,
       frequency: data?.frequency,
-      schedule_start_date: data?.schedule_start_date,
+      schedule_start_date: data?.schedule_start_date && data?.schedule_start_date !== null ? moment(data?.schedule_start_date, "DD/MM/YYYY").format("YYYY-MM-DD") : null,
       status: data?.status,
-      is_active: data?.is_active,
+      // is_active: data?.is_active,
     };
     pmData.pm_details = objData;
 

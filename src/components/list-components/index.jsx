@@ -5,10 +5,10 @@ import { Box, Button, useTheme } from "@mui/material";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
-export default function ListComponents({ columns, rows, isCheckbox, onChange, height = 580, hasPagination = true }) {
+export default function ListComponents({ columns, rows, isCheckbox, onChange, height = 580, hasPagination = true, pageSizes = 10 }) {
     const theme = useTheme()
     const [page, setPage] = useState(1);
-    const pageSize = 10;
+    const pageSize = pageSizes;
 
     const totalPages = Math.ceil(rows.length / pageSize);
 

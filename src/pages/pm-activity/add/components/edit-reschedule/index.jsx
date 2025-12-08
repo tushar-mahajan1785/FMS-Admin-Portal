@@ -116,15 +116,10 @@ export default function ReschedulePopup({
       if (
         selectedActivity &&
         selectedActivity !== null &&
-        selectedActivity?.type === "reschedule"
+        selectedActivity?.type === "reschedule" &&
+        selectedActivity?.frequency_data?.scheduled_date && selectedActivity?.frequency_data?.scheduled_date !== null
       ) {
-        setValue(
-          "current_schedule_date",
-          moment(
-            selectedActivity?.frequency_data?.scheduled_date,
-            "YYYY-MM-DD"
-          ).format("DD/MM/YYYY")
-        );
+        setValue("current_schedule_date", moment(selectedActivity?.frequency_data?.scheduled_date, "YYYY-MM-DD").format("DD/MM/YYYY"));
       }
     }
   }, [selectedActivity, open]);
@@ -335,6 +330,7 @@ export default function ReschedulePopup({
       dispatch(actionPMScheduleMarkDone(formData));
     } else if (selectedActivity?.type === "reschedule") {
       handleClose(data, "save");
+      reset()
     }
   };
 
@@ -467,11 +463,8 @@ export default function ReschedulePopup({
                   fontWeight={500}
                   sx={{ color: theme.palette.grey[700] }}
                 >
-                  {selectedActivity?.frequency_data?.scheduled_date !== null &&
-                    moment(
-                      selectedActivity?.frequency_data?.scheduled_date,
-                      "YYYY-MM-DD"
-                    ).format("DD MMM YYYY")}
+                  {selectedActivity?.frequency_data?.scheduled_date && selectedActivity?.frequency_data?.scheduled_date !== null &&
+                    moment(selectedActivity?.frequency_data?.scheduled_date, "YYYY-MM-DD").format("DD MMM YYYY")}
                 </TypographyComponent>
               </Grid>
               <Grid size={{ xs: 6, sm: 6, md: 3, lg: 3, xl: 3 }}>

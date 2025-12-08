@@ -272,12 +272,6 @@ export default function PMActivityPreviewSetUp() {
     }
   }, [pmScheduleData?.is_active]);
 
-  // Format date for display (from "05-Nov-2025" to "05 Nov 2025")
-  const formatDisplayDate = (dateString) => {
-    if (!dateString) return "N/A";
-    return dateString.replace("-", " ").replace("-", " ");
-  };
-
   return (
     <React.Fragment>
       {/* Schedule Details */}
@@ -339,9 +333,7 @@ export default function PMActivityPreviewSetUp() {
             </Typography>
             <Typography fontSize={16} fontWeight={500}>
               {pmScheduleData?.pm_details?.schedule_start_date
-                ? formatDisplayDate(
-                  pmScheduleData.pm_details.schedule_start_date
-                )
+                ? moment(pmScheduleData.pm_details.schedule_start_date,"YYYY-MM-DD").format("DD MMM YYYY")
                 : "N/A"}
             </Typography>
           </Grid>
@@ -462,12 +454,13 @@ export default function PMActivityPreviewSetUp() {
       {frequencyExceptionsData &&
         frequencyExceptionsData !== null &&
         frequencyExceptionsData.length > 0 ? (
-        <Box sx={{ height: "330px", width: "100%" }}>
+        <Box sx={{ height: "450px", width: "100%" }}>
           <ListComponents
             rows={frequencyExceptionsData}
             columns={columns}
             isCheckbox={false}
             hasPagination={false}
+            pageSizes={12}
             onChange={(selectedIds) => {
               console.log("Selected row IDs in UsersList:", selectedIds);
             }}

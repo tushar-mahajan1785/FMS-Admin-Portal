@@ -26,8 +26,10 @@ import {
   actionPMScheduleAdd,
   actionPMScheduleData,
   resetPmScheduleAddAssetResponse,
+  resetPmScheduleDataResponse,
 } from "../../../store/pm-activity";
 import PMActivityPreviewSetUp from "./components/pm-preview-setup";
+import moment from "moment";
 
 export default function AddPMSchedule({ open, handleClose }) {
   const theme = useTheme();
@@ -51,7 +53,7 @@ export default function AddPMSchedule({ open, handleClose }) {
     },
   });
 
-  const { handleSubmit, reset } = methods;
+  const { handleSubmit, reset, setValue } = methods;
 
   //States
   const [loading, setLoading] = useState(false);
@@ -69,6 +71,7 @@ export default function AddPMSchedule({ open, handleClose }) {
           message: pmScheduleAdd?.message,
           severity: "success",
         });
+        dispatch(resetPmScheduleDataResponse())
       } else {
         setLoading(false);
         switch (pmScheduleAdd?.status) {
@@ -98,11 +101,17 @@ export default function AddPMSchedule({ open, handleClose }) {
   // Handle next step (go to preview)
   const handleNext = () => {
     setActiveStep(1);
+    let objData = Object.assign({}, pmScheduleData)
+    objData.is_active = 1
+    dispatch(actionPMScheduleData(objData))
   };
 
   // Handle back step (go back to form)
   const handleBack = () => {
     setActiveStep(0);
+    let objData = Object.assign({}, pmScheduleData)
+    objData.is_active = 0
+    dispatch(actionPMScheduleData(objData))
   };
   // Helper function to format date as "2025-11-05"
   const formatDate = (date) => {
@@ -265,6 +274,15 @@ export default function AddPMSchedule({ open, handleClose }) {
     return dates;
   };
 
+  useEffect(() => {
+    if (pmScheduleData?.pm_details && pmScheduleData?.pm_details !== null) {
+      setValue('pm_activity_title', pmScheduleData?.pm_details?.title)
+      setValue('frequency', pmScheduleData?.pm_details?.frequency)
+      setValue('schedule_start_date', moment(pmScheduleData?.pm_details?.schedule_start_date, "YYYY-MM-DD").format("DD/MM/YYYY"))
+      setValue('status', pmScheduleData?.pm_details?.status)
+    }
+  }, [pmScheduleData?.pm_details])
+
   const onStep1Submit = (data) => {
     // setLoading(true);
 
@@ -272,7 +290,7 @@ export default function AddPMSchedule({ open, handleClose }) {
     let objData = {
       title: data?.pm_activity_title,
       frequency: data?.frequency,
-      schedule_start_date: data?.schedule_start_date,
+      schedule_start_date: data?.schedule_start_date && data?.schedule_start_date !== null ? moment(data?.schedule_start_date, "DD/MM/YYYY").format("YYYY-MM-DD") : null,
       status: data?.status,
       is_active: data?.is_active,
     };

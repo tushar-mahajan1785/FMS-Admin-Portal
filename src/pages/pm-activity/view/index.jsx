@@ -31,7 +31,9 @@ import ReschedulePopup from "../add/components/edit-reschedule";
 import {
   actionPMScheduleData,
   actionPMScheduleDetails,
+  actionPMScheduleEdit,
   resetPmScheduleDetailsResponse,
+  resetPmScheduleEditResponse,
 } from "../../../store/pm-activity";
 import FormHeader from "../../../components/form-header";
 import TotalPMIcon from "../../../assets/icons/TotalPMIcon";
@@ -45,14 +47,16 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import ReportAnalyticsIcon from "../../../assets/icons/ReportAnalyticsIcon";
 import PMActivityViewReport from "./components/view-report";
 import ListComponents from "../../../components/list-components";
+import { useBranch } from "../../../hooks/useBranch";
 
 export default function PMActivityDetails({ open, objData, handleClose }) {
   const theme = useTheme();
   const dispatch = useDispatch();
+  const branch = useBranch()
   const { logout, hasPermission } = useAuth();
   const { showSnackbar } = useSnackbar();
 
-  const { pmScheduleData, pmScheduleDetails } = useSelector(
+  const { pmScheduleData, pmScheduleDetails, pmScheduleEdit } = useSelector(
     (state) => state.pmActivityStore
   );
 
@@ -144,6 +148,44 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
     setSelectedActivity(activityData);
     setRescheduleOpen(true);
   };
+
+  useEffect(() => {
+    if (pmScheduleEdit && pmScheduleEdit !== null) {
+      dispatch(resetPmScheduleEditResponse());
+      if (pmScheduleEdit?.result === true) {
+
+        showSnackbar({
+          message: pmScheduleEdit?.message,
+          severity: "success",
+        });
+        if (objData && objData !== null && objData?.uuid) {
+          dispatch(actionPMScheduleDetails({ uuid: objData?.uuid }));
+        }
+      } else {
+
+        switch (pmScheduleEdit?.status) {
+          case UNAUTHORIZED:
+            logout();
+            break;
+          case ERROR:
+            dispatch(resetPmScheduleEditResponse());
+            showSnackbar({
+              message: pmScheduleEdit?.message,
+              severity: "error",
+            });
+            break;
+          case SERVER_ERROR:
+            showSnackbar({
+              message: pmScheduleEdit?.message,
+              severity: "error",
+            });
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }, [pmScheduleEdit]);
 
   useEffect(() => {
     if (open === true) {
@@ -726,12 +768,13 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
             {frequencyExceptionsData &&
               frequencyExceptionsData !== null &&
               frequencyExceptionsData?.length > 0 ? (
-              <Box sx={{ height: "330px", width: "100%" }}>
+              <Box sx={{ height: "450px", width: "100%" }}>
                 <ListComponents
                   rows={frequencyExceptionsData}
                   columns={columns}
                   isCheckbox={false}
                   hasPagination={false}
+                  pageSizes={12}
                   onChange={(selectedIds) => {
                     console.log("Selected row IDs in UsersList:", selectedIds);
                   }}
@@ -799,10 +842,91 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
           <ReschedulePopup
             open={rescheduleOpen}
             selectedActivity={selectedActivity}
-            handleClose={(data) => {
+            handleClose={(data, type) => {
               setRescheduleOpen(false);
-              if (data == "save") {
-                dispatch(actionPMScheduleDetails({ uuid: objData?.uuid }));
+              if (type === "save") {
+                const newDate = data.new_date
+                  ? moment(data.new_date, "DD/MM/YYYY").format("YYYY-MM-DD")
+                  : null;
+
+                const remark = data.reason_for_reschedule || "";
+
+                /* ------------------------------
+                   1. Update frequencyExceptionsData
+                --------------------------------*/
+                const updatedFrequencyExceptionsData = frequencyExceptionsData.map((item) => {
+                  if (item.scheduled_date === selectedActivity?.frequency_data?.scheduled_date) {
+                    return {
+                      ...item,
+                      scheduled_date: newDate,
+                      ...(remark && { remark })
+                    };
+                  }
+                  return item;
+                });
+
+                setFrequencyExceptionsData(updatedFrequencyExceptionsData);
+
+                /* ------------------------------
+                   2. Update selectedActivity
+                --------------------------------*/
+                const updatedSelectedActivity = {
+                  ...selectedActivity,
+                  frequency_data: {
+                    ...selectedActivity.frequency_data,
+                    scheduled_date: newDate,
+                    ...(remark && { remark })
+                  },
+                  frequency_exceptions: selectedActivity.frequency_exceptions.map((item) => {
+                    if (item.scheduled_date === selectedActivity?.frequency_data?.scheduled_date) {
+                      return {
+                        ...item,
+                        scheduled_date: newDate,
+                        ...(remark && { remark })
+                      };
+                    }
+                    return item;
+                  })
+                };
+
+                setSelectedActivity(updatedSelectedActivity);
+
+                /* ------------------------------
+                   3. Update pmScheduleData
+                --------------------------------*/
+                const updatedPmScheduleData = {
+                  ...pmScheduleData,
+                  assets: pmScheduleData.assets.map((asset) => {
+                    if (asset.asset_id === selectedActivity.asset_id) {
+                      return {
+                        ...asset,
+                        frequency_exceptions: asset.frequency_exceptions.map((item) => {
+                          const updatedItem = {
+                            ...item,
+                            date: item.date || item.scheduled_date, // add date for all items
+                            reason_for_reschedule: item.reason_for_reschedule || item.remark
+                          };
+
+                          // only update the selected one
+                          if (item.scheduled_date === selectedActivity?.frequency_data?.scheduled_date) {
+                            updatedItem.date = newDate;
+                            updatedItem.reason_for_reschedule = remark;
+                          }
+
+                          return updatedItem;
+                        })
+                      };
+                    }
+                    return asset;
+                  })
+                };
+                let input = {
+                  branch_uuid: branch?.currentBranch?.uuid,
+                  pm_activity_details: updatedPmScheduleData?.pm_details,
+                  assets: updatedPmScheduleData?.assets,
+                  pm_activity_uuid: objData?.uuid,
+                };
+                dispatch(actionPMScheduleEdit(input));
               }
             }}
           />
