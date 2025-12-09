@@ -112,6 +112,7 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
       type: "markAsDone",
       client_id: pmScheduleActivityDetails?.client_id,
       pm_activity_id: pmScheduleActivityDetails?.id,
+      pm_activity_uuid: pmScheduleActivityDetails?.uuid,
       pm_details: {
         title: pmScheduleData?.selected_asset_id
           ? // Find the selected asset and get its description

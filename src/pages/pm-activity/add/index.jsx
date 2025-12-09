@@ -150,12 +150,12 @@ export default function AddPMSchedule({ open, handleClose }) {
     return {
       id: index,
       title: `${index}${ordinal} Activity Date`,
-      date: formattedDate,
+      scheduled_date: formattedDate,
       status: "Upcoming",
       completed_date: "",
       supervision_by: "",
       time: "",
-      additional_info: "",
+      remark: "",
     };
   };
 
@@ -275,13 +275,13 @@ export default function AddPMSchedule({ open, handleClose }) {
   };
 
   useEffect(() => {
-    if (pmScheduleData?.pm_details && pmScheduleData?.pm_details !== null) {
+    if (pmScheduleData?.pm_details && pmScheduleData?.pm_details !== null && pmScheduleData?.is_active !== null && pmScheduleData?.is_active === 1) {
       setValue('pm_activity_title', pmScheduleData?.pm_details?.title)
       setValue('frequency', pmScheduleData?.pm_details?.frequency)
       setValue('schedule_start_date', moment(pmScheduleData?.pm_details?.schedule_start_date, "YYYY-MM-DD").format("DD/MM/YYYY"))
       setValue('status', pmScheduleData?.pm_details?.status)
     }
-  }, [pmScheduleData?.pm_details])
+  }, [pmScheduleData?.pm_details, pmScheduleData?.is_active])
 
   const onStep1Submit = (data) => {
     // setLoading(true);

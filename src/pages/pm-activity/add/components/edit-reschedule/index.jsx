@@ -53,6 +53,7 @@ import { useBranch } from "../../../../../hooks/useBranch";
 import { useAuth } from "../../../../../hooks/useAuth";
 import SectionHeader from "../../../../../components/section-header";
 import {
+  actionPMScheduleDetails,
   actionPMScheduleMarkDone,
   resetPmScheduleMarkDoneResponse,
 } from "../../../../../store/pm-activity";
@@ -256,6 +257,10 @@ export default function ReschedulePopup({
         reset();
         handleClose("save");
         setLoading(false);
+        setArrUploadedFiles([])
+        if (selectedActivity && selectedActivity !== null && selectedActivity?.pm_activity_uuid) {
+          dispatch(actionPMScheduleDetails({ uuid: selectedActivity?.pm_activity_uuid }));
+        }
       } else {
         setLoading(false);
 

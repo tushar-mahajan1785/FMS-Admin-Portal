@@ -92,15 +92,15 @@ export default function PMActivityPreviewSetUp() {
       renderCell: (params) => {
         return (
           <Stack sx={{ height: "100%", justifyContent: "center" }}>
-            {params.row.date && params.row.date !== null ? (
+            {params.row.scheduled_date && params.row.scheduled_date !== null ? (
               <TypographyComponent
                 color={theme.palette.grey.primary}
                 fontSize={14}
                 fontWeight={400}
                 sx={{ py: "10px" }}
               >
-                {params.row.date && params.row.date !== null
-                  ? moment(params.row.date, "YYYY-MM-DD").format("DD MMM YYYY")
+                {params.row.scheduled_date && params.row.scheduled_date !== null
+                  ? moment(params.row.scheduled_date, "YYYY-MM-DD").format("DD MMM YYYY")
                   : ""}
               </TypographyComponent>
             ) : (
@@ -212,7 +212,7 @@ export default function PMActivityPreviewSetUp() {
     },
     {
       flex: 0.1,
-      field: "additional_info",
+      field: "remark",
       headerName: "Additional Information",
       editable: true,
     },
@@ -262,8 +262,8 @@ export default function PMActivityPreviewSetUp() {
         const assetData = pmScheduleData.assets.find((asset) => asset.asset_id === pmScheduleData.selected_asset_id);
         const frequencies = (assetData?.frequency_exceptions || []).map((objFrequency) => ({
           ...objFrequency,
-          date: objFrequency.scheduled_date,
-          additional_info: objFrequency.remark
+          scheduled_date: objFrequency.scheduled_date,
+          remark: objFrequency.remark
         }));
 
         setFrequencyExceptionsData(frequencies);
@@ -415,8 +415,8 @@ export default function PMActivityPreviewSetUp() {
                         let currentData = pmData?.assets[currentAssetIndex]?.frequency_exceptions
                         let frequencies = currentData.map((objFrequency) => ({
                           ...objFrequency,
-                          date: objFrequency.scheduled_date,
-                          additional_info: objFrequency.remark
+                          scheduled_date: objFrequency.scheduled_date,
+                          remark: objFrequency.remark
                         }));
 
                         if (currentAssetIndex > -1) {
@@ -497,8 +497,8 @@ export default function PMActivityPreviewSetUp() {
               if (item.scheduled_date === selectedActivity?.frequency_data?.scheduled_date) {
                 return {
                   ...item,
-                  date: newDate,
-                  additional_info: remark
+                  scheduled_date: newDate,
+                  remark: remark
                 };
               }
               return item;
@@ -513,7 +513,7 @@ export default function PMActivityPreviewSetUp() {
               ...selectedActivity,
               frequency_data: {
                 ...selectedActivity.frequency_data,
-                date: newDate,
+                scheduled_date: newDate,
                 ...(remark && { remark })
               },
               frequency_exceptions: selectedActivity.frequency_exceptions.map((item) => {
