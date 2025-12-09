@@ -2,7 +2,7 @@ import { Box, Card, Divider, Grid, Stack, useTheme } from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import { TechnicianNavbarHeader } from '../../../../components/technician/navbar-header'
 import TypographyComponent from '../../../../components/custom-typography'
-import { IMAGES_SCREEN_NO_DATA } from '../../../../constants'
+import { ERROR, IMAGES_SCREEN_NO_DATA, SERVER_ERROR, UNAUTHORIZED } from '../../../../constants'
 import EmptyContent from '../../../../components/empty_content'
 import { getColorAndBackgroundForAssetType, getPercentage } from '../../../../utils'
 import { StyledLinearProgress } from '../../../../components/common'
@@ -12,14 +12,82 @@ import AlertTriangleIcon from '../../../../assets/icons/AlertTriangleIcon'
 import CheckboxIcon from '../../../../assets/icons/CheckboxIcon'
 import ClockIcon from '../../../../assets/icons/ClockIcon'
 import FileXIcon from '../../../../assets/icons/FileXIcon'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
+import { useBranch } from '../../../../hooks/useBranch'
+import { useAuth } from '../../../../hooks/useAuth'
+import { useSnackbar } from '../../../../hooks/useSnackbar'
+import { actionTechnicianChecklistGroupList, resetTechnicianChecklistGroupListResponse } from '../../../../store/technician/checklist'
+import FullScreenLoader from '../../../../components/fullscreen-loader'
 
 export const ChecklistGroups = () => {
     const theme = useTheme()
     const navigate = useNavigate()
-    const [arrAssetTypesData, setArrAssetTypesData] = useState([])
+    const dispatch = useDispatch()
+    const branch = useBranch()
+    const { logout } = useAuth()
+    const { showSnackbar } = useSnackbar()
+    const { assetTypeId } = useParams()
+
+    const [arrChecklistGroupsData, setArrChecklistGroupsData] = useState([])
     const [loadingList, setLoadingList] = useState(false)
     const [getCurrentAssetGroup, setGetCurrentAssetGroup] = useState(null)
+
+    //Stores
+    const { technicianChecklistGroupList } = useSelector(state => state.technicianChecklistStore)
+
+    /**
+     * Initial call Checklist group list API
+     */
+    useEffect(() => {
+        if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && assetTypeId && assetTypeId !== null) {
+            setLoadingList(true)
+            dispatch(actionTechnicianChecklistGroupList({
+                branch_uuid: branch?.currentBranch?.uuid,
+                asset_type_id: assetTypeId
+            }))
+        }
+
+    }, [branch?.currentBranch?.uuid, assetTypeId])
+
+    /**
+       * useEffect
+       * @dependency : technicianChecklistGroupList
+       * @type : HANDLE API RESULT
+       * @description : Handle the result of checklist group List API
+      */
+    useEffect(() => {
+        if (technicianChecklistGroupList && technicianChecklistGroupList !== null) {
+            dispatch(resetTechnicianChecklistGroupListResponse())
+            if (technicianChecklistGroupList?.result === true) {
+                setGetCurrentAssetGroup(technicianChecklistGroupList?.response)
+                if (technicianChecklistGroupList?.response?.group_data && technicianChecklistGroupList?.response?.group_data !== null && technicianChecklistGroupList?.response?.group_data.length > 0) {
+                    setArrChecklistGroupsData(technicianChecklistGroupList?.response?.group_data)
+                } else {
+                    setArrChecklistGroupsData([])
+                }
+                setLoadingList(false)
+            } else {
+                setLoadingList(false)
+                // setGetCurrentAssetGroup(null)
+                // setArrChecklistGroupsData([])
+                switch (technicianChecklistGroupList?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetTechnicianChecklistGroupListResponse())
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: technicianChecklistGroupList?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [technicianChecklistGroupList])
+
     /**
     * Initial Render
     */
@@ -27,6 +95,7 @@ export const ChecklistGroups = () => {
         let data = [
             {
                 "id": 1,
+                "uuid": 'sdfghjk',
                 "asset_type_id": 1,
                 "title": "GF-BMS UPS Room-A",
                 "total_groups": 2,
@@ -40,6 +109,7 @@ export const ChecklistGroups = () => {
             },
             {
                 "id": 2,
+                "uuid": 'sdfg234hjk',
                 "asset_type_id": 2,
                 "title": "T2-L3 -BMS UPS Room-B",
                 "total_groups": 1,
@@ -53,6 +123,7 @@ export const ChecklistGroups = () => {
             },
             {
                 "id": 3,
+                "uuid": 'sdfghjk2222',
                 "asset_type_id": 3,
                 "title": "GF-Mechanical UPS Room-A",
                 "total_groups": 0,
@@ -66,6 +137,7 @@ export const ChecklistGroups = () => {
             },
             {
                 "id": 9,
+                "uuid": 'sdf345ghjk',
                 "asset_type_id": 9,
                 "title": "GF-Mechanical UPS Room-B",
                 "total_groups": 0,
@@ -96,7 +168,19 @@ export const ChecklistGroups = () => {
                 // icon_background: theme.palette.common.white,
             };
         }) : [];
-        setArrAssetTypesData(updatedAssetTypesData)
+        setArrChecklistGroupsData(updatedAssetTypesData)
+        setGetCurrentAssetGroup({
+            "asset_type_id": "1",
+            "title": "Electric",
+            "total_groups": 2,
+            "total_assets": 5,
+            "total_checklists": 36,
+            "total_completed": 15,
+            "total_overdue": 0,
+            "total_abnormal": 6,
+            "total_pending": 0,
+            "total_not_approved": 15,
+        })
     }, [])
 
 
@@ -115,15 +199,15 @@ export const ChecklistGroups = () => {
                 <Stack sx={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', px: 2 }}>
                     <Stack>
                         <TypographyComponent fontSize={16} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>Groups</TypographyComponent>
-                        <TypographyComponent fontSize={18} fontWeight={600} sx={{ color: theme.palette.grey[900] }}>{getCurrentAssetGroup?.total_groups && getCurrentAssetGroup?.total_groups !== null ? getCurrentAssetGroup?.total_groups : '0'}</TypographyComponent>
+                        <TypographyComponent fontSize={18} fontWeight={600} sx={{ color: theme.palette.grey[900] }}>{getCurrentAssetGroup?.total_groups && getCurrentAssetGroup?.total_groups !== null ? getCurrentAssetGroup?.total_groups.toString().padStart(2, "0") : '0'}</TypographyComponent>
                     </Stack>
                     <Stack>
                         <TypographyComponent fontSize={16} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>Assets</TypographyComponent>
-                        <TypographyComponent fontSize={18} fontWeight={600} sx={{ color: theme.palette.grey[900] }}>{getCurrentAssetGroup?.total_assets && getCurrentAssetGroup?.total_assets !== null ? getCurrentAssetGroup?.total_assets : '0'}</TypographyComponent>
+                        <TypographyComponent fontSize={18} fontWeight={600} sx={{ color: theme.palette.grey[900] }}>{getCurrentAssetGroup?.total_assets && getCurrentAssetGroup?.total_assets !== null ? getCurrentAssetGroup?.total_assets.toString().padStart(2, "0") : '0'}</TypographyComponent>
                     </Stack>
                     <Stack>
                         <TypographyComponent fontSize={16} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>Checklists</TypographyComponent>
-                        <TypographyComponent fontSize={18} fontWeight={600} sx={{ color: theme.palette.grey[900] }}>{getCurrentAssetGroup?.total_checklists && getCurrentAssetGroup?.total_checklists !== null ? getCurrentAssetGroup?.total_checklists : '0'}</TypographyComponent>
+                        <TypographyComponent fontSize={18} fontWeight={600} sx={{ color: theme.palette.grey[900] }}>{getCurrentAssetGroup?.total_checklists && getCurrentAssetGroup?.total_checklists !== null ? getCurrentAssetGroup?.total_checklists.toString().padStart(2, "0") : '0'}</TypographyComponent>
                     </Stack>
                 </Stack>
                 <Divider sx={{ my: 1 }} />
@@ -166,8 +250,8 @@ export const ChecklistGroups = () => {
                 <Grid container spacing={2}>
                     {loadingList ? (
                         <FullScreenLoader open={true} />
-                    ) : arrAssetTypesData && arrAssetTypesData !== null && arrAssetTypesData?.length > 0 ?
-                        arrAssetTypesData?.map((objAsset, index) => (
+                    ) : arrChecklistGroupsData && arrChecklistGroupsData !== null && arrChecklistGroupsData?.length > 0 ?
+                        arrChecklistGroupsData?.map((objAsset, index) => (
                             <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 4 }} key={`${objAsset?.id}-${index}`}>
                                 <Card
                                     sx={{
@@ -183,7 +267,7 @@ export const ChecklistGroups = () => {
                                         boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
                                     }}
                                     onClick={() => {
-                                        navigate(`select-assets/${objAsset?.id}`)
+                                        navigate(`select-assets/${objAsset?.group_uuid}`)
                                     }}
                                 >
                                     <Stack direction="row" justifyContent={'space-between'} alignItems="center" sx={{ width: '100%' }}>
@@ -191,7 +275,7 @@ export const ChecklistGroups = () => {
 
                                             <Box>
                                                 <TypographyComponent fontSize={18} fontWeight={500}>
-                                                    {objAsset?.title}
+                                                    {objAsset?.group_name}
                                                 </TypographyComponent>
 
                                             </Box>
@@ -220,7 +304,7 @@ export const ChecklistGroups = () => {
                                             </Box>
                                         </Stack>
                                         <Stack flexDirection={'row'} sx={{ gap: '12px', marginTop: 1.5 }}>
-                                            <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>{objAsset?.total_groups && objAsset?.total_groups !== null ? objAsset?.total_groups.toString().padStart(2, "0") : 0} Assets</TypographyComponent>
+                                            <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>{objAsset?.total_assets && objAsset?.total_assets !== null ? objAsset?.total_assets.toString().padStart(2, "0") : 0} Assets</TypographyComponent>
                                             <Stack sx={{ alignItems: 'center', justifyContent: 'center' }}>
                                                 <Stack sx={{ background: theme.palette.common.black, height: '4px', width: '4px', borderRadius: '5px', alignItems: 'center' }}></Stack>
                                             </Stack>

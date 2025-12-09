@@ -1,4 +1,3 @@
-import React from 'react'
 import { TechnicianNavbarHeader } from '../../../components/technician/navbar-header'
 import { Stack, useTheme } from '@mui/material'
 import ChevronLeftIcon from '../../../assets/icons/ChevronLeft'

@@ -5,6 +5,7 @@ import { Box, Button, Chip, Divider, Grid, Stack } from "@mui/material";
 import { TechnicianNavbarHeader } from "../../../components/technician/navbar-header";
 import TypographyComponent from "../../../components/custom-typography";
 import { getInitials } from "../../../utils";
+import BottomNav from "../../../components/bottom-navbar";
 
 export default function TechnicianDashboard() {
     const theme = useTheme()

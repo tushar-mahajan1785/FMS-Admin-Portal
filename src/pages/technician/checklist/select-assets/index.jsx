@@ -10,10 +10,7 @@ import QRScanner from '../../../../components/qr-scanner'
 export const ChecklistSelectAsset = () => {
     const theme = useTheme()
     const navigate = useNavigate()
-    const { assetId, assetTypeId } = useParams()
-
-    console.log('-------assetId--------', assetId)
-    console.log('-------assetTypeId--------', assetTypeId)
+    const { assetTypeId } = useParams()
 
     const [screenType, setScreenType] = useState(null)
     const [assetsList, setAssetsList] = useState([])
@@ -23,57 +20,21 @@ export const ChecklistSelectAsset = () => {
         setAssetsList([
             {
                 id: 1,
-                title: 'GF-BMS UPS Room-A No.1'
-            },
-            {
-                id: 2,
-                title: 'GF-BMS UPS Room-A No.2'
-            },
-            {
-                id: 3,
-                title: 'GF-BMS UPS Room-A No.3'
+                title: "Battery Monitoring system"
             },
             {
                 id: 4,
-                title: 'GF-BMS UPS Room-A No.4'
+                title: " MBC (Miniature Circuit Breaker)"
             },
             {
-                id: 1,
-                title: 'GF-BMS UPS Room-A No.1'
-            },
-            {
-                id: 2,
-                title: 'GF-BMS UPS Room-A No.2'
-            },
-            {
-                id: 3,
-                title: 'GF-BMS UPS Room-A No.3'
-            },
-            {
-                id: 4,
-                title: 'GF-BMS UPS Room-A No.4'
-            },
-            {
-                id: 1,
-                title: 'GF-BMS UPS Room-A No.1'
-            },
-            {
-                id: 2,
-                title: 'GF-BMS UPS Room-A No.2'
-            },
-            {
-                id: 3,
-                title: 'GF-BMS UPS Room-A No.3'
-            },
-            {
-                id: 4,
-                title: 'GF-BMS UPS Room-A No.4'
-            },
+                id: 9,
+                title: "Electric vehicles (EVs)"
+            }
         ])
     }, [])
 
     return (
-        <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+        <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
 
             {/* HEADER */}
             {screenType === "qr-scan" ? (
@@ -114,7 +75,7 @@ export const ChecklistSelectAsset = () => {
                     flexGrow: 1,
                     overflowY: "auto",
                     // p: 1,
-                    pb: "100px", // space so content does not hide behind button
+                    pb: "10px", // space so content does not hide behind button
                     rowGap: 2
                 }}
             >
@@ -131,7 +92,7 @@ export const ChecklistSelectAsset = () => {
                 ) : (
                     <Stack
                         sx={{
-                            height: '450px',
+                            // height: '500px',
                             overflowY: "auto",
                             borderRadius: "4px",
                             background: theme.palette.common.white,
@@ -144,6 +105,9 @@ export const ChecklistSelectAsset = () => {
                                 sx={{
                                     py: "16px",
                                     borderBottom: index < assetsList.length - 1 ? `1px solid ${theme.palette.grey[100]}` : 'none',
+                                }}
+                                onClick={() => {
+                                    navigate(`select-time/${item?.id}`)
                                 }}
                             >
                                 <TypographyComponent fontSize={18} fontWeight={500}>
@@ -159,14 +123,15 @@ export const ChecklistSelectAsset = () => {
             <Box
                 sx={{
                     position: "fixed",
-                    bottom: 20,
+                    bottom: 0,
                     left: 0,
                     width: "100%",
                     display: "flex",
                     justifyContent: "center",
-                    px: 2,
-                    zIndex: 100,
-                    paddingBottom: 8
+                    background: theme.palette.grey[50],
+                    p: 2,
+                    // zIndex: 100,
+                    // paddingBottom: 8
                 }}
             >
                 <Button

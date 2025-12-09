@@ -2,19 +2,117 @@ import { Box, Card, Divider, Grid, Stack, useTheme } from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import { TechnicianNavbarHeader } from '../../../../components/technician/navbar-header'
 import TypographyComponent from '../../../../components/custom-typography'
-import { IMAGES_SCREEN_NO_DATA } from '../../../../constants'
+import { ERROR, IMAGES_SCREEN_NO_DATA, SERVER_ERROR, UNAUTHORIZED } from '../../../../constants'
 import EmptyContent from '../../../../components/empty_content'
 import { getColorAndBackgroundForAssetType, getPercentage } from '../../../../utils'
 import { StyledLinearProgress } from '../../../../components/common'
 import AssetIcon from '../../../../assets/icons/AssetIcon'
 import { useNavigate } from 'react-router-dom'
+import BottomNav from '../../../../components/bottom-navbar'
+import { useDispatch, useSelector } from 'react-redux'
+import { actionTechnicianChecklistAssetTypeList, resetTechnicianChecklistAssetTypeListResponse } from '../../../../store/technician/checklist'
+import { useBranch } from '../../../../hooks/useBranch'
+import { useAuth } from '../../../../hooks/useAuth'
+import { useSnackbar } from '../../../../hooks/useSnackbar'
+import FullScreenLoader from '../../../../components/fullscreen-loader'
 
 export const AssetTypesChecklist = () => {
     const theme = useTheme()
+    const dispatch = useDispatch()
     const navigate = useNavigate()
+    const branch = useBranch()
+    const { logout } = useAuth()
+    const { showSnackbar } = useSnackbar()
+
     const [overviewChecklists, setOverviewChecklists] = useState([])
     const [arrAssetTypesData, setArrAssetTypesData] = useState([])
     const [loadingList, setLoadingList] = useState(false)
+
+    //Stores
+    const { technicianChecklistAssetTypeList } = useSelector(state => state.technicianChecklistStore)
+
+    /**
+     * Initial call Asset type list API
+     */
+    useEffect(() => {
+        if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null) {
+            setLoadingList(true)
+            dispatch(actionTechnicianChecklistAssetTypeList({
+                branch_uuid: branch?.currentBranch?.uuid
+            }))
+        }
+    }, [branch?.currentBranch?.uuid])
+
+    /**
+      * useEffect
+      * @dependency : technicianChecklistAssetTypeList
+      * @type : HANDLE API RESULT
+      * @description : Handle the result of inventory category List API
+     */
+    useEffect(() => {
+        if (technicianChecklistAssetTypeList && technicianChecklistAssetTypeList !== null) {
+            dispatch(resetTechnicianChecklistAssetTypeListResponse())
+            if (technicianChecklistAssetTypeList?.result === true) {
+
+                // Use map to iterate through the array and assign colors
+                const updatedAssetTypesData = technicianChecklistAssetTypeList?.response?.asset_types && technicianChecklistAssetTypeList?.response?.asset_types !== null && technicianChecklistAssetTypeList?.response?.asset_types?.length > 0 ? technicianChecklistAssetTypeList?.response?.asset_types?.map((asset, index) => {
+                    // 1. Calculate the cyclic index (0, 1, 2, 3, 4, 5, 0, 1, ...)
+                    const colorIndex = index % 10;
+
+                    // 2. Get the color object for the cyclic index
+                    const colors = getColorAndBackgroundForAssetType(String(colorIndex));
+
+                    // 3. Return the updated asset object with the new colors
+                    return {
+                        ...asset,
+                        background_color: colors.backgroundColor,
+                        border_color: theme.palette.common.white,
+                        icon_color: theme.palette.common.white,
+                        icon_background: colors.color,
+                    };
+                }) : [];
+                setArrAssetTypesData(updatedAssetTypesData)
+
+                let objData = technicianChecklistAssetTypeList?.response?.overall_totals
+                setOverviewChecklists(prevArr =>
+                    prevArr.map(item => ({
+                        ...item,
+                        count: objData[item.key] !== undefined ? objData[item.key] : 0
+                    }))
+                );
+
+                setLoadingList(false)
+            } else {
+                setLoadingList(false)
+                setArrAssetTypesData([])
+                let objData = {
+                    pending_count: 0,
+                    missing_count: 0,
+                    completed_count: 0
+                }
+                setOverviewChecklists(prevArr =>
+                    prevArr.map(item => ({
+                        ...item,
+                        count: objData[item.key] !== undefined ? objData[item.key] : 0
+                    }))
+                );
+                switch (technicianChecklistAssetTypeList?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetTechnicianChecklistAssetTypeListResponse())
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: technicianChecklistAssetTypeList?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [technicianChecklistAssetTypeList])
+
     /**
     * Initial Render
     */
@@ -22,15 +120,18 @@ export const AssetTypesChecklist = () => {
         setOverviewChecklists([
             {
                 title: "Pending",
-                count: 3
+                count: 3,
+                key: 'pending_count'
             },
             {
                 title: "Missed",
-                count: 0
+                count: 0,
+                key: 'missing_count'
             },
             {
                 title: "Completed",
-                count: 12
+                count: 12,
+                key: 'completed_count'
             }
         ])
         let data = [
@@ -214,7 +315,6 @@ export const AssetTypesChecklist = () => {
                     }
                 </Grid>
             </Stack>
-
         </Stack >
     )
 }

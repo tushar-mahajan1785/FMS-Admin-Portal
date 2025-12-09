@@ -8,7 +8,7 @@ import BottomNav from "../../../../components/bottom-navbar";
 export default function TechnicianAssetList() {
     const theme = useTheme()
     const [getAssetList, setGetAssetList] = useState([])
-    // const [value, setValue] = useState(0);
+    const [value, setValue] = useState(2);
 
     useEffect(() => {
         setGetAssetList([
@@ -238,7 +238,7 @@ export default function TechnicianAssetList() {
                         <></>
                 }
             </Stack>
-            {/* <BottomNav value={value} onChange={setValue} /> */}
+            <BottomNav value={value} onChange={setValue} />
         </React.Fragment>
     )
 }
