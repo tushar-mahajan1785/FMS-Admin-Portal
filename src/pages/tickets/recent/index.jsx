@@ -403,7 +403,7 @@ export default function RecentTicket() {
                 <TypographyComponent fontSize={18} fontWeight={500} sx={{ color: theme.palette.grey[700] }}>Recent Tickets</TypographyComponent>
               </Stack>
               <Chip
-                label={`${total.toString().padStart(2, "0")} Tickets`}
+                label={recentTicketsData && recentTicketsData !== null && recentTicketsData?.length > 0 ? `${recentTicketsData?.length.toString().padStart(2, "0")} Tickets` : '0 Tickets'}
                 size="small"
                 sx={{ bgcolor: theme.palette.primary[50], color: theme.palette.primary[600], fontSize: 14, fontWeight: 500 }}
               />

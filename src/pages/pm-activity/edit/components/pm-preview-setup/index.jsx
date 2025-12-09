@@ -541,15 +541,13 @@ export default function PMActivityPreviewSetUp() {
                     ...asset,
                     frequency_exceptions: asset.frequency_exceptions.map((item) => {
                       const updatedItem = {
-                        ...item,
-                        date: item.date || item.scheduled_date, // add date for all items
-                        reason_for_reschedule: item.reason_for_reschedule || item.remark
+                        ...item
                       };
 
                       // only update the selected one
                       if (item.scheduled_date === selectedActivity?.frequency_data?.scheduled_date) {
-                        updatedItem.date = newDate;
-                        updatedItem.reason_for_reschedule = remark;
+                        updatedItem.scheduled_date = newDate;
+                        updatedItem.remark = remark;
                       }
 
                       return updatedItem;
