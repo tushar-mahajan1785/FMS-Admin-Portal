@@ -150,12 +150,12 @@ export default function AddPMSchedule({ open, handleClose }) {
     return {
       id: index,
       title: `${index}${ordinal} Activity Date`,
-      date: formattedDate,
+      scheduled_date: formattedDate,
       status: "Upcoming",
       completed_date: "",
       supervision_by: "",
       time: "",
-      additional_info: "",
+      remark: "",
     };
   };
 

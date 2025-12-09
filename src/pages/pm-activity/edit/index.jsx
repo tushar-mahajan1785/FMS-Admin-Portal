@@ -157,12 +157,12 @@ export default function PMActivityEdit({ open, handleClose, objData }) {
     return {
       id: index,
       title: `${index}${ordinal} Activity Date`,
-      date: formattedDate,
+      scheduled_date: formattedDate,
       status: "Upcoming",
       completed_date: "",
       supervision_by: "",
       time: "",
-      additional_info: "",
+      remark: "",
     };
   };
 
