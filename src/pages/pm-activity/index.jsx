@@ -135,6 +135,7 @@ export default function PmActivity() {
               setOpenPmActivityDetails(true);
               let objData = {
                 uuid: params.row.uuid,
+                id: params.row.id
               };
               setPmScheduleActivityData(objData);
             }}

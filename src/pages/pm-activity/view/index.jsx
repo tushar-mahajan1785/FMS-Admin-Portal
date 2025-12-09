@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
-  Card,
   Divider,
   Drawer,
   Grid,
@@ -14,8 +13,6 @@ import {
   useTheme,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
-
-import { DataGrid } from "@mui/x-data-grid";
 import moment from "moment/moment";
 import TypographyComponent from "../../../components/custom-typography";
 import EmptyContent from "../../../components/empty_content";
@@ -31,9 +28,9 @@ import ReschedulePopup from "../add/components/edit-reschedule";
 import {
   actionPMScheduleData,
   actionPMScheduleDetails,
-  actionPMScheduleEdit,
   resetPmScheduleDetailsResponse,
-  resetPmScheduleEditResponse,
+  actionPMScheduleReschedule,
+  resetPmScheduleRescheduleResponse
 } from "../../../store/pm-activity";
 import FormHeader from "../../../components/form-header";
 import TotalPMIcon from "../../../assets/icons/TotalPMIcon";
@@ -47,16 +44,14 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import ReportAnalyticsIcon from "../../../assets/icons/ReportAnalyticsIcon";
 import PMActivityViewReport from "./components/view-report";
 import ListComponents from "../../../components/list-components";
-import { useBranch } from "../../../hooks/useBranch";
 
 export default function PMActivityDetails({ open, objData, handleClose }) {
   const theme = useTheme();
   const dispatch = useDispatch();
-  const branch = useBranch()
   const { logout, hasPermission } = useAuth();
   const { showSnackbar } = useSnackbar();
 
-  const { pmScheduleData, pmScheduleDetails, pmScheduleEdit } = useSelector(
+  const { pmScheduleData, pmScheduleDetails, pmScheduleReschedule } = useSelector(
     (state) => state.pmActivityStore
   );
 
@@ -150,33 +145,31 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
   };
 
   useEffect(() => {
-    if (pmScheduleEdit && pmScheduleEdit !== null) {
-      dispatch(resetPmScheduleEditResponse());
-      if (pmScheduleEdit?.result === true) {
-
+    if (pmScheduleReschedule && pmScheduleReschedule !== null) {
+      dispatch(resetPmScheduleRescheduleResponse());
+      if (pmScheduleReschedule?.result === true) {
         showSnackbar({
-          message: pmScheduleEdit?.message,
+          message: pmScheduleReschedule?.message,
           severity: "success",
         });
         if (objData && objData !== null && objData?.uuid) {
           dispatch(actionPMScheduleDetails({ uuid: objData?.uuid }));
         }
       } else {
-
-        switch (pmScheduleEdit?.status) {
+        switch (pmScheduleReschedule?.status) {
           case UNAUTHORIZED:
             logout();
             break;
           case ERROR:
-            dispatch(resetPmScheduleEditResponse());
+            dispatch(resetPmScheduleRescheduleResponse());
             showSnackbar({
-              message: pmScheduleEdit?.message,
+              message: pmScheduleReschedule?.message,
               severity: "error",
             });
             break;
           case SERVER_ERROR:
             showSnackbar({
-              message: pmScheduleEdit?.message,
+              message: pmScheduleReschedule?.message,
               severity: "error",
             });
             break;
@@ -185,7 +178,7 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
         }
       }
     }
-  }, [pmScheduleEdit]);
+  }, [pmScheduleReschedule]);
 
   useEffect(() => {
     if (open === true) {
@@ -845,10 +838,7 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
             handleClose={(data, type) => {
               setRescheduleOpen(false);
               if (type === "save") {
-                const newDate = data.new_date
-                  ? moment(data.new_date, "DD/MM/YYYY").format("YYYY-MM-DD")
-                  : null;
-
+                const newDate = data.new_date ? moment(data.new_date, "DD/MM/YYYY").format("YYYY-MM-DD") : null;
                 const remark = data.reason_for_reschedule || "";
 
                 /* ------------------------------
@@ -891,42 +881,14 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
 
                 setSelectedActivity(updatedSelectedActivity);
 
-                /* ------------------------------
-                   3. Update pmScheduleData
-                --------------------------------*/
-                const updatedPmScheduleData = {
-                  ...pmScheduleData,
-                  assets: pmScheduleData.assets.map((asset) => {
-                    if (asset.asset_id === selectedActivity.asset_id) {
-                      return {
-                        ...asset,
-                        frequency_exceptions: asset.frequency_exceptions.map((item) => {
-                          const updatedItem = {
-                            ...item,
-                            date: item.date || item.scheduled_date, // add date for all items
-                            reason_for_reschedule: item.reason_for_reschedule || item.remark
-                          };
-
-                          // only update the selected one
-                          if (item.scheduled_date === selectedActivity?.frequency_data?.scheduled_date) {
-                            updatedItem.date = newDate;
-                            updatedItem.reason_for_reschedule = remark;
-                          }
-
-                          return updatedItem;
-                        })
-                      };
-                    }
-                    return asset;
-                  })
-                };
                 let input = {
-                  branch_uuid: branch?.currentBranch?.uuid,
-                  pm_activity_details: updatedPmScheduleData?.pm_details,
-                  assets: updatedPmScheduleData?.assets,
-                  pm_activity_uuid: objData?.uuid,
+                  pm_activity_id: objData?.id,
+                  asset_id: selectedActivity?.asset_id,
+                  old_date: data?.current_schedule_date ? moment(data?.current_schedule_date, "DD/MM/YYYY").format("YYYY-MM-DD") : null,
+                  new_date: newDate,
+                  reason_for_reschedule: remark
                 };
-                dispatch(actionPMScheduleEdit(input));
+                dispatch(actionPMScheduleReschedule(input));
               }
             }}
           />
