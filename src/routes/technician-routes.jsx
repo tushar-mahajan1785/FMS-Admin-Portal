@@ -4,7 +4,7 @@ import LoginPage from "../pages/login";
 import TechnicianAsset from "../pages/technician/assets";
 import TechnicianChecklist from "../pages/technician/checklist";
 import TechnicianDashboard from "../pages/technician/dashboard";
-import { TechnicianProfile } from "../pages/technician/profile";
+import TechnicianProfile from "../pages/technician/profile";
 
 const technicianRoutes = [
     {
