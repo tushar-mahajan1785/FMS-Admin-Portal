@@ -285,6 +285,9 @@ export const isCurrentTimeInRange = (from, to) => {
     return now.isBetween(start, end, null, '[)');
   }
 
+  // console.log('------start------', start)
+  // console.log('------end------', end)
+
   // Handle overnight range like 21:00–04:00
   return now.isAfter(start) || now.isBefore(end);
 };
@@ -370,3 +373,5 @@ export const getColorAndBackgroundForAssetType = (index) => {
   }
   return color;
 };
+
+

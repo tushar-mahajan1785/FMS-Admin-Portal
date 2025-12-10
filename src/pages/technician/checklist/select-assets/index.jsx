@@ -107,7 +107,8 @@ export const ChecklistSelectAsset = () => {
                                     borderBottom: index < assetsList.length - 1 ? `1px solid ${theme.palette.grey[100]}` : 'none',
                                 }}
                                 onClick={() => {
-                                    navigate(`select-time/${item?.id}`)
+                                    // navigate(`select-time/${item?.id}`)
+                                    navigate(`view/${item?.id}`)
                                 }}
                             >
                                 <TypographyComponent fontSize={18} fontWeight={500}>

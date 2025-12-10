@@ -16,6 +16,13 @@ export default function App() {
   const [routes, setRoutes] = useState(adminRoutes || [])
   const [value, setValue] = useState(0);
 
+  const bottomNavRoutes = ["/", "/checklist", "/assets", "/tickets", "/profile"];
+
+  // Check if BottomNav should show
+  const showBottomNav =
+    user?.type === "Technician" &&
+    bottomNavRoutes.includes(location.pathname); // EXACT match only
+
   /**
   * Get Routes as per Role type Technician or other
   */
@@ -52,13 +59,10 @@ export default function App() {
         <Route path="*" element={<NotFoundPage />} />
 
       </Routes>
-      {
-        user?.type == 'Technician' ?
-          <BottomNav value={value} onChange={setValue} />
-          :
-          <></>
-      }
 
+      {showBottomNav && (
+        <BottomNav value={value} onChange={setValue} />
+      )}
     </Provider>
   );
 }
