@@ -8,7 +8,7 @@ import ActivityIcon from "../../../assets/icons/ActivityIcon";
 import AlertTriangleIcon from "../../../assets/icons/AlertTriangleIcon";
 import ArrowRightIcon from "../../../assets/icons/ArrowRightIcon";
 import { SearchInput, StyledLinearProgress } from "../../../components/common";
-import { getPercentage } from "../../../utils";
+import { getInitials, getPercentage } from "../../../utils";
 import AssetIcon from "../../../assets/icons/AssetIcon";
 import ClockIcon from "../../../assets/icons/ClockIcon";
 import FileXIcon from "../../../assets/icons/FileXIcon";
@@ -344,7 +344,7 @@ export default function ChecklistAssetTypes() {
                                                 justifyContent: "center",
                                             }}
                                         >
-                                            <AssetIcon stroke={objAsset?.border_color} size={18} />
+                                            <TypographyComponent fontSize={30} fontWeight={600} sx={{ color: objAsset?.border_color }}>{getInitials(objAsset?.title, 1)}</TypographyComponent>
                                         </Box>
                                         <Box>
                                             <TypographyComponent fontSize={16} fontWeight={500}>

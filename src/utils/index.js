@@ -314,3 +314,9 @@ export const parseScheduleStartDate = (schedule) => {
   return parsed.isValid() ? parsed : null;
 };
 
+export const getInitials = (fullName, length = 2) => {
+    if (!fullName) return '';
+    const parts = fullName.split(' ').filter(p => p.length > 0);
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return parts.map(part => part.charAt(0)).join('').toUpperCase().substring(0, length);
+};
