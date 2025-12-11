@@ -176,7 +176,7 @@ export default function UploadFilePopup({ open, objData, handleClose }) {
                 setLoading(false)
                 reset()
             } else {
-                handleClose()
+                reset()
                 setLoading(false)
                 switch (uploadDocumentCategories?.status) {
                     case UNAUTHORIZED:

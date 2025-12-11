@@ -51,6 +51,7 @@ import {
   resetPmScheduleListResponse,
   actionDeletePmActivity,
   resetDeletePmActivityResponse,
+  resetPmScheduleDataResponse,
 } from "../../store/pm-activity";
 import {
   actionMasterAssetType,
@@ -134,6 +135,7 @@ export default function PmActivity() {
               setOpenPmActivityDetails(true);
               let objData = {
                 uuid: params.row.uuid,
+                id: params.row.id
               };
               setPmScheduleActivityData(objData);
             }}
@@ -339,6 +341,7 @@ export default function PmActivity() {
         setTotal(pmScheduleList?.response?.total_pm_schedules);
         setLoadingList(false);
       } else {
+        setLoadingList(false);
         setTotal(null);
         setPmScheduleActivityData([])
         setOriginalPmActivityScheduleData([])
@@ -384,6 +387,7 @@ export default function PmActivity() {
    */
   useEffect(() => {
     if (page !== null) {
+      setLoadingList(true)
       dispatch(
         actionPMScheduleList({
           page: page,
@@ -1000,6 +1004,7 @@ export default function PmActivity() {
       <AddPMSchedule
         open={openAddPmSchedule}
         handleClose={() => {
+          dispatch(resetPmScheduleDataResponse())
           setOpenAddPmSchedule(false);
           dispatch(
             actionPMScheduleList({

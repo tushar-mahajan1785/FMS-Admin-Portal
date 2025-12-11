@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
-  Card,
   Divider,
   Drawer,
   Grid,
@@ -14,8 +13,6 @@ import {
   useTheme,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
-
-import { DataGrid } from "@mui/x-data-grid";
 import moment from "moment/moment";
 import TypographyComponent from "../../../components/custom-typography";
 import EmptyContent from "../../../components/empty_content";
@@ -32,6 +29,8 @@ import {
   actionPMScheduleData,
   actionPMScheduleDetails,
   resetPmScheduleDetailsResponse,
+  actionPMScheduleReschedule,
+  resetPmScheduleRescheduleResponse
 } from "../../../store/pm-activity";
 import FormHeader from "../../../components/form-header";
 import TotalPMIcon from "../../../assets/icons/TotalPMIcon";
@@ -52,7 +51,7 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
   const { logout, hasPermission } = useAuth();
   const { showSnackbar } = useSnackbar();
 
-  const { pmScheduleData, pmScheduleDetails } = useSelector(
+  const { pmScheduleData, pmScheduleDetails, pmScheduleReschedule } = useSelector(
     (state) => state.pmActivityStore
   );
 
@@ -113,6 +112,7 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
       type: "markAsDone",
       client_id: pmScheduleActivityDetails?.client_id,
       pm_activity_id: pmScheduleActivityDetails?.id,
+      pm_activity_uuid: pmScheduleActivityDetails?.uuid,
       pm_details: {
         title: pmScheduleData?.selected_asset_id
           ? // Find the selected asset and get its description
@@ -144,6 +144,42 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
     setSelectedActivity(activityData);
     setRescheduleOpen(true);
   };
+
+  useEffect(() => {
+    if (pmScheduleReschedule && pmScheduleReschedule !== null) {
+      dispatch(resetPmScheduleRescheduleResponse());
+      if (pmScheduleReschedule?.result === true) {
+        showSnackbar({
+          message: pmScheduleReschedule?.message,
+          severity: "success",
+        });
+        if (objData && objData !== null && objData?.uuid) {
+          dispatch(actionPMScheduleDetails({ uuid: objData?.uuid }));
+        }
+      } else {
+        switch (pmScheduleReschedule?.status) {
+          case UNAUTHORIZED:
+            logout();
+            break;
+          case ERROR:
+            dispatch(resetPmScheduleRescheduleResponse());
+            showSnackbar({
+              message: pmScheduleReschedule?.message,
+              severity: "error",
+            });
+            break;
+          case SERVER_ERROR:
+            showSnackbar({
+              message: pmScheduleReschedule?.message,
+              severity: "error",
+            });
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }, [pmScheduleReschedule]);
 
   useEffect(() => {
     if (open === true) {
@@ -289,7 +325,7 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
             color = "grey";
             break;
           case "Completed":
-            color = "primary";
+            color = "success";
             break;
           case "On Hold":
             color = "warning";
@@ -726,12 +762,13 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
             {frequencyExceptionsData &&
               frequencyExceptionsData !== null &&
               frequencyExceptionsData?.length > 0 ? (
-              <Box sx={{ height: "330px", width: "100%" }}>
+              <Box sx={{ height: "450px", width: "100%" }}>
                 <ListComponents
                   rows={frequencyExceptionsData}
                   columns={columns}
                   isCheckbox={false}
                   hasPagination={false}
+                  pageSizes={12}
                   onChange={(selectedIds) => {
                     console.log("Selected row IDs in UsersList:", selectedIds);
                   }}
@@ -799,10 +836,60 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
           <ReschedulePopup
             open={rescheduleOpen}
             selectedActivity={selectedActivity}
-            handleClose={(data) => {
+            handleClose={(data, type) => {
               setRescheduleOpen(false);
-              if (data == "save") {
-                dispatch(actionPMScheduleDetails({ uuid: objData?.uuid }));
+              if (type === "save") {
+                const newDate = data.new_date ? moment(data.new_date, "DD/MM/YYYY").format("YYYY-MM-DD") : null;
+                const remark = data.reason_for_reschedule || "";
+
+                /* ------------------------------
+                   1. Update frequencyExceptionsData
+                --------------------------------*/
+                const updatedFrequencyExceptionsData = frequencyExceptionsData.map((item) => {
+                  if (item.scheduled_date === selectedActivity?.frequency_data?.scheduled_date) {
+                    return {
+                      ...item,
+                      scheduled_date: newDate,
+                      ...(remark && { remark })
+                    };
+                  }
+                  return item;
+                });
+
+                setFrequencyExceptionsData(updatedFrequencyExceptionsData);
+
+                /* ------------------------------
+                   2. Update selectedActivity
+                --------------------------------*/
+                const updatedSelectedActivity = {
+                  ...selectedActivity,
+                  frequency_data: {
+                    ...selectedActivity.frequency_data,
+                    scheduled_date: newDate,
+                    ...(remark && { remark })
+                  },
+                  frequency_exceptions: selectedActivity.frequency_exceptions.map((item) => {
+                    if (item.scheduled_date === selectedActivity?.frequency_data?.scheduled_date) {
+                      return {
+                        ...item,
+                        scheduled_date: newDate,
+                        ...(remark && { remark })
+                      };
+                    }
+                    return item;
+                  })
+                };
+
+                setSelectedActivity(updatedSelectedActivity);
+
+                let input = {
+                  pm_activity_id: objData?.id,
+                  asset_id: selectedActivity?.asset_id,
+                  old_date: data?.current_schedule_date ? moment(data?.current_schedule_date, "DD/MM/YYYY").format("YYYY-MM-DD") : null,
+                  new_date: newDate,
+                  reason_for_reschedule: remark
+                };
+                dispatch(actionPMScheduleReschedule(input));
               }
             }}
           />

@@ -45,7 +45,7 @@ export default function PMActivityPreviewSetUp() {
       ...currentAssetData,
       frequency_data: {
         ...activity,
-        scheduled_date: activity?.date,
+        scheduled_date: activity?.scheduled_date,
       },
       type: "reschedule",
       pm_details: {
@@ -97,15 +97,15 @@ export default function PMActivityPreviewSetUp() {
       renderCell: (params) => {
         return (
           <Stack sx={{ height: "100%", justifyContent: "center" }}>
-            {params.row.date && params.row.date !== null ? (
+            {params.row.scheduled_date && params.row.scheduled_date !== null ? (
               <TypographyComponent
                 color={theme.palette.grey.primary}
                 fontSize={14}
                 fontWeight={400}
                 sx={{ py: "10px" }}
               >
-                {params.row.date && params.row.date !== null
-                  ? moment(params.row.date, "YYYY-MM-DD").format("DD MMM YYYY")
+                {params.row.scheduled_date && params.row.scheduled_date !== null
+                  ? moment(params.row.scheduled_date, "YYYY-MM-DD").format("DD MMM YYYY")
                   : ""}
               </TypographyComponent>
             ) : (
@@ -219,7 +219,7 @@ export default function PMActivityPreviewSetUp() {
     {
       flex: 0.1,
 
-      field: "additional_info",
+      field: "remark",
       headerName: "Additional Information",
       editable: true,
     },
@@ -278,12 +278,6 @@ export default function PMActivityPreviewSetUp() {
       setFrequencyExceptionsData([]);
     }
   }, [pmScheduleData?.is_active]);
-
-  // Format date for display (from "05-Nov-2025" to "05 Nov 2025")
-  const formatDisplayDate = (dateString) => {
-    if (!dateString) return "N/A";
-    return dateString.replace("-", " ").replace("-", " ");
-  };
 
   return (
     <React.Fragment>
@@ -346,9 +340,7 @@ export default function PMActivityPreviewSetUp() {
             </Typography>
             <Typography fontSize={16} fontWeight={500}>
               {pmScheduleData?.pm_details?.schedule_start_date
-                ? formatDisplayDate(
-                  pmScheduleData.pm_details.schedule_start_date
-                )
+                ? moment(pmScheduleData.pm_details.schedule_start_date, "YYYY-MM-DD").format("DD MMM YYYY")
                 : "N/A"}
             </Typography>
           </Grid>
@@ -469,12 +461,13 @@ export default function PMActivityPreviewSetUp() {
       {frequencyExceptionsData &&
         frequencyExceptionsData !== null &&
         frequencyExceptionsData.length > 0 ? (
-        <Box sx={{ height: "330px", width: "100%" }}>
+        <Box sx={{ height: "450px", width: "100%" }}>
           <ListComponents
             rows={frequencyExceptionsData}
             columns={columns}
             isCheckbox={false}
             hasPagination={false}
+            pageSizes={12}
             onChange={(selectedIds) => {
               console.log("Selected row IDs in UsersList:", selectedIds);
             }}
@@ -495,36 +488,81 @@ export default function PMActivityPreviewSetUp() {
         selectedActivity={selectedActivity}
         handleClose={(data, type) => {
           setRescheduleOpen(false);
-          if (type == "save") {
-            let objData = Object.assign({}, selectedActivity);
-            let objFrequencyData = Object.assign({}, objData?.frequency_data);
-            objFrequencyData.date =
-              data.new_date && data.new_date !== null
-                ? moment(data.new_date, "DD/MM/YYYY").format("YYYY-MM-DD")
-                : null;
-            objFrequencyData.reason_for_reschedule = data.reason_for_reschedule;
-            objData.frequency_data = objFrequencyData;
-            let frequencies = Object.assign([], frequencyExceptionsData);
-            let currentIndex = frequencyExceptionsData.findIndex(
-              (obj) => obj?.title === objFrequencyData?.title
-            );
-            if (currentIndex > -1) {
-              frequencies[currentIndex] = objFrequencyData;
-              setFrequencyExceptionsData(frequencies);
-              let pmData = Object.assign({}, pmScheduleData);
-              let assets = Object.assign([], pmData?.assets);
-              let currentAssetIndex = assets.findIndex(
-                (obj) => obj?.asset_id === pmData?.selected_asset_id
-              );
-              let currentAssetData = Object.assign(
-                {},
-                assets[currentAssetIndex]
-              );
-              currentAssetData.frequency_exceptions = frequencies;
-              assets[currentAssetIndex] = currentAssetData;
-              pmData.assets = assets;
-              dispatch(actionPMScheduleData(pmData));
-            }
+          if (type === "save") {
+            const newDate = data.new_date
+              ? moment(data.new_date, "DD/MM/YYYY").format("YYYY-MM-DD")
+              : null;
+
+            const remark = data.reason_for_reschedule || "";
+
+            /* ------------------------------
+               1. Update frequencyExceptionsData
+            --------------------------------*/
+            const updatedFrequencyExceptionsData = frequencyExceptionsData.map((item) => {
+              if (item.scheduled_date === selectedActivity?.frequency_data?.scheduled_date) {
+                return {
+                  ...item,
+                  scheduled_date: newDate,
+                  ...(remark && { remark })
+                };
+              }
+              return item;
+            });
+
+            setFrequencyExceptionsData(updatedFrequencyExceptionsData);
+
+            /* ------------------------------
+               2. Update selectedActivity
+            --------------------------------*/
+            const updatedSelectedActivity = {
+              ...selectedActivity,
+              frequency_data: {
+                ...selectedActivity.frequency_data,
+                scheduled_date: newDate,
+                ...(remark && { remark })
+              },
+              frequency_exceptions: selectedActivity.frequency_exceptions.map((item) => {
+                if (item.scheduled_date === selectedActivity?.frequency_data?.scheduled_date) {
+                  return {
+                    ...item,
+                    scheduled_date: newDate,
+                    ...(remark && { remark })
+                  };
+                }
+                return item;
+              })
+            };
+
+            setSelectedActivity(updatedSelectedActivity);
+
+            /* ------------------------------
+               3. Update pmScheduleData
+            --------------------------------*/
+            const updatedPmScheduleData = {
+              ...pmScheduleData,
+              assets: pmScheduleData.assets.map((asset) => {
+                if (asset.asset_id === selectedActivity.asset_id) {
+                  return {
+                    ...asset,
+                    frequency_exceptions: asset.frequency_exceptions.map((item) => {
+                      const updatedItem = {
+                        ...item,
+                      };
+
+                      // only update the selected one
+                      if (item.scheduled_date === selectedActivity?.frequency_data?.scheduled_date) {
+                        updatedItem.scheduled_date = newDate;
+                        updatedItem.remark = remark;
+                      }
+
+                      return updatedItem;
+                    })
+                  };
+                }
+                return asset;
+              })
+            };
+            dispatch(actionPMScheduleData(updatedPmScheduleData));
           }
         }}
       />

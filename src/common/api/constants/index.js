@@ -8,6 +8,8 @@ export const HOST = {
 
 export const BASE = '/api/admin'
 
+export const BASE_APP = '/api/app'
+
 export const CRYPTO_SECRET_KEY = import.meta.env.VITE_CRYPTO_SECRET_KEY;
 
 export const API_VERIFY_EMAIL = `${BASE}/employee/forgot-password`
@@ -317,6 +319,8 @@ export const API_PM_ACTIVITY_EDIT = `${BASE}/pm-activity/edit`
 
 export const API_PM_ACTIVITY_VIEW_REPORT = `${BASE}/pm-activity/history-view-report`
 
+export const API_PM_ACTIVITY_RESCHEDULE = `${BASE}/pm-activity/reschedule`
+
 // document categories
 export const API_DOCUMENTS_CATEGORIES_LIST = `${BASE}/document-category/list`
 
@@ -352,4 +356,23 @@ export const API_CHECKLIST_GROUP_HISTORY_ADD = `${BASE}/checklist-group-history/
 export const API_CHECKLIST_GROUP_ASSET_APPROVE = `${BASE}/checklist-group-history/approve`
 
 export const API_CHECKLIST_ALL_GROUP_DETAILS = `${BASE}/checklist-group/all-group-details`
+
+//Technician App Flow Routes
+
+//Checklist
+export const API_TECHNICIAN_CHECKLIST_ASSET_TYPE_LIST = `${BASE_APP}/checklist-group/asset-type-list`
+
+export const API_TECHNICIAN_CHECKLIST_GROUP_LIST = `${BASE_APP}/checklist-group/list`
+
+export const API_TECHNICIAN_CHECKLIST_GROUP_ASSET_LIST = `${BASE_APP}/checklist-group/asset-list`
+
+export const API_TECHNICIAN_CHECKLIST_ASSET_TIMES = `${BASE_APP}/checklist/asset/times`
+
+export const API_TECHNICIAN_ASSET_CHECKLIST_DETAILS = `${BASE_APP}/checklist-group/details`
+
+export const API_TECHNICIAN_ASSET_CHECKLIST_UPDATE = `${BASE_APP}/asset/checklist/add-or-edit`
+
+export const API_TECHNICIAN_CHECKLIST_GROUP_ASSET_APPROVE = `${BASE_APP}/checklist-group-history/approve`
+
+export const API_TECHNICIAN_CHECKLIST_ALL_GROUP_DETAILS = `${BASE_APP}/checklist-group/all-group-details`
 

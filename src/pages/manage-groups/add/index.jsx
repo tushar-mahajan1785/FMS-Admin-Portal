@@ -64,6 +64,33 @@ export default function AddManageGroups({ open, handleClose }) {
             }
             setActiveStep((prevActiveStep) => prevActiveStep + 1);
         } else {
+            const employees = rosterData?.employees || [];
+
+            // Check if at least one manager exists
+            const hasManager = employees.some(
+                (emp) => emp.role_type === "Manager"
+            );
+
+            // Check if at least one technician exists (optional since your msg says both)
+            const hasTechnician = employees.some(
+                (emp) => emp.role_type === "Technician"
+            );
+
+            if (!hasManager) {
+                showSnackbar({
+                    message: "Please select at least one manager",
+                    severity: "error",
+                });
+                return;
+            }
+
+            if (!hasTechnician) {
+                showSnackbar({
+                    message: "Please select at least one technician",
+                    severity: "error",
+                });
+                return;
+            }
             dispatch(actionAddManageGroups({
                 branch_uuid: branch?.currentBranch?.uuid,
                 assets: rosterData?.assets,

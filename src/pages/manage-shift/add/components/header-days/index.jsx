@@ -24,7 +24,11 @@ export default function HeaderDays({ daysToDisplay, leftHeader, isMDDown, theme,
             </Grid>
 
             {/* Dynamic Days */}
-            <Grid size={{ xs: 10, sm: 10, md: 10, lg: 10, xl: 10 }} container>
+            <Grid 
+            size={{ xs: 10, sm: 10, md: 10, lg: 10, xl: 10 }} 
+            container
+            sx={{ flexWrap: "nowrap" }}
+            >
                 {daysToDisplay.map((day, index) => {
                     const dayFormat = day.format("ddd").toUpperCase()
                     const dateFormat = day.format("D MMM")

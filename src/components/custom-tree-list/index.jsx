@@ -11,11 +11,11 @@ import EyeIcon from '../../assets/icons/EyeIcon';
 const INDENT_SPACE = 4;
 
 // Helper function to get initials from a full name
-const getInitials = (fullName) => {
+const getInitials = (fullName, length = 2) => {
     if (!fullName) return '';
     const parts = fullName.split(' ').filter(p => p.length > 0);
     if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-    return parts.map(part => part.charAt(0)).join('').toUpperCase().substring(0, 2);
+    return parts.map(part => part.charAt(0)).join('').toUpperCase().substring(0, length);
 };
 
 

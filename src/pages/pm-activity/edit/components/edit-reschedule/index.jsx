@@ -53,6 +53,7 @@ import { useBranch } from "../../../../../hooks/useBranch";
 import { useAuth } from "../../../../../hooks/useAuth";
 import SectionHeader from "../../../../../components/section-header";
 import {
+  actionPMScheduleDetails,
   actionPMScheduleMarkDone,
   resetPmScheduleMarkDoneResponse,
 } from "../../../../../store/pm-activity";
@@ -120,7 +121,7 @@ export default function ReschedulePopup({
       ) {
         setValue(
           "current_schedule_date",
-          moment(selectedActivity?.frequency_data?.date, "YYYY-MM-DD").format(
+          moment(selectedActivity?.frequency_data?.scheduled_date, "YYYY-MM-DD").format(
             "DD/MM/YYYY"
           )
         );
@@ -260,6 +261,9 @@ export default function ReschedulePopup({
         reset();
         handleClose("save");
         setLoading(false);
+        if (selectedActivity && selectedActivity !== null && selectedActivity?.pm_activity_uuid) {
+          dispatch(actionPMScheduleDetails({ uuid: selectedActivity?.pm_activity_uuid }));
+        }
       } else {
         setLoading(false);
 
@@ -294,7 +298,7 @@ export default function ReschedulePopup({
       // Build the main payload
       let input = {
         branch_uuid: branch?.currentBranch?.uuid,
-        activity_date: selectedActivity?.frequency_data?.date,
+        activity_date: selectedActivity?.frequency_data?.scheduled_date,
         completion_date: data?.completion_date
           ? moment(data?.completion_date, "DD/MM/YYYY").format("YYYY-MM-DD")
           : null,
@@ -334,6 +338,7 @@ export default function ReschedulePopup({
       dispatch(actionPMScheduleMarkDone(formData));
     } else if (selectedActivity?.type === "reschedule") {
       handleClose(data, "save");
+      reset()
     }
   };
 
@@ -466,9 +471,9 @@ export default function ReschedulePopup({
                   fontWeight={500}
                   sx={{ color: theme.palette.grey[700] }}
                 >
-                  {selectedActivity?.frequency_data?.date !== null &&
+                  {selectedActivity?.frequency_data?.scheduled_date !== null &&
                     moment(
-                      selectedActivity?.frequency_data?.date,
+                      selectedActivity?.frequency_data?.scheduled_date,
                       "YYYY-MM-DD"
                     ).format("DD MMM YYYY")}
                 </TypographyComponent>
@@ -669,7 +674,7 @@ export default function ReschedulePopup({
                       render={({ field }) => {
                         // read scheduled_date from selectedActivity
                         const scheduledDate =
-                          selectedActivity?.frequency_data?.date;
+                          selectedActivity?.frequency_data?.scheduled_date;
 
                         // convert YYYY-MM-DD → moment date
                         const scheduledMoment = scheduledDate
