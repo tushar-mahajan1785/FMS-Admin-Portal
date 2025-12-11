@@ -16,7 +16,7 @@ import { useAuth } from '../../../../hooks/useAuth'
 import { useSnackbar } from '../../../../hooks/useSnackbar'
 import FullScreenLoader from '../../../../components/fullscreen-loader'
 
-export const AssetTypesChecklist = () => {
+export default function AssetTypesChecklist() {
     const theme = useTheme()
     const dispatch = useDispatch()
     const navigate = useNavigate()
@@ -84,7 +84,7 @@ export const AssetTypesChecklist = () => {
                 setLoadingList(false)
             } else {
                 setLoadingList(false)
-                setArrAssetTypesData([])
+                // setArrAssetTypesData([])
                 let objData = {
                     pending_count: 0,
                     missing_count: 0,

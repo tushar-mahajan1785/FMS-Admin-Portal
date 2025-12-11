@@ -370,9 +370,5 @@ export const API_TECHNICIAN_CHECKLIST_ASSET_TIMES = `${BASE_APP}/checklist/asset
 
 export const API_TECHNICIAN_ASSET_CHECKLIST_DETAILS = `${BASE_APP}/checklist-group/details`
 
-export const API_TECHNICIAN_ASSET_CHECKLIST_UPDATE = `${BASE_APP}/asset/checklist/add-or-edit`
-
-export const API_TECHNICIAN_CHECKLIST_GROUP_ASSET_APPROVE = `${BASE_APP}/checklist-group-history/approve`
-
-export const API_TECHNICIAN_CHECKLIST_ALL_GROUP_DETAILS = `${BASE_APP}/checklist-group/all-group-details`
+export const API_TECHNICIAN_ASSET_CHECKLIST_UPDATE = `${BASE_APP}/checklist-group-history/add-or-edit`
 

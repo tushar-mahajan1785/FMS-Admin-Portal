@@ -3,7 +3,7 @@ import { getErrorResponse } from "../../../utils";
 import {
     API_TECHNICIAN_CHECKLIST_ASSET_TYPE_LIST,
     API_TECHNICIAN_CHECKLIST_GROUP_LIST,
-    // API_TECHNICIAN_CHECKLIST_GROUP_ASSET_LIST,
+    API_TECHNICIAN_CHECKLIST_GROUP_ASSET_LIST,
     API_TECHNICIAN_CHECKLIST_ASSET_TIMES, API_TECHNICIAN_ASSET_CHECKLIST_DETAILS,
     API_TECHNICIAN_ASSET_CHECKLIST_UPDATE
 } from "../../../common/api/constants";
@@ -29,15 +29,15 @@ export const actionTechnicianChecklistGroupList = createAsyncThunk('technicianCh
     }
 })
 
-// export const actionTechnicianChecklistGroupAssetList = createAsyncThunk('technicianChecklist/actionTechnicianChecklistGroupAssetList', async (params) => {
-//     try {
-//         const response = await axiosApi.post(API_TECHNICIAN_CHECKLIST_GROUP_ASSET_LIST, params)
+export const actionTechnicianChecklistGroupAssetList = createAsyncThunk('technicianChecklist/actionTechnicianChecklistGroupAssetList', async (params) => {
+    try {
+        const response = await axiosApi.post(API_TECHNICIAN_CHECKLIST_GROUP_ASSET_LIST, params)
 
-//         return response.status !== 200 ? getErrorResponse() : response.data
-//     } catch (error) {
-//         return error
-//     }
-// })
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
 
 export const actionTechnicianGetChecklistAssetTimes = createAsyncThunk('technicianChecklist/actionTechnicianGetChecklistAssetTimes', async (params) => {
     try {
@@ -75,7 +75,7 @@ export const technicianChecklistStore = createSlice({
     initialState: {
         technicianChecklistAssetTypeList: null,
         technicianChecklistGroupList: null,
-        // technicianChecklistGroupAssetList: null,
+        technicianChecklistGroupAssetList: null,
         technicianGetChecklistAssetTimes: null,
         technicianAssetChecklistDetails: null,
         technicianAssetChecklistUpdate: null
@@ -88,9 +88,9 @@ export const technicianChecklistStore = createSlice({
         resetTechnicianChecklistGroupListResponse: (state) => {
             state.technicianChecklistGroupList = null
         },
-        // resetTechnicianChecklistGroupAssetListResponse: (state) => {
-        //     state.technicianChecklistGroupAssetList = null
-        // },
+        resetTechnicianChecklistGroupAssetListResponse: (state) => {
+            state.technicianChecklistGroupAssetList = null
+        },
         resetTechnicianGetChecklistAssetTimesResponse: (state) => {
             state.technicianGetChecklistAssetTimes = null
         },
@@ -110,9 +110,9 @@ export const technicianChecklistStore = createSlice({
             .addCase(actionTechnicianChecklistGroupList.fulfilled, (state, action) => {
                 state.technicianChecklistGroupList = action.payload
             })
-            // .addCase(actionTechnicianChecklistGroupAssetList.fulfilled, (state, action) => {
-            //     state.technicianChecklistGroupAssetList = action.payload
-            // })
+            .addCase(actionTechnicianChecklistGroupAssetList.fulfilled, (state, action) => {
+                state.technicianChecklistGroupAssetList = action.payload
+            })
             .addCase(actionTechnicianGetChecklistAssetTimes.fulfilled, (state, action) => {
                 state.technicianGetChecklistAssetTimes = action.payload
             })
@@ -129,7 +129,7 @@ export const technicianChecklistStore = createSlice({
 export const {
     resetTechnicianChecklistAssetTypeListResponse,
     resetTechnicianChecklistGroupListResponse,
-    // resetTechnicianChecklistGroupAssetListResponse,
+    resetTechnicianChecklistGroupAssetListResponse,
     resetTechnicianGetChecklistAssetTimesResponse,
     resetTechnicianAssetChecklistDetailsResponse,
     resetTechnicianAssetChecklistUpdateResponse,

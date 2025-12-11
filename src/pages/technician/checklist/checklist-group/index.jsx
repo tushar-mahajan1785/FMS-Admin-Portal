@@ -20,7 +20,7 @@ import { useSnackbar } from '../../../../hooks/useSnackbar'
 import { actionTechnicianChecklistGroupList, resetTechnicianChecklistGroupListResponse } from '../../../../store/technician/checklist'
 import FullScreenLoader from '../../../../components/fullscreen-loader'
 
-export const ChecklistGroups = () => {
+export default function ChecklistGroups() {
     const theme = useTheme()
     const navigate = useNavigate()
     const dispatch = useDispatch()

@@ -62,7 +62,7 @@ export default function QRScanner() {
             ></Box>
 
             <Box sx={{ mt: 2, fontSize: 16, fontWeight: 500 }}>
-                {result ? `Scanned: ${result}` : "Point camera at QR code"}
+                {result ? `Scanned : ${result}` : "Point camera at QR code"}
             </Box>
         </Stack>
     );
