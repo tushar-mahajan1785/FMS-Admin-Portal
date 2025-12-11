@@ -240,6 +240,7 @@ export default function ChecklistView() {
                             sub_name: param.sub_name,
                             parent_id: param.parent_id,
                             input_type: param.input_type,
+                            priority: param.priority,
                             is_mandatory: param.is_mandatory,
                             default_value: param.default_value
                         }))
@@ -294,6 +295,7 @@ export default function ChecklistView() {
                     sub_name: param.sub_name,
                     parent_id: param.parent_id,
                     input_type: param.input_type,
+                    priority: param.priority,
                     is_mandatory: param.is_mandatory,
                     default_value: param.default_value
                 }))
@@ -1120,8 +1122,8 @@ export default function ChecklistView() {
                                     </MenuItem>
 
                                     {params.options?.map((opt, index) => (
-                                        <MenuItem key={index} value={opt}>
-                                            {opt}
+                                        <MenuItem key={index} value={opt.name}>
+                                            {opt.name}
                                         </MenuItem>
                                     ))}
                                 </CustomTextField>
