@@ -954,8 +954,13 @@ export default function ChecklistView() {
                                         </TypographyComponent>
                                     </Box>
                                     <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 1, cursor: 'pointer' }} >
-                                        <Chip size='small' label={getCurrentAssetDetailsData?.time_interval && getCurrentAssetDetailsData?.time_interval !== null ? skipEvery(getCurrentAssetDetailsData?.time_interval) : ''} sx={{ background: theme.palette.primary[600], borderRadius: '4px', padding: '0px 1px', color: theme.palette.common.white, fontSize: '12px' }}>
-                                        </Chip>
+                                        {
+                                            getCurrentAssetDetailsData?.time_interval && getCurrentAssetDetailsData?.time_interval !== null ?
+                                                <Chip size='small' label={getCurrentAssetDetailsData?.time_interval && getCurrentAssetDetailsData?.time_interval !== null ? skipEvery(getCurrentAssetDetailsData?.time_interval) : ''} sx={{ background: theme.palette.primary[600], borderRadius: '4px', padding: '0px 1px', color: theme.palette.common.white, fontSize: '12px' }}>
+                                                </Chip>
+                                                :
+                                                <></>
+                                        }
                                         <ChevronDownIcon />
                                     </Stack>
 
@@ -1020,6 +1025,7 @@ export default function ChecklistView() {
                                         : null
                                 }
                             </Stack>
+                            <Stack sx={{ borderTop: `1.5px solid ${theme.palette.grey[300]}`, mx: -2, mb: 1.5 }}></Stack>
                             {
                                 getCurrentAssetDetailsData?.is_view == 0 ?
                                     <Stack>
