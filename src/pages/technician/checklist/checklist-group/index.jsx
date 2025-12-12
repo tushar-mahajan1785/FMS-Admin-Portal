@@ -267,7 +267,8 @@ export default function ChecklistGroups() {
                                         boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
                                     }}
                                     onClick={() => {
-                                        navigate(`select-assets/${objAsset?.group_uuid}`)
+                                        // navigate(`select-assets/${objAsset?.group_uuid}`)
+                                        navigate(`view/${objAsset?.group_uuid}`)
                                     }}
                                 >
                                     <Stack direction="row" justifyContent={'space-between'} alignItems="center" sx={{ width: '100%' }}>
@@ -289,7 +290,7 @@ export default function ChecklistGroups() {
                                             </TypographyComponent>
                                             <Stack sx={{ flexDirection: 'row', gap: 1.5 }}>
                                                 <TypographyComponent fontSize={16} fontWeight={400} mb={1} sx={{ color: theme.palette.success[700] }}>
-                                                    {`(${objAsset?.total_completed.toString().padStart(2, "0")}/${objAsset?.total_checklists.toString().padStart(2, "0")})`}
+                                                    {`(${objAsset?.total_completed && objAsset?.total_completed !== null ? objAsset?.total_completed?.toString().padStart(2, "0") : 0}/${objAsset?.total_checklists && objAsset?.total_checklists !== null ? objAsset?.total_checklists?.toString().padStart(2, "0") : 0})`}
                                                 </TypographyComponent>
                                                 <TypographyComponent fontSize={16} fontWeight={400} mb={1} sx={{ color: theme.palette.success[700] }}>
                                                     {getPercentage(objAsset?.total_completed, objAsset?.total_checklists) ? Math.round(getPercentage(objAsset?.total_completed, objAsset?.total_checklists)) : 0}%

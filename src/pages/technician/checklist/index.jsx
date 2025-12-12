@@ -9,8 +9,9 @@ export default function TechnicianChecklist() {
         <Routes>
             <Route index element={<AssetTypesChecklist />} />
             <Route path="checklist-groups/:assetTypeId" element={<ChecklistGroups />} />
-            <Route path="checklist-groups/:assetTypeId/select-assets/:groupUuid" element={<ChecklistSelectAsset />} />
-            <Route path="checklist-groups/:assetTypeId/select-assets/:groupUuid/view/:assetId" element={<ChecklistView />} />
+            <Route path="checklist-groups/:assetTypeId/view/:groupUuid" element={<ChecklistView />} />
+            {/* <Route path="checklist-groups/:assetTypeId/select-assets/:groupUuid" element={<ChecklistSelectAsset />} /> */}
+            {/* <Route path="checklist-groups/:assetTypeId/select-assets/:groupUuid/view/:assetId" element={<ChecklistView />} /> */}
         </Routes>
     );
 }

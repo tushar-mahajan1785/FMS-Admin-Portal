@@ -4,7 +4,7 @@ import { TechnicianNavbarHeader } from '../../../../components/technician/navbar
 import TypographyComponent from '../../../../components/custom-typography'
 import { ERROR, IMAGES_SCREEN_NO_DATA, SERVER_ERROR, UNAUTHORIZED } from '../../../../constants'
 import EmptyContent from '../../../../components/empty_content'
-import { getColorAndBackgroundForAssetType, getPercentage } from '../../../../utils'
+import { getColorAndBackgroundForAssetType, getInitials, getPercentage } from '../../../../utils'
 import { StyledLinearProgress } from '../../../../components/common'
 import AssetIcon from '../../../../assets/icons/AssetIcon'
 import { useNavigate } from 'react-router-dom'
@@ -266,9 +266,13 @@ export default function AssetTypesChecklist() {
                                                     display: "flex",
                                                     alignItems: "center",
                                                     justifyContent: "center",
+                                                    color: theme.palette.common.white,
+                                                    fontWeight: 600,
+                                                    fontSize: 18
                                                 }}
                                             >
-                                                <AssetIcon stroke={objAsset?.border_color} size={18} />
+                                                {getInitials(objAsset?.title, 1)}
+                                                {/* <AssetIcon stroke={objAsset?.border_color} size={18} /> */}
                                             </Box>
                                             <Box>
                                                 <TypographyComponent fontSize={18} fontWeight={500}>

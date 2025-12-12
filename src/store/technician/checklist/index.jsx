@@ -5,7 +5,8 @@ import {
     API_TECHNICIAN_CHECKLIST_GROUP_LIST,
     API_TECHNICIAN_CHECKLIST_GROUP_ASSET_LIST,
     API_TECHNICIAN_CHECKLIST_ASSET_TIMES, API_TECHNICIAN_ASSET_CHECKLIST_DETAILS,
-    API_TECHNICIAN_ASSET_CHECKLIST_UPDATE
+    API_TECHNICIAN_ASSET_CHECKLIST_UPDATE,
+    API_TECHNICIAN_ASSET_VALIDATE_QR_CODE,
 } from "../../../common/api/constants";
 import { axiosApi } from "../../../common/api";
 
@@ -68,6 +69,15 @@ export const actionTechnicianAssetChecklistUpdate = createAsyncThunk('technician
         return error
     }
 })
+export const actionTechnicianAssetValidateQRCode = createAsyncThunk('technicianChecklist/actionTechnicianAssetValidateQRCode', async (params) => {
+    try {
+        const response = await axiosApi.post(API_TECHNICIAN_ASSET_VALIDATE_QR_CODE, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
 
 
 export const technicianChecklistStore = createSlice({
@@ -78,7 +88,8 @@ export const technicianChecklistStore = createSlice({
         technicianChecklistGroupAssetList: null,
         technicianGetChecklistAssetTimes: null,
         technicianAssetChecklistDetails: null,
-        technicianAssetChecklistUpdate: null
+        technicianAssetChecklistUpdate: null,
+        technicianAssetValidateQRCode: null
     },
 
     reducers: {
@@ -100,7 +111,9 @@ export const technicianChecklistStore = createSlice({
         resetTechnicianAssetChecklistUpdateResponse: (state) => {
             state.technicianAssetChecklistUpdate = null
         },
-
+        resetTechnicianAssetValidateQRCodeResponse: (state) => {
+            state.technicianAssetValidateQRCode = null
+        },
     },
     extraReducers: builder => {
         builder
@@ -122,6 +135,9 @@ export const technicianChecklistStore = createSlice({
             .addCase(actionTechnicianAssetChecklistUpdate.fulfilled, (state, action) => {
                 state.technicianAssetChecklistUpdate = action.payload
             })
+            .addCase(actionTechnicianAssetValidateQRCode.fulfilled, (state, action) => {
+                state.technicianAssetValidateQRCode = action.payload
+            })
 
     }
 })
@@ -134,7 +150,8 @@ export const {
     resetTechnicianAssetChecklistDetailsResponse,
     resetTechnicianAssetChecklistUpdateResponse,
     resetTechnicianChecklistGroupAssetApproveResponse,
-    resetTechnicianChecklistGroupAllGroupDetailsResponse
+    resetTechnicianChecklistGroupAllGroupDetailsResponse,
+    resetTechnicianAssetValidateQRCodeResponse
 } =
     technicianChecklistStore.actions
 

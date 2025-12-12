@@ -2,7 +2,7 @@ import { Box, Button, Card, Chip, CircularProgress, Divider, Grid, IconButton, I
 import React, { useEffect, useRef, useState } from 'react'
 import { TechnicianNavbarHeader } from '../../../../components/technician/navbar-header'
 import TypographyComponent from '../../../../components/custom-typography'
-import { getPercentage, isCurrentTimeInRange, isFutureTimeRange } from '../../../../utils'
+import { getPercentage, isCurrentTimeInRange, isFutureTimeRange, skipEvery } from '../../../../utils'
 import { StyledLinearProgress } from '../../../../components/common'
 import ChevronLeftIcon from '../../../../assets/icons/ChevronLeft'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -44,73 +44,165 @@ export default function ChecklistView() {
     const [getTimesArray, setGetTimesArray] = useState([])
     const [selectedTimeUuid, setSelectedTimeUuid] = useState(null)
     const [openAssetListDrawer, setOpenAssetListDrawer] = useState(false)
-    const [assetMasterData, setAssetMasterData] = useState([
-        {
-            "id": 1,
-            "title": "Battery Monitoring system"
-        },
-        {
-            "id": 4,
-            "title": " MBC (Miniature Circuit Breaker)"
-        },
-        {
-            "id": 9,
-            "title": "Electric vehicles (EVs)"
-        }
-    ])
+    const [assetMasterData, setAssetMasterData] = useState([])
     const [selectedAssetId, setSelectedAssetId] = useState(assetId ? assetId : null)
-    const [currentDataCalculations,
-        // setCurrentDataCalculations
-    ] = useState({
-        total_count: 0,
-        pending_count: 0,
-        completed_count: 0,
-    })
+    const [selectedAssetStatus, setSelectedAssetStatus] = useState(null)
+    const [filledCount, setFilledCount] = useState(0)
+    const [getCurrentParametersRenderedLength, setGetCurrentParametersRenderedLength] = useState(0)
+    const [ViewFilledCount, setViewFilledCount] = useState(0)
+    const [getAbnormalCount, setGetAbnormalCount] = useState(0)
+    // const [getParametersData, setGetParametersData] = useState([])
+
+    // const [currentDataCalculations,
+    //     // setCurrentDataCalculations
+    // ] = useState({
+    //     total_count: 0,
+    //     pending_count: 0,
+    //     completed_count: 0,
+    // })
 
 
     //Form
     const { control, handleSubmit,
         // getValues,
+        setValue,
         reset,
-        // watch,
+        watch,
         formState: { errors } } = useForm();
 
     console.log('----currentData-------', currentData)
-    console.log('----getCurrentAssetDetailsData-------', getCurrentAssetDetailsData)
-    console.log('----currentDataCalculations-------', currentDataCalculations)
-    console.log('----getTimesArray-------', getTimesArray)
+    console.log('----getCurrentParametersRenderedLength-------', getCurrentParametersRenderedLength)
+    console.log('----ViewFilledCount-------', ViewFilledCount)
+    console.log('----getAbnormalCount-------', getAbnormalCount)
 
-    // const watchedValues = watch();
+    useEffect(() => {
+        if (assetMasterData && assetMasterData !== null && assetMasterData.length > 0) {
+            setSelectedAssetId(assetMasterData[0]?.id || null)
+        }
+
+    }, [assetMasterData])
 
     // useEffect(() => {
     //     checklistStats();
     // }, [watchedValues]);
 
-    // const checklistStats = useCallback(() => {
-    //     const formValues = getValues();
-    //     const keys = Object.keys(formValues);
+    // const debouncedStats = useDebounce(() => {
+    //     checklistStats();
+    // }, 100);
 
-    //     let total = keys.length;
-    //     let pending = 0;
-
-    //     keys.forEach((key) => {
-    //         if (
-    //             formValues[key] === "" ||
-    //             formValues[key] === null ||
-    //             formValues[key] === undefined
-    //         ) {
-    //             pending++;
-    //         }
-    //     });
-
-    //     return {
-    //         total_count: total,
-    //         pending_count: pending,
-    //         completed_count: total - pending,
+    // useEffect(() => {
+    //     const isFilled = (value) => {
+    //         if (Array.isArray(value)) return value.length > 0;
+    //         if (typeof value === "boolean") return value === true;
+    //         return value !== "" && value !== null && value !== undefined;
     //     };
-    // }, [getValues]);
 
-    // console.log('----checklistStats-------', checklistStats)
+    //     const count = Object.values(watchedValues).filter(isFilled).length;
+    //     setFilledCount(count);
+    //     console.log('----count---@@@----', count)
+    //     // const formValues = getValues();
+    //     // const keys = Object.keys(formValues);
+
+    //     // let total = keys.length;
+    //     // let pending = 0;
+
+    //     // keys.forEach((key) => {
+    //     //     if (
+    //     //         formValues[key] === "" ||
+    //     //         formValues[key] === null ||
+    //     //         formValues[key] === undefined
+    //     //     ) {
+    //     //         pending++;
+    //     //     }
+    //     // });
+
+    //     // return {
+    //     //     total_count: total,
+    //     //     pending_count: pending,
+    //     //     completed_count: total - pending,
+    //     // };
+    // }, [watchedValues]);
+
+    useEffect(() => {
+        const subscription = watch((values) => {
+            const count = Object.values(values).filter(
+                (v) => v !== "" && v !== null && v !== undefined
+            ).length;
+
+            setFilledCount(count); // updating only state, not form fields
+        });
+
+        return () => subscription.unsubscribe();
+    }, [watch]);
+
+    useEffect(() => {
+        if (selectedTimeUuid && selectedTimeUuid !== null) {
+            //Get Total Count of Parameters to be rendered
+            let count = 0
+            getCurrentAssetDetailsData?.checklist_json?.parameters?.forEach(param => {
+
+                if (param && param !== null && param?.parameter_type !== "Grouping") {
+                    count += 1
+                }
+            });
+            setGetCurrentParametersRenderedLength(count)
+            //----------------------------------------------
+
+            //Get Total Filled Count of Parameters to be rendered
+            const parametersList = getCurrentAssetDetailsData?.checklist_json?.parameters || [];
+            let nonGroupingFilledCount = 0;
+            // let updatedData =
+            currentData?.forEach(param => {
+                const matchedParam = parametersList?.find(
+                    p => p.id == param.parameter_id
+                );
+
+                // console.log('---------------------------', matchedParam)
+                // skip if no match
+                if (!matchedParam) return;
+
+                // skip grouping parameters
+                if (matchedParam.parameter_type == "Grouping") return;
+
+                // count only filled values
+                if (param.value != "" && param.value !== null && param.value !== undefined) {
+                    nonGroupingFilledCount += 1;
+                }
+            });
+            setViewFilledCount(nonGroupingFilledCount)
+            //----------------------------------------------
+
+            //-----------Get abnormal Count-----------
+            let abnormalCount = 0;
+            currentData?.forEach(param => {
+                console.log('----param for abnormal count----status---', param?.param_status)
+                if (param?.param_status == 'Abnormal' && param?.priority == 'High') {
+                    abnormalCount += 1
+                }
+            });
+            setGetAbnormalCount(abnormalCount)
+            //----------------------------------------------
+        }
+
+    }, [selectedTimeUuid, currentData])
+
+    // const FilledCounter = ({ control, setFilledCount }) => {
+
+    //     const watch = useWatch({ control });
+
+    //     useEffect(() => {
+    //         const filled = Object.values(watch || {}).filter(
+    //             (v) => v !== "" && v !== null && v !== undefined
+    //         ).length;
+
+    //         setFilledCount(filled);
+    //     }, [watch]);
+
+    //     return null; // no UI needed unless you want to show it
+    // };
+
+
+    console.log('----filledCount-------', filledCount)
 
 
     //Scroll times to current selected time
@@ -146,82 +238,6 @@ export default function ChecklistView() {
 
     useEffect(() => {
         setIsInitialLoad(true)
-        // let times = [
-        //     {
-        //         "to": "02:00",
-        //         "from": "00:00",
-        //         "status": 'Active',
-        //         "uuid": "2b3e61e4-bf47-4a72-b44f-0594fc05384f"
-        //     },
-        //     {
-        //         "to": "04:00",
-        //         "from": "02:00",
-        //         "status": 'Active',
-        //         "uuid": "6b75553c-a30e-4adb-8d9b-fbbd9d330613"
-        //     },
-        //     {
-        //         "to": "06:00",
-        //         "from": "04:00",
-        //         "uuid": "b714b8de-5376-4ab1-b24a-899cde56d7c4"
-        //     },
-        //     {
-        //         "to": "08:00",
-        //         "from": "06:00",
-        //         "uuid": "c79d301a-a0a0-4548-b091-ace8492431b0"
-        //     },
-        //     {
-        //         "to": "10:00",
-        //         "from": "08:00",
-        //         "status": 'Active',
-        //         "uuid": "48c701e9-07a7-45d1-86c9-2e6c32abe201"
-        //     },
-        //     {
-        //         "to": "12:00",
-        //         "from": "10:00",
-        //         "uuid": "55cd008f-cec4-46a5-bf8b-cd8ec7d76016"
-        //     },
-        //     {
-        //         "to": "14:00",
-        //         "from": "12:00",
-        //         "uuid": "a189e6ad-fc25-46b6-adb8-bf1f71c1f791"
-        //     },
-        //     {
-        //         "to": "16:00",
-        //         "from": "14:00",
-        //         "uuid": "4854a4b2-dc76-42f0-a7d2-891ad033fbd3"
-        //     },
-        //     {
-        //         "to": "18:00",
-        //         "from": "16:00",
-        //         "uuid": "8366367f-6332-4714-95cd-dd2895e1d0ef"
-        //     },
-        //     {
-        //         "to": "20:00",
-        //         "from": "18:00",
-        //         "uuid": "896e145f-6375-4b38-8a69-877097507148"
-        //     },
-        //     {
-        //         "to": "22:00",
-        //         "from": "20:00",
-        //         "uuid": "98fbe09f-e9f4-4295-80b8-f56687bc0f12"
-        //     },
-        //     {
-        //         "to": "00:00",
-        //         "from": "22:00",
-        //         "uuid": "286c2ae1-02f5-4006-8c32-c9ff7449db36"
-        //     }
-        // ]
-        // // Helper to check if now is between timeObj.from and timeObj.to
-        // const matched = times?.find(t => isCurrentTimeInRange(t.from, t.to));
-
-        // let updated = times?.map((timeObj) => ({
-        //     ...timeObj,
-        //     is_selected: matched?.uuid == timeObj?.uuid ? true : false
-        // }))
-        // setGetTimesArray(updated)
-
-        // setSelectedTimeUuid(matched)
-
     }, [])
 
     useEffect(() => {
@@ -290,6 +306,7 @@ export default function ChecklistView() {
             dispatch(resetTechnicianAssetChecklistDetailsResponse())
             if (technicianAssetChecklistDetails?.result === true) {
                 setGetCurrentAssetDetailsData(technicianAssetChecklistDetails?.response)
+                // setGetParametersData(technicianAssetChecklistDetails?.response?.checklist_json?.parameters || [])
                 // let times = technicianAssetChecklistDetails?.response?.checklist_json?.times || []
                 // const matched = times?.find(t => isCurrentTimeInRange(t.from, t.to));
 
@@ -303,6 +320,9 @@ export default function ChecklistView() {
 
                 // Find current time range
                 const matched = checklistTimes.find(t => isCurrentTimeInRange(t.from, t.to));
+                const matchedAssetJSON = assetTimes.find(t => isCurrentTimeInRange(t.from, t.to));
+
+                setSelectedAssetStatus(matchedAssetJSON?.status || null);
 
                 let updated = checklistTimes.map((timeObj) => {
 
@@ -324,6 +344,7 @@ export default function ChecklistView() {
                 setGetCurrentAssetDetailsData(null)
                 setGetTimesArray([])
                 setSelectedTimeUuid(null)
+                // setGetParametersData([])
                 // setCurrentData([])
                 switch (technicianAssetChecklistDetails?.status) {
                     case UNAUTHORIZED:
@@ -356,7 +377,7 @@ export default function ChecklistView() {
                 reset()
                 showSnackbar({ message: technicianAssetChecklistUpdate.message, severity: "success" })
                 setLoadingList(true)
-                console.log('-------selectedAssetId, groupUuid-------', selectedAssetId, groupUuid)
+                // console.log('-------selectedAssetId, groupUuid-------', selectedAssetId, groupUuid)
                 if (selectedAssetId && selectedAssetId !== null && groupUuid && groupUuid !== null) {
                     setLoadingList(true)
                     dispatch(actionTechnicianAssetChecklistDetails({
@@ -385,9 +406,6 @@ export default function ChecklistView() {
         }
     }, [technicianAssetChecklistUpdate])
 
-    // console.log('----se-------', selectedTimeUuid?.uuid == getCurrentAssetDetailsData?.time_uuid)
-    // console.log('----selectedTimeUuid-------', selectedTimeUuid)
-    // console.log('----getCurrentAssetDetailsData-------', getCurrentAssetDetailsData)
     /**
     * Initial Render
     */
@@ -610,6 +628,8 @@ export default function ChecklistView() {
             input_type: param?.input_type ?? "",
             is_mandatory: param?.is_mandatory ?? 0,
             default_value: param?.default_value ?? "",
+            priority: param?.priority ?? "",
+            parameter_type: param?.parameter_type ?? "",
             is_view: 1,
         }));
     };
@@ -628,12 +648,27 @@ export default function ChecklistView() {
             // }
 
             if (getCurrentAssetDetailsData?.checklist_json?.parameters && getCurrentAssetDetailsData?.checklist_json?.parameters !== null && getCurrentAssetDetailsData?.checklist_json?.parameters.length > 0) {
+
                 if (getCurrentAssetDetailsData?.asset_checklist_json && getCurrentAssetDetailsData?.asset_checklist_json !== null) {
-                    console.log('---getCurrentAssetDetailsData?.asset_checklist_json?.times---', getCurrentAssetDetailsData?.asset_checklist_json?.times)
+
                     let currentTime = getCurrentAssetDetailsData?.asset_checklist_json?.times?.find(t => t.uuid == selectedTimeUuid?.uuid) || []
-                    console.log('---selectedTimeUuid---', selectedTimeUuid)
-                    console.log('---currentTime---', currentTime)
+
                     if (currentTime && currentTime !== null && currentTime?.values && currentTime?.values.length > 0) {
+
+                        // let parameters = getParametersData || []
+                        // let currentValues = currentTime?.values || []
+
+                        // const mergedParameters = getParametersData?.map(param => {
+                        //     const match = currentValues.find(
+                        //         v => v.parameter_id === param.id
+                        //     );
+
+                        //     return {
+                        //         ...param,
+                        //         value: match ? match.value : null, // or "" or undefined as per your UI
+                        //     };
+                        // });
+                        // setGetParametersData(mergedParameters)
                         setCurrentData(currentTime?.values)
                     } else {
                         let values = createValuesFromParameters(getCurrentAssetDetailsData?.checklist_json?.parameters)
@@ -657,6 +692,20 @@ export default function ChecklistView() {
         }
     }, [getCurrentAssetDetailsData])
 
+    useEffect(() => {
+        if (getCurrentAssetDetailsData?.is_view == 0) {
+            // let getParameters = currentData || []
+            if (currentData && currentData !== null && currentData.length > 0) {
+                currentData.forEach(param => {
+                    const fieldName = param.name // Note the space
+                    const currentValueObj = getValue(param.parameter_id);
+                    setValue(fieldName, currentValueObj?.value || "");
+                });
+            }
+        }
+
+    }, [getCurrentAssetDetailsData?.is_view])
+
     /**
      * Get Current Value of Parameter
      * @param {*} paramId 
@@ -671,15 +720,16 @@ export default function ChecklistView() {
         * @param {*} params, value
         * @returns 
         */
-    const FieldRenderer = ({ params, value }) => {
+    const FieldRenderer = React.memo(({ params }) => {
 
-        const fieldName = `${params.name} `;
+        const fieldName = params.name
 
         return (
             <Controller
                 name={fieldName}
                 control={control}
-                defaultValue={value ?? ""}
+                // defaultValue={value ?? ""}
+                // value={value ?? ""}
                 render={({ field }) => {
 
                     switch (params?.input_type) {
@@ -746,7 +796,7 @@ export default function ChecklistView() {
                 }}
             />
         );
-    };
+    });
 
     /**
     * Check if a time slot is enabled based on current time
@@ -772,14 +822,10 @@ export default function ChecklistView() {
     };
 
     const onSubmit = (formData) => {
-        console.log('-------formData-------', formData)
-        console.log('-------currentData-------', currentData)
-        console.log('-------selectedAssetId, groupUuid-------', selectedAssetId, groupUuid)
+
         const updatedValues = currentData?.map(param => {
-            // Construct the dynamic fieldName
-            console.log('---param param---', param)
-            const fieldName = `${param.name} `;
-            // const fieldName = `param_${param.parameter_id}`;
+
+            const fieldName = param.name
 
             return {
                 ...param,
@@ -787,8 +833,6 @@ export default function ChecklistView() {
                 value: formData[fieldName] ?? param.value
             };
         });
-
-        // console.log('-------updatedValues-------', updatedValues)
 
         let objData = {
             "asset_type_id": assetTypeId,
@@ -811,8 +855,6 @@ export default function ChecklistView() {
                 ]
             }
         }
-
-        // console.log('-------objData-------', objData)
         setLoadingSubmit(true)
         dispatch(actionTechnicianAssetChecklistUpdate(objData))
     }
@@ -876,7 +918,8 @@ export default function ChecklistView() {
         <Stack rowGap={2} sx={{ overflowY: 'scroll', height: "100%" }}>
             <TechnicianNavbarHeader leftSection={<Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                 <Stack sx={{ cursor: 'pointer' }} onClick={() => {
-                    navigate(`/checklist/checklist-groups/${assetTypeId}/select-assets/${groupUuid}`)
+                    // navigate(`/checklist/checklist-groups/${assetTypeId}/select-assets/${groupUuid}`)
+                    navigate(`/checklist/checklist-groups/${assetTypeId}`)
                 }}>
                     <ChevronLeftIcon size={24} />
                 </Stack>
@@ -911,7 +954,7 @@ export default function ChecklistView() {
                                         </TypographyComponent>
                                     </Box>
                                     <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 1, cursor: 'pointer' }} >
-                                        <Chip size='small' label={getCurrentAssetDetailsData?.time_interval} sx={{ background: theme.palette.primary[600], borderRadius: '4px', padding: '0px 1px', color: theme.palette.common.white, fontSize: '12px' }}>
+                                        <Chip size='small' label={getCurrentAssetDetailsData?.time_interval && getCurrentAssetDetailsData?.time_interval !== null ? skipEvery(getCurrentAssetDetailsData?.time_interval) : ''} sx={{ background: theme.palette.primary[600], borderRadius: '4px', padding: '0px 1px', color: theme.palette.common.white, fontSize: '12px' }}>
                                         </Chip>
                                         <ChevronDownIcon />
                                     </Stack>
@@ -977,26 +1020,131 @@ export default function ChecklistView() {
                                         : null
                                 }
                             </Stack>
-                            <Stack>
+                            {
+                                getCurrentAssetDetailsData?.is_view == 0 ?
+                                    <Stack>
+                                        <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 0.7 }}>
+                                            <TypographyComponent fontSize={16} fontWeight={400} mb={1}>
+                                                Checklist Progress
+                                            </TypographyComponent>
+                                            <Stack sx={{ flexDirection: 'row', gap: 1.5 }}>
+                                                <TypographyComponent fontSize={16} fontWeight={400} mb={1} sx={{ color: theme.palette.success[700] }}>
+                                                    {/* {`(${filledCount && filledCount !== null ? filledCount?.toString().padStart(2, "0") : 0}/${currentData?.length && currentData?.length !== null && currentData?.length > 0 ? currentData?.length?.toString().padStart(2, "0") : "0"})`} */}
+                                                    {`(${filledCount && filledCount !== null ? filledCount?.toString().padStart(2, "0") : 0}/${getCurrentParametersRenderedLength})`}
+                                                </TypographyComponent>
+                                                <TypographyComponent fontSize={16} fontWeight={400} mb={1} sx={{ color: theme.palette.success[700] }}>
+                                                    {currentData && currentData !== null && currentData?.length > 0 ? getPercentage(filledCount, getCurrentParametersRenderedLength) : 0}%
+                                                </TypographyComponent>
+                                            </Stack>
+                                        </Stack>
+                                        <Stack sx={{ width: '100%' }}>
+                                            <Box sx={{ width: '100%', mr: 1 }}>
+                                                <StyledLinearProgress variant="determinate"
+                                                    // value={getPercentage(filledCount, (currentData?.length && currentData?.length !== null ? currentData?.length?.toString().padStart(2, "0") : 0)) ? getPercentage(filledCount, (currentData?.length && currentData?.length !== null ? currentData?.length?.toString().padStart(2, "0") : 0)) : "0"}
+                                                    value={getCurrentParametersRenderedLength && getCurrentParametersRenderedLength !== null && getCurrentParametersRenderedLength > 0 ? getPercentage(filledCount, getCurrentParametersRenderedLength) : 0}
+                                                    bgColor={theme.palette.success[700]} />
+                                            </Box>
+                                        </Stack>
+                                    </Stack>
+                                    :
+                                    <Stack sx={{ flexDirection: "row", justifyContent: "space-between", mt: 0.7 }}>
+
+                                        {/* LEFT SIDE — Checklist Details */}
+                                        <Stack>
+                                            <TypographyComponent fontSize={16} fontWeight={400} mb={1}>
+                                                Checklist Details
+                                            </TypographyComponent>
+
+                                            <Stack sx={{ flexDirection: "row", gap: 1.5 }}>
+                                                <TypographyComponent
+                                                    fontSize={16}
+                                                    fontWeight={400}
+                                                    mb={1}
+                                                    sx={{ color: theme.palette.success[700] }}
+                                                >
+                                                    {/* {`(${filledCount && filledCount !== null
+                                                        ? filledCount.toString().padStart(2, "0")
+                                                        : "00"
+                                                        }/${currentData?.length && currentData?.length > 0
+                                                            ? currentData.length.toString().padStart(2, "0")
+                                                            : "00"
+                                                        })`} */}
+                                                    {`(${ViewFilledCount}/${getCurrentParametersRenderedLength && getCurrentParametersRenderedLength > 0
+                                                        ? getCurrentParametersRenderedLength.toString().padStart(2, "0")
+                                                        : "00"
+                                                        })`}
+                                                </TypographyComponent>
+
+                                                <TypographyComponent
+                                                    fontSize={16}
+                                                    fontWeight={400}
+                                                    mb={1}
+                                                    sx={{ color: theme.palette.success[700] }}
+                                                >
+                                                    {/* {currentData?.length > 0
+                                                        ? getPercentage(filledCount, currentData.length)
+                                                        : 0}% */}
+                                                    {getCurrentParametersRenderedLength > 0
+                                                        ? getPercentage(ViewFilledCount, getCurrentParametersRenderedLength)
+                                                        : 0}%
+                                                </TypographyComponent>
+                                            </Stack>
+                                        </Stack>
+
+                                        {/* RIGHT SIDE — Abnormalities */}
+                                        <Stack sx={{ alignItems: "flex-end" }}>
+                                            <TypographyComponent fontSize={16} fontWeight={400} mb={1}>
+                                                Abnormalities
+                                            </TypographyComponent>
+
+                                            <Stack sx={{ flexDirection: "row", gap: 1.5 }}>
+                                                <TypographyComponent
+                                                    fontSize={16}
+                                                    fontWeight={400}
+                                                    mb={1}
+                                                    sx={{ color: theme.palette.warning[700] }}  // orange like your screenshot
+                                                >
+                                                    ({getAbnormalCount})
+                                                </TypographyComponent>
+
+                                                <TypographyComponent
+                                                    fontSize={16}
+                                                    fontWeight={400}
+                                                    mb={1}
+                                                    sx={{ color: theme.palette.warning[700] }}
+                                                >
+                                                    {getCurrentParametersRenderedLength > 0
+                                                        ? getPercentage(getAbnormalCount, getCurrentParametersRenderedLength)
+                                                        : 0}%
+                                                </TypographyComponent>
+                                            </Stack>
+                                        </Stack>
+
+                                    </Stack>
+                            }
+                            {/* <Stack>
                                 <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 0.7 }}>
                                     <TypographyComponent fontSize={16} fontWeight={400} mb={1}>
                                         Checklist Progress
                                     </TypographyComponent>
                                     <Stack sx={{ flexDirection: 'row', gap: 1.5 }}>
                                         <TypographyComponent fontSize={16} fontWeight={400} mb={1} sx={{ color: theme.palette.success[700] }}>
-                                            {/* {`(${checklistStats()?.completed_count && checklistStats()?.completed_count !== null ? checklistStats()?.completed_count?.toString().padStart(2, "0") : 0}/${currentData?.length && currentData?.length !== null ? currentData?.length?.toString().padStart(2, "0") : 0})`} */}
+                                            {`(${filledCount && filledCount !== null ? filledCount?.toString().padStart(2, "0") : 0}/${currentData?.length && currentData?.length !== null && currentData?.length > 0 ? currentData?.length?.toString().padStart(2, "0") : "0"})`}
                                         </TypographyComponent>
                                         <TypographyComponent fontSize={16} fontWeight={400} mb={1} sx={{ color: theme.palette.success[700] }}>
-                                            {getPercentage(getCurrentAssetDetailsData?.total_completed, getCurrentAssetDetailsData?.total_checklists) ? Math.round(getPercentage(getCurrentAssetDetailsData?.total_completed, getCurrentAssetDetailsData?.total_checklists)) : 0}%
+                                            {currentData && currentData !== null && currentData?.length > 0 ? getPercentage(filledCount, currentData?.length) : 0}%
                                         </TypographyComponent>
                                     </Stack>
                                 </Stack>
                                 <Stack sx={{ width: '100%' }}>
                                     <Box sx={{ width: '100%', mr: 1 }}>
-                                        <StyledLinearProgress variant="determinate" value={getPercentage(getCurrentAssetDetailsData?.total_completed, getCurrentAssetDetailsData?.total_checklists) ? getPercentage(getCurrentAssetDetailsData?.total_completed, getCurrentAssetDetailsData?.total_checklists) : 0} bgColor={theme.palette.success[700]} />
+                                        <StyledLinearProgress variant="determinate"
+                                            // value={getPercentage(filledCount, (currentData?.length && currentData?.length !== null ? currentData?.length?.toString().padStart(2, "0") : 0)) ? getPercentage(filledCount, (currentData?.length && currentData?.length !== null ? currentData?.length?.toString().padStart(2, "0") : 0)) : "0"}
+                                            value={currentData && currentData !== null && currentData?.length > 0 ? getPercentage(filledCount, currentData?.length) : 0}
+                                            bgColor={theme.palette.success[700]} />
                                     </Box>
                                 </Stack>
-                            </Stack>
+                            </Stack> */}
                         </Card>
                     </Grid>
                 </Grid>
@@ -1027,27 +1175,44 @@ export default function ChecklistView() {
                                     }}
                                 >
                                     {/* LEFT: Parameter Name */}
-                                    <TypographyComponent
+                                    {/* <TypographyComponent
                                         fontSize={16}
                                         fontWeight={400}
                                         sx={{
 
                                             width: "70%",
-                                            lineHeight: 1.3
+                                            // lineHeight: 1.3.toExponential,
                                         }}
                                     >
                                         {param.name}
-                                    </TypographyComponent>
+                                    </TypographyComponent> */}
+                                    <Stack sx={{ flexDirection: 'row', width: '100%' }}>
+                                        <TypographyComponent sx={{ color: theme.palette.grey[900] }} fontSize={16} fontWeight={400}> {param.name}</TypographyComponent>
+                                        {
+                                            param.is_mandatory == 1 ?
+                                                <span style={{ color: 'red', fontSize: 10 }}>*</span>
+                                                :
+                                                <></>
+                                        }
+                                    </Stack>
 
                                     {/* RIGHT: Input Field */}
                                     {
                                         getCurrentAssetDetailsData?.is_view == 0 ?
                                             <>
-                                                <FieldRenderer key={`${param?.asset_id} `} params={param} value={valueObj.value} assetId={param?.asset_id} />
+                                                {/* <FilledCounter control={control} setFilledCount={setFilledCount} /> */}
+                                                <FieldRenderer key={param?.asset_id} params={param} value={valueObj.value} assetId={param?.asset_id} />
+                                                {/* {param && param !== null && param.length > 0 && param?.map((objectParam) => (
+                                                    <FieldRenderer key={param?.asset_id} params={param} value={valueObj.value} assetId={param?.asset_id} />
+                                                ))} */}
+
                                             </>
                                             :
                                             <Stack sx={{ padding: '12px 18px', width: '100%', alignItems: 'center', background: theme.palette.grey[100], borderRadius: '8px' }}>
-                                                <TypographyComponent sx={{ color: theme.palette.grey[900] }} fontSize={14} fontWeight={400}>{valueObj.value && valueObj.value !== null ? `${valueObj.value} ${param?.input_type == 'Number (with range)' ? (param?.unit && param?.unit !== null ? param?.unit : '') : ''} ` : '--'} </TypographyComponent>
+                                                <TypographyComponent
+                                                    sx={{ color: valueObj?.param_status == 'Abnormal' && valueObj?.priority == 'High' ? theme.palette.error[600] : (valueObj?.param_status == 'Abnormal' && valueObj?.priority == 'Low') ? theme.palette.warning[600] : theme.palette.grey[900] }}
+                                                    fontSize={16} fontWeight={400}
+                                                >{valueObj.value && valueObj.value !== null ? `${valueObj.value} ${param?.input_type == 'Number (with range)' ? (param?.unit && param?.unit !== null ? param?.unit : '') : ''} ` : '--'} </TypographyComponent>
                                             </Stack>
                                     }
                                 </Box>
@@ -1057,7 +1222,7 @@ export default function ChecklistView() {
                 </form>
             </Stack>
             {
-                selectedTimeUuid?.uuid == getTimesArray?.find(t => isCurrentTimeInRange(t.from, t.to))?.uuid ?
+                (selectedTimeUuid?.uuid == getTimesArray?.find(t => isCurrentTimeInRange(t.from, t.to))?.uuid) && selectedAssetStatus !== 'Approved' ?
                     <Box
                         sx={{
                             position: "fixed",
@@ -1189,19 +1354,19 @@ export default function ChecklistView() {
                                         {item?.title}
                                     </TypographyComponent>
                                     <Stack flexDirection={'row'} sx={{ gap: '10px', marginTop: 0.5 }}>
-                                        <TypographyComponent fontSize={16} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>{item?.total_assets && item?.total_assets !== null ? item?.total_assets.toString().padStart(2, "0") : '00'} Completed</TypographyComponent>
+                                        <TypographyComponent fontSize={16} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>{item?.completed && item?.completed !== null ? item?.completed.toString().padStart(2, "0") : '00'} Completed</TypographyComponent>
                                         <Stack sx={{ alignItems: 'center', justifyContent: 'center' }}>
                                             <Stack sx={{ background: theme.palette.common.black, height: '4px', width: '4px', borderRadius: '5px', alignItems: 'center' }}></Stack>
                                         </Stack>
-                                        <TypographyComponent fontSize={16} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>{item?.total_assets && item?.total_assets !== null ? item?.total_assets.toString().padStart(2, "0") : '00'} Pending</TypographyComponent>
+                                        <TypographyComponent fontSize={16} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>{item?.pending && item?.pending !== null ? item?.pending.toString().padStart(2, "0") : '00'} Pending</TypographyComponent>
                                         <Stack sx={{ alignItems: 'center', justifyContent: 'center' }}>
                                             <Stack sx={{ background: theme.palette.common.black, height: '4px', width: '4px', borderRadius: '5px', alignItems: 'center' }}></Stack>
                                         </Stack>
-                                        <TypographyComponent fontSize={16} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>{item?.total_checklists && item?.total_checklists !== null ? item?.total_checklists.toString().padStart(2, "0") : '00'} Skipped</TypographyComponent>
+                                        <TypographyComponent fontSize={16} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>{item?.skipped && item?.skipped !== null ? item?.skipped.toString().padStart(2, "0") : '00'} Skipped</TypographyComponent>
                                     </Stack>
                                 </Box>
 
-                                <Chip size='small' label={item?.interval} sx={{ background: theme.palette.primary[600], borderRadius: '4px', padding: '0px 1px', color: theme.palette.common.white, fontSize: '12px' }}>
+                                <Chip size='small' label={item?.interval && item?.interval !== null ? skipEvery(item?.interval) : ''} sx={{ background: theme.palette.primary[600], borderRadius: '4px', padding: '0px 1px', color: theme.palette.common.white, fontSize: '12px' }}>
                                 </Chip>
                             </Stack >
                             <Divider sx={{ my: -0.2 }} />

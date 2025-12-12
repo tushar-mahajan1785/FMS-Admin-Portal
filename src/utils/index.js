@@ -269,10 +269,11 @@ export const getCurrentStatusColor = (status) => {
 * Generate Percentage function
 */
 export const getPercentage = (value, total) => {
-  let count = (Number(value) / Number(total))
+  let totalCount = total && total !== null && total > 0 ? total : 0
+  let count = (Number(value) / Number(totalCount))
   let percentage = count * Number(100)
 
-  return percentage
+  return Math.round(percentage)
 }
 
 export const isCurrentTimeInRange = (from, to) => {
@@ -384,4 +385,9 @@ export const parseScheduleStartDate = (schedule) => {
   return parsed.isValid() ? parsed : null;
 };
 
+
+export const skipEvery = (text) => {
+  if (!text) return "";
+  return text.replace(/^Every\s*/i, "").trim();
+}
 
