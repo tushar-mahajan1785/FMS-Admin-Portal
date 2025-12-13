@@ -162,6 +162,26 @@ export const StyledLinearProgress = styled(LinearProgress)(({ theme, bgColor = t
   },
 }));
 
+// Styled Checklist Progress Bar Root
+export const ChecklistLinearProgressRoot = styled("div")(({ theme }) => ({
+  height: 6,
+  borderRadius: 8,
+  flex: 1,
+  backgroundColor: theme.palette.grey[200],
+  overflow: "hidden",
+}));
+
+// Styled Checklist Progress Bar 
+export const ChecklistLinearProgressBar = styled("div")(
+  ({ theme, bgColor = theme.palette.primary[600] }) => ({
+    height: "100%",
+    width: "0%",
+    borderRadius: 8,
+    backgroundColor: bgColor,
+    transition: "width 0.25s ease",
+  })
+);
+
 // Styled Section Header Wrapper
 export const SectionHeaderWrapper = styled(Stack)(({ theme }) => ({
   flexDirection: "row",

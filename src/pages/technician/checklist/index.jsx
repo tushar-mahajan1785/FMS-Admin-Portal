@@ -1,6 +1,5 @@
 import { Route, Routes } from "react-router-dom";
 import AssetTypesChecklist from "./asset-types";
-import ChecklistSelectAsset from "./select-assets";
 import ChecklistGroups from "./checklist-group";
 import ChecklistView from "./view";
 

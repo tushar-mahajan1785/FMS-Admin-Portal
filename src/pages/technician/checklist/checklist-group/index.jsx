@@ -1,12 +1,11 @@
 import { Box, Card, Divider, Grid, Stack, useTheme } from '@mui/material'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { TechnicianNavbarHeader } from '../../../../components/technician/navbar-header'
 import TypographyComponent from '../../../../components/custom-typography'
 import { ERROR, IMAGES_SCREEN_NO_DATA, SERVER_ERROR, UNAUTHORIZED } from '../../../../constants'
 import EmptyContent from '../../../../components/empty_content'
-import { getColorAndBackgroundForAssetType, getPercentage } from '../../../../utils'
+import { getPercentage } from '../../../../utils'
 import { StyledLinearProgress } from '../../../../components/common'
-import AssetIcon from '../../../../assets/icons/AssetIcon'
 import ChevronLeftIcon from '../../../../assets/icons/ChevronLeft'
 import AlertTriangleIcon from '../../../../assets/icons/AlertTriangleIcon'
 import CheckboxIcon from '../../../../assets/icons/CheckboxIcon'
@@ -29,6 +28,7 @@ export default function ChecklistGroups() {
     const { showSnackbar } = useSnackbar()
     const { assetTypeId } = useParams()
 
+    //States
     const [arrChecklistGroupsData, setArrChecklistGroupsData] = useState([])
     const [loadingList, setLoadingList] = useState(false)
     const [getCurrentAssetGroup, setGetCurrentAssetGroup] = useState(null)
@@ -69,8 +69,8 @@ export default function ChecklistGroups() {
                 setLoadingList(false)
             } else {
                 setLoadingList(false)
-                // setGetCurrentAssetGroup(null)
-                // setArrChecklistGroupsData([])
+                setGetCurrentAssetGroup(null)
+                setArrChecklistGroupsData([])
                 switch (technicianChecklistGroupList?.status) {
                     case UNAUTHORIZED:
                         logout()
@@ -87,102 +87,6 @@ export default function ChecklistGroups() {
             }
         }
     }, [technicianChecklistGroupList])
-
-    /**
-    * Initial Render
-    */
-    useEffect(() => {
-        let data = [
-            {
-                "id": 1,
-                "uuid": 'sdfghjk',
-                "asset_type_id": 1,
-                "title": "GF-BMS UPS Room-A",
-                "total_groups": 2,
-                "total_assets": 5,
-                "total_checklists": 36,
-                "total_completed": 2,
-                "total_overdue": 0,
-                "total_abnormal": 1,
-                "total_pending": 0,
-                "total_not_approved": 3
-            },
-            {
-                "id": 2,
-                "uuid": 'sdfg234hjk',
-                "asset_type_id": 2,
-                "title": "T2-L3 -BMS UPS Room-B",
-                "total_groups": 1,
-                "total_assets": 2,
-                "total_checklists": 13,
-                "total_completed": 5,
-                "total_overdue": 0,
-                "total_abnormal": 2,
-                "total_pending": 0,
-                "total_not_approved": 6
-            },
-            {
-                "id": 3,
-                "uuid": 'sdfghjk2222',
-                "asset_type_id": 3,
-                "title": "GF-Mechanical UPS Room-A",
-                "total_groups": 0,
-                "total_assets": 0,
-                "total_checklists": 20,
-                "total_completed": 5,
-                "total_overdue": 0,
-                "total_abnormal": 0,
-                "total_pending": 0,
-                "total_not_approved": 0
-            },
-            {
-                "id": 9,
-                "uuid": 'sdf345ghjk',
-                "asset_type_id": 9,
-                "title": "GF-Mechanical UPS Room-B",
-                "total_groups": 0,
-                "total_assets": 0,
-                "total_checklists": 16,
-                "total_completed": 9,
-                "total_overdue": 0,
-                "total_abnormal": 0,
-                "total_pending": 0,
-                "total_not_approved": 0
-            }
-        ]
-        const updatedAssetTypesData = data && data !== null && data?.length > 0 ? data?.map((asset, index) => {
-            // 1. Calculate the cyclic index (0, 1, 2, 3, 4, 5, 0, 1, ...)
-            const colorIndex = index % 10;
-
-            // 2. Get the color object for the cyclic index
-            const colors = getColorAndBackgroundForAssetType(String(colorIndex));
-
-            // 3. Return the updated asset object with the new colors
-            return {
-                ...asset,
-                background_color: colors.backgroundColor,
-                border_color: theme.palette.common.white,
-                icon_color: theme.palette.common.white,
-                icon_background: colors.color,
-                // icon_color: colors.backgroundColor,
-                // icon_background: theme.palette.common.white,
-            };
-        }) : [];
-        setArrChecklistGroupsData(updatedAssetTypesData)
-        setGetCurrentAssetGroup({
-            "asset_type_id": "1",
-            "title": "Electric",
-            "total_groups": 2,
-            "total_assets": 5,
-            "total_checklists": 36,
-            "total_completed": 15,
-            "total_overdue": 0,
-            "total_abnormal": 6,
-            "total_pending": 0,
-            "total_not_approved": 15,
-        })
-    }, [])
-
 
     return (
         <Stack rowGap={2} sx={{ overflowY: 'scroll', paddingBottom: 10 }}>
@@ -259,7 +163,6 @@ export default function ChecklistGroups() {
                                         height: "100%",
                                         width: '100%',
                                         borderRadius: "8px",
-                                        // border: `1px solid ${theme.palette.primary[600]}`,
                                         backgroundColor: theme.palette.common.white,
                                         display: "flex",
                                         flexDirection: "column",
@@ -273,15 +176,12 @@ export default function ChecklistGroups() {
                                 >
                                     <Stack direction="row" justifyContent={'space-between'} alignItems="center" sx={{ width: '100%' }}>
                                         <Stack direction="row" gap={2} alignItems="center">
-
                                             <Box>
                                                 <TypographyComponent fontSize={18} fontWeight={500}>
                                                     {objAsset?.group_name}
                                                 </TypographyComponent>
-
                                             </Box>
                                         </Stack>
-
                                     </Stack>
                                     <Stack>
                                         <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 0.7 }}>
@@ -296,8 +196,6 @@ export default function ChecklistGroups() {
                                                     {getPercentage(objAsset?.total_completed, objAsset?.total_checklists) ? Math.round(getPercentage(objAsset?.total_completed, objAsset?.total_checklists)) : 0}%
                                                 </TypographyComponent>
                                             </Stack>
-
-
                                         </Stack>
                                         <Stack sx={{ width: '100%' }}>
                                             <Box sx={{ width: '100%', mr: 1 }}>

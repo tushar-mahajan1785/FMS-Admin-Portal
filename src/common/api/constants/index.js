@@ -372,3 +372,5 @@ export const API_TECHNICIAN_ASSET_CHECKLIST_DETAILS = `${BASE_APP}/checklist-gro
 
 export const API_TECHNICIAN_ASSET_CHECKLIST_UPDATE = `${BASE_APP}/checklist-group-history/add-or-edit`
 
+export const API_TECHNICIAN_ASSET_VALIDATE_QR_CODE = `${BASE_APP}/checklist-group/validate-qrcode`
+
