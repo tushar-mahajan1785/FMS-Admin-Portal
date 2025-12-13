@@ -671,53 +671,65 @@ export default function Dashboard() {
               <TypographyComponent fontSize={16} fontWeight={400}>Asset type wise Asset Count</TypographyComponent>
               {
                 dashboardDetails?.assets?.type_wise && dashboardDetails?.assets?.type_wise !== null && dashboardDetails?.assets?.type_wise?.length > 0 ?
-                  <Box sx={{ position: "relative", width: 250, height: 250 }}>
-                    <PieChart
-                      height={250}
-                      width={250}
-                      series={[
-                        {
-                          data: dashboardDetails?.assets?.type_wise,
-                          innerRadius: 90,
-                          outerRadius: 120,
-                          arcLabelMinAngle: 20,
-                          valueFormatter,
-                        },
-                      ]}
-                      sx={{
-                        "& .MuiChartsLegend-root": {
-                          display: "none",
-                        },
-                      }}
-                      slotProps={{ legend: { hidden: true } }}
-                    />
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Box sx={{ position: "relative", width: 250, height: 250 }}>
+                      <PieChart
+                        height={250}
+                        width={250}
+                        series={[
+                          {
+                            data: dashboardDetails?.assets?.type_wise,
+                            innerRadius: 90,
+                            outerRadius: 120,
+                            arcLabelMinAngle: 20,
+                            valueFormatter,
+                          },
+                        ]}
+                        sx={{
+                          "& .MuiChartsLegend-root": {
+                            display: "none",
+                          },
+                          "& svg": {
+                            margin: "0 auto",
+                            display: "block",
+                          },
+                        }}
+                        slotProps={{ legend: { hidden: true } }}
+                      />
 
-                    {/* Center overlay text */}
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        top: "50%",
-                        left: "50%",
-                        transform: "translate(-50%, -50%)",
-                        textAlign: "center",
-                        pointerEvents: "none",
-                      }}
-                    >
-                      <TypographyComponent
-                        fontSize={26}
-                        fontWeight={700}
-                        sx={{ color: theme.palette.text.primary, lineHeight: 1 }}
+                      {/* Center overlay text */}
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: "50%",
+                          left: "50%",
+                          transform: "translate(-50%, -50%)",
+                          textAlign: "center",
+                          pointerEvents: "none",
+                        }}
                       >
-                        {dashboardDetails?.assets?.type_wise_count}
-                      </TypographyComponent>
+                        <TypographyComponent
+                          fontSize={26}
+                          fontWeight={700}
+                          sx={{ color: theme.palette.text.primary, lineHeight: 1 }}
+                        >
+                          {dashboardDetails?.assets?.type_wise_count}
+                        </TypographyComponent>
 
-                      <TypographyComponent
-                        fontSize={14}
-                        fontWeight={500}
-                        sx={{ color: theme.palette.text.secondary }}
-                      >
-                        Total Tickets
-                      </TypographyComponent>
+                        <TypographyComponent
+                          fontSize={14}
+                          fontWeight={500}
+                          sx={{ color: theme.palette.text.secondary }}
+                        >
+                          Total Assets
+                        </TypographyComponent>
+                      </Box>
                     </Box>
                   </Box>
                   :
