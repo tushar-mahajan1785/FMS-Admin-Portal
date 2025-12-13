@@ -142,7 +142,6 @@ export default function ChecklistView() {
             //-----------Get abnormal Count-----------
             let abnormalCount = 0;
             currentData?.forEach(param => {
-                console.log('----param for abnormal count----status---', param?.param_status)
                 if (param?.param_status == 'Abnormal' && param?.priority == 'High') {
                     abnormalCount += 1
                 }
