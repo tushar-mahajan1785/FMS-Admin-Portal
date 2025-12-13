@@ -1,12 +1,11 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
-// import { getErrorResponse } from 'src/utils'
 import { axiosApi } from "../../common/api"
 import { getErrorResponse } from "../../utils";
-import { API_GET_DASHBOARD_COUNT } from "../../common/api/constants";
+import { API_GET_DASHBOARD_DETAILS } from "../../common/api/constants";
 
-export const actionGetDashboardCount = createAsyncThunk('login/actionGetDashboardCount', async () => {
+export const actionGetDashboardDetails = createAsyncThunk('dashboard/actionGetDashboardDetails', async (params) => {
     try {
-        const response = await axiosApi.get(API_GET_DASHBOARD_COUNT)
+        const response = await axiosApi.post(API_GET_DASHBOARD_DETAILS, params)
 
         return response.status !== 200 ? getErrorResponse() : response.data
     } catch (error) {
@@ -17,24 +16,24 @@ export const actionGetDashboardCount = createAsyncThunk('login/actionGetDashboar
 export const dashboardStore = createSlice({
     name: 'dashboard',
     initialState: {
-        getDashboardCount: null
+        getDashboardDetails: null
     },
 
     reducers: {
-        resetGetDashboardCountResponse: (state) => {
-            state.getDashboardCount = null
+        resetGetDashboardDetailsResponse: (state) => {
+            state.getDashboardDetails = null
         }
     },
     extraReducers: builder => {
         builder
-            .addCase(actionGetDashboardCount.fulfilled, (state, action) => {
-                state.getDashboardCount = action.payload
+            .addCase(actionGetDashboardDetails.fulfilled, (state, action) => {
+                state.getDashboardDetails = action.payload
             })
     }
 })
 
 export const {
-    resetGetDashboardCountResponse
+    resetGetDashboardDetailsResponse
 } =
     dashboardStore.actions
 

@@ -14,7 +14,7 @@ export const API_VERIFY_EMAIL = `${BASE}/employee/forgot-password`
 
 export const API_RESET_PASSWORD = `${BASE}/employee/reset-password`
 
-export const API_GET_DASHBOARD_COUNT = `${BASE}/dashboard/details`
+export const API_GET_DASHBOARD_DETAILS = `${BASE}/dashboard/details`
 
 export const API_EMPLOYEE_LOGIN = `${BASE}/employee/login`
 
