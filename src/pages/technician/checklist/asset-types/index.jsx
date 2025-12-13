@@ -148,7 +148,7 @@ export default function AssetTypesChecklist() {
                 </Grid>
             </Stack>
             <Stack sx={{ rowGap: 1 }}>
-                <TypographyComponent fontSize={18} fontWeight={500}>Asset Groups</TypographyComponent>
+                <TypographyComponent fontSize={18} fontWeight={500}>Asset Types</TypographyComponent>
                 <Grid container spacing={2}>
                     {loadingList ? (
                         <FullScreenLoader open={true} />

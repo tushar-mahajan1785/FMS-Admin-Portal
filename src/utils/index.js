@@ -313,11 +313,11 @@ export const isFutureTimeRange = (from, to) => {
  * @param {*} fullName 
  * @returns 
  */
-export const getInitials = (fullName) => {
+export const getInitials = (fullName, length = 2) => {
   if (!fullName) return '';
   const parts = fullName.split(' ').filter(p => p.length > 0);
   if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-  return parts.map(part => part.charAt(0)).join('').toUpperCase().substring(0, 2);
+  return parts.map(part => part.charAt(0)).join('').toUpperCase().substring(0, length);
 };
 
 /**
@@ -391,3 +391,16 @@ export const skipEvery = (text) => {
   return text.replace(/^Every\s*/i, "").trim();
 }
 
+export const getPMActivityLabel = (pmDate) => {
+  if (!pmDate) return "--";
+
+  const today = moment().startOf("day");
+  const target = moment(pmDate, "YYYY-MM-DD").startOf("day");
+
+  const diffDays = target.diff(today, "days");
+
+  if (diffDays === 0) return "Today";
+  if (diffDays > 0) return `In ${diffDays} days`;
+
+  return `${Math.abs(diffDays)} days ago`;
+};

@@ -99,7 +99,7 @@ export default function ChecklistGroups() {
                 <TypographyComponent color={theme.palette.text.primary} fontSize={22} fontWeight={500}>UPS Asset List</TypographyComponent>
             </Stack>} />
 
-            <Stack sx={{ rowGap: '12px', width: '100%', padding: '16px', background: theme.palette.common.white, borderRadius: '8px', boxShadow: "0 1px 4px rgba(0,0,0,0.08)", }}>
+            <Stack sx={{ rowGap: '12px', width: '100%', padding: '16px', background: theme.palette.common.white, borderRadius: '8px' }}>
                 <Stack sx={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', px: 2 }}>
                     <Stack>
                         <TypographyComponent fontSize={16} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>Groups</TypographyComponent>
@@ -167,7 +167,8 @@ export default function ChecklistGroups() {
                                         display: "flex",
                                         flexDirection: "column",
                                         justifyContent: "space-between",
-                                        boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                                        boxShadow: 'none',
+                                        border: `1px solid ${theme.palette.grey[100]}`,
                                     }}
                                     onClick={() => {
                                         // navigate(`select-assets/${objAsset?.group_uuid}`)

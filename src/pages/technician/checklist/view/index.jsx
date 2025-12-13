@@ -638,7 +638,9 @@ export default function ChecklistView() {
                         display: "flex",
                         flexDirection: "column",
                         justifyContent: "space-between",
-                        boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                        boxShadow: 'none',
+                        border: `1px solid ${theme.palette.grey[100]}`
+                        // boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
                     }}
                     onClick={() => {
                         // navigate(`select-assets/${getCurrentAssetDetailsData?.id}`)
@@ -816,7 +818,7 @@ export default function ChecklistView() {
                     }
                 </Card>
             </Stack>
-            <Stack sx={{ rowGap: 1, marginBottom: 8 }}>
+            <Stack sx={{ rowGap: 1, marginBottom: 8, border: `1px solid ${theme.palette.grey[100]}`, borderRadius: '16px' }}>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <Stack sx={{ width: "100%", background: "#fff", borderRadius: '16px' }}>
                         {loadingList ? (
