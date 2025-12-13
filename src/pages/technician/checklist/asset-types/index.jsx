@@ -22,7 +22,23 @@ export default function AssetTypesChecklist() {
     const { logout } = useAuth()
     const { showSnackbar } = useSnackbar()
 
-    const [overviewChecklists, setOverviewChecklists] = useState([])
+    const [overviewChecklists, setOverviewChecklists] = useState([
+        {
+            title: "Pending",
+            count: 3,
+            key: 'pending_count'
+        },
+        {
+            title: "Missed",
+            count: 0,
+            key: 'missing_count'
+        },
+        {
+            title: "Completed",
+            count: 12,
+            key: 'completed_count'
+        }
+    ])
     const [arrAssetTypesData, setArrAssetTypesData] = useState([])
     const [loadingList, setLoadingList] = useState(false)
 
