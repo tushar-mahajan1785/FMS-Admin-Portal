@@ -32,6 +32,10 @@ import { useSnackbar } from '../../hooks/useSnackbar';
 import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '../../hooks/useAuth';
 import { actionGetDashboardDetails, resetGetDashboardDetailsResponse } from '../../store/dashboard';
+import SuccessCircleCheckIcon from '../../assets/icons/SucessCircleCheckIcon';
+import CircleExclamationMarkIcon from '../../assets/icons/CircleExclamationMarkIcon';
+import CalendarTodayIcon from '../../assets/icons/CalendarTodayIcon';
+import DescriptionOutlinedIcon from '../../assets/icons/DescriptionOutlinedIcon';
 
 export default function Dashboard() {
   const { showSnackbar } = useSnackbar()
@@ -171,6 +175,16 @@ export default function Dashboard() {
   const assetPagination = usePagination(dashboardDetails?.assets?.health_overview, 5);
   const pmPagination = usePagination(dashboardDetails?.pm_activities?.upcoming, 5);
   const updatesPagination = usePagination(dashboardDetails?.system_updates, 5);
+
+  const getIcon = (type) => {
+    switch (type) {
+      case 'success': return <SuccessCircleCheckIcon color="success" />;
+      case 'warning': return <CircleExclamationMarkIcon color="warning" />;
+      case 'shift': return <CalendarTodayIcon color="warning" />;
+      case 'document': return <DescriptionOutlinedIcon color="warning" />;
+      default: return <></>;
+    }
+  };
 
   return (
     <Box sx={{ p: 3 }}>
@@ -788,6 +802,7 @@ export default function Dashboard() {
                     <Stack spacing={2} sx={{ height: 640 }}>
                       {updatesPagination.paginatedData.map((item, index) => (
                         <Stack key={index} direction="row" spacing={2} sx={{ padding: '14px', borderBottom: `1px solid ${theme.palette.grey[200]}` }}>
+                          {getIcon(item?.type)}
                           <Box>
                             <TypographyComponent fontSize={16} fontWeight={400}>{item.title}</TypographyComponent>
                             <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[500], mt: 1 }}>{item.description}</TypographyComponent>
