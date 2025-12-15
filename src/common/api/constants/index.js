@@ -362,6 +362,13 @@ export const API_CHECKLIST_ALL_GROUP_DETAILS = `${BASE}/checklist-group/all-grou
 // technical dashboard
 export const API_TECHNICIAN_DASHBOARD_DETAILS = `${BASE_APP}/dashboard/details`
 
+// employee
+export const API_TECHNICIAN_EMPLOYEE_PROFILE = `${BASE_APP}/employee/profile`
+
+export const API_TECHNICIAN_EMPLOYEE_CHANGE_PASSWORD = `${BASE_APP}/employee/change-password`
+
+export const API_TECHNICIAN_EMPLOYEE_LOGOUT = `${BASE_APP}/employee/logout`
+
 //Checklist
 export const API_TECHNICIAN_CHECKLIST_ASSET_TYPE_LIST = `${BASE_APP}/checklist-group/asset-type-list`
 

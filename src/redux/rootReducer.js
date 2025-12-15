@@ -20,6 +20,7 @@ import documentCategoriesStore from '../store/document-categories';
 import checklistStore from '../store/checklist'
 import technicianChecklistStore from '../store/technician/checklist';
 import technicianDashboardStore from '../store/technician/dashboard';
+import technicianProfileStore from '../store/technician/profile';
 
 const rootReducer = {
     loginStore,
@@ -43,7 +44,8 @@ const rootReducer = {
     documentCategoriesStore,
     checklistStore,
     technicianChecklistStore,
-    technicianDashboardStore
+    technicianDashboardStore,
+    technicianProfileStore
 };
 
 export default rootReducer;

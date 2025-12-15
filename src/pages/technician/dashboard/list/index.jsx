@@ -460,7 +460,9 @@ export default function TechnicianDashboardList() {
                             </Stack>)
                         })
                         :
-                        <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Smart Suggestions Found'} subTitle={''} />
+                        <Stack sx={{ maxWidth: '100%', background: theme.palette.common.white, borderRadius: '8px' }}>
+                            <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Smart Suggestions Found'} subTitle={''} />
+                        </Stack>
                 }
             </Stack>
         </Stack >
