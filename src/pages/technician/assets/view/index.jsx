@@ -12,6 +12,8 @@ import { IMAGES_SCREEN_NO_DATA } from '../../../../constants';
 import ClockIcon from '../../../../assets/icons/ClockIcon';
 import DocumentIcon from '../../../../assets/icons/DocumentIcon';
 import PaperClipIcon from '../../../../assets/icons/PaperClipIcon';
+import MessageDotsIcon from '../../../../assets/MessageDotsIcon';
+import HistoryIcon from '../../../../assets/icons/HistoryIcon';
 
 export default function TechnicianAssetView() {
     const navigate = useNavigate()
@@ -308,7 +310,7 @@ export default function TechnicianAssetView() {
                                 <>
                                     <Stack key={index} gap={0.5}>
                                         {/* Row */}
-                                        <Stack direction="row" justifyContent="space-between">
+                                        <Stack direction="row" justifyContent="space-between" gap={2}>
                                             <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 1 }} >
                                                 {/* File badge */}
                                                 <img
@@ -332,11 +334,11 @@ export default function TechnicianAssetView() {
                                                 </TypographyComponent>
                                             </Stack>
                                         </Stack>
-                                        <Stack direction="row" justifyContent="space-between">
+                                        <Stack direction="row" justifyContent="space-between" gap={2}>
                                             <Stack direction="row" gap={1.5}>
                                                 {/* File info */}
                                                 <Stack gap={0.3}>
-                                                    <TypographyComponent fontSize={14} sx={{ color: "text.secondary" }}>
+                                                    <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500] }}>
                                                         {doc.notes}
                                                     </TypographyComponent>
                                                 </Stack>
@@ -344,8 +346,7 @@ export default function TechnicianAssetView() {
 
                                             {/* Version + date */}
                                             <Stack alignItems="flex-end" gap={0.5}>
-
-                                                <TypographyComponent fontSize={14} sx={{ color: "text.secondary" }}>
+                                                <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500], textWrap: 'nowrap' }}>
                                                     {moment(doc.updated_at).format("D MMM YYYY")}
                                                 </TypographyComponent>
                                             </Stack>
@@ -403,30 +404,30 @@ export default function TechnicianAssetView() {
                                             {/* Description */}
                                             <TypographyComponent
                                                 fontSize={14}
-                                                sx={{ color: "text.secondary" }}
+                                                sx={{ color: theme.palette.grey[500] }}
                                             >
                                                 {objTicket.description}
                                             </TypographyComponent>
 
                                             {/* Footer */}
-                                            <Stack direction="row" spacing={2} alignItems="center" mt={0.5}>
-                                                <Stack direction="row" spacing={0.5} alignItems="center">
-                                                    <ClockIcon size={14} />
-                                                    <TypographyComponent fontSize={14} sx={{ color: "text.secondary" }}>
-                                                        {moment(objTicket.created_at).fromNow()}
+                                            <Stack direction="row" gap={2} alignItems="center" mt={0.5}>
+                                                <Stack direction="row" gap={'2px'} alignItems="center" justifyContent={'center'}>
+                                                    <HistoryIcon size={14} />
+                                                    <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500] }}>
+                                                        {objTicket?.created_at && objTicket?.created_at !== null ? moment(objTicket?.created_at).fromNow() : ''}
                                                     </TypographyComponent>
                                                 </Stack>
 
-                                                <Stack direction="row" spacing={0.5} alignItems="center">
-                                                    <DocumentIcon size={12} />
-                                                    <TypographyComponent fontSize={14} sx={{ color: "text.secondary" }}>
-                                                        {objTicket?.updates} Updates
+                                                <Stack direction="row" gap={'4px'} alignItems="center" justifyContent={'center'}>
+                                                    <MessageDotsIcon size={14} />
+                                                    <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500] }}>
+                                                        {objTicket?.updates && objTicket?.updates !== null ? objTicket?.updates : ''} Updates
                                                     </TypographyComponent>
                                                 </Stack>
-                                                <Stack direction="row" spacing={0.5} alignItems="center">
+                                                <Stack direction="row" gap={'4px'} alignItems="center" justifyContent={'center'}>
                                                     <PaperClipIcon size={14} />
-                                                    <TypographyComponent fontSize={14} sx={{ color: "text.secondary" }}>
-                                                        {objTicket?.attachments} Attachments
+                                                    <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500] }}>
+                                                        {objTicket?.attachments && objTicket?.attachments !== null ? objTicket?.attachments : ''} Attachments
                                                     </TypographyComponent>
                                                 </Stack>
                                             </Stack>
@@ -440,6 +441,6 @@ export default function TechnicianAssetView() {
                 </Stack>
             </Stack>
 
-        </Stack>
+        </Stack >
     )
 }
