@@ -6,7 +6,7 @@ const ChevronRightIcon = (props) => {
     return (
         <SvgIcon
             {...rest}
-            viewBox="0 0 8 14"
+            viewBox="0 0 14 14"
             fill="none"
             style={{ fontSize: size, color: 'transparent' }}
         >

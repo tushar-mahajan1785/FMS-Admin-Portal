@@ -359,6 +359,9 @@ export const API_CHECKLIST_ALL_GROUP_DETAILS = `${BASE}/checklist-group/all-grou
 
 //Technician App Flow Routes
 
+// technical dashboard
+export const API_TECHNICIAN_DASHBOARD_DETAILS = `${BASE_APP}/dashboard/details`
+
 //Checklist
 export const API_TECHNICIAN_CHECKLIST_ASSET_TYPE_LIST = `${BASE_APP}/checklist-group/asset-type-list`
 

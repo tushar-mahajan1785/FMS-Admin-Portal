@@ -19,6 +19,7 @@ import pmActivityStore from '../store/pm-activity';
 import documentCategoriesStore from '../store/document-categories';
 import checklistStore from '../store/checklist'
 import technicianChecklistStore from '../store/technician/checklist';
+import technicianDashboardStore from '../store/technician/dashboard';
 
 const rootReducer = {
     loginStore,
@@ -41,7 +42,8 @@ const rootReducer = {
     pmActivityStore,
     documentCategoriesStore,
     checklistStore,
-    technicianChecklistStore
+    technicianChecklistStore,
+    technicianDashboardStore
 };
 
 export default rootReducer;

@@ -19,7 +19,7 @@ const technicianRoutes = [
         protected: true,
     },
     {
-        path: "/",
+        path: "/*",
         element: <TechnicianDashboard />,
         permission: "Technician",
         protected: true,
