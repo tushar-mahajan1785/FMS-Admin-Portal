@@ -111,20 +111,27 @@ export default function TechnicianDashboardList() {
         }
     }, [technicianDashboardDetails])
 
-    const activeShift = useMemo(
-        () => teamMembersShift?.[activeIndex] || null,
-        [teamMembersShift, activeIndex]
-    );
+    const activeShift = useMemo(() => {
+        if (
+            teamMembersShift &&
+            teamMembersShift.length > 0 &&
+            activeIndex >= 0 &&
+            activeIndex < teamMembersShift.length
+        ) {
+            return teamMembersShift[activeIndex];
+        }
+        return null;
+    }, [teamMembersShift, activeIndex]);
 
     const handleNext = () => {
         setActiveIndex((prev) =>
-            prev === teamMembersShift.length - 1 ? 0 : prev + 1
+            prev === teamMembersShift?.length - 1 ? 0 : prev + 1
         );
     };
 
     const handlePrev = () => {
         setActiveIndex((prev) =>
-            prev === 0 ? teamMembersShift.length - 1 : prev - 1
+            prev === 0 ? teamMembersShift?.length - 1 : prev - 1
         );
     };
 
@@ -152,8 +159,6 @@ export default function TechnicianDashboardList() {
         }
     };
 
-    if (!activeShift) return null;
-
     const getShiftName = (shortname) => {
         switch (shortname) {
             case "G":
@@ -174,7 +179,7 @@ export default function TechnicianDashboardList() {
     return (
         <Stack rowGap={2} sx={{ overflowY: 'scroll', paddingBottom: 10 }}>
             <TechnicianNavbarHeader />
-            {activeShift && (
+            {activeShift ? (
                 <Box
                     key={activeIndex}
                     onTouchStart={handleTouchStart}
@@ -206,11 +211,14 @@ export default function TechnicianDashboardList() {
                         {/* LEFT TOP */}
                         <Stack sx={{ rowGap: 0.5 }}>
                             <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[200] }}>
-                                {moment(activeShift.current_date).format("DD MMM YYYY")}
+                                {moment(activeShift?.current_date).format("DD MMM YYYY")}
                             </TypographyComponent>
 
                             <TypographyComponent fontSize={18} fontWeight={500}>
-                                {getShiftName(activeShift.shift_name)}
+                                {getShiftName(activeShift?.shift_name)}
+                                {console.log("activeShift?.shift_name", activeShift?.shift_name)}
+                                {console.log("activeShift", activeShift)}
+
                             </TypographyComponent>
                         </Stack>
 
@@ -221,7 +229,7 @@ export default function TechnicianDashboardList() {
                             </TypographyComponent>
 
                             <TypographyComponent fontSize={18} fontWeight={500}>
-                                {activeShift.employee_name}
+                                {activeShift?.employee_name}
                             </TypographyComponent>
                         </Stack>
                     </Box>
@@ -241,7 +249,7 @@ export default function TechnicianDashboardList() {
                             </TypographyComponent>
 
                             <TypographyComponent fontSize={18} fontWeight={400}>
-                                {activeShift.roster_group_name}
+                                {activeShift?.roster_group_name}
                             </TypographyComponent>
                         </Stack>
 
@@ -252,45 +260,128 @@ export default function TechnicianDashboardList() {
                             </TypographyComponent>
 
                             <TypographyComponent fontSize={18} fontWeight={400}>
-                                {activeShift.shift_supervisor}
+                                {activeShift?.shift_supervisor}
                             </TypographyComponent>
                         </Stack>
                     </Box>
-                    {teamMembersShift?.length > 1 && (
-                        <Stack
-                            direction="row"
-                            justifyContent="center"
-                            spacing={1}
-                            sx={{ mt: 1 }}
-                        >
-                            {teamMembersShift.map((_, index) => (
-                                <Box
-                                    key={index}
-                                    onClick={() => setActiveIndex(index)}
-                                    sx={{
-                                        width: 8,
-                                        height: 8,
-                                        borderRadius: "50%",
-                                        cursor: "pointer",
-                                        transition: "all 0.3s ease",
-                                        backgroundColor:
-                                            index === activeIndex
-                                                ? theme.palette.primary.main
-                                                : theme.palette.grey[400],
-                                        transform:
-                                            index === activeIndex ? "scale(1.3)" : "scale(1)",
-                                    }}
-                                />
-                            ))}
-                        </Stack>
-                    )}
+
                 </Box>
+            )
+                :
+                (
+                    <Box
+                        sx={{
+                            background: theme.palette.primary[600],
+                            color: "white",
+                            p: 2,
+                            borderRadius: "8px",
+                            width: "100%",
+                            boxShadow: "0px 4px 12px rgba(0,0,0,0.15)",
+                            animation: "fade 0.3s ease-in-out",
+                            touchAction: "pan-y",
+                            "@keyframes fade": {
+                                from: { opacity: 0.6 },
+                                to: { opacity: 1 },
+                            },
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                display: "grid",
+                                gridTemplateColumns: "1fr 1fr",
+                                columnGap: 2,
+                                rowGap: 1,
+                            }}
+                        >
+                            {/* LEFT TOP */}
+                            <Stack sx={{ rowGap: 0.5 }}>
+                                <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[200] }}>
+                                    Shift Date
+                                </TypographyComponent>
+
+                                <TypographyComponent fontSize={18} fontWeight={500}>
+                                    --
+                                </TypographyComponent>
+                            </Stack>
+
+                            {/* RIGHT TOP */}
+                            <Stack sx={{ rowGap: 0.5, alignItems: "flex-start" }}>
+                                <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[200] }}>
+                                    Technician
+                                </TypographyComponent>
+
+                                <TypographyComponent fontSize={18} fontWeight={500}>
+                                    --
+                                </TypographyComponent>
+                            </Stack>
+                        </Box>
+
+                        <Divider sx={{ my: 1.5, borderColor: "rgba(255,255,255,0.4)" }} />
+
+                        <Box sx={{
+                            display: "grid",
+                            gridTemplateColumns: "1fr 1fr",
+                            columnGap: 2,
+                            rowGap: 1
+                        }}>
+                            {/* LEFT BOTTOM */}
+                            <Stack sx={{ rowGap: 0.3 }}>
+                                <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[200] }}>
+                                    Shift Details
+                                </TypographyComponent>
+
+                                <TypographyComponent fontSize={18} fontWeight={400}>
+                                    --
+                                </TypographyComponent>
+                            </Stack>
+
+                            {/* RIGHT BOTTOM */}
+                            <Stack sx={{ rowGap: 0.3, alignItems: "flex-start" }}>
+                                <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[200] }}>
+                                    Shift Supervisor
+                                </TypographyComponent>
+
+                                <TypographyComponent fontSize={18} fontWeight={400}>
+                                    --
+                                </TypographyComponent>
+                            </Stack>
+                        </Box>
+
+                    </Box>
+                )
+            }
+            {teamMembersShift?.length > 1 && (
+                <Stack
+                    direction="row"
+                    justifyContent="center"
+                    spacing={1}
+                >
+                    {teamMembersShift.map((_, index) => (
+                        <Box
+                            key={index}
+                            onClick={() => setActiveIndex(index)}
+                            sx={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: "50%",
+                                cursor: "pointer",
+                                transition: "all 0.3s ease",
+                                backgroundColor:
+                                    index === activeIndex
+                                        ? theme.palette.primary.main
+                                        : theme.palette.grey[400],
+                                transform:
+                                    index === activeIndex ? "scale(1.3)" : "scale(1)",
+                            }}
+                        />
+                    ))}
+                </Stack>
             )}
             <Stack sx={{ rowGap: 1 }}>
                 <TypographyComponent fontSize={18} fontWeight={500}>Today’s Checklist Overview</TypographyComponent>
                 <Grid container spacing={1} sx={{ maxWidth: '100%' }}>
                     {
-                        overviewChecklists && overviewChecklists !== null && overviewChecklists.length > 0 ?
+                        overviewChecklists && overviewChecklists !== null && overviewChecklists?.length > 0 ?
                             overviewChecklists.map((objChecklist, index) => {
                                 return (<Grid size={{ xs: 4, sm: 4 }} sx={{ background: theme.palette.common.white, justifyContent: 'center', alignItems: 'center', p: 2.5, textAlign: 'center', borderRadius: '8px' }} key={index}>
                                     <TypographyComponent fontSize={24} fontWeight={600}>{objChecklist?.count !== null ? objChecklist?.count?.toString().padStart(2, "0") : '00'}</TypographyComponent>
@@ -307,7 +398,7 @@ export default function TechnicianDashboardList() {
                 <TypographyComponent fontSize={18} fontWeight={500}>Team Members in Shift</TypographyComponent>
                 <Stack sx={{ maxWidth: '100%', background: theme.palette.common.white, borderRadius: '8px' }}>
                     {
-                        activeShift?.team_members && activeShift?.team_members !== null && activeShift?.team_members.length > 0 ?
+                        activeShift?.team_members && activeShift?.team_members !== null && activeShift?.team_members?.length > 0 ?
                             activeShift?.team_members.map((member, index) => {
                                 return (<Stack
                                     sx={{ flexDirection: 'row', justifyContent: 'space-between', borderBottom: `1px solid ${theme.palette.grey[100]}`, alignItems: 'flex-start', p: '16px', textAlign: 'center' }}
@@ -341,20 +432,23 @@ export default function TechnicianDashboardList() {
                                 )
                             })
                             :
-                            <></>
+                            <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Team Members in Shift Found'} subTitle={''} />
                     }
                 </Stack>
             </Stack>
             <Stack sx={{ rowGap: 1 }}>
                 <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                     <TypographyComponent fontSize={18} fontWeight={500}>Smart Suggestions</TypographyComponent>
-                    <TypographyComponent
-                        fontSize={14}
-                        fontWeight={400}
-                        onClick={() => {
-                            navigate('view')
-                        }}
-                    >View All</TypographyComponent>
+                    {abnormalSuggestionData?.length > 2 && (
+                        <TypographyComponent
+                            fontSize={14}
+                            fontWeight={400}
+                            onClick={() => {
+                                navigate('view')
+                            }}
+                        >View All
+                        </TypographyComponent>
+                    )}
                 </Stack>
                 {
                     abnormalSuggestionData && abnormalSuggestionData !== null && abnormalSuggestionData.length > 0 ?

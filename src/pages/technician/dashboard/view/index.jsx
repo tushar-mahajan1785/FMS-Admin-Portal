@@ -33,7 +33,7 @@ export default function TechnicianDashboardView() {
 
     return (
         <Stack sx={{ rowGap: 1 }}>
-            <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Stack sx={{ flexDirection: 'row', alignItems: 'center' }}>
                 <IconButton
                     onClick={() => {
                         navigate('/')
@@ -45,7 +45,7 @@ export default function TechnicianDashboardView() {
                 <TypographyComponent fontSize={18} fontWeight={500}>Smart Suggestions</TypographyComponent>
             </Stack>
             {
-                abnormalSuggestionData && abnormalSuggestionData !== null && abnormalSuggestionData.length > 0 ?
+                abnormalSuggestionData && abnormalSuggestionData !== null && abnormalSuggestionData?.length > 0 ?
                     abnormalSuggestionData.map((obj, index) => {
                         return (
                             <Stack
