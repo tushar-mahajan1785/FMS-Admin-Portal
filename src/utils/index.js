@@ -2,7 +2,7 @@ import CryptoJS from "crypto-js";
 import { CRYPTO_SECRET_KEY } from "../common/api/constants";
 import imageCompression from 'browser-image-compression';
 import CustomChip from "../components/custom-chip";
-import React from "react";
+import React, { useState } from "react";
 import moment from "moment";
 
 /**
@@ -415,4 +415,19 @@ export const getPMActivityLabel = (pmDate) => {
   if (diffDays > 0) return `In ${diffDays} days`;
 
   return `${Math.abs(diffDays)} days ago`;
+};
+
+
+// pagination
+export const usePagination = (data = [], itemsPerPage = 5) => {
+  const [page, setPage] = useState(0);
+
+  const totalPages = Math.ceil(data.length / itemsPerPage);
+
+  const paginatedData = data.slice(
+    page * itemsPerPage,
+    page * itemsPerPage + itemsPerPage
+  );
+
+  return { page, setPage, totalPages, paginatedData };
 };
