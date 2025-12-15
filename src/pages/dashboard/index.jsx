@@ -63,136 +63,7 @@ export default function Dashboard() {
       if (getDashboardDetails?.result === true) {
         setDashboardDetails(getDashboardDetails?.response)
       } else {
-        setDashboardDetails({
-          "tickets": {
-            "total": 433,
-            "active": 200,
-            "closed": 233
-          },
-          "checklists": {
-            "total": 278,
-            "completed": 200,
-            "skipped": 0
-          },
-          "employees": {
-            "total": 433,
-            "on_duty": 430,
-            "on_leave": 3,
-            "shift_wise": [
-              { "shift": "General Shift", "count": 45 },
-              { "shift": "First Shift", "count": 32 },
-              { "shift": "Second Shift", "count": 18 },
-              { "shift": "Third Shift", "count": 20 },
-              { "shift": "Weekend Off", "count": 20 }
-            ]
-          },
-          "assets": {
-            "total": 435,
-            "low": 8,
-            "critical": 1,
-            "type_wise_count": 2,
-            "type_wise": [
-              { "label": "HVAC", "value": 42, "color": "#00B9CF" },
-              { "label": "Electrical", "value": 28, "color": "#32D583" }
-            ],
-            "health_overview": [
-              { "name": "HVAC", "healthy": 22, "warning": 2, "critical": 0, "total": 24 },
-              { "name": "DG Sets", "healthy": 7, "warning": 1, "critical": 0, "total": 8 },
-              { "name": "PAC Units", "healthy": 15, "warning": 0, "critical": 1, "total": 16 },
-              { "name": "Pumps", "healthy": 12, "warning": 0, "critical": 0, "total": 12 },
-              { "name": "HVAC", "healthy": 22, "warning": 2, "critical": 0, "total": 24 },
-              { "name": "DG Sets", "healthy": 7, "warning": 1, "critical": 0, "total": 8 },
-              { "name": "PAC Units", "healthy": 15, "warning": 0, "critical": 1, "total": 16 },
-              { "name": "Pumps", "healthy": 12, "warning": 0, "critical": 0, "total": 12 },
-            ]
-          },
-          "pm_activities": {
-            "upcoming": [
-              {
-                "title": "Electrical system PM schedule",
-                "assets": ["HVAC-001", "HVAC-002", "HVAC-003", "HVAC-004"],
-                "date": "2025-12-11",
-                "time": "In 2 days"
-              },
-              {
-                "title": "Cooling system PM schedule",
-                "assets": ["HVAC-001", "HVAC-002", "HVAC-003", "HVAC-004"],
-                "date": "2025-12-12",
-                "time": "In 2 days"
-              },
-              {
-                "title": "BMS system PM schedule",
-                "assets": ["HVAC-001", "HVAC-002", "HVAC-003", "HVAC-004"],
-                "date": "2025-12-13",
-                "time": "In 2 days"
-              },
-              {
-                "title": "Electrical system PM schedule",
-                "assets": ["HVAC-001", "HVAC-002", "HVAC-003", "HVAC-004"],
-                "date": "2025-12-11",
-                "time": "In 2 days"
-              },
-              {
-                "title": "Cooling system PM schedule",
-                "assets": ["HVAC-001", "HVAC-002", "HVAC-003", "HVAC-004"],
-                "date": "2025-12-12",
-                "time": "In 2 days"
-              },
-              {
-                "title": "BMS system PM schedule",
-                "assets": ["HVAC-001", "HVAC-002", "HVAC-003", "HVAC-004"],
-                "date": "2025-12-13",
-                "time": "In 2 days"
-              },
-            ]
-          },
-          "system_updates": [
-            {
-              "title": "New PM Activity Created",
-              "description": "HVAC Monthly Inspection scheduled for Tower A",
-              "time": "5 min ago"
-            },
-            {
-              "title": "Low Inventory Alert",
-              "description": "Air Filter stock running low (15 units remaining)",
-              "time": "12 min ago"
-            },
-            {
-              "title": "Shift Assignment Updated",
-              "description": "Night shift technician reassigned for DG Set maintenance",
-              "time": "25 min ago"
-            },
-            {
-              "title": "Ticket Resolved",
-              "description": "TKT-1247: PAC Unit cooling issue fixed",
-              "time": "1 hour ago"
-            },
-            {
-              "title": "New PM Activity Created",
-              "description": "HVAC Monthly Inspection scheduled for Tower A",
-              "time": "5 min ago"
-            },
-            {
-              "title": "Low Inventory Alert",
-              "description": "Air Filter stock running low (15 units remaining)",
-              "time": "12 min ago"
-            },
-            {
-              "title": "Shift Assignment Updated",
-              "description": "Night shift technician reassigned for DG Set maintenance",
-              "time": "25 min ago"
-            },
-            {
-              "title": "Ticket Resolved",
-              "description": "TKT-1247: PAC Unit cooling issue fixed",
-              "time": "1 hour ago"
-            },
-          ],
-          "system_performance": {
-            "percentage": "98.5%",
-            "count": "4"
-          }
-        })
+        setDashboardDetails(null)
         switch (getDashboardDetails?.status) {
           case UNAUTHORIZED:
             logout()
@@ -648,9 +519,9 @@ export default function Dashboard() {
       {/* Charts */}
       <Grid container spacing={2} sx={{ mt: 2 }}>
         <Grid size={{ xs: 12, sm: 12, md: 9, lg: 9, xl: 9 }}>
-          <Card sx={{ height: 300, borderRadius: 3 }}>
+          <Card sx={{ height: dashboardDetails?.employees?.shift_wise && dashboardDetails?.employees?.shift_wise !== null && dashboardDetails?.employees?.shift_wise?.length > 0 ? 350 : 500, borderRadius: 3 }}>
             <CardContent>
-              <TypographyComponent fontSize={16} fontWeight={400}>Shift-wise Employee Count</TypographyComponent>
+              <TypographyComponent fontSize={16} fontWeight={400}>Shift wise Employee Count</TypographyComponent>
               {
                 dashboardDetails?.employees?.shift_wise && dashboardDetails?.employees?.shift_wise !== null && dashboardDetails?.employees?.shift_wise?.length > 0 ?
                   <Chart
@@ -666,7 +537,7 @@ export default function Dashboard() {
           </Card>
         </Grid>
         <Grid size={{ xs: 12, sm: 12, md: 3, lg: 3, xl: 3 }}>
-          <Card sx={{ height: 300, borderRadius: 3 }}>
+          <Card sx={{ height: dashboardDetails?.assets?.type_wise && dashboardDetails?.assets?.type_wise !== null && dashboardDetails?.assets?.type_wise?.length > 0 ? 350 : 500, borderRadius: 3 }}>
             <CardContent>
               <TypographyComponent fontSize={16} fontWeight={400}>Asset type wise Asset Count</TypographyComponent>
               {
@@ -678,7 +549,7 @@ export default function Dashboard() {
                       alignItems: "center",
                     }}
                   >
-                    <Box sx={{ position: "relative", width: 250, height: 250 }}>
+                    <Box sx={{ position: "relative", width: 250, height: 250, mt: 2 }}>
                       <PieChart
                         height={250}
                         width={250}
@@ -851,7 +722,7 @@ export default function Dashboard() {
             </Stack>
             <Box sx={{ bgcolor: theme.palette.error[600], px: 2, py: 0.5, borderRadius: 2, color: theme.palette.common.white, fontSize: 16 }}>{moment().format("MMMM YYYY")}</Box>
           </Stack>
-          <Card sx={{ borderRadius: 3, mt: 1 }}>
+          <Card sx={{ borderRadius: 3, mt: 1, height: pmPagination.paginatedData && pmPagination.paginatedData !== null && pmPagination.paginatedData?.length > 0 ? 700 : 600 }}>
             <CardContent>
               {
                 pmPagination.paginatedData && pmPagination.paginatedData !== null && pmPagination.paginatedData?.length > 0 ?
@@ -909,7 +780,7 @@ export default function Dashboard() {
             </Stack>
             <Box sx={{ bgcolor: theme.palette.error[600], px: 2, py: 0.5, borderRadius: 2, color: theme.palette.common.white, fontSize: 16 }}>{dashboardDetails?.system_updates !== null && dashboardDetails?.system_updates?.length > 0 ? `${dashboardDetails?.system_updates?.length} New` : '0 New'}</Box>
           </Stack>
-          <Card sx={{ borderRadius: 3, mt: 1 }}>
+          <Card sx={{ borderRadius: 3, mt: 1, height: updatesPagination.paginatedData && updatesPagination.paginatedData !== null && updatesPagination.paginatedData?.length > 0 ? 700 : 600 }}>
             <CardContent>
               {
                 updatesPagination.paginatedData && updatesPagination.paginatedData !== null && updatesPagination.paginatedData?.length > 0 ?
