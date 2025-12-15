@@ -235,33 +235,45 @@ export const getCurrentStockValue = (type, current, initial) => {
  * @param {} status 
  * @returns 
  */
-export const getCurrentStatusColor = (status) => {
+export const getCurrentStatusColor = (status, returnType = 'color') => {
   let color = 'primary'
+  let colorCode = '#6941C6'
   switch (status) {
     case 'Open':
       color = 'primary'//'#6941C6'
+      colorCode = '#6941C6'
       break
     case 'Re Open':
       color = 'info'//'#039BE5'
+      colorCode = '#039BE5'
       break
     case 'Closed':
     case 'Good Stock':
       color = 'success'//'#039855'
+      colorCode = '#039855'
       break
     case 'On Hold':
     case 'Low Stock':
       color = 'warning'//#FEC84B'
+      colorCode = '#FEC84B'
       break
     case 'Rejected':
     case 'Out Of Stock':
       color = 'error'//'#D32F2F'
+      colorCode = '#D32F2F'
       break
     case 'Overdue':
       color = 'warning'//'#F79009'
+      colorCode = '#F79009'
       break
     default:
       color = 'primary'
+      colorCode = '#6941C6'
   }
+  if (returnType == 'code') {
+    return colorCode
+  }
+
   return color
 }
 

@@ -1,11 +1,8 @@
-import React, { useEffect, useState } from "react";
-import MyBreadcrumbs from "../../../../components/breadcrumb";
-import { Box, Card, Divider, IconButton, Stack, useTheme } from "@mui/material";
+import { useEffect, useState } from "react";
+import { Box, Divider, Stack, useTheme } from "@mui/material";
 import TypographyComponent from "../../../../components/custom-typography";
-import ArrowRightIcon from "../../../../assets/icons/ArrowRightIcon";
 import BottomNav from "../../../../components/bottom-navbar";
 import { TechnicianNavbarHeader } from "../../../../components/technician/navbar-header";
-import AssetIcon from "../../../../assets/icons/AssetIcon";
 import { getInitials, getPMActivityLabel } from "../../../../utils";
 import { useNavigate } from "react-router-dom";
 

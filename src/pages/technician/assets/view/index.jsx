@@ -410,19 +410,24 @@ export default function TechnicianAssetView() {
                                             </TypographyComponent>
 
                                             {/* Footer */}
-                                            <Stack direction="row" gap={2} alignItems="center" mt={0.5}>
+                                            <Stack direction="row" gap={1.5} alignItems="center" mt={0.5}>
                                                 <Stack direction="row" gap={'2px'} alignItems="center" justifyContent={'center'}>
                                                     <HistoryIcon size={14} />
                                                     <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500] }}>
                                                         {objTicket?.created_at && objTicket?.created_at !== null ? moment(objTicket?.created_at).fromNow() : ''}
                                                     </TypographyComponent>
                                                 </Stack>
-
+                                                <Stack sx={{ alignItems: 'center', justifyContent: 'center' }}>
+                                                    <Stack sx={{ background: theme.palette.common.black, height: '4px', width: '4px', borderRadius: '5px', alignItems: 'center' }}></Stack>
+                                                </Stack>
                                                 <Stack direction="row" gap={'4px'} alignItems="center" justifyContent={'center'}>
                                                     <MessageDotsIcon size={14} />
                                                     <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500] }}>
                                                         {objTicket?.updates && objTicket?.updates !== null ? objTicket?.updates : ''} Updates
                                                     </TypographyComponent>
+                                                </Stack>
+                                                <Stack sx={{ alignItems: 'center', justifyContent: 'center' }}>
+                                                    <Stack sx={{ background: theme.palette.common.black, height: '4px', width: '4px', borderRadius: '5px', alignItems: 'center' }}></Stack>
                                                 </Stack>
                                                 <Stack direction="row" gap={'4px'} alignItems="center" justifyContent={'center'}>
                                                     <PaperClipIcon size={14} />

@@ -5,7 +5,7 @@ import { useTheme } from '@mui/material/styles';
 import TypographyComponent from '../custom-typography';
 import _ from 'lodash';
 
-export default function CustomChip({ text, colorName, type }) {
+export default function CustomChip({ text, colorName, type, hasDot = true }) {
     const theme = useTheme();
 
     // Get the specific shades from the theme palette.
@@ -23,14 +23,20 @@ export default function CustomChip({ text, colorName, type }) {
         >
             <Stack direction="row" alignItems="center" spacing={1}>
                 {/* The colored dot */}
-                <Box
-                    sx={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        backgroundColor: mainColor,
-                    }}
-                />
+                {
+                    hasDot == true ?
+                        <Box
+                            sx={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: '50%',
+                                backgroundColor: mainColor,
+                            }}
+                        />
+                        :
+                        <></>
+                }
+
                 {/* The text label */}
 
                 {
