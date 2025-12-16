@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTheme } from "@emotion/react";
-import { Box, Button, Divider, Grid, IconButton, Stack } from "@mui/material";
+import { Avatar, Box, Button, Divider, Grid, Stack } from "@mui/material";
 import { TechnicianNavbarHeader } from "../../../../components/technician/navbar-header";
 import TypographyComponent from "../../../../components/custom-typography";
 import { getInitials } from "../../../../utils";
@@ -12,7 +12,6 @@ import { useSnackbar } from "../../../../hooks/useSnackbar";
 import { useBranch } from "../../../../hooks/useBranch";
 import { ERROR, IMAGES_SCREEN_NO_DATA, SERVER_ERROR, UNAUTHORIZED } from "../../../../constants";
 import moment from "moment";
-import EmptyContent from "../../../../components/empty_content";
 import { useNavigate } from "react-router-dom";
 
 export default function TechnicianDashboardList() {
@@ -432,7 +431,10 @@ export default function TechnicianDashboardList() {
                                 )
                             })
                             :
-                            <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Team Members in Shift Found'} subTitle={''} />
+                            <Stack sx={{ background: theme.palette.common.white, py: 2, mt: 0, alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                                <Avatar alt={""} src={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} sx={{ overFlow: 'hidden', borderRadius: 0, height: 120, width: 120 }} />
+                                <TypographyComponent fontSize={16} fontWeight={400}>No Team Members in Shift Found</TypographyComponent>
+                            </Stack>
                     }
                 </Stack>
             </Stack>
@@ -460,8 +462,9 @@ export default function TechnicianDashboardList() {
                             </Stack>)
                         })
                         :
-                        <Stack sx={{ maxWidth: '100%', background: theme.palette.common.white, borderRadius: '8px' }}>
-                            <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Smart Suggestions Found'} subTitle={''} />
+                        <Stack sx={{ background: theme.palette.common.white, py: 2, mt: 0, alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                            <Avatar alt={""} src={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} sx={{ overFlow: 'hidden', borderRadius: 0, height: 120, width: 120 }} />
+                            <TypographyComponent fontSize={16} fontWeight={400}>No Smart Suggestions Found</TypographyComponent>
                         </Stack>
                 }
             </Stack>
