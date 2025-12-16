@@ -111,9 +111,38 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
             dispatch(resetEmployeeShiftScheduleMasterListResponse())
             if (employeeShiftScheduleMasterList?.result === true) {
                 if (objData?.shift_schedule && objData?.shift_schedule !== null && objData?.shift_schedule?.length > 0) {
-                    setEmployeeShiftScheduleMasterOption(objData?.shift_schedule)
-                    setEmployeeShiftScheduleMasterOriginalData(objData?.shift_schedule)
-                } else {
+                    let previousShiftSchedule = objData?.shift_schedule
+                    if (!Array.isArray(previousShiftSchedule)) return;
+                    if (!Array.isArray(employeeShiftScheduleMasterList?.response) || employeeShiftScheduleMasterList?.response.length === 0) return;
+
+                    // 1️⃣ Get all employee_ids already in shiftSchedule
+                    const existingEmployeeIds = new Set(
+                        previousShiftSchedule
+                            .filter(item => item?.employee_id !== undefined)
+                            .map(item => item.employee_id)
+                    );
+
+                    // 2️⃣ Find members not present in shiftSchedule
+                    const missingMembers = employeeShiftScheduleMasterList?.response
+                        .filter(member =>
+                            member?.employee_id !== undefined &&
+                            !existingEmployeeIds.has(member.employee_id)
+                        )
+                        .map(member => ({
+                            ...member,
+                            shift_selection: null // 👈 required
+                        }));
+
+                    // 3️⃣ Append missing members (only if any)
+                    if (missingMembers.length === 0) {
+                        setEmployeeShiftScheduleMasterOption(objData?.shift_schedule)
+                        setEmployeeShiftScheduleMasterOriginalData(objData?.shift_schedule)
+                    };
+
+                    setEmployeeShiftScheduleMasterOption([...previousShiftSchedule, ...missingMembers]);
+                    setEmployeeShiftScheduleMasterOriginalData([...previousShiftSchedule, ...missingMembers]);
+                }
+                else {
                     setEmployeeShiftScheduleMasterOption(employeeShiftScheduleMasterList?.response)
                     setEmployeeShiftScheduleMasterOriginalData(employeeShiftScheduleMasterList?.response)
                 }
@@ -703,52 +732,108 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                             mx={2}
                             flexDirection={{ xs: 'column', md: 'row' }}
                             alignItems={{ xs: 'flex-start', md: 'center' }}
-                            rowGap={{ xs: 2, sm: 2 }}
+                            gap={{ xs: 2, sm: 2 }}
                         >
-                            <Stack sx={{ flexDirection: 'row' }} columnGap={1}>
-                                {groupMasterOption && groupMasterOption !== null && groupMasterOption?.length > 0 &&
-                                    groupMasterOption.map((g, index) => (
-                                        <Button
-                                            key={index}
-                                            sx={{
-                                                textTransform: "capitalize",
-                                                px: '16px',
-                                                py: '4px',
-                                                borderColor: g?.id === rosterData?.roster_group_id ? theme.palette.primary[600] : theme.palette.grey[300],
-                                                color: g?.id === rosterData?.roster_group_id ? theme.palette.common.white : theme.palette.grey[600],
-                                                backgroundColor: g?.id === rosterData?.roster_group_id ? theme.palette.primary[600] : '',
-                                                borderRadius: '4px',
-                                                fontSize: 16,
-                                                fontWeight: 500
-                                            }}
-                                            variant={g?.id === rosterData?.roster_group_id ? "contained" : "outlined"}
-                                            onClick={() => {
-                                                let objData = Object.assign({}, rosterData)
-                                                objData.roster_group_id = g?.id
-                                                objData.roster_group_uuid = g?.uuid
-                                                objData.roster_group_name = g?.roster_group_name
-                                                dispatch(actionRosterData(objData))
-                                            }}
-                                        >
-                                            <Stack sx={{ flexDirection: 'row', alignItems: 'center' }} columnGap={1}>
-                                                {g?.roster_group_name}
-                                                <Stack>
-                                                    <Chip
-                                                        label={g.employee_count}
-                                                        size="small"
-                                                        sx={{
-                                                            bgcolor: g?.id === rosterData?.roster_group_id ? theme.palette.common.white : '',
-                                                            color: `${theme.palette.grey[600]}}`,
-                                                            fontWeight: 24,
-                                                            border: g?.id === rosterData?.roster_group_id ? `1px solid ${theme.palette.common.white}` : `1px solid ${theme.palette.grey[600]}`,
-                                                        }}
-                                                        variant={g?.id === rosterData?.roster_group_id ? "contained" : "outlined"}
-                                                    />
-                                                </Stack>
+                            <Stack
+                                direction="row"
+                                gap={1}
+                                sx={{
+                                    width: "100%",
+                                    overflowX: "auto",
+                                    flexWrap: "nowrap",
+                                    "&::-webkit-scrollbar": { height: 6 },
+                                    /* Chrome / Edge / Safari */
 
-                                            </Stack>
-                                        </Button>
-                                    ))}
+                                    "&::-webkit-scrollbar-track": {
+                                        backgroundColor: theme.palette.grey[300],
+                                        borderRadius: 8,
+                                    },
+                                    "&::-webkit-scrollbar-thumb": {
+                                        backgroundColor: theme.palette.grey[300],
+                                        borderRadius: 8,
+                                    },
+                                    "&::-webkit-scrollbar-thumb:hover": {
+                                        backgroundColor: theme.palette.grey[300],
+                                    },
+
+                                    /* Firefox */
+                                    scrollbarWidth: "thin",
+                                    scrollbarColor: theme.palette.grey[300],
+                                }}
+                            >
+                                {groupMasterOption && groupMasterOption !== null && groupMasterOption?.length > 0 &&
+                                    groupMasterOption.map((g, index) => {
+                                        const isActive = g?.id === rosterData?.roster_group_id;
+
+                                        return (
+                                            <Button
+                                                key={index}
+                                                sx={{
+                                                    textTransform: "capitalize",
+                                                    px: 2,
+                                                    py: 0.75,
+                                                    minWidth: "fit-content",     // ✅ prevents compression
+                                                    flexShrink: 0,               // ✅ prevents overlap
+                                                    borderRadius: "4px",
+                                                    fontSize: 14,
+                                                    fontWeight: 500,
+                                                    borderColor: isActive
+                                                        ? theme.palette.primary[600]
+                                                        : theme.palette.grey[300],
+                                                    color: isActive
+                                                        ? theme.palette.common.white
+                                                        : theme.palette.grey[600],
+                                                    backgroundColor: isActive
+                                                        ? theme.palette.primary[600]
+                                                        : "transparent",
+                                                }}
+                                                variant={g?.id === rosterData?.roster_group_id ? "contained" : "outlined"}
+                                                onClick={() => {
+                                                    let objData = Object.assign({}, rosterData)
+                                                    objData.roster_group_id = g?.id
+                                                    objData.roster_group_uuid = g?.uuid
+                                                    objData.roster_group_name = g?.roster_group_name
+                                                    dispatch(actionRosterData(objData))
+                                                }}
+                                            >
+                                                <Stack sx={{ flexDirection: 'row', alignItems: 'center' }} columnGap={1}>
+                                                    <TypographyComponent
+                                                        fontSize={14}
+                                                        fontWeight={500}
+                                                        sx={{
+                                                            maxWidth: 140,             // ✅ control width
+                                                            whiteSpace: "nowrap",
+                                                            overflow: "hidden",
+                                                            textOverflow: "ellipsis",
+                                                        }}
+                                                        title={g?.roster_group_name}
+                                                    >
+                                                        {g?.roster_group_name}
+                                                    </TypographyComponent>
+                                                    <Stack>
+                                                        <Chip
+                                                            label={g.employee_count}
+                                                            size="small"
+                                                            variant={isActive ? "contained" : "outlined"}
+                                                            sx={{
+                                                                flexShrink: 0,             // ✅ chip never collapses
+                                                                fontSize: 12,
+                                                                height: 20,
+                                                                bgcolor: isActive
+                                                                    ? theme.palette.common.white
+                                                                    : "transparent",
+                                                                color: theme.palette.grey[600],
+                                                                border: isActive
+                                                                    ? `1px solid ${theme.palette.common.white}`
+                                                                    : `1px solid ${theme.palette.grey[600]}`,
+                                                            }}
+                                                        />
+                                                    </Stack>
+
+                                                </Stack>
+                                            </Button>
+                                        );
+                                    })}
                             </Stack>
                             <Stack sx={{ minWidth: { xs: "100%", sm: "100%", md: "260px" } }}>
                                 <SearchInput
