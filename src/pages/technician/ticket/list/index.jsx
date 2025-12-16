@@ -1,4 +1,4 @@
-import { Avatar, Box, Grid, InputAdornment, Stack, useTheme } from '@mui/material';
+import { Avatar, Box, Fab, Grid, InputAdornment, Stack, useTheme } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { TechnicianNavbarHeader } from '../../../../components/technician/navbar-header';
 import BottomNav from '../../../../components/bottom-navbar';
@@ -18,6 +18,7 @@ import { useBranch } from '../../../../hooks/useBranch';
 import { useAuth } from '../../../../hooks/useAuth';
 import { actionTechnicianTicketList, resetTechnicianTicketListResponse } from '../../../../store/technician/tickets';
 import AddTechnicianTicket from '../add';
+import FloatingAddIcon from '../../../../assets/icons/FloatingAddIcon';
 
 export default function TicketsList() {
     const theme = useTheme()
@@ -165,14 +166,7 @@ export default function TicketsList() {
                 key: 'total_closed'
             }
         ])
-
-
     }, [])
-
-    const handleFloatingAddClick = () => {
-        console.log("FAB clicked from BottomNav");
-        setOpenAddTicketPopup(true)
-    };
 
     /**
      * Get Ticket list API Call
@@ -191,11 +185,7 @@ export default function TicketsList() {
             <Stack rowGap={1.2} sx={{ overflowY: 'scroll', paddingBottom: 10 }}>
                 <TechnicianNavbarHeader />
                 <Stack sx={{ rowGap: 1 }}>
-                    <TypographyComponent fontSize={18} fontWeight={500}
-                    // onClick={() => {
-                    //     setOpenAddTicketPopup(true)
-                    // }}
-                    >Tickets Overview</TypographyComponent>
+                    <TypographyComponent fontSize={18} fontWeight={500}>Tickets Overview</TypographyComponent>
                     <Grid container spacing={1} sx={{ maxWidth: '100%' }}>
                         {
                             overviewTickets && overviewTickets !== null && overviewTickets.length > 0 ?
@@ -363,7 +353,28 @@ export default function TicketsList() {
                     </Stack>
                 </Stack>
                 <BottomNav value={value} onChange={setValue}
-                    onFabClick={handleFloatingAddClick} />
+                    fabContent={
+                        <Fab
+                            sx={{
+                                position: "absolute",
+                                right: 16,
+                                top: -58,
+                                width: 52,
+                                height: 52,
+                                boxShadow: 4,
+                                background: theme.palette.primary[700],
+                                '&:hover': {
+                                    background: theme.palette.primary[700]
+                                }
+                            }}
+                            onClick={() => {
+                                setOpenAddTicketPopup(true)
+                            }}
+                        >
+                            <FloatingAddIcon />
+                        </Fab>
+                    }
+                />
             </Stack>
             <AddTechnicianTicket
                 open={openAddTicketPopup}

@@ -456,9 +456,9 @@ export default function AddTechnicianTicket({ open, handleClose }) {
                     }
                 }
             }
-            setLoading(true)
-            const formData = getFormData(objData, files);
-            dispatch(actionAddTicket(formData))
+            // setLoading(true)
+            // const formData = getFormData(objData, files);
+            // dispatch(actionAddTicket(formData))
         } else {
             showSnackbar({ message: 'Atleast one vendor selection is required', severity: "error" })
         }

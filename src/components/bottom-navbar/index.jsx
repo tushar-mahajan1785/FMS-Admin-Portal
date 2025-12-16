@@ -1,7 +1,6 @@
 // BottomNav.jsx
-import { BottomNavigation, BottomNavigationAction, Paper, useTheme, Badge, Fab, Box } from "@mui/material";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { BottomNavigation, BottomNavigationAction, Paper, useTheme, Badge, Box } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 // Icons
 import DashboardIcon from "../../assets/icons/DashboardIcon";
@@ -9,11 +8,9 @@ import ProfileIcon from "../../assets/icons/ProfileIcon";
 import ClipboardIcon from "../../assets/icons/ClipboardIcon";
 import BoxPackedIcon from "../../assets/icons/BoxPackedIcon";
 import TechnicianTicketIcon from "../../assets/icons/TechnicianTicketIcon";
-import FloatingAddIcon from "../../assets/icons/FloatingAddIcon";
 
-export default function BottomNav({ value, onChange, onFabClick = () => { } }) {
+export default function BottomNav({ value, onChange, fabContent }) {
     const navigate = useNavigate();
-    const location = useLocation();
     const theme = useTheme();
 
     // Route mapping by tab index
@@ -33,24 +30,7 @@ export default function BottomNav({ value, onChange, onFabClick = () => { } }) {
         <Box sx={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 1100 }}>
 
             {value === 3 ?
-
-                <Fab
-                    sx={{
-                        position: "absolute",
-                        right: 16,
-                        top: -58,
-                        width: 52,
-                        height: 52,
-                        boxShadow: 4,
-                        background: theme.palette.primary[700],
-                        '&:hover': {
-                            background: theme.palette.primary[700]
-                        }
-                    }}
-                    onClick={onFabClick}
-                >
-                    <FloatingAddIcon />
-                </Fab>
+                <>{fabContent && fabContent !== null ? fabContent : ''}</>
                 :
                 <></>
             }
