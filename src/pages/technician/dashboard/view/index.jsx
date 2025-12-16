@@ -1,11 +1,10 @@
-import { Button, IconButton, Stack, useTheme } from "@mui/material"
+import { Avatar, Button, IconButton, Stack, useTheme } from "@mui/material"
 import TypographyComponent from "../../../../components/custom-typography"
-import EmptyContent from "../../../../components/empty_content"
 import { IMAGES_SCREEN_NO_DATA } from "../../../../constants"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { useNavigate } from "react-router-dom"
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew"
 
 export default function TechnicianDashboardView() {
     const theme = useTheme()
@@ -67,7 +66,10 @@ export default function TechnicianDashboardView() {
                         )
                     })
                     :
-                    <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Smart Suggestions Found'} subTitle={''} />
+                    <Stack sx={{ background: theme.palette.common.white, py: 4, mt: 0, alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                        <Avatar alt={""} src={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} sx={{ overFlow: 'hidden', borderRadius: 0, height: 120, width: 120 }} />
+                        <TypographyComponent fontSize={16} fontWeight={400}>No Smart Suggestions Found</TypographyComponent>
+                    </Stack>
             }
         </Stack>
     )

@@ -1,16 +1,32 @@
 import { useTheme } from '@emotion/react';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import ChevronLeftIcon from '../../../../assets/icons/ChevronLeft';
-import { Stack, Divider, Grid } from '@mui/material';
+import { Stack, Divider, Grid, Avatar } from '@mui/material';
 import { TechnicianNavbarHeader } from '../../../../components/technician/navbar-header';
 import TypographyComponent from '../../../../components/custom-typography';
 import moment from 'moment';
 import { TechnicianShowHistoryComponent } from '../../../../components/technician-history-component';
+import { useDispatch, useSelector } from 'react-redux';
+import { actionTechnicianTicketDetails, resetTechnicianTicketDetailsResponse } from '../../../../store/technician/tickets';
+import { ERROR, IMAGES_SCREEN_NO_DATA, SERVER_ERROR, UNAUTHORIZED } from '../../../../constants';
+import { useSnackbar } from '../../../../hooks/useSnackbar';
+import { useBranch } from '../../../../hooks/useBranch';
+import { useAuth } from '../../../../hooks/useAuth';
+import FullScreenLoader from '../../../../components/fullscreen-loader';
 
 export default function TicketView() {
-    const navigate = useNavigate()
     const theme = useTheme()
+    const dispatch = useDispatch()
+    const navigate = useNavigate();
+    const { showSnackbar } = useSnackbar()
+    const branch = useBranch()
+    const { logout } = useAuth()
+
+    const { ticketUuid } = useParams()
+
+    // store
+    const { technicianTicketDetails } = useSelector(state => state.technicianTicketsStore)
 
     const [ticketDetails, setTicketDetails] = useState({
         "ticket_id": 1,
@@ -304,31 +320,50 @@ export default function TicketView() {
             }
         ]
     })
+    const [loadingDetail, setLoadingDetail] = useState(false)
 
-    const [documentArray, setDocumentArray] = useState([
-        {
-            "id": 33,
-            "uuid": "qFxjdw5D4hRRJsylBweYGpMSdkoO3LixOxKI",
-            "file_name": "HVAC_Emergency_Shutdown_Services.jpg",
-            "version": "ver_4XSgDGlZ6BFxGDeJwSQNea3UuYcz",
-            "uploaded_by": "Avinash Suryawanshi",
-            "upload_date": "8 DEC 2025",
-            "file_size": "0.04 MB",
-            "notes": "new file document new file document new file document new file document",
-            "file_url": "https://fms-super-admin.interdev.in/fms/client/1/branch/2/document/33/group/11/category/73/objTicket.jpg"
-        },
-        {
-            "id": 34,
-            "uuid": "obqzyRinIAyf0XNBwaY8kD3GFZFfnYUyhXpO",
-            "file_name": "file-sample.pdf",
-            "version": "ver_jeXAEQRwY3umEMgSDukTPCeTxjQA",
-            "uploaded_by": "Avinash Suryawanshi",
-            "upload_date": "8 DEC 2025",
-            "file_size": "0.14 MB",
-            "notes": "new file",
-            "file_url": "https://fms-super-admin.interdev.in/fms/client/1/branch/2/document/34/group/11/category/73/file-sample.pdf"
+    useEffect(() => {
+        if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && ticketUuid && ticketUuid !== null) {
+            setLoadingDetail(true)
+            dispatch(actionTechnicianTicketDetails({
+                branch_uuid: branch?.currentBranch?.uuid,
+                ticket_uuid: ticketUuid
+            }))
         }
-    ])
+    }, [branch?.currentBranch?.uuid, ticketUuid])
+
+    /**
+     * useEffect
+     * @dependency : technicianTicketDetails
+     * @type : HANDLE API RESULT
+     * @description : Handle the result of technician asset details API
+     */
+    useEffect(() => {
+        if (technicianTicketDetails && technicianTicketDetails !== null) {
+            dispatch(resetTechnicianTicketDetailsResponse())
+            if (technicianTicketDetails?.result === true) {
+                setLoadingDetail(false)
+                setTicketDetails(technicianTicketDetails?.response)
+            } else {
+                setLoadingDetail(false)
+                setTicketDetails(null)
+                switch (technicianTicketDetails?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetTechnicianTicketDetailsResponse())
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: technicianTicketDetails?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [technicianTicketDetails])
+
     return (
         <Stack rowGap={2} sx={{ overflowY: 'scroll', paddingBottom: 10 }}>
             <TechnicianNavbarHeader leftSection={<Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>
@@ -339,6 +374,12 @@ export default function TicketView() {
                 </Stack>
                 <TypographyComponent color={theme.palette.text.primary} fontSize={22} fontWeight={500}>Ticket {ticketDetails?.ticket_no && ticketDetails?.ticket_no !== null ? `#${ticketDetails?.ticket_no}` : ''}</TypographyComponent>
             </Stack>} />
+
+            {loadingDetail ?
+                <FullScreenLoader open={true} />
+                :
+                <></>
+            }
             <Stack>
                 <TypographyComponent fontSize={18} fontWeight={500}>Ticket Information</TypographyComponent>
                 <Stack sx={{ background: theme.palette.common.white, p: '16px', borderRadius: '8px', mt: 1 }}>
@@ -349,7 +390,7 @@ export default function TicketView() {
                                     Ticket No
                                 </TypographyComponent>
                                 <TypographyComponent fontSize={18} fontWeight={500}>
-                                    {ticketDetails?.ticket_no && ticketDetails?.ticket_no !== null ? ticketDetails?.ticket_no : ''}
+                                    {ticketDetails?.ticket_no && ticketDetails?.ticket_no !== null ? ticketDetails?.ticket_no : '--'}
                                 </TypographyComponent>
                             </Stack>
                         </Grid>
@@ -359,7 +400,7 @@ export default function TicketView() {
                                     Created On
                                 </TypographyComponent>
                                 <TypographyComponent fontSize={20} fontWeight={500}>
-                                    {ticketDetails?.created_on && ticketDetails?.created_on !== null ? moment(ticketDetails?.created_on, 'YYYY-MM-DD hh:mm').format('DD MMM YYYY, hh:mm') : ''}
+                                    {ticketDetails?.created_on && ticketDetails?.created_on !== null ? moment(ticketDetails?.created_on, 'YYYY-MM-DD hh:mm').format('DD MMM YYYY, hh:mm') : '--'}
                                 </TypographyComponent>
                             </Stack>
                         </Grid>
@@ -370,7 +411,7 @@ export default function TicketView() {
                                     Asset Name
                                 </TypographyComponent>
                                 <TypographyComponent fontSize={20} fontWeight={500}>
-                                    {ticketDetails?.asset_name && ticketDetails?.asset_name !== null ? ticketDetails?.asset_name : ''}
+                                    {ticketDetails?.asset_name && ticketDetails?.asset_name !== null ? ticketDetails?.asset_name : '--'}
                                 </TypographyComponent>
                             </Stack>
                         </Grid>
@@ -380,7 +421,7 @@ export default function TicketView() {
                                     Asset Type
                                 </TypographyComponent>
                                 <TypographyComponent fontSize={20} fontWeight={500}>
-                                    {ticketDetails?.asset_type && ticketDetails?.asset_type !== null ? ticketDetails?.asset_type : ''}
+                                    {ticketDetails?.asset_type && ticketDetails?.asset_type !== null ? ticketDetails?.asset_type : '--'}
                                 </TypographyComponent>
                             </Stack>
                         </Grid>
@@ -391,7 +432,7 @@ export default function TicketView() {
                                     Created By
                                 </TypographyComponent>
                                 <TypographyComponent fontSize={20} fontWeight={500}>
-                                    {ticketDetails?.created_by && ticketDetails?.created_by !== null ? ticketDetails?.created_by : ''}
+                                    {ticketDetails?.created_by && ticketDetails?.created_by !== null ? ticketDetails?.created_by : '--'}
                                 </TypographyComponent>
                             </Stack>
                         </Grid>
@@ -401,7 +442,7 @@ export default function TicketView() {
                                     Updated On
                                 </TypographyComponent>
                                 <TypographyComponent fontSize={20} fontWeight={500}>
-                                    {ticketDetails?.last_updated && ticketDetails?.last_updated !== null ? moment(ticketDetails?.last_updated, 'YYYY-MM-DD hh:mm').format('DD MMM YYYY, hh:mm') : ''}
+                                    {ticketDetails?.last_updated && ticketDetails?.last_updated !== null ? moment(ticketDetails?.last_updated, 'YYYY-MM-DD hh:mm').format('DD MMM YYYY, hh:mm') : '--'}
                                 </TypographyComponent>
                             </Stack>
                         </Grid>
@@ -412,7 +453,7 @@ export default function TicketView() {
                                     Location
                                 </TypographyComponent>
                                 <TypographyComponent fontSize={20} fontWeight={500}>
-                                    {ticketDetails?.location && ticketDetails?.location !== null ? ticketDetails?.location : ''}
+                                    {ticketDetails?.location && ticketDetails?.location !== null ? ticketDetails?.location : '--'}
                                 </TypographyComponent>
                             </Stack>
                         </Grid>
@@ -421,20 +462,25 @@ export default function TicketView() {
             </Stack>
             <Stack>
                 <TypographyComponent fontSize={18} fontWeight={500}>Ticket Updates</TypographyComponent>
-                <Stack>
-                    {/* Show Tickets History */}
-                    <TechnicianShowHistoryComponent
-                        historyArray={ticketDetails?.history_by_status}
-                        title="title"
-                        description="description"
-                        files="files"
-                        user="user"
-                    // permission={'TICKET_EDIT'}
-                    // can_show_action={!['Rejected', 'Closed'].includes(ticketDetailsData?.status)}
-                    // onEditClick={handleEditClick}
-                    // onDeleteClick={handleDeleteClick}
-                    />
-                </Stack>
+                {
+                    ticketDetails?.history_by_status && ticketDetails?.history_by_status !== null && ticketDetails?.history_by_status.length > 0 ?
+                        <Stack>
+                            {/* Show Tickets History */}
+                            <TechnicianShowHistoryComponent
+                                historyArray={ticketDetails?.history_by_status}
+                                title="title"
+                                description="description"
+                                files="files"
+                                user="user"
+                            />
+                        </Stack>
+                        :
+                        <Stack sx={{ background: theme.palette.common.white, py: 6, mt: 1, borderRadius: '8px', alignItems: 'center', justifyContent: 'center' }}>
+                            <Avatar alt={""} src={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} sx={{ overFlow: 'hidden', borderRadius: 0, height: 120, width: 120 }} />
+                            <TypographyComponent fontSize={16} fontWeight={400}>No Ticket Updates Found</TypographyComponent>
+                        </Stack>
+                }
+
             </Stack>
 
 

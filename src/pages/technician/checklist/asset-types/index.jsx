@@ -1,4 +1,4 @@
-import { Box, Card, Divider, Grid, Stack, useTheme } from '@mui/material'
+import { Avatar, Box, Card, Divider, Grid, Stack, useTheme } from '@mui/material'
 import { useEffect, useState } from 'react'
 import { TechnicianNavbarHeader } from '../../../../components/technician/navbar-header'
 import TypographyComponent from '../../../../components/custom-typography'
@@ -228,9 +228,13 @@ export default function AssetTypesChecklist() {
                             </Grid>
                         ))
                         :
-                        <Stack sx={{ height: '100%', width: '100%', background: theme.palette.common.white, pb: 20, borderRadius: '8px', border: `1px solid ${theme.palette.grey[300]}` }}>
-                            <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Asset Groups Found'} subTitle={''} />
-                        </Stack>
+                        <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
+                            <Stack sx={{ background: theme.palette.common.white, py: 5, mt: 0, alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                                <Avatar alt={""} src={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} sx={{ overFlow: 'hidden', borderRadius: 0, height: 120, width: 120 }} />
+                                <TypographyComponent fontSize={16} fontWeight={400}>No Tickets Found</TypographyComponent>
+                            </Stack>
+                        </Grid>
+
                     }
                 </Grid>
             </Stack>

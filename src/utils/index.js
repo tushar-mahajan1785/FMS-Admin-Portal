@@ -1,8 +1,7 @@
 import CryptoJS from "crypto-js";
 import { CRYPTO_SECRET_KEY } from "../common/api/constants";
 import imageCompression from 'browser-image-compression';
-import CustomChip from "../components/custom-chip";
-import React, { useState } from "react";
+import { useState } from "react";
 import moment from "moment";
 
 /**

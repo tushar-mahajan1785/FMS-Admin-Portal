@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Box, Divider, Stack, useTheme } from "@mui/material";
+import { Avatar, Box, Divider, Stack, useTheme } from "@mui/material";
 import TypographyComponent from "../../../../components/custom-typography";
 import BottomNav from "../../../../components/bottom-navbar";
 import { TechnicianNavbarHeader } from "../../../../components/technician/navbar-header";
@@ -7,7 +7,7 @@ import { getInitials, getPMActivityLabel } from "../../../../utils";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { actionTechnicianAssetList, actionTechnicianAssetTypeList, resetTechnicianAssetListResponse, resetTechnicianAssetTypeListResponse } from "../../../../store/technician/assets";
-import { ERROR, SERVER_ERROR, UNAUTHORIZED } from "../../../../constants";
+import { ERROR, IMAGES_SCREEN_NO_DATA, SERVER_ERROR, UNAUTHORIZED } from "../../../../constants";
 import { useBranch } from "../../../../hooks/useBranch";
 import { useSnackbar } from "../../../../hooks/useSnackbar";
 import { useAuth } from "../../../../hooks/useAuth";
@@ -259,7 +259,10 @@ export default function TechnicianAssetList() {
                             </Stack>)
                         })
                         :
-                        <></>
+                        <Stack sx={{ background: theme.palette.common.white, py: 15, mt: 1, alignItems: 'center', justifyContent: 'center' }}>
+                            <Avatar alt={""} src={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} sx={{ overFlow: 'hidden', borderRadius: 0, height: 120, width: 120 }} />
+                            <TypographyComponent fontSize={16} fontWeight={400}>No Assets Found</TypographyComponent>
+                        </Stack>
                 }
             </Stack>
             <BottomNav value={value} onChange={setValue} />

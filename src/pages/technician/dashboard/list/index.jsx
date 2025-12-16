@@ -431,7 +431,7 @@ export default function TechnicianDashboardList() {
                                 )
                             })
                             :
-                            <Stack sx={{ background: theme.palette.common.white, py: 2, mt: 0, alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                            <Stack sx={{ background: theme.palette.common.white, py: 4, mt: 0, alignItems: 'center', justifyContent: 'center', width: '100%' }}>
                                 <Avatar alt={""} src={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} sx={{ overFlow: 'hidden', borderRadius: 0, height: 120, width: 120 }} />
                                 <TypographyComponent fontSize={16} fontWeight={400}>No Team Members in Shift Found</TypographyComponent>
                             </Stack>
@@ -462,7 +462,7 @@ export default function TechnicianDashboardList() {
                             </Stack>)
                         })
                         :
-                        <Stack sx={{ background: theme.palette.common.white, py: 2, mt: 0, alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                        <Stack sx={{ background: theme.palette.common.white, py: 10, mt: 0, alignItems: 'center', justifyContent: 'center', width: '100%' }}>
                             <Avatar alt={""} src={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} sx={{ overFlow: 'hidden', borderRadius: 0, height: 120, width: 120 }} />
                             <TypographyComponent fontSize={16} fontWeight={400}>No Smart Suggestions Found</TypographyComponent>
                         </Stack>
