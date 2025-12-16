@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { getErrorResponse } from "../../../utils";
-import { API_TECHNICIAN_EMPLOYEE_PROFILE, API_TECHNICIAN_EMPLOYEE_CHANGE_PASSWORD, API_TECHNICIAN_EMPLOYEE_LOGOUT } from "../../../common/api/constants";
-import { axiosApi } from "../../../common/api";
+import { API_TECHNICIAN_EMPLOYEE_PROFILE, API_TECHNICIAN_EMPLOYEE_CHANGE_PASSWORD, API_TECHNICIAN_EMPLOYEE_LOGOUT, API_TECHNICIAN_EMPLOYEE_PROFILE_UPLOAD, API_TECHNICIAN_EMPLOYEE_PROFILE_UPLOAD_REMOVE } from "../../../common/api/constants";
+import { axiosApi, MULTIPART_HEADER } from "../../../common/api";
 
 export const actionTechnicianEmployeeProfile = createAsyncThunk('technicianProfile/actionTechnicianEmployeeProfile', async (params) => {
     try {
@@ -33,12 +33,34 @@ export const actionTechnicianEmployeeLogout = createAsyncThunk('technicianProfil
     }
 })
 
+export const actionTechnicianEmployeeProfileUpload = createAsyncThunk('technicianProfile/actionTechnicianEmployeeProfileUpload', async (params) => {
+    try {
+        const response = await axiosApi.post(API_TECHNICIAN_EMPLOYEE_PROFILE_UPLOAD, params, MULTIPART_HEADER)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+
+export const actionTechnicianEmployeeProfileUploadReset = createAsyncThunk('technicianProfile/actionTechnicianEmployeeProfileUploadReset', async (params) => {
+    try {
+        const response = await axiosApi.post(API_TECHNICIAN_EMPLOYEE_PROFILE_UPLOAD_REMOVE, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
+
 export const technicianProfileStore = createSlice({
     name: 'technicianProfile',
     initialState: {
         technicianEmployeeProfile: null,
         technicianEmployeeChangePassword: null,
-        technicianEmployeeLogout: null
+        technicianEmployeeLogout: null,
+        technicianEmployeeProfileUpload: null,
+        technicianEmployeeProfileUploadReset: null
     },
 
     reducers: {
@@ -50,6 +72,12 @@ export const technicianProfileStore = createSlice({
         },
         resetTechnicianEmployeeLogoutResponse: (state) => {
             state.technicianEmployeeLogout = null
+        },
+        resetTechnicianEmployeeProfileUploadResponse: (state) => {
+            state.technicianEmployeeProfileUpload = null
+        },
+        resetTechnicianEmployeeProfileUploadResetResponse: (state) => {
+            state.technicianEmployeeProfileUploadReset = null
         },
     },
     extraReducers: builder => {
@@ -63,6 +91,12 @@ export const technicianProfileStore = createSlice({
             .addCase(actionTechnicianEmployeeLogout.fulfilled, (state, action) => {
                 state.technicianEmployeeLogout = action.payload
             })
+            .addCase(actionTechnicianEmployeeProfileUpload.fulfilled, (state, action) => {
+                state.technicianEmployeeProfileUpload = action.payload
+            })
+            .addCase(actionTechnicianEmployeeProfileUploadReset.fulfilled, (state, action) => {
+                state.technicianEmployeeProfileUploadReset = action.payload
+            })
 
     }
 })
@@ -70,7 +104,9 @@ export const technicianProfileStore = createSlice({
 export const {
     resetTechnicianEmployeeProfileResponse,
     resetTechnicianEmployeeChangePasswordResponse,
-    resetTechnicianEmployeeLogoutResponse
+    resetTechnicianEmployeeLogoutResponse,
+    resetTechnicianEmployeeProfileUploadResponse,
+    resetTechnicianEmployeeProfileUploadResetResponse
 } =
     technicianProfileStore.actions
 

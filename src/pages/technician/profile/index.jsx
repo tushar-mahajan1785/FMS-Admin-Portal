@@ -8,33 +8,47 @@ import PhoneCallIcon from "../../../assets/icons/PhoneCallIcon";
 import CalendarIcon from "../../../assets/icons/CalendarIcon";
 import ChangePasswordIcon from "../../../assets/icons/ChangePasswordIcon";
 import LogoutIcon from '@mui/icons-material/Logout';
-import { actionTechnicianEmployeeLogout, actionTechnicianEmployeeProfile, resetTechnicianEmployeeLogoutResponse, resetTechnicianEmployeeProfileResponse } from "../../../store/technician/profile";
+import {
+    actionTechnicianEmployeeLogout,
+    actionTechnicianEmployeeProfile,
+    resetTechnicianEmployeeLogoutResponse,
+    resetTechnicianEmployeeProfileResponse,
+    actionTechnicianEmployeeProfileUpload,
+    resetTechnicianEmployeeProfileUploadResponse,
+    actionTechnicianEmployeeProfileUploadReset,
+    resetTechnicianEmployeeProfileUploadResetResponse
+} from "../../../store/technician/profile";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../../../hooks/useAuth";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import React, { useEffect, useState } from "react";
 import { ERROR, SERVER_ERROR, UNAUTHORIZED } from "../../../constants";
-import { decrypt } from "../../../utils";
+import { decrypt, getFormData } from "../../../utils";
 import CloseIcon from "../../../assets/icons/CloseIcon";
 import moment from "moment";
 import MapPinIcon from "../../../assets/icons/MapPinIcon"
 import AlertPopup from "../../../components/alert-confirm";
 import ChangePassword from "../change-password"
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import AlertCircleIcon from "../../../assets/icons/AlertCircleIcon";
 
 export default function TechnicianProfile() {
     const theme = useTheme()
     const dispatch = useDispatch()
-    const { logout, user } = useAuth()
+    const { logout, user, setUser } = useAuth()
     const { showSnackbar } = useSnackbar()
 
     // store
-    const { technicianEmployeeProfile, technicianEmployeeLogout } = useSelector(state => state.technicianProfileStore)
+    const { technicianEmployeeProfile, technicianEmployeeLogout, technicianEmployeeProfileUpload, technicianEmployeeProfileUploadReset } = useSelector(state => state.technicianProfileStore)
 
+    // state
     const [profileDetails, setProfileDetails] = useState(null)
     const [openLogoutConfirm, setOpenLogoutConfirm] = useState(false);
     const [loadingLogout, setLoadingLogout] = useState(false);
     const [openChangePasswordPopup, setOpenChangePasswordPopup] = useState(false)
-    // const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [openResetProfilePopup, setOpenResetProfilePopup] = useState(false);
+    const [loadingDelete, setLoadingDelete] = useState(false)
 
     /**
        * Initial Render
@@ -44,6 +58,109 @@ export default function TechnicianProfile() {
             dispatch(actionTechnicianEmployeeProfile({ employee_id: user?.employee_id }))
         }
     }, [user?.employee_id])
+
+    // Handler function for file selection and preview
+    const handleImageUpload = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                // TODO: Add your API call here to upload 'file' to the backend
+                let objData = {
+                    employee_id: user?.employee_id,
+                    client_uuid: user?.client?.uuid
+                }
+                var images = []
+                if (file !== undefined && file !== null && file !== '') {
+                    images.push({
+                        title: 'file',
+                        data: file
+                    })
+                }
+
+                var objFormData = getFormData(objData, images)
+                setLoading(true)
+                dispatch(actionTechnicianEmployeeProfileUpload(objFormData))
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    /**
+          * useEffect
+          * @dependency : technicianEmployeeProfileUpload
+          * @type : HANDLE API RESULT
+          * @description : Handle the result of profile upload API
+          */
+    useEffect(() => {
+        if (technicianEmployeeProfileUpload && technicianEmployeeProfileUpload !== null) {
+            dispatch(resetTechnicianEmployeeProfileUploadResponse())
+            if (technicianEmployeeProfileUpload?.result === true) {
+                setLoading(false)
+                showSnackbar({ message: technicianEmployeeProfileUpload?.message, severity: "success" })
+                dispatch(actionTechnicianEmployeeProfile({ employee_id: user?.employee_id }))
+                if (technicianEmployeeProfileUpload?.response?.image_url && technicianEmployeeProfileUpload?.response?.image_url !== null) {
+                    let userData = Object.assign({}, user)
+                    userData.image_url = technicianEmployeeProfileUpload?.response?.image_url
+                    setUser(userData)
+                }
+            } else {
+                setLoading(false)
+                switch (technicianEmployeeProfileUpload?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetTechnicianEmployeeProfileUploadResponse())
+                        showSnackbar({ message: technicianEmployeeProfileUpload?.message, severity: "error" })
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: technicianEmployeeProfileUpload?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [technicianEmployeeProfileUpload])
+
+    /**
+     * useEffect
+     * @dependency : technicianEmployeeProfileUploadReset
+     * @type : HANDLE API RESULT
+     * @description : Handle the result of profile upload reset API
+     */
+    useEffect(() => {
+        if (technicianEmployeeProfileUploadReset && technicianEmployeeProfileUploadReset !== null) {
+            dispatch(resetTechnicianEmployeeProfileUploadResetResponse())
+            if (technicianEmployeeProfileUploadReset?.result === true) {
+                setOpenResetProfilePopup(false)
+                setLoadingDelete(false)
+                showSnackbar({ message: technicianEmployeeProfileUploadReset?.message, severity: "success" })
+
+                dispatch(actionTechnicianEmployeeProfile({ employee_id: user?.employee_id }))
+                let userData = Object.assign({}, user)
+                userData.image_url = null
+                setUser(userData)
+
+            } else {
+                setLoadingDelete(false)
+                switch (technicianEmployeeProfileUploadReset?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetTechnicianEmployeeProfileUploadResetResponse())
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: technicianEmployeeProfileUploadReset?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [technicianEmployeeProfileUploadReset])
 
     /**
           * useEffect
@@ -117,7 +234,7 @@ export default function TechnicianProfile() {
             <Stack sx={{ pb: 10 }}>
                 <Box
                     sx={{
-                        height: 320,
+                        height: 340,
                         background: "linear-gradient(180deg, #6941C6 0%, #6E30FF 100%)",
                         borderBottomLeftRadius: 20,
                         borderBottomRightRadius: 20,
@@ -167,23 +284,38 @@ export default function TechnicianProfile() {
                                                 '&:hover': { backgroundColor: theme.palette.grey[100] }
                                             }}
                                             onClick={() => {
-                                                // setOpenResetProfilePopup(true)
+                                                setOpenResetProfilePopup(true)
                                             }}
                                         >
-                                            {/* {loading ? <CircularProgress size={18} /> : <CloseIcon size={14} />} */}
+                                            {loading ? <CircularProgress size={18} /> : <CloseIcon size={14} />}
                                         </IconButton>
                                     </>
                                     :
                                     <></>
                             }
                         </Box>
+                        <Stack sx={{ alignItems: 'center', width: '100%' }}>
+                            <Button
+                                color="primary"
+                                aria-label="upload picture"
+                                component="label"
+                                size='small'
+                                sx={{ background: theme.palette.primary[600], fontWeight: 600, fontSize: '14px', textTransform: "capitalize" }}
+                                variant="contained"
+                                startIcon={<PhotoCameraIcon fontSize={'small'} />}
+                                onClick={handleImageUpload}
+                            >
+                                <input disabled={loading ? true : false} hidden accept="image/*" type="file" onChange={handleImageUpload} />
+                                {loading ? <CircularProgress size={18} /> : 'Upload'}
+                            </Button>
+                        </Stack>
                         <TypographyComponent fontSize={24} fontWeight={600} sx={{ mt: 2, }}>
                             {profileDetails?.name && profileDetails?.name !== null ? profileDetails?.name : '-'}
                         </TypographyComponent>
                         <TypographyComponent fontSize={16} fontWeight={400} sx={{ opacity: 0.8 }}>{profileDetails?.role && profileDetails?.role !== null ? profileDetails?.role : '-'}</TypographyComponent>
                         <Box
                             sx={{
-                                mt: 1,
+                                my:2,
                                 px: 2,
                                 py: "4px",
                                 borderRadius: '8px',
@@ -377,6 +509,38 @@ export default function TechnicianProfile() {
                 open={openChangePasswordPopup}
                 handleClose={() => setOpenChangePasswordPopup(false)}
             />
+            {
+                openResetProfilePopup &&
+                <AlertPopup
+                    open={openResetProfilePopup}
+                    icon={<AlertCircleIcon sx={{ color: theme.palette.error[600] }} fontSize="inherit" size={20} />}
+                    color={theme.palette.error[600]}
+                    objData={{
+                        uuid: '',
+                        title: `Reset Profile`,
+                        text: `Are you sure you want to reset profile photo? This action cannot be undone.`
+                    }}
+                    actionButtons={[
+                        <Button key="cancel" color="secondary" variant="outlined" sx={{ width: '100%', color: theme.palette.grey[800], textTransform: 'capitalize' }} onClick={() => {
+                            setOpenResetProfilePopup(false)
+                        }}>
+                            Cancel
+                        </Button >
+                        ,
+                        <Button key="delete" variant="contained" sx={{ width: '100%', textTransform: 'capitalize', background: theme.palette.error[600], color: theme.palette.common.white }} disabled={loadingDelete} onClick={() => {
+                            setLoadingDelete(true)
+                            if (profileDetails?.id && profileDetails?.id !== null) {
+                                dispatch(actionTechnicianEmployeeProfileUploadReset({
+                                    employee_id: profileDetails?.id
+                                }))
+                            }
+                        }}>
+                            {loadingDelete ? <CircularProgress size={20} color="white" /> : 'Delete'}
+                        </Button>
+                    ]
+                    }
+                />
+            }
         </React.Fragment>
 
     );
