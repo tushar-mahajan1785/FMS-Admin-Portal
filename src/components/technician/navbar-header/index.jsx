@@ -26,8 +26,7 @@ export const TechnicianNavbarHeader = ({ leftSection = null, rightSection = null
                             <Stack sx={{ height: '42px', width: '42px', background: theme.palette.common.white, boxShadow: "0 1px 4px rgba(0,0,0,0.08)", borderRadius: '4px' }}>
                                 <Avatar
                                     alt={user?.name || 'Guest'}
-                                    // src={user?.image_url || '/person.png'}
-                                    src={"https://fms-super-admin.interdev.in/fms/admin/2/2_1765183597354.jpg"}
+                                    src={user?.image_url || 'https://fms-super-admin.interdev.in/fms/admin/2/2_1765183597354.jpg'}
                                     sx={{ width: '42px', height: '42px', borderRadius: 0 }}
                                 />
                             </Stack>
