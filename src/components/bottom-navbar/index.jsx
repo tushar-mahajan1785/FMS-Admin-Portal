@@ -11,26 +11,13 @@ import BoxPackedIcon from "../../assets/icons/BoxPackedIcon";
 import TechnicianTicketIcon from "../../assets/icons/TechnicianTicketIcon";
 import FloatingAddIcon from "../../assets/icons/FloatingAddIcon";
 
-export default function BottomNav({ value, onChange }) {
+export default function BottomNav({ value, onChange, onFabClick = () => { } }) {
     const navigate = useNavigate();
     const location = useLocation();
     const theme = useTheme();
 
     // Route mapping by tab index
     const routes = ["/", "/checklist", "/assets", "/tickets", "/profile"];
-
-    // Update selected tab when URL changes
-    // useEffect(() => {
-    //     const currentIndex = routes.findIndex((path) =>
-    //         location.pathname.startsWith(path)
-    //     );
-
-    //     if (currentIndex !== -1 && currentIndex !== value) {
-    //         onChange(currentIndex);
-    //     }
-    // }, [location.pathname]);
-
-
 
     const isSelected = (index) => value === index;
 
@@ -60,9 +47,7 @@ export default function BottomNav({ value, onChange }) {
                             background: theme.palette.primary[700]
                         }
                     }}
-                    onClick={() => {
-                        console.log("FAB Clicked");
-                    }}
+                    onClick={onFabClick}
                 >
                     <FloatingAddIcon />
                 </Fab>
@@ -72,18 +57,6 @@ export default function BottomNav({ value, onChange }) {
 
             {/* 🔽 BOTTOM NAV BAR */}
             <Paper elevation={5} sx={{ pt: 1, pb: 1 }}>
-                {/* <Paper
-            sx={{
-                position: "fixed",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                zIndex: 1000,
-                pt: 1,
-                pb: 1,
-            }}
-            elevation={5}
-        > */}
                 <BottomNavigation
                     showLabels
                     value={value}
@@ -213,7 +186,6 @@ export default function BottomNav({ value, onChange }) {
                         }
                     />
                 </BottomNavigation>
-                {/* </Paper> */}
             </Paper >
         </Box >
     );

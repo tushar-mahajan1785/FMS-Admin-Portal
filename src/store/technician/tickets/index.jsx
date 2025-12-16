@@ -43,7 +43,7 @@ export const technicianTicketsStore = createSlice({
                 state.technicianTicketList = action.payload
             })
             .addCase(actionTechnicianTicketDetails.fulfilled, (state, action) => {
-                state.technicianTicketList = action.payload
+                state.technicianTicketDetails = action.payload
             })
 
     }
