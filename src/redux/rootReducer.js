@@ -21,6 +21,8 @@ import checklistStore from '../store/checklist'
 import technicianChecklistStore from '../store/technician/checklist';
 import technicianDashboardStore from '../store/technician/dashboard';
 import technicianProfileStore from '../store/technician/profile';
+import technicianTicketsStore from '../store/technician/tickets';
+import technicianAssetStore from '../store/technician/assets';
 
 const rootReducer = {
     loginStore,
@@ -45,7 +47,9 @@ const rootReducer = {
     checklistStore,
     technicianChecklistStore,
     technicianDashboardStore,
-    technicianProfileStore
+    technicianProfileStore,
+    technicianTicketsStore,
+    technicianAssetStore
 };
 
 export default rootReducer;

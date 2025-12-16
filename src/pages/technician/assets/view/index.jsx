@@ -1,6 +1,6 @@
 import { useTheme } from '@emotion/react';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import ChevronLeftIcon from '../../../../assets/icons/ChevronLeft';
 import { Stack, Box, Divider, Avatar } from '@mui/material';
 import { TechnicianNavbarHeader } from '../../../../components/technician/navbar-header';
@@ -8,171 +8,96 @@ import TypographyComponent from '../../../../components/custom-typography';
 import { getInitials, getPMActivityLabel } from '../../../../utils';
 import moment from 'moment';
 import _ from 'lodash';
-import { IMAGES_SCREEN_NO_DATA } from '../../../../constants';
-import ClockIcon from '../../../../assets/icons/ClockIcon';
-import DocumentIcon from '../../../../assets/icons/DocumentIcon';
+import { ERROR, IMAGES_SCREEN_NO_DATA, SERVER_ERROR, UNAUTHORIZED } from '../../../../constants';
 import PaperClipIcon from '../../../../assets/icons/PaperClipIcon';
 import MessageDotsIcon from '../../../../assets/MessageDotsIcon';
 import HistoryIcon from '../../../../assets/icons/HistoryIcon';
+import { useDispatch, useSelector } from 'react-redux';
+import { useSnackbar } from '../../../../hooks/useSnackbar';
+import { useBranch } from '../../../../hooks/useBranch';
+import { useAuth } from '../../../../hooks/useAuth';
+import { actionTechnicianAssetDetails, resetTechnicianAssetDetailsResponse } from '../../../../store/technician/assets';
 
 export default function TechnicianAssetView() {
-    const navigate = useNavigate()
     const theme = useTheme()
+    const dispatch = useDispatch()
+    const navigate = useNavigate();
+    const { showSnackbar } = useSnackbar()
+    const branch = useBranch()
+    const { logout } = useAuth()
+    const { assetUuid } = useParams()
 
-    const [assetDetails, setAssetDetails] = useState({
-        "id": 3,
-        "title": "Solar energy equipment",
-        "group_name": "Electric Tower 1",
-        "total_documents": 2,
-        "total_active_tickets": 6,
-        "upcoming_pm_activity_date": "2025-12-18",
-        "document_categories": [
-            {
-                "id": 78,
-                "uuid": "A8BwJXhfNaAPvqi7dZIoUrghC1GfVXfiJezo",
-                "category_name": "Archive Files",
-                "category_short_name": "Archive",
-                "description": "Archived and historical documents",
-                "image_url": "https://fms-super-admin.interdev.in/fms/client/1/branch/2/icon/78/78_1765190269783.svg",
-                "is_selected": true,
-                "documents": [
-                    {
-                        "id": 33,
-                        "uuid": "qFxjdw5D4hRRJsylBweYGpMSdkoO3LixOxKI",
-                        "file_name": "HVAC_Emergency_Shutdown_Services.jpg",
-                        "version": "ver_4XSgDGlZ6BFxGDeJwSQNea3UuYcz",
-                        "uploaded_by": "Avinash Suryawanshi",
-                        "upload_date": "8 DEC 2025",
-                        "file_size": "0.04 MB",
-                        "notes": "new file document new file document new file document new file document",
-                        "file_url": "https://fms-super-admin.interdev.in/fms/client/1/branch/2/document/33/group/11/category/73/objTicket.jpg"
-                    },
-                    {
-                        "id": 34,
-                        "uuid": "obqzyRinIAyf0XNBwaY8kD3GFZFfnYUyhXpO",
-                        "file_name": "file-sample.pdf",
-                        "version": "ver_jeXAEQRwY3umEMgSDukTPCeTxjQA",
-                        "uploaded_by": "Avinash Suryawanshi",
-                        "upload_date": "8 DEC 2025",
-                        "file_size": "0.14 MB",
-                        "notes": "new file",
-                        "file_url": "https://fms-super-admin.interdev.in/fms/client/1/branch/2/document/34/group/11/category/73/file-sample.pdf"
-                    }
-                ]
-            },
-            {
-                "id": 77,
-                "uuid": "eCryENxTKTqZIqSfsdvoCP18IscdBr5PeaDT",
-                "category_name": "Miscellaneous  Files",
-                "category_short_name": "Miscellaneous",
-                "description": "Archived and historical documents",
-                "image_url": "https://fms-super-admin.interdev.in/fms/client/1/branch/2/icon/77/77_1765190247971.svg",
-                "documents": [
-                    {
-                        "id": 33,
-                        "uuid": "qFxjdw5D4hRRJsylBweYGpMSdkoO3LixOxKI",
-                        "file_name": "objTicket.jpg",
-                        "version": "ver_4XSgDGlZ6BFxGDeJwSQNea3UuYcz",
-                        "uploaded_by": "Avinash Suryawanshi",
-                        "upload_date": "8 DEC 2025",
-                        "file_size": "0.04 MB",
-                        "notes": "new file document",
-                        "file_url": "https://fms-super-admin.interdev.in/fms/client/1/branch/2/document/33/group/11/category/73/objTicket.jpg"
-                    }
-                ]
-            },
-            {
-                "id": 76,
-                "uuid": "rQ4nCHhuRsZ6uY8x6JkLHH2XkwtyinxQqf4I",
-                "category_name": "Vendor Policies",
-                "category_short_name": "Vendor",
-                "description": "Vendor agreements, warranties, and policies",
-                "image_url": "https://fms-super-admin.interdev.in/fms/client/1/branch/2/icon/76/76_1765190216329.svg",
-                "documents": []
-            },
-            {
-                "id": 75,
-                "uuid": "d0u3NBp2unJ1XajTBLMHO8AAtJjXGuKAOUny",
-                "category_name": "Safety Documents",
-                "category_short_name": "Safety",
-                "description": "Safety protocols, MSDS, and compliance documents",
-                "image_url": "https://fms-super-admin.interdev.in/fms/client/1/branch/2/icon/75/75_1765190189547.svg",
-                "documents": []
-            },
-            {
-                "id": 74,
-                "uuid": "cYbXloDaAjZla6KZ8osRBNOs4LMrtzic8VMF",
-                "category_name": "Standard Operating Procedures",
-                "category_short_name": "SOP",
-                "description": "Day-to-day operational procedures and guidelines",
-                "image_url": "https://fms-super-admin.interdev.in/fms/client/1/branch/2/icon/74/74_1765190166370.svg",
-                "documents": []
-            },
-            {
-                "id": 73,
-                "uuid": "no2wNAMjnNjPLOqPnZlTJbCXTppdbY3dLBLE",
-                "category_name": "Emergency Operating Procedures",
-                "category_short_name": "EOP",
-                "description": "Critical emergency procedures and protocols",
-                "image_url": "https://fms-super-admin.interdev.in/fms/client/1/branch/2/icon/73/73_1765190134201.svg",
-                "documents": []
-            }
-        ],
-        "tickets": [
-            {
-                id: 1,
-                "name": "AC not working",
-                "ticket_no": "VF-2025-0001677",
-                "description": "While routine check we observe high vibration in Source A Cond Pump. No. 03. so kindly arrange your technician and resolve the issue ASAP",
-                "created_at": "2025-12-01T10:30:00Z",
-                "updates": 2,
-                "attachments": 1,
-            },
-            {
-                id: 2,
-                "name": "HVAC Unit - Tower A",
-                "ticket_no": "VF-2025-0001677",
-                "description": "While routine check we observe high vibration in Source A Cond Pump. No. 03. so kindly arrange your technician and resolve the issue ASAP",
-                "created_at": "2025-12-01T10:30:00Z",
-                "updates": 2,
-                "attachments": 3,
-            },
-            {
-                id: 3,
-                "name": "HVAC Unit - Tower B",
-                "ticket_no": "VF-2025-0001677",
-                "description": "While routine check we observe high vibration in Source A Cond Pump. No. 03. so kindly arrange your technician and resolve the issue ASAP",
-                "created_at": "2025-12-01T10:30:00Z",
-                "updates": 2,
-                "attachments": 2,
-            }
-        ]
-    })
+    //Store
+    const { technicianAssetDetails } = useSelector(state => state.technicianAssetStore)
 
-    const [documentArray, setDocumentArray] = useState([
-        {
-            "id": 33,
-            "uuid": "qFxjdw5D4hRRJsylBweYGpMSdkoO3LixOxKI",
-            "file_name": "HVAC_Emergency_Shutdown_Services.jpg",
-            "version": "ver_4XSgDGlZ6BFxGDeJwSQNea3UuYcz",
-            "uploaded_by": "Avinash Suryawanshi",
-            "upload_date": "8 DEC 2025",
-            "file_size": "0.04 MB",
-            "notes": "new file document new file document new file document new file document",
-            "file_url": "https://fms-super-admin.interdev.in/fms/client/1/branch/2/document/33/group/11/category/73/objTicket.jpg"
-        },
-        {
-            "id": 34,
-            "uuid": "obqzyRinIAyf0XNBwaY8kD3GFZFfnYUyhXpO",
-            "file_name": "file-sample.pdf",
-            "version": "ver_jeXAEQRwY3umEMgSDukTPCeTxjQA",
-            "uploaded_by": "Avinash Suryawanshi",
-            "upload_date": "8 DEC 2025",
-            "file_size": "0.14 MB",
-            "notes": "new file",
-            "file_url": "https://fms-super-admin.interdev.in/fms/client/1/branch/2/document/34/group/11/category/73/file-sample.pdf"
+    //States
+    const [loadingDetail, setLoadingDetail] = useState(false)
+    const [assetDetails, setAssetDetails] = useState(null)
+    const [documentArray, setDocumentArray] = useState([])
+
+    /**
+     * useEffect
+     * @dependency : technicianAssetDetails
+     * @type : HANDLE API RESULT
+     * @description : Handle the result of technician asset details API
+     */
+    useEffect(() => {
+        if (technicianAssetDetails && technicianAssetDetails !== null) {
+            dispatch(resetTechnicianAssetDetailsResponse())
+
+            if (technicianAssetDetails?.result === true) {
+                setLoadingDetail(false)
+                let assetResponse = Object.assign({}, technicianAssetDetails?.response)
+
+                let documentCategoryArray = Object.assign([], assetResponse?.document_categories);
+                const updatedArray = documentCategoryArray?.map((cat, index) => ({
+                    ...cat,
+                    is_selected: index === 0
+                }));
+                assetResponse.document_categories = updatedArray;
+                setAssetDetails(assetResponse)
+                let findSelected = assetResponse?.document_categories?.find(obj => obj?.is_selected == true)
+                if (findSelected && findSelected.documents && findSelected.documents !== null && findSelected.documents.length > 0) {
+                    setDocumentArray(findSelected.documents)
+                } else {
+                    setDocumentArray([])
+                }
+
+            } else {
+                setLoadingDetail(false)
+                setAssetDetails([])
+                setDocumentArray([])
+                switch (technicianAssetDetails?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetTechnicianAssetDetailsResponse())
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: technicianAssetDetails?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
         }
-    ])
+    }, [technicianAssetDetails])
+
+    /**
+      * Initial Render Call Asset Type list
+      */
+    useEffect(() => {
+        if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null) {
+            dispatch(actionTechnicianAssetDetails({
+                branch_uuid: branch?.currentBranch?.uuid,
+                asset_uuid: assetUuid
+            }))
+        }
+
+    }, [branch?.currentBranch?.uuid, assetUuid])
+
+
     return (
         <Stack rowGap={2} sx={{ overflowY: 'scroll', paddingBottom: 10 }}>
             <TechnicianNavbarHeader leftSection={<Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>
@@ -251,201 +176,206 @@ export default function TechnicianAssetView() {
                     </Stack>
                 </Stack>
             </Stack>
-            <Stack sx={{ width: '100%' }}>
-                <TypographyComponent fontSize={18} fontWeight={500} >
-                    Documents
-                </TypographyComponent>
-                <Stack gap={1} sx={{ flexDirection: 'row', alignItems: 'center', width: '100%', py: 1, overflowX: 'scroll', scrollbarWidth: 'thin' }}>
-                    {assetDetails?.document_categories && assetDetails?.document_categories.length > 0 ?
-                        assetDetails?.document_categories.map((category, index) => (
-                            <Stack
-                                key={index}
-                                sx={{
-                                    flexDirection: 'row', alignItems: 'center', gap: 0.8,
-                                    background: category?.is_selected == true ? theme.palette.common.black : theme.palette.common.white, padding: '8px 16px', textWrap: 'nowrap',
-                                    borderRadius: '8px', justifyContent: 'center', cursor: 'pointer',
-                                    border: `1px solid ${theme.palette.grey[100]}`,
-                                }}
-                                onClick={() => {
-                                    let details = Object.assign({}, assetDetails);
-                                    let documentCategory = Object.assign([], details.document_categories);
-                                    documentCategory.forEach((cat) => {
-                                        if (cat?.id == category?.id) {
-                                            cat.is_selected = true;
-                                        } else {
-                                            cat.is_selected = false;
-                                        }
-                                    })
-                                    details.document_categories = documentCategory;
-                                    setAssetDetails(details);
-                                    if (category?.documents && category?.documents.length > 0) {
-                                        setDocumentArray(category?.documents);
-                                    } else {
-                                        setDocumentArray([]);
-                                    }
-
-                                }}
-                            >
-                                <TypographyComponent fontSize={16} fontWeight={600} sx={{ textWrap: 'nowrap', color: category?.is_selected == true ? theme.palette.common.white : theme.palette.text.primary }}>
-                                    {category?.category_short_name && category?.category_short_name !== null ? category?.category_short_name : ''}
-                                </TypographyComponent>
+            {
+                loadingDetail ? (
+                    <FullScreenLoader open={true} />
+                ) :
+                    <>
+                        <Stack sx={{ width: '100%' }}>
+                            <TypographyComponent fontSize={18} fontWeight={500} >
+                                Documents
+                            </TypographyComponent>
+                            <Stack gap={1} sx={{ flexDirection: 'row', alignItems: 'center', width: '100%', py: 1, overflowX: 'scroll', scrollbarWidth: 'thin' }}>
+                                {assetDetails?.document_categories && assetDetails?.document_categories.length > 0 ?
+                                    assetDetails?.document_categories.map((category, index) => (
+                                        <Stack
+                                            key={index}
+                                            sx={{
+                                                flexDirection: 'row', alignItems: 'center', gap: 0.8,
+                                                background: category?.is_selected == true ? theme.palette.common.black : theme.palette.common.white, padding: '8px 16px', textWrap: 'nowrap',
+                                                borderRadius: '8px', justifyContent: 'center', cursor: 'pointer',
+                                                border: `1px solid ${theme.palette.grey[100]}`,
+                                            }}
+                                            onClick={() => {
+                                                let details = Object.assign({}, assetDetails);
+                                                let documentCategory = Object.assign([], details.document_categories);
+                                                const updatedArray = documentCategory?.map((cat) => ({
+                                                    ...cat,
+                                                    is_selected: cat?.id == category?.id
+                                                }));
+                                                details.document_categories = updatedArray;
+                                                setAssetDetails(details);
+                                                if (category?.documents && category?.documents.length > 0) {
+                                                    setDocumentArray(category?.documents);
+                                                } else {
+                                                    setDocumentArray([]);
+                                                }
+                                            }}
+                                        >
+                                            <TypographyComponent fontSize={16} fontWeight={600} sx={{ textWrap: 'nowrap', color: category?.is_selected == true ? theme.palette.common.white : theme.palette.text.primary }}>
+                                                {category?.category_short_name && category?.category_short_name !== null ? category?.category_short_name : ''}
+                                            </TypographyComponent>
+                                        </Stack>
+                                    )) : <></>}
                             </Stack>
-                        )) : <></>}
-                </Stack>
-                <Stack gap={1} sx={{ background: theme.palette.common.white, p: 2, borderRadius: '8px', mt: 1, minHeight: '150px', maxHeight: '250px', overflowY: 'scroll' }}>
-                    {documentArray && documentArray !== null && documentArray.length > 0 ?
-                        documentArray?.map((doc, index) => {
-                            const fileName = doc?.file_name || "";
-                            const ext = fileName.split('.').pop().toLowerCase();
+                            <Stack gap={1} sx={{ background: theme.palette.common.white, p: 2, borderRadius: '8px', mt: 1, minHeight: '150px', maxHeight: '250px', overflowY: 'scroll' }}>
+                                {documentArray && documentArray !== null && documentArray.length > 0 ?
+                                    documentArray?.map((doc, index) => {
+                                        const fileName = doc?.file_name || "";
+                                        const ext = fileName.split('.').pop().toLowerCase();
 
-                            let iconPath = "/asset/pdf-file.png"; // default
+                                        let iconPath = "/asset/pdf-file.png"; // default
 
-                            if (ext === "jpg" || ext === "jpeg" || ext === "png") {
-                                iconPath = "/assets/jpg-file.png";
-                            } else if (ext === "pdf") {
-                                iconPath = "/assets/pdf-file.png";
-                            }
+                                        if (ext === "jpg" || ext === "jpeg" || ext === "png") {
+                                            iconPath = "/assets/jpg-file.png";
+                                        } else if (ext === "pdf") {
+                                            iconPath = "/assets/pdf-file.png";
+                                        }
 
-                            return (
-                                <>
-                                    <Stack key={index} gap={0.5}>
-                                        {/* Row */}
-                                        <Stack direction="row" justifyContent="space-between" gap={2}>
-                                            <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 1 }} >
-                                                {/* File badge */}
-                                                <img
-                                                    src={iconPath}
-                                                    alt="file icon"
-                                                    style={{ width: 24, height: 24 }}
-                                                />
+                                        return (
+                                            <>
+                                                <Stack key={index} gap={0.5}>
+                                                    {/* Row */}
+                                                    <Stack direction="row" justifyContent="space-between" gap={2}>
+                                                        <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 1 }} >
+                                                            {/* File badge */}
+                                                            <img
+                                                                src={iconPath}
+                                                                alt="file icon"
+                                                                style={{ width: 24, height: 24 }}
+                                                            />
 
-                                                {/* File info */}
-                                                <Stack spacing={0.3}>
-                                                    <TypographyComponent fontSize={16} fontWeight={600}>
-                                                        {doc.file_name && doc.file_name !== null ? _.truncate(doc.file_name, { length: 28 }) : ''}
-                                                    </TypographyComponent>
+                                                            {/* File info */}
+                                                            <Stack spacing={0.3}>
+                                                                <TypographyComponent fontSize={16} fontWeight={600}>
+                                                                    {doc?.file_name && doc?.file_name !== null ? _.truncate(doc?.file_name, { length: 28 }) : ''}
+                                                                </TypographyComponent>
+                                                            </Stack>
+                                                        </Stack>
+
+                                                        {/* Version + date */}
+                                                        <Stack alignItems="flex-end" gap={0.5}>
+                                                            <TypographyComponent fontSize={14} fontWeight={600}>
+                                                                {doc?.version && doc?.version !== null ? _.truncate(doc?.version, { length: 8 }) : ''}
+                                                            </TypographyComponent>
+                                                        </Stack>
+                                                    </Stack>
+                                                    <Stack direction="row" justifyContent="space-between" gap={2}>
+                                                        <Stack direction="row" gap={1.5}>
+                                                            {/* File info */}
+                                                            <Stack gap={0.3}>
+                                                                <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500] }}>
+                                                                    {doc?.notes && doc?.notes !== null ? doc?.notes : ''}
+                                                                </TypographyComponent>
+                                                            </Stack>
+                                                        </Stack>
+
+                                                        {/* Version + date */}
+                                                        <Stack alignItems="flex-end" gap={0.5}>
+                                                            <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500], textWrap: 'nowrap' }}>
+                                                                {doc?.updated_at && doc?.updated_at !== null ? moment(doc?.updated_at).format("D MMM YYYY") : ''}
+                                                            </TypographyComponent>
+                                                        </Stack>
+                                                    </Stack>
+
+                                                    {/* Divider except last item */}
+
                                                 </Stack>
-                                            </Stack>
-
-                                            {/* Version + date */}
-                                            <Stack alignItems="flex-end" gap={0.5}>
-                                                <TypographyComponent fontSize={14} fontWeight={600}>
-                                                    {doc.version && doc.version !== null ? _.truncate(doc.version, { length: 8 }) : ''}
-                                                </TypographyComponent>
-                                            </Stack>
-                                        </Stack>
-                                        <Stack direction="row" justifyContent="space-between" gap={2}>
-                                            <Stack direction="row" gap={1.5}>
-                                                {/* File info */}
-                                                <Stack gap={0.3}>
-                                                    <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500] }}>
-                                                        {doc.notes}
-                                                    </TypographyComponent>
-                                                </Stack>
-                                            </Stack>
-
-                                            {/* Version + date */}
-                                            <Stack alignItems="flex-end" gap={0.5}>
-                                                <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500], textWrap: 'nowrap' }}>
-                                                    {moment(doc.updated_at).format("D MMM YYYY")}
-                                                </TypographyComponent>
-                                            </Stack>
-                                        </Stack>
-
-                                        {/* Divider except last item */}
-
+                                                {index !== documentArray?.length - 1 && <Divider sx={{ mx: -2, my: 0.5, color: theme.palette.grey[200] }} />}
+                                            </>
+                                        );
+                                    })
+                                    :
+                                    <Stack sx={{ background: theme.palette.common.white, py: 2, mt: 0, alignItems: 'center', justifyContent: 'center' }}>
+                                        <Avatar alt={""} src={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} sx={{ overFlow: 'hidden', borderRadius: 0, height: 120, width: 120 }} />
+                                        <TypographyComponent fontSize={16} fontWeight={400}>No Documents Found</TypographyComponent>
                                     </Stack>
-                                    {index !== documentArray.length - 1 && <Divider sx={{ mx: -2, my: 0.5, color: theme.palette.grey[200] }} />}
-                                </>
-                            );
-                        })
-                        :
-                        <Stack sx={{ background: theme.palette.common.white, py: 2, mt: 0, alignItems: 'center', justifyContent: 'center' }}>
-                            <Avatar alt={""} src={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} sx={{ overFlow: 'hidden', borderRadius: 0, height: 120, width: 120 }} />
-                            <TypographyComponent fontSize={16} fontWeight={400}>No Documents Found</TypographyComponent>
+                                }
+
+                            </Stack>
                         </Stack>
-                    }
+                        <Stack sx={{ width: '100%' }}>
+                            <TypographyComponent fontSize={18} fontWeight={500} >
+                                Active Tickets
+                            </TypographyComponent>
+                            <Stack gap={1} sx={{ alignItems: 'center', width: '100%', py: 1 }}>
+                                {
+                                    assetDetails?.tickets && assetDetails?.tickets !== null && assetDetails?.tickets.length > 0 ?
+                                        assetDetails?.tickets?.map((objTicket, index) => {
+                                            return (
+                                                <Stack
+                                                    key={index}
+                                                    sx={{
+                                                        borderRadius: 2,
+                                                        p: 2,
+                                                        backgroundColor: "#fff",
+                                                        width: '100%'
+                                                    }}
+                                                >
+                                                    <Stack spacing={1}>
+                                                        {/* Title */}
+                                                        <TypographyComponent fontSize={16} fontWeight={600}>
+                                                            {objTicket?.name && objTicket?.name !== null ? objTicket?.name : ''}
+                                                        </TypographyComponent>
 
-                </Stack>
-            </Stack>
+                                                        {/* Ticket number */}
+                                                        <TypographyComponent
+                                                            fontSize={14}
+                                                            fontWeight={500}
+                                                            sx={{ color: "#7C3AED", textDecoration: "underline" }}
+                                                        >
+                                                            {objTicket?.ticket_no && objTicket?.ticket_no !== null ? objTicket?.ticket_no : ''}
+                                                        </TypographyComponent>
 
-            <Stack sx={{ width: '100%' }}>
-                <TypographyComponent fontSize={18} fontWeight={500} >
-                    Active Tickets
-                </TypographyComponent>
-                <Stack gap={1} sx={{ alignItems: 'center', width: '100%', py: 1 }}>
-                    {
-                        assetDetails?.tickets && assetDetails?.tickets !== null && assetDetails?.tickets.length > 0 ?
-                            assetDetails?.tickets.map((objTicket, index) => {
-                                return (
-                                    <Stack
-                                        key={index}
-                                        sx={{
-                                            borderRadius: 2,
-                                            p: 2,
-                                            backgroundColor: "#fff",
-                                        }}
-                                    >
-                                        <Stack spacing={1}>
-                                            {/* Title */}
-                                            <TypographyComponent fontSize={16} fontWeight={600}>
-                                                {objTicket.name}
-                                            </TypographyComponent>
+                                                        {/* Description */}
+                                                        <TypographyComponent
+                                                            fontSize={14}
+                                                            sx={{ color: theme.palette.grey[500] }}
+                                                        >
+                                                            {objTicket?.description && objTicket?.description !== null ? objTicket?.description : ''}
+                                                        </TypographyComponent>
 
-                                            {/* Ticket number */}
-                                            <TypographyComponent
-                                                fontSize={14}
-                                                fontWeight={500}
-                                                sx={{ color: "#7C3AED", textDecoration: "underline" }} // violet like screenshot
-                                            >
-                                                {objTicket.ticket_no}
-                                            </TypographyComponent>
-
-                                            {/* Description */}
-                                            <TypographyComponent
-                                                fontSize={14}
-                                                sx={{ color: theme.palette.grey[500] }}
-                                            >
-                                                {objTicket.description}
-                                            </TypographyComponent>
-
-                                            {/* Footer */}
-                                            <Stack direction="row" gap={1.5} alignItems="center" mt={0.5}>
-                                                <Stack direction="row" gap={'2px'} alignItems="center" justifyContent={'center'}>
-                                                    <HistoryIcon size={14} />
-                                                    <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500] }}>
-                                                        {objTicket?.created_at && objTicket?.created_at !== null ? moment(objTicket?.created_at).fromNow() : ''}
-                                                    </TypographyComponent>
+                                                        {/* Footer */}
+                                                        <Stack direction="row" gap={1.5} alignItems="center" mt={0.5}>
+                                                            <Stack direction="row" gap={'2px'} alignItems="center" justifyContent={'center'}>
+                                                                <HistoryIcon size={14} />
+                                                                <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500] }}>
+                                                                    {objTicket?.created_at && objTicket?.created_at !== null ? moment(objTicket?.created_at).fromNow() : ''}
+                                                                </TypographyComponent>
+                                                            </Stack>
+                                                            <Stack sx={{ alignItems: 'center', justifyContent: 'center' }}>
+                                                                <Stack sx={{ background: theme.palette.common.black, height: '4px', width: '4px', borderRadius: '5px', alignItems: 'center' }}></Stack>
+                                                            </Stack>
+                                                            <Stack direction="row" gap={'4px'} alignItems="center" justifyContent={'center'}>
+                                                                <MessageDotsIcon size={14} />
+                                                                <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500] }}>
+                                                                    {objTicket?.updates && objTicket?.updates !== null ? objTicket?.updates : ''} Updates
+                                                                </TypographyComponent>
+                                                            </Stack>
+                                                            <Stack sx={{ alignItems: 'center', justifyContent: 'center' }}>
+                                                                <Stack sx={{ background: theme.palette.common.black, height: '4px', width: '4px', borderRadius: '5px', alignItems: 'center' }}></Stack>
+                                                            </Stack>
+                                                            <Stack direction="row" gap={'4px'} alignItems="center" justifyContent={'center'}>
+                                                                <PaperClipIcon size={14} />
+                                                                <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500] }}>
+                                                                    {objTicket?.attachments && objTicket?.attachments !== null ? objTicket?.attachments : ''} Attachments
+                                                                </TypographyComponent>
+                                                            </Stack>
+                                                        </Stack>
+                                                    </Stack>
                                                 </Stack>
-                                                <Stack sx={{ alignItems: 'center', justifyContent: 'center' }}>
-                                                    <Stack sx={{ background: theme.palette.common.black, height: '4px', width: '4px', borderRadius: '5px', alignItems: 'center' }}></Stack>
-                                                </Stack>
-                                                <Stack direction="row" gap={'4px'} alignItems="center" justifyContent={'center'}>
-                                                    <MessageDotsIcon size={14} />
-                                                    <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500] }}>
-                                                        {objTicket?.updates && objTicket?.updates !== null ? objTicket?.updates : ''} Updates
-                                                    </TypographyComponent>
-                                                </Stack>
-                                                <Stack sx={{ alignItems: 'center', justifyContent: 'center' }}>
-                                                    <Stack sx={{ background: theme.palette.common.black, height: '4px', width: '4px', borderRadius: '5px', alignItems: 'center' }}></Stack>
-                                                </Stack>
-                                                <Stack direction="row" gap={'4px'} alignItems="center" justifyContent={'center'}>
-                                                    <PaperClipIcon size={14} />
-                                                    <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500] }}>
-                                                        {objTicket?.attachments && objTicket?.attachments !== null ? objTicket?.attachments : ''} Attachments
-                                                    </TypographyComponent>
-                                                </Stack>
-                                            </Stack>
+                                            )
+                                        })
+                                        :
+                                        <Stack sx={{ background: theme.palette.common.white, py: 2, mt: 0, alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                                            <Avatar alt={""} src={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} sx={{ overFlow: 'hidden', borderRadius: 0, height: 120, width: 120 }} />
+                                            <TypographyComponent fontSize={16} fontWeight={400}>No Tickets Found</TypographyComponent>
                                         </Stack>
-                                    </Stack>
-                                )
-                            })
-                            :
-                            <></>
-                    }
-                </Stack>
-            </Stack>
-
-        </Stack >
+                                }
+                            </Stack>
+                        </Stack>
+                    </>
+            }
+        </Stack>
     )
 }

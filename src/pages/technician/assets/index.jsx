@@ -8,7 +8,7 @@ export default function TechnicianAsset() {
     return (
         <Routes>
             <Route index element={<TechnicianAssetList />} />
-            <Route path="view/:assetId" element={<TechnicianAssetView />} />
+            <Route path="view/:assetUuid" element={<TechnicianAssetView />} />
         </Routes>
     );
 }

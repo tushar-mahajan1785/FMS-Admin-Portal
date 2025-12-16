@@ -55,7 +55,7 @@ export default function ChecklistView() {
     //Form
     const { control, handleSubmit,
         setValue,
-        reset,
+        // reset,
         watch,
         formState: { errors } } = useForm();
 

@@ -5,122 +5,119 @@ import BottomNav from "../../../../components/bottom-navbar";
 import { TechnicianNavbarHeader } from "../../../../components/technician/navbar-header";
 import { getInitials, getPMActivityLabel } from "../../../../utils";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { actionTechnicianAssetList, actionTechnicianAssetTypeList, resetTechnicianAssetListResponse, resetTechnicianAssetTypeListResponse } from "../../../../store/technician/assets";
+import { ERROR, SERVER_ERROR, UNAUTHORIZED } from "../../../../constants";
+import { useBranch } from "../../../../hooks/useBranch";
+import { useSnackbar } from "../../../../hooks/useSnackbar";
+import { useAuth } from "../../../../hooks/useAuth";
+import FullScreenLoader from "../../../../components/fullscreen-loader";
 
 export default function TechnicianAssetList() {
     const theme = useTheme()
+    const dispatch = useDispatch()
     const navigate = useNavigate();
+    const { showSnackbar } = useSnackbar()
+    const branch = useBranch()
+    const { logout } = useAuth()
+
+
+    const [loadingList, setLoadingList] = useState(false)
     const [getAssetTypesList, setGetAssetTypesList] = useState([])
     const [getAssetList, setGetAssetList] = useState([])
     const [value, setValue] = useState(2);
-    const [selectedAssetTypeId, setSelectedAssetTypeId] = useState('');
+    const [selectedAssetTypeValue, setSelectedAssetTypeValue] = useState('');
 
+    // store
+    const { technicianAssetList, technicianAssetTypeList } = useSelector(state => state.technicianAssetStore)
+
+    /**
+     * Initial Render Call Asset Type list
+     */
     useEffect(() => {
-        setGetAssetTypesList([
-            {
-                "id": 1,
-                "asset_type_id": 1,
-                "title": "Electric",
-                "total_groups": 2,
-                "total_assets": 5,
-                "total_checklists": 120,
-                "total_completed": 3,
-                "total_overdue": 74,
-                "total_abnormal": 2,
-                "total_pending": 40,
-                "total_not_approved": 1
-            },
-            {
-                "id": 2,
-                "asset_type_id": 2,
-                "title": "Cooling",
-                "total_groups": 1,
-                "total_assets": 2,
-                "total_checklists": 48,
-                "total_completed": 0,
-                "total_overdue": 32,
-                "total_abnormal": 0,
-                "total_pending": 16,
-                "total_not_approved": 0
-            },
-            {
-                "id": 3,
-                "asset_type_id": 3,
-                "title": "BMS",
-                "total_groups": 1,
-                "total_assets": 2,
-                "total_checklists": 48,
-                "total_completed": 1,
-                "total_overdue": 29,
-                "total_abnormal": 1,
-                "total_pending": 16,
-                "total_not_approved": 1
-            },
-            {
-                "id": 9,
-                "asset_type_id": 9,
-                "title": "Operating",
-                "total_groups": 1,
-                "total_assets": 3,
-                "total_checklists": 72,
-                "total_completed": 0,
-                "total_overdue": 46,
-                "total_abnormal": 2,
-                "total_pending": 24,
-                "total_not_approved": 0
-            }
-        ])
-        setGetAssetList([
-            {
-                "id": 3,
-                "title": "Solar energy equipment",
-                "group_name": "Electric Tower 1",
-                "total_documents": 2,
-                "total_active_tickets": 6,
-                "upcoming_pm_activity_date": "2025-12-18",
-            },
-            {
-                "id": 44,
-                "title": "Cash and Cash Equivalents",
-                "group_name": "Operating Tower Phase I",
-                "total_documents": 1,
-                "total_active_tickets": 65,
-                "upcoming_pm_activity_date": "2025-12-20",
-            },
-            {
-                "id": 4,
-                "title": " MBC (Miniature Circuit Breaker)",
-                "group_name": "Electric Tower 1",
-                "total_documents": 4,
-                "total_active_tickets": 45,
-                "upcoming_pm_activity_date": "2025-12-25",
-            },
-            {
-                "id": 9,
-                "title": "Electric vehicles (EVs)",
-                "group_name": "Electric Tower 1",
-                "total_documents": 5,
-                "total_active_tickets": 5,
-                "upcoming_pm_activity_date": "2025-12-29",
-            },
-            {
-                "id": 45,
-                "title": "PPE (Property, Plant, and Equipment)",
-                "group_name": "Operating Tower Phase I",
-                "total_documents": 7,
-                "total_active_tickets": 23,
-                "upcoming_pm_activity_date": "2025-12-23",
-            },
-            {
-                "id": 46,
-                "title": "Patents (intangible asset)",
-                "group_name": "Operating Tower Phase I",
-                "total_documents": 2,
-                "total_active_tickets": 56,
-                "upcoming_pm_activity_date": "2025-12-26",
-            }
-        ])
-    }, [])
+        if (branch?.currentBranch?.client_uuid && branch?.currentBranch?.client_uuid !== null) {
+            dispatch(actionTechnicianAssetTypeList({
+                client_uuid: branch?.currentBranch?.client_uuid
+            }))
+        }
 
+    }, [branch?.currentBranch?.client_uuid])
+
+    /**
+     * Call Asset List API on select of Asset Type
+     */
+    useEffect(() => {
+        if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null) {
+            setLoadingList(true)
+            dispatch(actionTechnicianAssetList({
+                branch_uuid: branch?.currentBranch?.uuid,
+                asset_type: selectedAssetTypeValue && selectedAssetTypeValue !== null ? selectedAssetTypeValue : ''
+            }))
+        }
+    }, [branch?.currentBranch?.uuid, selectedAssetTypeValue])
+
+    /**
+     * useEffect
+     * @dependency : technicianAssetTypeList
+     * @type : HANDLE API RESULT
+     * @description : Handle the result of technician asset type List API
+     */
+    useEffect(() => {
+        if (technicianAssetTypeList && technicianAssetTypeList !== null) {
+            dispatch(resetTechnicianAssetTypeListResponse())
+            if (technicianAssetTypeList?.result === true) {
+                setGetAssetTypesList(technicianAssetTypeList?.response)
+            } else {
+                setGetAssetTypesList[[]]
+                switch (technicianAssetTypeList?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetTechnicianAssetTypeListResponse())
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: technicianAssetTypeList?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [technicianAssetTypeList])
+    /**
+     * useEffect
+     * @dependency : technicianAssetList
+     * @type : HANDLE API RESULT
+     * @description : Handle the result of technician asset List API
+     */
+    useEffect(() => {
+        if (technicianAssetList && technicianAssetList !== null) {
+            dispatch(resetTechnicianAssetListResponse())
+            if (technicianAssetList?.result === true) {
+                setLoadingList(false)
+                setGetAssetList(technicianAssetList?.response)
+            } else {
+                setLoadingList(false)
+                setGetAssetList([])
+                switch (technicianAssetList?.status) {
+                    case UNAUTHORIZED:
+                        logout()
+                        break
+                    case ERROR:
+                        dispatch(resetTechnicianAssetListResponse())
+                        break
+                    case SERVER_ERROR:
+                        showSnackbar({ message: technicianAssetList?.message, severity: "error" })
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+    }, [technicianAssetList])
+
+    //Color palatte
     const colorPalette = [
         theme.palette.primary[600], // violet
         theme.palette.info[600], // blue
@@ -129,6 +126,7 @@ export default function TechnicianAssetList() {
         theme.palette.warning[600], // amber
     ];
 
+    //Get Color by index
     const getColorByIndex = (index = 0) => {
         return colorPalette[index % colorPalette.length];
     };
@@ -138,45 +136,44 @@ export default function TechnicianAssetList() {
             <TechnicianNavbarHeader />
             <Stack sx={{ flexDirection: 'row', gap: 1.2, borderRadius: '8px', width: '100%', overflowX: 'scroll', scrollbarWidth: 'thin' }}>
                 <Stack
-                    onClick={() => setSelectedAssetTypeId('')}
+                    onClick={() => setSelectedAssetTypeValue('')}
                     sx={{
                         flexDirection: 'row', alignItems: 'center',
-                        background: selectedAssetTypeId === '' ? theme.palette.common.black : theme.palette.common.white, padding: '8px 16px',
+                        background: selectedAssetTypeValue === '' ? theme.palette.common.black : theme.palette.common.white, padding: '8px 16px',
                         borderRadius: '8px', justifyContent: 'center', cursor: 'pointer'
                     }}
                 >
-                    <TypographyComponent fontSize={16} fontWeight={500} sx={{ textAlign: 'center', alignItems: 'center', textWrap: 'nowrap', color: selectedAssetTypeId === '' ? theme.palette.common.white : theme.palette.common.black }}>All Assets</TypographyComponent>
+                    <TypographyComponent fontSize={16} fontWeight={500} sx={{ textAlign: 'center', alignItems: 'center', textWrap: 'nowrap', color: selectedAssetTypeValue === '' ? theme.palette.common.white : theme.palette.common.black }}>All Assets</TypographyComponent>
                 </Stack>
                 {
                     getAssetTypesList && getAssetTypesList !== null && getAssetTypesList.length > 0 ?
                         getAssetTypesList.map((objData, index) => {
                             const color = getColorByIndex(index)
-                            // console.log('-------getColorFromString(objData?.title)---------', getColorFromString(objData?.title))
                             return (<Stack
                                 key={index}
                                 sx={{
                                     flexDirection: 'row', alignItems: 'center', gap: 0.8,
-                                    background: selectedAssetTypeId === objData?.asset_type_id ? theme.palette.common.black : theme.palette.common.white, padding: '8px 16px', textWrap: 'nowrap',
+                                    background: selectedAssetTypeValue === objData?.name ? theme.palette.common.black : theme.palette.common.white, padding: '8px 16px', textWrap: 'nowrap',
                                     borderRadius: '8px', justifyContent: 'center', cursor: 'pointer',
                                     border: `1px solid ${theme.palette.grey[100]}`,
                                 }}
-                                onClick={() => setSelectedAssetTypeId(objData?.asset_type_id)}
+                                onClick={() => setSelectedAssetTypeValue(objData?.name)}
                             >
                                 <Box
                                     sx={{
                                         height: 20,
                                         width: 20,
                                         borderRadius: "15px",
-                                        border: selectedAssetTypeId === objData?.asset_type_id ? `1.2px solid ${color}` : `1px solid ${color}`,
+                                        border: selectedAssetTypeValue === objData?.name ? `1.2px solid ${color}` : `1px solid ${color}`,
                                         color,
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
                                     }}
                                 >
-                                    <TypographyComponent fontSize={14} fontWeight={600} sx={{ color: color }}>{getInitials(objData?.title, 1)}</TypographyComponent>
+                                    <TypographyComponent fontSize={14} fontWeight={600} sx={{ color: color }}>{getInitials(objData?.name, 1)}</TypographyComponent>
                                 </Box>
-                                <TypographyComponent fontSize={16} fontWeight={500} sx={{ textAlign: 'center', color: selectedAssetTypeId === objData?.asset_type_id ? theme.palette.common.white : theme.palette.common.black }}>{objData?.title}</TypographyComponent>
+                                <TypographyComponent fontSize={16} fontWeight={500} sx={{ textAlign: 'center', color: selectedAssetTypeValue === objData?.name ? theme.palette.common.white : theme.palette.common.black }}>{objData?.name}</TypographyComponent>
                             </Stack>)
                         })
                         :
@@ -184,9 +181,11 @@ export default function TechnicianAssetList() {
                 }
             </Stack>
             <Stack gap={1.3} sx={{ width: '100%' }}>
-                {
+                {loadingList ? (
+                    <FullScreenLoader open={true} />
+                ) :
                     getAssetList && getAssetList !== null && getAssetList.length > 0 ?
-                        getAssetList.map((asset, index) => {
+                        getAssetList?.map((asset, index) => {
                             return (<Stack
                                 sx={{
                                     borderRadius: '8px',
@@ -196,7 +195,7 @@ export default function TechnicianAssetList() {
                                     backgroundColor: theme.palette.common.white,
                                 }}
                                 onClick={() => {
-                                    navigate(`view/${asset?.id}`)
+                                    navigate(`view/${asset?.uuid}`)
                                 }}
                             >
                                 {/* Top section */}

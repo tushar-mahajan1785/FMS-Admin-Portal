@@ -386,3 +386,15 @@ export const API_TECHNICIAN_ASSET_CHECKLIST_UPDATE = `${BASE_APP}/checklist-grou
 
 export const API_TECHNICIAN_ASSET_VALIDATE_QR_CODE = `${BASE_APP}/checklist-group/validate-qrcode`
 
+//assets
+export const API_TECHNICIAN_ASSET_LIST = `${BASE_APP}/asset/list`
+
+export const API_TECHNICIAN_ASSET_TYPE_LIST = `${BASE_APP}/asset-type/master-list`
+
+export const API_TECHNICIAN_ASSET_DETAILS = `${BASE_APP}/asset/details`
+
+//ticket
+export const API_TECHNICIAN_TICKET_LIST = `${BASE_APP}/ticket/list`
+
+export const API_TECHNICIAN_TICKET_DETAILS = `${BASE_APP}/ticket/details`
+
