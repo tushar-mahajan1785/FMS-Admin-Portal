@@ -312,7 +312,7 @@ export default function ChecklistView() {
             dispatch(resetTechnicianAssetChecklistUpdateResponse())
             if (technicianAssetChecklistUpdate?.result === true) {
                 setLoadingSubmit(false)
-                reset()
+                // reset()
                 showSnackbar({ message: technicianAssetChecklistUpdate.message, severity: "success" })
                 setLoadingList(true)
                 if (selectedAssetId && selectedAssetId !== null && groupUuid && groupUuid !== null) {
