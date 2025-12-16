@@ -369,6 +369,8 @@ export const API_TECHNICIAN_EMPLOYEE_CHANGE_PASSWORD = `${BASE_APP}/employee/cha
 
 export const API_TECHNICIAN_EMPLOYEE_LOGOUT = `${BASE_APP}/employee/logout`
 
+export const API_TECHNICIAN_EMPLOYEE_PROFILE_UPLOAD = `${BASE}/employee/profile-image-upload`
+
 //Checklist
 export const API_TECHNICIAN_CHECKLIST_ASSET_TYPE_LIST = `${BASE_APP}/checklist-group/asset-type-list`
 
