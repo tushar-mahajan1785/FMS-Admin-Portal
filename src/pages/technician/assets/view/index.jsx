@@ -247,7 +247,9 @@ export default function TechnicianAssetView() {
 
                                                             {/* File info */}
                                                             <Stack spacing={0.3}>
-                                                                <TypographyComponent fontSize={16} fontWeight={600}>
+                                                                <TypographyComponent fontSize={16} fontWeight={600} sx={{ cursor: 'pointer' }} onClick={() => {
+                                                                    window.open(doc?.file_url, '_blank')
+                                                                }}>
                                                                     {doc?.file_name && doc?.file_name !== null ? _.truncate(doc?.file_name, { length: 28 }) : ''}
                                                                 </TypographyComponent>
                                                             </Stack>
