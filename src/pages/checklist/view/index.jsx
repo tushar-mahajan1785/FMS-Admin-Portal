@@ -1733,7 +1733,6 @@ export default function ChecklistView() {
                                                                             :
                                                                             <></>
                                                                     }
-
                                                                 </Stack>
                                                             </TableCell>
                                                         ))}
@@ -1794,7 +1793,7 @@ export default function ChecklistView() {
                                                                                 objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]} ` : `1px solid ${theme.palette.grey[300]} `// `1px solid ${ theme.palette.success[600] } `
                                                                                 : '',
                                                                             borderBottom: `1px solid ${theme.palette.grey[300]} `,
-                                                                            background: objAsset?.status == 'Approved' ? theme.palette.success[50] : theme.palette.common.white,//theme.palette.success[50],
+                                                                            background: objAsset?.status == 'Approved' ? theme.palette.success[50] : paramValue?.param_status == 'Abnormal' ? theme.palette.error[50] : theme.palette.common.white,//theme.palette.success[50],
                                                                             borderLeft: objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]} ` : `1px solid ${theme.palette.grey[300]} `,// `1px solid ${ theme.palette.success[600] } `
                                                                             borderRight: objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]} ` : `1px solid ${theme.palette.grey[300]} `,// `1px solid ${ theme.palette.success[600] } `
                                                                             borderTopLeftRadius: i == 0 ? '8px' : 'none',
@@ -1804,7 +1803,7 @@ export default function ChecklistView() {
                                                                         {
                                                                             objAsset?.is_view == 1 ?
                                                                                 <>
-                                                                                    <TypographyComponent sx={{ color: theme.palette.grey[900] }} fontSize={14} fontWeight={400}>{value && value !== null ? `${value} ${paramValue?.input_type == 'Number (with range)' ? (paramValue?.unit && paramValue?.unit !== null ? paramValue?.unit : '') : ''} ` : '--'} </TypographyComponent>
+                                                                                    <TypographyComponent sx={{ color: paramValue?.param_status == 'Abnormal' ? theme.palette.error[600] : theme.palette.grey[900] }} fontSize={14} fontWeight={400}>{value && value !== null ? `${value} ${paramValue?.input_type == 'Number (with range)' ? (paramValue?.unit && paramValue?.unit !== null ? paramValue?.unit : '') : ''} ` : '--'} </TypographyComponent>
                                                                                 </>
                                                                                 :
                                                                                 <>
