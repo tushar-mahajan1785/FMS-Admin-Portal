@@ -50,7 +50,7 @@ export default function SquareBoxButton({
 
     // --- Common Styles for the Square Container ---
     const squareStyles = {
-        width: responsiveSize,
+        // width: responsiveSize,
         height: responsiveSize,
         minWidth: responsiveSize,
         minHeight: responsiveSize,
@@ -59,6 +59,7 @@ export default function SquareBoxButton({
         justifyContent: 'center',
         alignItems: 'center',
         flexShrink: 0,
+        paddingX: 1
     };
 
     if (isButton) {

@@ -97,18 +97,21 @@ export const normalizeEscalationLevels = (syncData) => {
 
 // convert count function
 export const convertCount = (value) => {
+  const format = (num) =>
+    Number.isInteger(num) ? num.toString() : num.toFixed(1).replace(/\.0$/, '');
+
   if (value >= 10000000) {
-    return Number(value / 10000000).toFixed(2) + 'CR';
+    return format(value / 10000000) + 'CR';
   } else if (value >= 100000) {
-    return Number(value / 100000).toFixed(2) + 'L';
+    return format(value / 100000) + 'L';
   } else if (value >= 1000) {
-    return Number(value / 1000).toFixed(2) + 'K';
+    return format(value / 1000) + 'K';
   } else if (value >= 0 && value < 10) {
-    return String(value).padStart(2, '0')
+    return String(value).padStart(2, '0');
   } else {
-    return Number(value);
+    return value.toString();
   }
-}
+};
 
 // get object by id function
 export const getObjectById = (arr, id) => {
