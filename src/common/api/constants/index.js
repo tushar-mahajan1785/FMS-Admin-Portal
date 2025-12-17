@@ -400,3 +400,13 @@ export const API_TECHNICIAN_TICKET_LIST = `${BASE_APP}/ticket/list`
 
 export const API_TECHNICIAN_TICKET_DETAILS = `${BASE_APP}/ticket/details`
 
+export const API_TECHNICIAN_TICKET_TYPE_WISE_ASSET = `${BASE_APP}/ticket/type-wise-asset-list`
+
+export const API_TECHNICIAN_TICKET_CUSTODIAN_LIST = `${BASE_APP}/ticket/custodian-list`
+
+export const API_TECHNICIAN_TICKET_ASSET_DETAILS = `${BASE_APP}/ticket/asset-details`
+
+export const API_TECHNICIAN_TICKET_ADD = `${BASE_APP}/ticket/add`
+
+
+

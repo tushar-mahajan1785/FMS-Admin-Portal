@@ -17,8 +17,9 @@ import { useSnackbar } from '../../../../hooks/useSnackbar';
 import { useBranch } from '../../../../hooks/useBranch';
 import { useAuth } from '../../../../hooks/useAuth';
 import { actionTechnicianTicketList, resetTechnicianTicketListResponse } from '../../../../store/technician/tickets';
-import AddTechnicianTicket from '../add';
 import FloatingAddIcon from '../../../../assets/icons/FloatingAddIcon';
+import AddTechnicianTicket from '../add';
+import _ from 'lodash';
 
 export default function TicketsList() {
     const theme = useTheme()
@@ -307,7 +308,8 @@ export default function TicketsList() {
                                                     fontSize={14}
                                                     sx={{ color: theme.palette.grey[500] }}
                                                 >
-                                                    {ticket?.description}
+
+                                                    {ticket?.description && ticket?.description !== null ? _.truncate(ticket?.description, { length: 140 }) : ''}
                                                 </TypographyComponent>
 
                                                 {/* Footer */}
@@ -378,8 +380,17 @@ export default function TicketsList() {
             </Stack>
             <AddTechnicianTicket
                 open={openAddTicketPopup}
-                handleClose={() => {
+                handleClose={(data) => {
                     setOpenAddTicketPopup(false)
+                    if (data == 'save') {
+                        if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null) {
+                            dispatch(actionTechnicianTicketList({
+                                branch_uuid: branch?.currentBranch?.uuid,
+                                status: selectedTicketsStatus
+                            }))
+                        }
+                    }
+
                 }}
             />
         </React.Fragment>

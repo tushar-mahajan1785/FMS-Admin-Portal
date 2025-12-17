@@ -32,21 +32,19 @@ import FieldBox from "../../../../components/field-box";
 import { AntSwitch } from "../../../../components/common";
 import DeleteIcon from "../../../../assets/icons/DeleteIcon";
 import FileIcon from "../../../../assets/icons/FileIcon";
-import { actionAssetCustodianList, actionGetAssetDetailsByName, actionGetMasterAssetName, actionMasterAssetType, resetAssetCustodianListResponse, resetGetAssetDetailsByNameResponse, resetGetMasterAssetNameResponse, resetMasterAssetTypeResponse } from "../../../../store/asset";
 import { useBranch } from "../../../../hooks/useBranch";
-import { actionAddTicket, resetAddTicketResponse } from "../../../../store/tickets";
 import { compressFile, getFormData, getObjectByUuid } from "../../../../utils";
-// import EditVendor from "../../../vendors/edit";
-import { actionMasterCountryCodeList, actionVendorDetails, resetVendorDetailsResponse } from "../../../../store/vendor";
 import _ from "lodash";
 import CustomAutocomplete from "../../../../components/custom-autocomplete";
 import CustomTextField from "../../../../components/text-field";
 import FormLabel from "../../../../components/form-label";
+import { actionTechnicianAddTicket, actionTechnicianTicketAssetDetails, actionTechnicianTicketCustodianList, actionTechnicianTicketTypeWiseAsset, resetTechnicianAddTicketResponse, resetTechnicianTicketAssetDetailsResponse, resetTechnicianTicketCustodianListResponse, resetTechnicianTicketTypeWiseAssetResponse } from "../../../../store/technician/tickets";
+import { actionTechnicianAssetTypeList, resetTechnicianAssetTypeListResponse } from "../../../../store/technician/assets";
 
 export default function AddTechnicianTicket({ open, handleClose }) {
     const theme = useTheme()
     const dispatch = useDispatch()
-    const { logout, hasPermission } = useAuth()
+    const { logout, } = useAuth()
     const { showSnackbar } = useSnackbar()
     const branch = useBranch()
     const inputRef = useRef();
@@ -60,10 +58,8 @@ export default function AddTechnicianTicket({ open, handleClose }) {
     };
 
     //Stores
-    const { masterAssetType, getMasterAssetName, getAssetDetailsByName, assetCustodianList } = useSelector(state => state.AssetStore)
-    const { addTicket } = useSelector(state => state.ticketsStore)
-    const { vendorDetails } = useSelector(state => state.vendorStore)
-
+    const { technicianTicketTypeWiseAsset, technicianTicketAssetDetails, technicianTicketCustodianList, technicianAddTicket } = useSelector(state => state.technicianTicketsStore)
+    const { technicianAssetTypeList } = useSelector(state => state.technicianAssetStore)
     const {
         control,
         handleSubmit,
@@ -96,16 +92,14 @@ export default function AddTechnicianTicket({ open, handleClose }) {
     const [assetDetailData, setAssetDetailData] = useState(null)
     const [vendorEscalationDetailsData, setVendorEscalationDetailsData] = useState([])
     const [arrUploadedFiles, setArrUploadedFiles] = useState([])
-    const [openViewEditVendorPopup, setOpenViewEditVendorPopup] = useState(false)
-    const [vendorDetailData, setVendorDetailData] = useState(null)
 
     //Initial Render
     useEffect(() => {
         if (open === true) {
-            dispatch(actionMasterAssetType({
+            dispatch(actionTechnicianAssetTypeList({
                 client_uuid: branch?.currentBranch?.client_uuid
             }))
-            dispatch(actionAssetCustodianList({
+            dispatch(actionTechnicianTicketCustodianList({
                 client_id: branch?.currentBranch?.client_id,
                 branch_uuid: branch?.currentBranch?.uuid
             }))
@@ -128,10 +122,11 @@ export default function AddTechnicianTicket({ open, handleClose }) {
      */
     useEffect(() => {
         if (watchAssetType && watchAssetType !== null) {
-            dispatch(actionGetMasterAssetName({
+            dispatch(actionTechnicianTicketTypeWiseAsset({
                 branch_uuid: branch?.currentBranch?.uuid,
                 asset_type: watchAssetType
             }))
+            setAssetDetailData(null)
         } else {
             setValue('asset_name', '')
             setMasterAssetNameOptions([])
@@ -146,7 +141,7 @@ export default function AddTechnicianTicket({ open, handleClose }) {
      */
     useEffect(() => {
         if (watchAssetName && watchAssetName !== null) {
-            dispatch(actionGetAssetDetailsByName({
+            dispatch(actionTechnicianTicketAssetDetails({
                 uuid: watchAssetName
             }))
         } else {
@@ -225,201 +220,167 @@ export default function AddTechnicianTicket({ open, handleClose }) {
 
     /**
        * useEffect
-       * @dependency : masterAssetType
+       * @dependency : technicianAssetTypeList
        * @type : HANDLE API RESULT
        * @description : Handle the result of master Asset Type List API
        */
     useEffect(() => {
-        if (masterAssetType && masterAssetType !== null) {
-            dispatch(resetMasterAssetTypeResponse())
-            if (masterAssetType?.result === true) {
-                setMasterAssetTypeOptions(masterAssetType?.response)
+        if (technicianAssetTypeList && technicianAssetTypeList !== null) {
+            dispatch(resetTechnicianAssetTypeListResponse())
+            if (technicianAssetTypeList?.result === true) {
+                setMasterAssetTypeOptions(technicianAssetTypeList?.response)
             } else {
                 setMasterAssetTypeOptions([])
-                switch (masterAssetType?.status) {
+                switch (technicianAssetTypeList?.status) {
                     case UNAUTHORIZED:
                         logout()
                         break
                     case ERROR:
-                        dispatch(resetMasterAssetTypeResponse())
+                        dispatch(resetTechnicianAssetTypeListResponse())
                         break
                     case SERVER_ERROR:
-                        showSnackbar({ message: masterAssetType?.message, severity: "error" })
+                        showSnackbar({ message: technicianAssetTypeList?.message, severity: "error" })
                         break
                     default:
                         break
                 }
             }
         }
-    }, [masterAssetType])
+    }, [technicianAssetTypeList])
 
     /**
        * useEffect
-       * @dependency : getMasterAssetName
+       * @dependency : technicianTicketTypeWiseAsset
        * @type : HANDLE API RESULT
-       * @description : Handle the result of master Asset Name API
+       * @description : Handle the result of master Asset list API
        */
     useEffect(() => {
-        if (getMasterAssetName && getMasterAssetName !== null) {
-            dispatch(resetGetMasterAssetNameResponse())
-            if (getMasterAssetName?.result === true) {
-                setMasterAssetNameOptions(getMasterAssetName?.response)
+        if (technicianTicketTypeWiseAsset && technicianTicketTypeWiseAsset !== null) {
+            dispatch(resetTechnicianTicketTypeWiseAssetResponse())
+            if (technicianTicketTypeWiseAsset?.result === true) {
+                setMasterAssetNameOptions(technicianTicketTypeWiseAsset?.response)
             } else {
                 setMasterAssetNameOptions([])
-                switch (getMasterAssetName?.status) {
+                switch (technicianTicketTypeWiseAsset?.status) {
                     case UNAUTHORIZED:
                         logout()
                         break
                     case ERROR:
-                        dispatch(resetGetMasterAssetNameResponse())
+                        dispatch(resetTechnicianTicketTypeWiseAssetResponse())
                         break
                     case SERVER_ERROR:
-                        showSnackbar({ message: getMasterAssetName?.message, severity: "error" })
+                        showSnackbar({ message: technicianTicketTypeWiseAsset?.message, severity: "error" })
                         break
                     default:
                         break
                 }
             }
         }
-    }, [getMasterAssetName])
+    }, [technicianTicketTypeWiseAsset])
 
     /**
        * useEffect
-       * @dependency : getAssetDetailsByName
+       * @dependency : technicianTicketAssetDetails
        * @type : HANDLE API RESULT
-       * @description : Handle the result of master Asset Name API
+       * @description : Handle the result of master Asset details by Name API
        */
     useEffect(() => {
-        if (getAssetDetailsByName && getAssetDetailsByName !== null) {
-            dispatch(resetGetAssetDetailsByNameResponse())
-            if (getAssetDetailsByName?.result === true) {
-                setAssetDetailData(getAssetDetailsByName?.response)
-                setValue('location', getAssetDetailsByName?.response?.location)
-                setValue('supervisor', getAssetDetailsByName?.response?.asset_custodian_id)
-                if (getAssetDetailsByName?.response?.vendor_escalation && getAssetDetailsByName?.response?.vendor_escalation !== null && getAssetDetailsByName?.response?.vendor_escalation.length > 0) {
-                    setVendorEscalationDetailsData(getAssetDetailsByName?.response?.vendor_escalation)
+        if (technicianTicketAssetDetails && technicianTicketAssetDetails !== null) {
+            dispatch(resetTechnicianTicketAssetDetailsResponse())
+            if (technicianTicketAssetDetails?.result === true) {
+                setAssetDetailData(technicianTicketAssetDetails?.response)
+                setValue('location', technicianTicketAssetDetails?.response?.location)
+                setValue('supervisor', technicianTicketAssetDetails?.response?.asset_custodian_id)
+                if (technicianTicketAssetDetails?.response?.vendor_escalation && technicianTicketAssetDetails?.response?.vendor_escalation !== null && technicianTicketAssetDetails?.response?.vendor_escalation.length > 0) {
+                    setVendorEscalationDetailsData(technicianTicketAssetDetails?.response?.vendor_escalation)
                 } else {
                     setVendorEscalationDetailsData([])
-                }
-                if (Object.hasOwn(getAssetDetailsByName?.response, 'vendor_escalation') === false || getAssetDetailsByName?.response?.vendor_escalation.length === 0) {
-                    dispatch(actionVendorDetails({ uuid: getAssetDetailsByName?.response?.vendor_uuid }))
                 }
             } else {
                 setAssetDetailData(null)
                 setVendorEscalationDetailsData([])
-                switch (getAssetDetailsByName?.status) {
+                switch (technicianTicketAssetDetails?.status) {
                     case UNAUTHORIZED:
                         logout()
                         break
                     case ERROR:
-                        dispatch(resetGetAssetDetailsByNameResponse())
+                        dispatch(resetTechnicianTicketAssetDetailsResponse())
                         break
                     case SERVER_ERROR:
-                        showSnackbar({ message: getAssetDetailsByName?.message, severity: "error" })
+                        showSnackbar({ message: technicianTicketAssetDetails?.message, severity: "error" })
                         break
                     default:
                         break
                 }
             }
         }
-    }, [getAssetDetailsByName])
+    }, [technicianTicketAssetDetails])
 
     /**
       * useEffect
-      * @dependency : assetCustodianList
+      * @dependency : technicianTicketCustodianList
       * @type : HANDLE API RESULT
       * @description : Handle the result of asset Custodian List API
       */
     useEffect(() => {
-        if (assetCustodianList && assetCustodianList !== null) {
-            dispatch(resetAssetCustodianListResponse())
-            if (assetCustodianList?.result === true) {
-                setSupervisorMasterOptions(assetCustodianList?.response)
+        if (technicianTicketCustodianList && technicianTicketCustodianList !== null) {
+            dispatch(resetTechnicianTicketCustodianListResponse())
+            if (technicianTicketCustodianList?.result === true) {
+                setSupervisorMasterOptions(technicianTicketCustodianList?.response)
             } else {
                 setSupervisorMasterOptions([])
-                switch (assetCustodianList?.status) {
+                switch (technicianTicketCustodianList?.status) {
                     case UNAUTHORIZED:
                         logout()
                         break
                     case ERROR:
-                        dispatch(resetAssetCustodianListResponse())
+                        dispatch(resetTechnicianTicketCustodianListResponse())
                         break
                     case SERVER_ERROR:
-                        showSnackbar({ message: assetCustodianList?.message, severity: "error" })
+                        showSnackbar({ message: technicianTicketCustodianList?.message, severity: "error" })
                         break
                     default:
                         break
                 }
             }
         }
-    }, [assetCustodianList])
+    }, [technicianTicketCustodianList])
 
     /**
      * useEffect
-     * @dependency : vendorDetails
-     * @type : HANDLE API RESULT
-     * @description : Handle the result of vendor Details API
-     */
-    useEffect(() => {
-        if (vendorDetails && vendorDetails !== null) {
-            dispatch(resetVendorDetailsResponse())
-            if (vendorDetails?.result === true) {
-
-                setVendorDetailData(vendorDetails?.response)
-            } else {
-                setVendorDetailData(null)
-                switch (vendorDetails?.status) {
-                    case UNAUTHORIZED:
-                        logout()
-                        break
-                    case ERROR:
-                        dispatch(resetVendorDetailsResponse())
-                        break
-                    case SERVER_ERROR:
-                        showSnackbar({ message: vendorDetails?.message, severity: "error" })
-                        break
-                    default:
-                        break
-                }
-            }
-        }
-    }, [vendorDetails])
-
-    /**
-     * useEffect
-     * @dependency : addTicket
+     * @dependency : technicianAddTicket
      * @type : HANDLE API RESULT
      * @description : Handle the result of add ticket API
      */
     useEffect(() => {
-        if (addTicket && addTicket !== null) {
-            dispatch(resetAddTicketResponse())
-            if (addTicket?.result === true) {
+        if (technicianAddTicket && technicianAddTicket !== null) {
+            dispatch(resetTechnicianAddTicketResponse())
+            if (technicianAddTicket?.result === true) {
                 handleClose('save')
                 reset()
                 setLoading(false)
-                showSnackbar({ message: addTicket?.message, severity: "success" })
+                showSnackbar({ message: technicianAddTicket?.message, severity: "success" })
 
-                window.localStorage.setItem('ticket_update', true)
+                // window.localStorage.setItem('ticket_update', true)
             } else {
                 setLoading(false)
-                switch (addTicket?.status) {
+                switch (technicianAddTicket?.status) {
                     case UNAUTHORIZED:
                         logout()
                         break
                     case ERROR:
-                        dispatch(resetAddTicketResponse())
-                        showSnackbar({ message: addTicket?.message, severity: "error" })
+                        dispatch(resetTechnicianAddTicketResponse())
+                        showSnackbar({ message: technicianAddTicket?.message, severity: "error" })
                         break
                     case SERVER_ERROR:
-                        showSnackbar({ message: addTicket?.message, severity: "error" })
+                        showSnackbar({ message: technicianAddTicket?.message, severity: "error" })
                         break
                     default:
                         break
                 }
             }
         }
-    }, [addTicket])
+    }, [technicianAddTicket])
 
     /**
      * handle Submit function
@@ -456,9 +417,10 @@ export default function AddTechnicianTicket({ open, handleClose }) {
                     }
                 }
             }
-            // setLoading(true)
-            // const formData = getFormData(objData, files);
-            // dispatch(actionAddTicket(formData))
+            setLoading(true)
+
+            const formData = getFormData(objData, files);
+            dispatch(actionTechnicianAddTicket(formData))
         } else {
             showSnackbar({ message: 'Atleast one vendor selection is required', severity: "error" })
         }
@@ -926,7 +888,7 @@ export default function AddTechnicianTicket({ open, handleClose }) {
                                                     <Stack sx={{ px: 1, py: 5, justifyContent: 'center', width: '100%' }}>
 
                                                         <Stack sx={{ alignItems: 'center' }}>
-                                                            <Avatar alt={""} src={'/assets/person-details.png'} sx={{ justifyContent: 'center', overFlow: 'hidden', borderRadius: 0, height: 232, width: 253 }} />
+                                                            <Avatar alt={""} src={'/assets/person-details.png'} sx={{ justifyContent: 'center', overFlow: 'hidden', borderRadius: 0, height: 200, width: 200 }} />
                                                         </Stack>
                                                         {
                                                             assetDetailData === null ?
@@ -938,54 +900,19 @@ export default function AddTechnicianTicket({ open, handleClose }) {
                                                         {
                                                             assetDetailData && assetDetailData !== null && (Object.hasOwn(assetDetailData, 'vendor_escalation') === false || assetDetailData?.vendor_escalation.length === 0) ?
                                                                 <>
-                                                                    {
-                                                                        hasPermission('VENDOR_EDIT') ?
-                                                                            <TypographyComponent
-                                                                                fontSize={16}
-                                                                                fontWeight={400}
-                                                                                sx={{
-                                                                                    mt: 3,
-                                                                                    textAlign: 'center',
-                                                                                    // color: theme.palette.grey[600],
-                                                                                    wordWrap: 'break-word',
-                                                                                    display: 'inline', // ensures inline text flow
-                                                                                }}
-                                                                            >
-                                                                                The selected asset has no vendor details assigned. Click to{' '}
-                                                                                <TypographyComponent
-                                                                                    fontSize={16}
-                                                                                    fontWeight={500}
-                                                                                    sx={{
-                                                                                        color: theme.palette.primary[600],
-                                                                                        textDecoration: 'underline',
-                                                                                        cursor: 'pointer',
-                                                                                        display: 'inline', // keeps inline
-                                                                                    }}
-                                                                                    onClick={() => {
-                                                                                        setOpenViewEditVendorPopup(true)
-                                                                                        dispatch(actionMasterCountryCodeList())
-                                                                                    }}
-                                                                                >
-                                                                                    add
-                                                                                </TypographyComponent>{' '}
-                                                                                vendor details.
-                                                                            </TypographyComponent>
-                                                                            :
-                                                                            <><TypographyComponent
-                                                                                fontSize={16}
-                                                                                fontWeight={400}
-                                                                                sx={{
-                                                                                    mt: 3,
-                                                                                    textAlign: 'center',
-                                                                                    // color: theme.palette.grey[600],
-                                                                                    wordWrap: 'break-word',
-                                                                                    display: 'inline', // ensures inline text flow
-                                                                                }}
-                                                                            >
-                                                                                The selected asset has no vendor details assigned. Please contact your administrator to add the vendor details.
-                                                                            </TypographyComponent></>
-                                                                    }
-
+                                                                    <TypographyComponent
+                                                                        fontSize={16}
+                                                                        fontWeight={400}
+                                                                        sx={{
+                                                                            mt: 3,
+                                                                            textAlign: 'center',
+                                                                            // color: theme.palette.grey[600],
+                                                                            wordWrap: 'break-word',
+                                                                            display: 'inline', // ensures inline text flow
+                                                                        }}
+                                                                    >
+                                                                        The selected asset has no vendor details assigned. Please contact your administrator to add the vendor details.
+                                                                    </TypographyComponent>
                                                                 </>
 
                                                                 :
@@ -1078,21 +1005,6 @@ export default function AddTechnicianTicket({ open, handleClose }) {
                     </Button>
                 </Stack>
             </Stack>
-            {
-                openViewEditVendorPopup &&
-                <EditVendor
-                    open={openViewEditVendorPopup}
-                    objData={vendorDetailData}
-                    toggle={(data) => {
-                        if (data && data !== null && data === 'save') {
-                            dispatch(actionGetAssetDetailsByName({
-                                uuid: watchAssetName
-                            }))
-                        }
-                        setOpenViewEditVendorPopup(false)
-                    }}
-                />
-            }
         </Drawer>
     );
 }
