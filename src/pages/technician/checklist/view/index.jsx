@@ -818,7 +818,7 @@ export default function ChecklistView() {
                     }
                 </Card>
             </Stack>
-            <Stack sx={{ rowGap: 1, marginBottom: 8, border: `1px solid ${theme.palette.grey[100]}`, borderRadius: '16px' }}>
+            <Stack sx={{ rowGap: 1, marginBottom: 8, border: selectedAssetStatus === 'Approved' ? `1px solid ${theme.palette.success[300]}` : `1px solid ${theme.palette.grey[100]}`, borderRadius: '16px' }}>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <Stack sx={{ width: "100%", background: "#fff", borderRadius: '16px' }}>
                         {loadingList ? (
@@ -829,7 +829,7 @@ export default function ChecklistView() {
                                 <Box
                                     key={param.id}
                                     sx={{
-                                        background: "#fff",
+                                        background: selectedAssetStatus === 'Approved' ? theme.palette.success[50] : "#fff",
                                         padding: "16px 16px",
                                         borderTopLeftRadius: index == 0 ? '16px' : 'none',
                                         borderTopRightRadius: index == 0 ? '16px' : 'none',
