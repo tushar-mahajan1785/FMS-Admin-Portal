@@ -36,6 +36,7 @@ import SuccessCircleCheckIcon from '../../assets/icons/SucessCircleCheckIcon';
 import CircleExclamationMarkIcon from '../../assets/icons/CircleExclamationMarkIcon';
 import CalendarTodayIcon from '../../assets/icons/CalendarTodayIcon';
 import DescriptionOutlinedIcon from '../../assets/icons/DescriptionOutlinedIcon';
+import { useBranch } from "../../hooks/useBranch"
 
 export default function Dashboard() {
   const { showSnackbar } = useSnackbar()
@@ -43,6 +44,7 @@ export default function Dashboard() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const { logout } = useAuth()
+  const branch = useBranch()
 
   // store
   const { getDashboardDetails } = useSelector(state => state.dashboardStore)
@@ -52,7 +54,7 @@ export default function Dashboard() {
 
   // dashboard API call
   useEffect(() => {
-    dispatch(actionGetDashboardDetails({ date: moment().format("YYYY-MM-DD") }))
+    dispatch(actionGetDashboardDetails({ date: moment().format("YYYY-MM-DD"), branch_uuid: branch?.currentBranch?.uuid }))
   }, [])
 
   /**
@@ -303,7 +305,7 @@ export default function Dashboard() {
                   <TypographyComponent fontSize={16} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>On Duty</TypographyComponent>
                 </Stack>
                 <Stack>
-                  <TypographyComponent fontSize={36} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>{dashboardDetails?.employees?.on_leave && dashboardDetails?.employees?.on_leave !== null ? String(dashboardDetails?.employees?.on_leave).padStart(2, '0') : '00'}</TypographyComponent>
+                  <TypographyComponent fontSize={36} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>{dashboardDetails?.employees?.absent && dashboardDetails?.employees?.absent !== null ? String(dashboardDetails?.employees?.absent).padStart(2, '0') : '00'}</TypographyComponent>
                   <TypographyComponent fontSize={16} fontWeight={400} sx={{ color: theme.palette.grey[500] }}>On Leave</TypographyComponent>
                 </Stack>
               </Stack>
@@ -533,7 +535,7 @@ export default function Dashboard() {
       {/* Charts */}
       <Grid container spacing={2} sx={{ mt: 2 }}>
         <Grid size={{ xs: 12, sm: 12, md: 9, lg: 9, xl: 9 }}>
-          <Card sx={{ height: dashboardDetails?.employees?.shift_wise && dashboardDetails?.employees?.shift_wise !== null && dashboardDetails?.employees?.shift_wise?.length > 0 ? 350 : 500, borderRadius: 3 }}>
+          <Card sx={{ height: 350, borderRadius: 3 }}>
             <CardContent>
               <TypographyComponent fontSize={16} fontWeight={400}>Shift wise Employee Count</TypographyComponent>
               {
@@ -545,13 +547,13 @@ export default function Dashboard() {
                     height={300}
                   />
                   :
-                  <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Employee Found'} subTitle={''} />
+                  <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Employee Found'} subTitle={''} mt={0} />
               }
             </CardContent>
           </Card>
         </Grid>
         <Grid size={{ xs: 12, sm: 12, md: 3, lg: 3, xl: 3 }}>
-          <Card sx={{ height: dashboardDetails?.assets?.type_wise && dashboardDetails?.assets?.type_wise !== null && dashboardDetails?.assets?.type_wise?.length > 0 ? 350 : 500, borderRadius: 3 }}>
+          <Card sx={{ height: 350, borderRadius: 3 }}>
             <CardContent>
               <TypographyComponent fontSize={16} fontWeight={400}>Asset type wise Asset Count</TypographyComponent>
               {
@@ -618,7 +620,7 @@ export default function Dashboard() {
                     </Box>
                   </Box>
                   :
-                  <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Asset Found'} subTitle={''} />
+                  <EmptyContent imageUrl={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} title={'No Asset Found'} subTitle={''} mt={0} />
               }
             </CardContent>
           </Card>
@@ -631,12 +633,12 @@ export default function Dashboard() {
             <ActivityIcon />
             <TypographyComponent fontSize={20} fontWeight={500}>Asset Health Overview</TypographyComponent>
           </Stack>
-          <Card sx={{ borderRadius: 3, mt: 1 }}>
+          <Card sx={{ borderRadius: 3, mt: 1, height: 700 }}>
             <CardContent>
               {
                 assetPagination?.paginatedData !== null && assetPagination?.paginatedData?.length > 0 ?
                   <React.Fragment>
-                    <Stack spacing={3} sx={{ height: 450 }}>
+                    <Stack spacing={3} sx={{ height: 640 }}>
                       {assetPagination?.paginatedData.map((item, index) => (
                         <Stack direction="row" gap={2} alignItems="center">
                           <Box
@@ -700,32 +702,6 @@ export default function Dashboard() {
               }
             </CardContent>
           </Card>
-          {/* System Performance */}
-          <Card sx={{ mt: 3, borderRadius: 3, background: 'linear-gradient(135deg, #00C950, #009966)', p: 2 }}>
-            <Stack direction={'row'} spacing={1} alignItems={'center'}>
-              <BatchIcon />
-              <TypographyComponent fontSize={20} fontWeight={400} sx={{ mb: 1, color: theme.palette.common.white }}>
-                System Performance
-              </TypographyComponent>
-            </Stack>
-            <TypographyComponent fontSize={36} fontWeight={400} sx={{ color: theme.palette.common.white }}>{dashboardDetails?.system_performance?.percentage}</TypographyComponent>
-            <TypographyComponent fontSize={16} fontWeight={400} sx={{ color: theme.palette.common.white }}>Excellent performance this week!</TypographyComponent>
-            <Stack direction="row" spacing={1} mt={1}>
-              {Array.from({ length: 5 }).map((_, index) => (
-                <Box
-                  key={index}
-                  sx={{ width: 22, height: 22 }}
-                >
-                  {index < dashboardDetails?.system_performance?.count ? (
-                    <StarFilledIcon />
-                  ) : (
-                    <StarEmptyIcon />
-                  )}
-                </Box>
-              ))}
-
-            </Stack>
-          </Card>
         </Grid>
         {/* Upcoming PM Activities */}
         <Grid size={{ xs: 12, sm: 12, md: 4, lg: 4, xl: 4 }}>
@@ -736,7 +712,7 @@ export default function Dashboard() {
             </Stack>
             <Box sx={{ bgcolor: theme.palette.error[600], px: 2, py: 0.5, borderRadius: 2, color: theme.palette.common.white, fontSize: 16 }}>{moment().format("MMMM YYYY")}</Box>
           </Stack>
-          <Card sx={{ borderRadius: 3, mt: 1, height: pmPagination.paginatedData && pmPagination.paginatedData !== null && pmPagination.paginatedData?.length > 0 ? 700 : 600 }}>
+          <Card sx={{ borderRadius: 3, mt: 1, height: 700 }}>
             <CardContent>
               {
                 pmPagination.paginatedData && pmPagination.paginatedData !== null && pmPagination.paginatedData?.length > 0 ?
@@ -794,7 +770,7 @@ export default function Dashboard() {
             </Stack>
             <Box sx={{ bgcolor: theme.palette.error[600], px: 2, py: 0.5, borderRadius: 2, color: theme.palette.common.white, fontSize: 16 }}>{dashboardDetails?.system_updates !== null && dashboardDetails?.system_updates?.length > 0 ? `${dashboardDetails?.system_updates?.length} New` : '0 New'}</Box>
           </Stack>
-          <Card sx={{ borderRadius: 3, mt: 1, height: updatesPagination.paginatedData && updatesPagination.paginatedData !== null && updatesPagination.paginatedData?.length > 0 ? 700 : 600 }}>
+          <Card sx={{ borderRadius: 3, mt: 1, height: 700 }}>
             <CardContent>
               {
                 updatesPagination.paginatedData && updatesPagination.paginatedData !== null && updatesPagination.paginatedData?.length > 0 ?
