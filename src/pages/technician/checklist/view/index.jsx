@@ -994,15 +994,15 @@ export default function ChecklistView() {
                                         {item?.title}
                                     </TypographyComponent>
                                     <Stack flexDirection={'row'} sx={{ gap: '10px', marginTop: 0.5 }}>
-                                        <TypographyComponent fontSize={16} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>{item?.completed && item?.completed !== null ? item?.completed.toString().padStart(2, "0") : '00'} Completed</TypographyComponent>
+                                        <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>{item?.completed && item?.completed !== null ? item?.completed.toString().padStart(2, "0") : '00'} Completed</TypographyComponent>
                                         <Stack sx={{ alignItems: 'center', justifyContent: 'center' }}>
                                             <Stack sx={{ background: theme.palette.common.black, height: '4px', width: '4px', borderRadius: '5px', alignItems: 'center' }}></Stack>
                                         </Stack>
-                                        <TypographyComponent fontSize={16} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>{item?.pending && item?.pending !== null ? item?.pending.toString().padStart(2, "0") : '00'} Pending</TypographyComponent>
+                                        <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>{item?.pending && item?.pending !== null ? item?.pending.toString().padStart(2, "0") : '00'} Pending</TypographyComponent>
                                         <Stack sx={{ alignItems: 'center', justifyContent: 'center' }}>
                                             <Stack sx={{ background: theme.palette.common.black, height: '4px', width: '4px', borderRadius: '5px', alignItems: 'center' }}></Stack>
                                         </Stack>
-                                        <TypographyComponent fontSize={16} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>{item?.overdue && item?.overdue !== null ? item?.overdue.toString().padStart(2, "0") : '00'} Skipped</TypographyComponent>
+                                        <TypographyComponent fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>{item?.overdue && item?.overdue !== null ? item?.overdue.toString().padStart(2, "0") : '00'} Skipped</TypographyComponent>
                                     </Stack>
                                 </Box>
 
