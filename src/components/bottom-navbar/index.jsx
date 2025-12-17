@@ -81,29 +81,29 @@ export default function BottomNav({ value, onChange, fabContent }) {
                     <BottomNavigationAction
                         label="Checklists"
                         icon={
-                            <Badge
-                                badgeContent={3}
-                                color="error"
-                                sx={{
-                                    "& .MuiBadge-badge": {
-                                        top: -4,
-                                        right: -6,
-                                        fontSize: "10px",
-                                        minWidth: 16,
-                                        height: 16,
-                                    },
-                                }}
-                            >
-                                <ClipboardIcon
-                                    size={22}
-                                    strokeWidth={isSelected(1) ? 1.8 : 1.5}
-                                    stroke={
-                                        isSelected(1)
-                                            ? theme.palette.primary[600]
-                                            : theme.palette.grey[400]
-                                    }
-                                />
-                            </Badge>
+                            // <Badge
+                            //     badgeContent={3}
+                            //     color="error"
+                            //     sx={{
+                            //         "& .MuiBadge-badge": {
+                            //             top: -4,
+                            //             right: -6,
+                            //             fontSize: "10px",
+                            //             minWidth: 16,
+                            //             height: 16,
+                            //         },
+                            //     }}
+                            // >
+                            <ClipboardIcon
+                                size={22}
+                                strokeWidth={isSelected(1) ? 1.8 : 1.5}
+                                stroke={
+                                    isSelected(1)
+                                        ? theme.palette.primary[600]
+                                        : theme.palette.grey[400]
+                                }
+                            />
+                            // </Badge>
                         }
                     />
 
@@ -125,29 +125,29 @@ export default function BottomNav({ value, onChange, fabContent }) {
                     <BottomNavigationAction
                         label="Tickets"
                         icon={
-                            <Badge
-                                badgeContent={3}
-                                color="error"
-                                sx={{
-                                    "& .MuiBadge-badge": {
-                                        top: -4,
-                                        right: -6,
-                                        fontSize: "10px",
-                                        minWidth: 16,
-                                        height: 16,
-                                    },
-                                }}
-                            >
-                                <TechnicianTicketIcon
-                                    size={22}
-                                    strokeWidth={isSelected(3) ? 1.8 : 1.5}
-                                    stroke={
-                                        isSelected(3)
-                                            ? theme.palette.primary[600]
-                                            : theme.palette.grey[400]
-                                    }
-                                />
-                            </Badge>
+                            // <Badge
+                            //     badgeContent={3}
+                            //     color="error"
+                            //     sx={{
+                            //         "& .MuiBadge-badge": {
+                            //             top: -4,
+                            //             right: -6,
+                            //             fontSize: "10px",
+                            //             minWidth: 16,
+                            //             height: 16,
+                            //         },
+                            //     }}
+                            // >
+                            <TechnicianTicketIcon
+                                size={22}
+                                strokeWidth={isSelected(3) ? 1.8 : 1.5}
+                                stroke={
+                                    isSelected(3)
+                                        ? theme.palette.primary[600]
+                                        : theme.palette.grey[400]
+                                }
+                            />
+                            // </Badge>
                         }
                     />
 
