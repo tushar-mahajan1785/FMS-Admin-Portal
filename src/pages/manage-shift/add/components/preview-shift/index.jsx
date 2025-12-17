@@ -8,7 +8,8 @@ export default function PreviewShiftTable({
     daysToDisplay,
     theme,
     setEmployeeShiftScheduleMasterOption,
-    getCurrentColor
+    getCurrentColor,
+    rosterData
 }) {
     return (
         <Stack sx={{ gap: 2, mt: 2 }}>
@@ -24,25 +25,42 @@ export default function PreviewShiftTable({
                 >
                     <Grid container alignItems="center" sx={{ p: 2 }}>
                         {/* Employee info + switch */}
-                        <Grid size={{ xs: 2 }} display="flex" alignItems="center" gap={1.5}>
-                            <FormControlLabel
-                                sx={{ m: 0 }}
-                                control={
-                                    <AntSwitch
-                                        checked={emp.status === "Active"}
-                                        onChange={() =>
-                                            setEmployeeShiftScheduleMasterOption(prev =>
-                                                prev.map((item, i) =>
-                                                    i === index ? { ...item, status: item.status === "Active" ? "Inactive" : "Active" } : item
+                        <Grid size={{ xs: 2 }}>
+                            <Box display="flex" alignItems="center" gap={1.5}>
+                                <FormControlLabel
+                                    sx={{ m: 0 }}
+                                    control={
+                                        <AntSwitch
+                                            checked={emp.status === "Active"}
+                                            onChange={() =>
+                                                setEmployeeShiftScheduleMasterOption(prev =>
+                                                    prev.map((item, i) =>
+                                                        i === index
+                                                            ? {
+                                                                ...item,
+                                                                status: item.status === "Active" ? "Inactive" : "Active",
+                                                            }
+                                                            : item
+                                                    )
                                                 )
-                                            )
-                                        }
-                                    />
-                                }
-                            />
-                            <TypographyComponent fontSize={16} fontWeight={500}>
-                                {emp.employee_name}
-                            </TypographyComponent>
+                                            }
+                                        />
+                                    }
+                                />
+
+                                <TypographyComponent fontSize={16} fontWeight={500}>
+                                    {emp.employee_name}
+                                </TypographyComponent>
+                            </Box>
+                            {emp.role_type === "Manager" && (
+                                <TypographyComponent
+                                    fontSize={14}
+                                    fontWeight={400}
+                                    sx={{ color: theme.palette.grey[500], ml: 4.5 }}
+                                >
+                                    {`${emp.role_type} - ${rosterData?.roster_name}`}
+                                </TypographyComponent>
+                            )}
                         </Grid>
 
                         {/* Shifts */}

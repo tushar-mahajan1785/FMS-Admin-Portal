@@ -209,14 +209,14 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                 shiftData.schedule_type = objData?.schedule_type
                 shiftData.roster_group_uuid = objData?.uuid
                 shiftData.roster_group_id = objData?.id
-                shiftData.roster_group_name = objData?.roster_name
+                shiftData.roster_name = objData?.roster_name
                 dispatch(actionRosterData(shiftData))
             } else {
                 if (rosterData === null || rosterData?.roster_group_id === null || rosterData?.roster_group_id === '') {
                     let objData = Object.assign({}, rosterData)
                     objData.roster_group_id = groupMasterOption[1]?.id
                     objData.roster_group_uuid = groupMasterOption[1]?.uuid
-                    objData.roster_group_name = groupMasterOption[1]?.roster_group_name
+                    objData.roster_name = groupMasterOption[1]?.roster_group_name
                     dispatch(actionRosterData(objData))
                 }
             }
@@ -792,7 +792,7 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                                                     let objData = Object.assign({}, rosterData)
                                                     objData.roster_group_id = g?.id
                                                     objData.roster_group_uuid = g?.uuid
-                                                    objData.roster_group_name = g?.roster_group_name
+                                                    objData.roster_name = g?.roster_group_name
                                                     dispatch(actionRosterData(objData))
                                                 }}
                                             >

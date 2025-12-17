@@ -26,13 +26,22 @@ export default function PublishShiftTable({
                             <TypographyComponent fontSize={16} fontWeight={500}>
                                 {emp.employee_name}
                             </TypographyComponent>
+                            {emp.role_type === "Manager" && (
+                                <TypographyComponent
+                                    fontSize={14}
+                                    fontWeight={400}
+                                    sx={{ color: theme.palette.grey[500] }}
+                                >
+                                    {`${emp.role_type} - ${rosterData?.roster_name}`}
+                                </TypographyComponent>
+                            )}
                         </Grid>
 
-                        <Grid 
-                        size={{ xs: 10, sm: 10, md: 10, lg: 10, xl: 10 }} 
-                        container
-                        sx={{ flexWrap: "nowrap" }}
-                         >
+                        <Grid
+                            size={{ xs: 10, sm: 10, md: 10, lg: 10, xl: 10 }}
+                            container
+                            sx={{ flexWrap: "nowrap" }}
+                        >
                             {daysToDisplay.map((day, dayIndex) => {
                                 const dateKey = moment(day).format("YYYY-MM-DD");
                                 const selectedShortName = emp.shift_selection?.[dateKey];
