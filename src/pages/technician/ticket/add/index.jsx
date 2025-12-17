@@ -33,7 +33,7 @@ import { AntSwitch } from "../../../../components/common";
 import DeleteIcon from "../../../../assets/icons/DeleteIcon";
 import FileIcon from "../../../../assets/icons/FileIcon";
 import { useBranch } from "../../../../hooks/useBranch";
-import { compressFile, getFormData, getObjectByUuid } from "../../../../utils";
+import { compressFile, getFormData, getObjectById, getObjectByUuid } from "../../../../utils";
 import _ from "lodash";
 import CustomAutocomplete from "../../../../components/custom-autocomplete";
 import CustomTextField from "../../../../components/text-field";
@@ -41,7 +41,7 @@ import FormLabel from "../../../../components/form-label";
 import { actionTechnicianAddTicket, actionTechnicianTicketAssetDetails, actionTechnicianTicketCustodianList, actionTechnicianTicketTypeWiseAsset, resetTechnicianAddTicketResponse, resetTechnicianTicketAssetDetailsResponse, resetTechnicianTicketCustodianListResponse, resetTechnicianTicketTypeWiseAssetResponse } from "../../../../store/technician/tickets";
 import { actionTechnicianAssetTypeList, resetTechnicianAssetTypeListResponse } from "../../../../store/technician/assets";
 
-export default function AddTechnicianTicket({ open, handleClose }) {
+export default function AddTechnicianTicket({ open, handleClose, abnormality }) {
     const theme = useTheme()
     const dispatch = useDispatch()
     const { logout, } = useAuth()
@@ -103,6 +103,7 @@ export default function AddTechnicianTicket({ open, handleClose }) {
                 client_id: branch?.currentBranch?.client_id,
                 branch_uuid: branch?.currentBranch?.uuid
             }))
+
         }
 
         return () => {
@@ -116,6 +117,30 @@ export default function AddTechnicianTicket({ open, handleClose }) {
         }
 
     }, [open])
+
+    /**
+     * Set type for selected abnormality
+     */
+    useEffect(() => {
+        if (masterAssetTypeOptions && masterAssetTypeOptions !== null && masterAssetTypeOptions.length > 0) {
+            if (abnormality?.asset_type_id && abnormality?.asset_type_id !== null) {
+                let objData = getObjectById(masterAssetTypeOptions, abnormality?.asset_type_id)
+                setValue('type', objData?.name)
+            }
+        }
+    }, [masterAssetTypeOptions])
+
+    /**
+    * Set asset_name for selected abnormality
+    */
+    useEffect(() => {
+        if (masterAssetNameOptions && masterAssetNameOptions !== null && masterAssetNameOptions.length > 0) {
+            if (abnormality?.asset_id && abnormality?.asset_id !== null) {
+                let objData = getObjectById(masterAssetNameOptions, abnormality?.asset_id)
+                setValue('asset_name', objData?.uuid)
+            }
+        }
+    }, [masterAssetNameOptions])
 
     /**
      * actionGetMasterAssetName on selection of Asset Type
@@ -134,7 +159,6 @@ export default function AddTechnicianTicket({ open, handleClose }) {
             setAssetDetailData(null)
         }
     }, [watchAssetType])
-
 
     /**
      * actionGetAssetDetailsByName on selection of Asset Name
