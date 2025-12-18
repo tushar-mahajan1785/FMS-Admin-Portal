@@ -231,7 +231,7 @@ export default function ChecklistAssetGroups() {
                         const asset = block.asset;
                         const slot = asset?.times?.find(t => t?.uuid === time?.uuid);
 
-                        // If no time slot exists for this asset ⇒ fill blanks
+                        // If no time slot exists for this asset → fill blanks
                         if (!slot) {
                             for (let i = 0; i < block.totalCols; i++) {
                                 row.getCell(col).value = "-";
@@ -242,14 +242,44 @@ export default function ChecklistAssetGroups() {
 
                         block.blocks.forEach(b => {
                             if (b.childList.length === 0) {
-                                // parent without children
+                                // Parent without children
                                 const v = slot?.values?.find(x => x?.parameter_id === b.parent?.id);
-                                row.getCell(col).value = v?.value ?? "-";
+                                const cell = row.getCell(col);
+
+                                cell.value = v?.value ?? "-";
+
+                                let color = 'FF000000'; // default black
+
+                                if (v?.param_status === 'Abnormal') {
+                                    if (v?.priority === 'High') {
+                                        color = 'FFD92D20'; // 🔴 red
+                                    } else if (v?.priority === 'Low') {
+                                        color = 'FFF79009'; // 🟠 orange
+                                    }
+                                }
+
+                                cell.font = { color: { argb: color } };
                                 col++;
+
                             } else {
+                                // Parent with children
                                 b.childList.forEach(child => {
                                     const v = slot?.values?.find(x => x?.parameter_id === child?.id);
-                                    row.getCell(col).value = v?.value ?? "-";
+                                    const cell = row.getCell(col);
+
+                                    cell.value = v?.value ?? "-";
+
+                                    let color = 'FF000000'; // default black
+
+                                    if (v?.param_status === 'Abnormal') {
+                                        if (v?.priority === 'High') {
+                                            color = 'FFD92D20'; // 🔴 red
+                                        } else if (v?.priority === 'Low') {
+                                            color = 'FFF79009'; // 🟠 orange
+                                        }
+                                    }
+
+                                    cell.font = { color: { argb: color } };
                                     col++;
                                 });
                             }

@@ -585,13 +585,32 @@ export default function ChecklistView() {
 
                     const assetRecord = asset_checklist_json.find(ac => ac.asset_id === a.asset_id);
                     const slotEntry = assetRecord?.times?.find(t => t.uuid === slot.uuid);
-
                     const valObj = slotEntry?.values?.find(v => v.parameter_id === param.id);
 
                     const value = valObj?.value ? `${valObj.value}` : "-";
 
-                    row.getCell(writeCol).value = value;
-                    row.getCell(writeCol).alignment = { horizontal: "center" };
+                    const cell = row.getCell(writeCol);
+
+                    cell.value = value;
+
+                    cell.alignment = {
+                        horizontal: "center",
+                        vertical: "middle"
+                    };
+
+                    let fontColor = 'FF000000'; // default black
+
+                    if (valObj?.param_status === 'Abnormal') {
+                        if (valObj?.priority === 'High') {
+                            fontColor = 'FFD92D20'; // 🔴 Red
+                        } else if (valObj?.priority === 'Low') {
+                            fontColor = 'FFF79009'; // 🟠 Orange
+                        }
+                    }
+
+                    cell.font = {
+                        color: { argb: fontColor }
+                    };
 
                     writeCol++;
                 });
@@ -803,13 +822,23 @@ export default function ChecklistView() {
                         // parent has no children
                         const v = slot.values.find(x => x?.parameter_id === b.parent.id);
 
-                        row.getCell(writeCol).value = "-";
+                        const cell = row.getCell(writeCol);
+                        cell.value = "-";
 
                         if (v) {
-                            row.getCell(writeCol).value = v.unit
-                                // ? `${v.value} ${v.unit}`
-                                ? `${v.value}`
-                                : v.value;
+                            cell.value = v.unit ? `${v.value}` : v.value;
+
+                            let color = 'FF000000'; // black
+
+                            if (v.param_status === 'Abnormal') {
+                                if (v.priority == 'High') {
+                                    color = 'FFD92D20'; // 🔴 red
+                                } else if (v.priority == 'Low') {
+                                    color = 'FFF79009'; // 🟠 orange
+                                }
+                            }
+
+                            cell.font = { color: { argb: color } };
                         }
 
                         writeCol++;
@@ -818,13 +847,23 @@ export default function ChecklistView() {
                         b.childList.forEach(child => {
                             const v = slot.values.find(x => x?.parameter_id === child.id);
 
-                            row.getCell(writeCol).value = "-";
+                            const cell = row.getCell(writeCol);
+                            cell.value = "-";
 
                             if (v) {
-                                row.getCell(writeCol).value = v.unit
-                                    // ? `${v.value} ${v.unit} `
-                                    ? `${v.value}`
-                                    : v.value;
+                                cell.value = v.unit ? `${v.value}` : v.value;
+
+                                let color = 'FF000000'; // black
+
+                                if (v.param_status === 'Abnormal') {
+                                    if (v.priority == 'High') {
+                                        color = 'FFD92D20'; // 🔴 red
+                                    } else if (v.priority == 'Low') {
+                                        color = 'FFF79009'; // 🟠 orange
+                                    }
+                                }
+
+                                cell.font = { color: { argb: color } };
                             }
 
                             writeCol++;
