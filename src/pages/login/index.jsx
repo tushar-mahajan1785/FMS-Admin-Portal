@@ -88,7 +88,7 @@ export default function LoginPage() {
     <Stack sx={{
       flexDirection: 'row',
       backgroundColor: 'background.paper',
-      height: isSMDown ? '80vh' : '100vh',
+      height: '100vh',
       overflowY: 'scroll',
       '&::-webkit-scrollbar': {
         width: '5px'
@@ -132,7 +132,7 @@ export default function LoginPage() {
         >
           <Box sx={{ width: '100%', maxWidth: 405, justifyContent: 'center' }}>
             {/* <LogoImage alt='logo-image' src={`/images/icons/covergrow-logo.png`} /> */}
-            <Box sx={{ my: 6 }}>
+            <Box sx={{ mb: 6, mt: !isSMDown ? 6 : '' }}>
               <TypographyComponent fontSize={40} fontWeight={700} sx={{ mb: 0.3, color: theme.palette.common.black }}>
                 WELCOME BACK !
               </TypographyComponent >
