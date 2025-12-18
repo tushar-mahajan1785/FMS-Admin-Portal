@@ -316,8 +316,12 @@ export default function TicketsList() {
                                                 <Stack direction="row" gap={1.5} alignItems="center" mt={0.5}>
                                                     <Stack direction="row" gap={'2px'} alignItems="center" justifyContent={'center'}>
                                                         <HistoryIcon size={14} />
-                                                        <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500] }}>
-                                                            {ticket?.created_at && ticket?.created_at !== null ? moment(ticket?.created_at).fromNow() : ''}
+                                                        <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500], textWrap: 'nowrap' }}>
+                                                            {ticket?.created_at && ticket?.created_at !== null
+                                                                ? moment().diff(moment(ticket.created_at), "seconds") < 45
+                                                                    ? `${moment().diff(moment(ticket.created_at), "seconds")} seconds ago`
+                                                                    : moment(ticket.created_at).fromNow()
+                                                                : ""}
                                                         </TypographyComponent>
 
                                                     </Stack>
@@ -326,7 +330,7 @@ export default function TicketsList() {
                                                     </Stack>
                                                     <Stack direction="row" gap={'4px'} alignItems="center" justifyContent={'center'}>
                                                         <MessageDotsIcon size={14} />
-                                                        <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500] }}>
+                                                        <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500], textWrap: 'nowrap' }}>
                                                             {ticket?.updates && ticket?.updates !== null ? ticket?.updates : ''} Updates
                                                         </TypographyComponent>
                                                     </Stack>
@@ -335,7 +339,7 @@ export default function TicketsList() {
                                                     </Stack>
                                                     <Stack direction="row" gap={'4px'} alignItems="center" justifyContent={'center'}>
                                                         <PaperClipIcon size={14} />
-                                                        <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500] }}>
+                                                        <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500], textWrap: 'nowrap' }}>
                                                             {ticket?.attachments && ticket?.attachments !== null ? ticket?.attachments : ''} Attachments
                                                         </TypographyComponent>
                                                     </Stack>
