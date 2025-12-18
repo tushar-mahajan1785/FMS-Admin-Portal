@@ -1,8 +1,14 @@
-// BottomNav.jsx
-import { BottomNavigation, BottomNavigationAction, Paper, useTheme, Badge, Box } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import {
+    BottomNavigation,
+    BottomNavigationAction,
+    Paper,
+    useTheme,
+    Box
+} from "@mui/material";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 
-// Icons
+// Icons (UNCHANGED)
 import DashboardIcon from "../../assets/icons/DashboardIcon";
 import ProfileIcon from "../../assets/icons/ProfileIcon";
 import ClipboardIcon from "../../assets/icons/ClipboardIcon";
@@ -11,31 +17,40 @@ import TechnicianTicketIcon from "../../assets/icons/TechnicianTicketIcon";
 
 export default function BottomNav({ value, onChange, fabContent }) {
     const navigate = useNavigate();
+    const location = useLocation();
     const theme = useTheme();
 
-    // Route mapping by tab index
     const routes = ["/", "/checklist", "/assets", "/tickets", "/profile"];
 
-    const isSelected = (index) => value === index;
+    /** ✅ KEEP VALUE IN SYNC WITH URL (FIXED LOGIC) */
+    useEffect(() => {
+        const index = routes.findIndex((path) => {
+            if (path === "/") {
+                return location.pathname === "/";
+            }
+            return location.pathname === path || location.pathname.startsWith(path + "/");
+        });
+
+        if (index !== -1 && index !== value) {
+            onChange(index);
+        }
+    }, [location.pathname, value, onChange]);
 
     const handleChange = (event, newValue) => {
         if (value !== newValue) {
             onChange(newValue);
             navigate(routes[newValue]);
         }
-
     };
+
+    const isSelected = (index) => value === index;
 
     return (
         <Box sx={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 1100 }}>
 
-            {value === 3 ?
-                <>{fabContent && fabContent !== null ? fabContent : ''}</>
-                :
-                <></>
-            }
+            {/* FAB only for Tickets */}
+            {value === 3 && fabContent ? fabContent : ''}
 
-            {/* 🔽 BOTTOM NAV BAR */}
             <Paper elevation={5} sx={{ pt: 1, pb: 1 }}>
                 <BottomNavigation
                     showLabels
@@ -69,10 +84,9 @@ export default function BottomNav({ value, onChange, fabContent }) {
                             <DashboardIcon
                                 size={22}
                                 strokeWidth={isSelected(0) ? 1.5 : 1.2}
-                                stroke={
-                                    isSelected(0)
-                                        ? theme.palette.primary[600]
-                                        : theme.palette.grey[400]
+                                stroke={isSelected(0)
+                                    ? theme.palette.primary[600]
+                                    : theme.palette.grey[400]
                                 }
                             />
                         }
@@ -97,13 +111,12 @@ export default function BottomNav({ value, onChange, fabContent }) {
                             <ClipboardIcon
                                 size={22}
                                 strokeWidth={isSelected(1) ? 1.8 : 1.5}
-                                stroke={
-                                    isSelected(1)
-                                        ? theme.palette.primary[600]
-                                        : theme.palette.grey[400]
+                                stroke={isSelected(1)
+                                    ? theme.palette.primary[600]
+                                    : theme.palette.grey[400]
                                 }
                             />
-                            // </Badge>
+                            //</Badge>
                         }
                     />
 
@@ -113,10 +126,9 @@ export default function BottomNav({ value, onChange, fabContent }) {
                             <BoxPackedIcon
                                 size={22}
                                 strokeWidth={isSelected(2) ? 1.8 : 1.5}
-                                stroke={
-                                    isSelected(2)
-                                        ? theme.palette.primary[600]
-                                        : theme.palette.grey[400]
+                                stroke={isSelected(2)
+                                    ? theme.palette.primary[600]
+                                    : theme.palette.grey[400]
                                 }
                             />
                         }
@@ -141,13 +153,12 @@ export default function BottomNav({ value, onChange, fabContent }) {
                             <TechnicianTicketIcon
                                 size={22}
                                 strokeWidth={isSelected(3) ? 1.8 : 1.5}
-                                stroke={
-                                    isSelected(3)
-                                        ? theme.palette.primary[600]
-                                        : theme.palette.grey[400]
+                                stroke={isSelected(3)
+                                    ? theme.palette.primary[600]
+                                    : theme.palette.grey[400]
                                 }
                             />
-                            // </Badge>
+                            //</Badge>
                         }
                     />
 
@@ -157,16 +168,15 @@ export default function BottomNav({ value, onChange, fabContent }) {
                             <ProfileIcon
                                 size={22}
                                 strokeWidth={isSelected(4) ? 1.8 : 1.5}
-                                stroke={
-                                    isSelected(4)
-                                        ? theme.palette.primary[600]
-                                        : theme.palette.grey[400]
+                                stroke={isSelected(4)
+                                    ? theme.palette.primary[600]
+                                    : theme.palette.grey[400]
                                 }
                             />
                         }
                     />
                 </BottomNavigation>
-            </Paper >
-        </Box >
+            </Paper>
+        </Box>
     );
 }

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Avatar, Box, Divider, Stack, useTheme } from "@mui/material";
 import TypographyComponent from "../../../../components/custom-typography";
-import BottomNav from "../../../../components/bottom-navbar";
 import { TechnicianNavbarHeader } from "../../../../components/technician/navbar-header";
 import { getInitials, getPMActivityLabel } from "../../../../utils";
 import { useNavigate } from "react-router-dom";
@@ -25,7 +24,6 @@ export default function TechnicianAssetList() {
     const [loadingList, setLoadingList] = useState(false)
     const [getAssetTypesList, setGetAssetTypesList] = useState([])
     const [getAssetList, setGetAssetList] = useState([])
-    const [value, setValue] = useState(2);
     const [selectedAssetTypeValue, setSelectedAssetTypeValue] = useState('');
 
     // store
@@ -265,7 +263,6 @@ export default function TechnicianAssetList() {
                         </Stack>
                 }
             </Stack>
-            <BottomNav value={value} onChange={setValue} />
         </Stack>
     )
 }
