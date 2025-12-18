@@ -477,6 +477,7 @@ export default function ChecklistView() {
                                     select
                                     fullWidth
                                     {...field}
+                                    value={field.value ?? ""}
                                     error={!!errors[fieldName]}
                                     helperText={errors[fieldName]?.message}
                                 >
