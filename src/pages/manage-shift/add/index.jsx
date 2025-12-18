@@ -914,9 +914,27 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                                 fontWeight: 600,
                             }}
                             variant="outlined"
-                            disabled={activePage === "Preview"} // disabled in Preview, active in Publish
                             onClick={() => {
-                                if (activePage === "Preview") return; // no action
+                                // If coming from Reset, clean up state
+                                if (activePage === "Preview") {
+                                    // Reset only the clicked index
+                                    let updated = employeeShiftScheduleMasterOption.map((objShift)=>{
+                                        let shift = Object.assign({},objShift)
+                                        shift.shift_selection = null
+                                        return shift
+                                    })
+                                    setEmployeeShiftScheduleMasterOption(updated)
+
+                                    // Reset roster data
+                                    dispatch(
+                                        actionRosterData({
+                                            ...rosterData,
+                                            schedule_type: null
+                                        })
+                                    );
+                                }
+
+                                // Finally move to Preview
                                 setActivePage("Preview");
                             }}
                         >
