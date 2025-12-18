@@ -220,9 +220,6 @@ export default function TechnicianDashboardList() {
 
                                 <TypographyComponent fontSize={18} fontWeight={500}>
                                     {getShiftName(activeShift?.shift_name)}
-                                    {console.log("activeShift?.shift_name", activeShift?.shift_name)}
-                                    {console.log("activeShift", activeShift)}
-
                                 </TypographyComponent>
                             </Stack>
 
