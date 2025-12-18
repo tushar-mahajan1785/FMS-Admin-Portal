@@ -236,7 +236,7 @@ export default function AssetTypesChecklist() {
                         <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
                             <Stack sx={{ background: theme.palette.common.white, py: 5, mt: 0, alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
                                 <Avatar alt={""} src={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} sx={{ overFlow: 'hidden', borderRadius: 0, height: 120, width: 120 }} />
-                                <TypographyComponent fontSize={16} fontWeight={400}>No Tickets Found</TypographyComponent>
+                                <TypographyComponent fontSize={16} fontWeight={400}>No Asset Types Found</TypographyComponent>
                             </Stack>
                         </Grid>
 
