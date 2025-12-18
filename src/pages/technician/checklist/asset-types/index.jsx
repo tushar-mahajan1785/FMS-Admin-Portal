@@ -137,8 +137,8 @@ export default function AssetTypesChecklist() {
                         overviewChecklists && overviewChecklists !== null && overviewChecklists.length > 0 ?
                             overviewChecklists?.map((objChecklist, index) => {
                                 return (<Grid size={{ xs: 4, sm: 4 }} sx={{ background: theme.palette.common.white, justifyContent: 'center', alignItems: 'center', p: 2.5, textAlign: 'center', borderRadius: '8px' }} key={index}>
-                                    <TypographyComponent fontSize={24} fontWeight={600}>{objChecklist?.count !== null ? objChecklist?.count?.toString().padStart(2, "0") : '00'}</TypographyComponent>
-                                    <TypographyComponent fontSize={14} fontWeight={500} sx={{ color: theme.palette.grey[500] }}>{objChecklist?.title}</TypographyComponent>
+                                    <TypographyComponent title={objChecklist?.count} fontSize={24} fontWeight={600}>{objChecklist?.count !== null ? objChecklist?.count?.toString().padStart(2, "0") : '00'}</TypographyComponent>
+                                    <TypographyComponent title={objChecklist?.title} fontSize={14} fontWeight={500} sx={{ color: theme.palette.grey[500] }}>{objChecklist?.title}</TypographyComponent>
                                 </Grid>
                                 )
                             })
@@ -214,9 +214,14 @@ export default function AssetTypesChecklist() {
                                             <TypographyComponent fontSize={16} fontWeight={400} mb={1}>
                                                 Today’s Overall Progress
                                             </TypographyComponent>
-                                            <TypographyComponent fontSize={16} fontWeight={400} mb={1} sx={{ color: objAsset?.icon_background }}>
-                                                {getPercentage(objAsset?.total_completed, objAsset?.total_checklists) ? Math.round(getPercentage(objAsset?.total_completed, objAsset?.total_checklists)) : 0}% Complete
-                                            </TypographyComponent>
+                                            <Stack sx={{ flexDirection: 'row', gap: 1.5 }}>
+                                                <TypographyComponent fontSize={16} fontWeight={400} mb={1} sx={{ color: theme.palette.success[700] }}>
+                                                    {`(${objAsset?.total_completed && objAsset?.total_completed !== null ? objAsset?.total_completed?.toString().padStart(2, "0") : 0}/${objAsset?.total_checklists && objAsset?.total_checklists !== null ? objAsset?.total_checklists?.toString().padStart(2, "0") : 0})`}
+                                                </TypographyComponent>
+                                                <TypographyComponent fontSize={16} fontWeight={400} mb={1} sx={{ color: theme.palette.success[700] }}>
+                                                    {getPercentage(objAsset?.total_completed, objAsset?.total_checklists) ? Math.ceil(getPercentage(objAsset?.total_completed, objAsset?.total_checklists)) : 0}% Complete
+                                                </TypographyComponent>
+                                            </Stack>
                                         </Stack>
                                         <Stack sx={{ width: '100%' }}>
                                             <Box sx={{ width: '100%', mr: 1 }}>
