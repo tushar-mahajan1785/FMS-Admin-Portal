@@ -376,7 +376,8 @@ export default function AssetDetails({ open, objData, toggle, page }) {
                                 {
                                     assetDetailData?.qr_image_url && assetDetailData?.qr_image_url !== null ?
                                         <Button
-                                            sx={{ textTransform: "capitalize", px: 6, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, borderColor: theme.palette.primary[600] }}
+                                            size="small"
+                                            sx={{ textTransform: "capitalize", my: 1, px: 6, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, borderColor: theme.palette.primary[600] }}
                                             onClick={() => [
                                                 window.open(assetDetailData?.qr_image_url, "_blank")
                                             ]}
