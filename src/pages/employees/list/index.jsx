@@ -123,7 +123,7 @@ export default function EmployeeList() {
                                     <></>
                             }
                             {
-                                hasPermission('EMPLOYEE_PERMISSIONS_UPDATE') ?
+                                hasPermission('EMPLOYEE_PERMISSIONS_UPDATE') && params?.row?.type !== "Technician" ?
                                     <Tooltip title="EmployeeWise Permission" followCursor placement="top">
                                         {/* open employee wise permission */}
                                         <IconButton
