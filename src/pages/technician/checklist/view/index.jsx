@@ -148,6 +148,17 @@ export default function ChecklistView() {
             });
             setGetAbnormalCount(abnormalCount)
             //----------------------------------------------
+
+            let getData = Object.assign({}, getCurrentAssetDetailsData)
+            let objAssetJSON = Object.assign({}, getData?.asset_checklist_json)
+            let arrTimes = Object.assign([], objAssetJSON?.times)
+            let currentTime = arrTimes.find(time => time.uuid == selectedTimeUuid?.uuid)
+            if (currentTime && currentTime !== null) {
+                setSelectedAssetStatus(currentTime?.status)
+            } else {
+                setSelectedAssetStatus(null)
+            }
+
         }
 
     }, [selectedTimeUuid, currentData])
