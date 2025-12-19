@@ -96,7 +96,7 @@ export default function ChecklistGroups() {
                 }}>
                     <ChevronLeftIcon size={24} />
                 </Stack>
-                <TypographyComponent color={theme.palette.text.primary} fontSize={22} fontWeight={500}>UPS Asset List</TypographyComponent>
+                <TypographyComponent color={theme.palette.text.primary} fontSize={22} fontWeight={500}>{getCurrentAssetGroup?.title && getCurrentAssetGroup?.title !== null ? getCurrentAssetGroup?.title : ''} Asset Groups</TypographyComponent>
             </Stack>} />
 
             <Stack sx={{ rowGap: '12px', width: '100%', padding: '16px', background: theme.palette.common.white, borderRadius: '8px' }}>
