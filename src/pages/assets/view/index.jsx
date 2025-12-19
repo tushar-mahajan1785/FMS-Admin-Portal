@@ -371,6 +371,29 @@ export default function AssetDetails({ open, objData, toggle, page }) {
                                     )
                                 }
                             </Grid>
+                            <SectionHeader title="QR Details" progress={100} sx={{ marginTop: 2 }} />
+                            <Grid container spacing={'2px'} sx={{ backgroundColor: theme.palette.primary[25], borderRadius: '16px', padding: '10px', marginBottom: 2 }}>
+                                {
+                                    assetDetailData?.qr_image_url && assetDetailData?.qr_image_url !== null ?
+                                        <Button
+                                            sx={{ textTransform: "capitalize", px: 6, borderRadius: '8px', backgroundColor: theme.palette.primary[600], color: theme.palette.common.white, fontSize: 16, fontWeight: 600, borderColor: theme.palette.primary[600] }}
+                                            onClick={() => [
+                                                window.open(assetDetailData?.qr_image_url, "_blank")
+                                            ]}
+                                            variant='contained'
+                                        >
+                                            Download QR
+                                        </Button>
+                                        :
+                                        (
+                                            <Stack sx={{ width: '100%', justifyContent: 'center', alignItems: 'center' }}>
+                                                <TypographyComponent sx={{ fontSize: 16, fontWeight: 400, color: theme.palette.grey[600], py: 2, textAlign: 'center' }}>
+                                                    No QR Generated
+                                                </TypographyComponent>
+                                            </Stack>
+                                        )
+                                }
+                            </Grid>
                         </Stack>)
                         : (
                             <Stack sx={{ height: '100%' }}>

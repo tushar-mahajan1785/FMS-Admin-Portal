@@ -633,7 +633,9 @@ export default function VendorBulkUpload() {
                                 loadingRefresh={loadingRefresh}
                                 onSyncClick={() => {
                                     setLoadingRefresh(true)
-                                    dispatch(actionVendorBulkUploadCron())
+                                    dispatch(actionVendorBulkUploadCron({
+                                        branch_uuid: branch?.currentBranch?.uuid
+                                    }))
                                 }}
                                 onRefreshClick={() => {
                                     setLoadingRefresh(true)

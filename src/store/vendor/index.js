@@ -93,9 +93,9 @@ export const actionVendorUploadList = createAsyncThunk('vendor/actionVendorUploa
     }
 })
 
-export const actionVendorBulkUploadCron = createAsyncThunk('vendor/actionVendorBulkUploadCron', async () => {
+export const actionVendorBulkUploadCron = createAsyncThunk('vendor/actionVendorBulkUploadCron', async (params) => {
     try {
-        const response = await axiosApi.get(API_VENDOR_BULK_UPLOAD_CRON)
+        const response = await axiosApi.post(API_VENDOR_BULK_UPLOAD_CRON, params)
 
         return response.status !== 200 ? getErrorResponse() : response.data
     } catch (error) {
