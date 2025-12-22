@@ -302,8 +302,8 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
             ) : (
               <></>
             )}
-            {params?.row?.remark && params?.row?.remark !== null && (
-              <Tooltip title={params?.row?.remark}>
+            {params?.row?.reschedule_remark && params?.row?.reschedule_remark !== null && (
+              <Tooltip title={params?.row?.reschedule_remark}>
                 <InfoOutlinedIcon
                   fontSize="20"
                   sx={{ color: theme.palette.primary[600] }}

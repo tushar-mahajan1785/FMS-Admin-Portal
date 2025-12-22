@@ -1,20 +1,10 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Card,
-  Divider,
-  Grid,
-  IconButton,
-  Stack,
-  Typography,
-  useTheme,
-} from "@mui/material";
+import { Box, Divider, Grid, IconButton, Stack, Tooltip, Typography, useTheme } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import TypographyComponent from "../../../../../components/custom-typography";
 import EmptyContent from "../../../../../components/empty_content";
 import { IMAGES_SCREEN_NO_DATA } from "../../../../../constants";
-import { DataGrid } from "@mui/x-data-grid";
 import CustomChip from "../../../../../components/custom-chip";
 import moment from "moment/moment";
 import { getFormattedDuration } from "../../../../../utils";
@@ -23,6 +13,7 @@ import PmEditReschedulerIcon from "../../../../../assets/icons/PMEditReshedulerI
 import ReschedulePopup from "../edit-reschedule";
 import { actionPMScheduleData } from "../../../../../store/pm-activity";
 import ListComponents from "../../../../../components/list-components";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
 export default function PMActivityPreviewSetUp() {
   const theme = useTheme();
@@ -91,7 +82,14 @@ export default function PMActivityPreviewSetUp() {
       editable: false,
       renderCell: (params) => {
         return (
-          <Stack sx={{ height: "100%", justifyContent: "center" }}>
+          <Stack
+            sx={{
+              flexDirection: "row",
+              alignItems: "center",
+              width: "100%",
+              columnGap: 1,
+            }}
+          >
             {params.row.scheduled_date && params.row.scheduled_date !== null ? (
               <TypographyComponent
                 color={theme.palette.grey.primary}
@@ -105,6 +103,14 @@ export default function PMActivityPreviewSetUp() {
               </TypographyComponent>
             ) : (
               <></>
+            )}
+            {params?.row?.reschedule_remark && params?.row?.reschedule_remark !== null && (
+              <Tooltip title={params?.row?.reschedule_remark}>
+                <InfoOutlinedIcon
+                  fontSize="20"
+                  sx={{ color: theme.palette.primary[600] }}
+                />
+              </Tooltip>
             )}
           </Stack>
         );
@@ -120,10 +126,10 @@ export default function PMActivityPreviewSetUp() {
           case "Upcoming":
             color = "grey";
             break;
-          case "On Hold":
-            color = "primary";
-            break;
           case "Completed":
+            color = "success";
+            break;
+          case "On Hold":
             color = "warning";
             break;
           default:
@@ -263,7 +269,7 @@ export default function PMActivityPreviewSetUp() {
         const frequencies = (assetData?.frequency_exceptions || []).map((objFrequency) => ({
           ...objFrequency,
           scheduled_date: objFrequency.scheduled_date,
-          remark: objFrequency.remark
+          reschedule_remark: objFrequency.reschedule_remark
         }));
 
         setFrequencyExceptionsData(frequencies);
@@ -416,7 +422,7 @@ export default function PMActivityPreviewSetUp() {
                         let frequencies = currentData.map((objFrequency) => ({
                           ...objFrequency,
                           scheduled_date: objFrequency.scheduled_date,
-                          remark: objFrequency.remark
+                          reschedule_remark: objFrequency.reschedule_remark
                         }));
 
                         if (currentAssetIndex > -1) {
@@ -488,7 +494,7 @@ export default function PMActivityPreviewSetUp() {
               ? moment(data.new_date, "DD/MM/YYYY").format("YYYY-MM-DD")
               : null;
 
-            const remark = data.reason_for_reschedule || "";
+            const reschedule_remark = data.reason_for_reschedule || "";
 
             /* ------------------------------
                1. Update frequencyExceptionsData
@@ -498,7 +504,7 @@ export default function PMActivityPreviewSetUp() {
                 return {
                   ...item,
                   scheduled_date: newDate,
-                  remark: remark
+                  reschedule_remark: reschedule_remark
                 };
               }
               return item;
@@ -514,14 +520,14 @@ export default function PMActivityPreviewSetUp() {
               frequency_data: {
                 ...selectedActivity.frequency_data,
                 scheduled_date: newDate,
-                ...(remark && { remark })
+                ...(reschedule_remark && { reschedule_remark })
               },
               frequency_exceptions: selectedActivity.frequency_exceptions.map((item) => {
                 if (item.scheduled_date === selectedActivity?.frequency_data?.scheduled_date) {
                   return {
                     ...item,
                     scheduled_date: newDate,
-                    ...(remark && { remark })
+                    ...(reschedule_remark && { reschedule_remark })
                   };
                 }
                 return item;
@@ -547,7 +553,7 @@ export default function PMActivityPreviewSetUp() {
                       // only update the selected one
                       if (item.scheduled_date === selectedActivity?.frequency_data?.scheduled_date) {
                         updatedItem.scheduled_date = newDate;
-                        updatedItem.remark = remark;
+                        updatedItem.reschedule_remark = reschedule_remark;
                       }
 
                       return updatedItem;
