@@ -840,7 +840,7 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
               setRescheduleOpen(false);
               if (type === "save") {
                 const newDate = data.new_date ? moment(data.new_date, "DD/MM/YYYY").format("YYYY-MM-DD") : null;
-                const remark = data.reason_for_reschedule || "";
+                const reschedule_remark = data.reason_for_reschedule || "";
 
                 /* ------------------------------
                    1. Update frequencyExceptionsData
@@ -850,7 +850,7 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
                     return {
                       ...item,
                       scheduled_date: newDate,
-                      ...(remark && { remark })
+                      ...(reschedule_remark && { reschedule_remark })
                     };
                   }
                   return item;
@@ -866,14 +866,14 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
                   frequency_data: {
                     ...selectedActivity.frequency_data,
                     scheduled_date: newDate,
-                    ...(remark && { remark })
+                    ...(reschedule_remark && { reschedule_remark })
                   },
                   frequency_exceptions: selectedActivity.frequency_exceptions.map((item) => {
                     if (item.scheduled_date === selectedActivity?.frequency_data?.scheduled_date) {
                       return {
                         ...item,
                         scheduled_date: newDate,
-                        ...(remark && { remark })
+                        ...(reschedule_remark && { reschedule_remark })
                       };
                     }
                     return item;
@@ -887,7 +887,7 @@ export default function PMActivityDetails({ open, objData, handleClose }) {
                   asset_id: selectedActivity?.asset_id,
                   old_date: data?.current_schedule_date ? moment(data?.current_schedule_date, "DD/MM/YYYY").format("YYYY-MM-DD") : null,
                   new_date: newDate,
-                  reason_for_reschedule: remark
+                  reschedule_remark: reschedule_remark
                 };
                 dispatch(actionPMScheduleReschedule(input));
               }
