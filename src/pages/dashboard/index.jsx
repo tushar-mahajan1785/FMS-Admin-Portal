@@ -180,10 +180,10 @@ export default function Dashboard() {
 
   const getIcon = (type) => {
     switch (type) {
-      case 'success': return <SuccessCircleCheckIcon color="success" />;
-      case 'warning': return <CircleExclamationMarkIcon color="warning" />;
-      case 'shift': return <CalendarTodayIcon color="warning" />;
-      case 'document': return <DescriptionOutlinedIcon color="warning" />;
+      case 'PM_ACTIVITY': return <SuccessCircleCheckIcon color="success" />;
+      case 'CHECKLIST': return <CircleExclamationMarkIcon color="warning" />;
+      case 'TICKET': return <CalendarTodayIcon color="warning" />;
+      case 'DOCUMENT': return <DescriptionOutlinedIcon color="warning" />;
       default: return <></>;
     }
   };
