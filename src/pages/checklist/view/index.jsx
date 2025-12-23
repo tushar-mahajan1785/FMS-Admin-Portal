@@ -29,7 +29,7 @@ import { ERROR, IMAGES_SCREEN_NO_DATA, SERVER_ERROR, UNAUTHORIZED } from "../../
 import { useAuth } from "../../../hooks/useAuth";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import CircleDashedIcon from "../../../assets/icons/CircleDashedIcon";
-import { useForm, FormProvider, useFormContext, Controller } from "react-hook-form";
+import { useForm, FormProvider, Controller } from "react-hook-form";
 import CloseIcon from "../../../assets/icons/CloseIcon";
 import { isCurrentTimeInRange, isFutureTimeRange } from "../../../utils";
 import AlertCircleIcon from "../../../assets/icons/AlertCircleIcon";
@@ -51,6 +51,13 @@ export default function ChecklistView() {
 
     const methods = useForm();
 
+    const {
+        control, handleSubmit,
+        setValue,
+        reset,
+        formState: { errors }
+    } = methods
+
     //Stores
     const { checklistGroupDetails, checklistGroupHistoryAdd, checklistGroupAssetApprove } = useSelector(state => state.checklistStore)
 
@@ -65,6 +72,7 @@ export default function ChecklistView() {
     const [loadingChecklist, setLoadingChecklist] = useState(false)
     const [isInitialLoad, setIsInitialLoad] = useState(false)
     const [loadingSubmit, setLoadingSubmit] = useState(false)
+    const [formMode, setFormMode] = useState('view')
 
     //Scroll times to current selected time
     const getScrollTargetIndex = () => {
@@ -84,6 +92,33 @@ export default function ChecklistView() {
             setCurrentAssetApprovalDetails(null)
         }
     }, [])
+
+    /**
+     * set value for current asset on click of Edit
+     */
+    useEffect(() => {
+        if (formMode == 'edit') {
+            let checklistData = Object.assign({}, getChecklistDetails)
+
+            let currentTime = checklistData?.times.find(obj => obj?.is_selected == true)
+
+            if (currentTime && currentTime !== null) {
+                if (currentTime?.schedules && currentTime?.schedules !== null && currentTime?.schedules.length > 0) {
+                    let currentAsset = currentTime?.schedules.find(obj => obj?.is_view == 0)
+                    if (currentAsset && currentAsset !== null) {
+                        if (currentAsset?.values && currentAsset?.values !== null && currentAsset?.values.length > 0) {
+                            currentAsset?.values?.forEach(param => {
+                                let getCurrentParameter = getChecklistDetails?.parameters.find(p => p.id == param.parameter_id)
+                                const fieldName = getCurrentParameter?.name
+                                setValue(fieldName, param?.value || "");
+                            });
+                        }
+
+                    }
+                }
+            }
+        }
+    }, [formMode])
 
     //Scroll times on update of getChecklistDetails & isInitialLoad as true
     useEffect(() => {
@@ -112,6 +147,7 @@ export default function ChecklistView() {
      */
     useEffect(() => {
         if (branch?.currentBranch?.uuid && branch?.currentBranch?.uuid !== null && groupUuid && groupUuid !== null) {
+            setFormMode('view')
             setLoadingChecklist(true)
             dispatch(actionChecklistGroupDetails({
                 branch_uuid: branch?.currentBranch?.uuid,
@@ -374,6 +410,7 @@ export default function ChecklistView() {
         if (checklistGroupDetails && checklistGroupDetails !== null) {
             dispatch(resetChecklistGroupDetailsResponse())
             if (checklistGroupDetails?.result === true) {
+                setFormMode('view')
                 setLoadingChecklist(false)
                 let response = Object.assign({}, checklistGroupDetails?.response)
                 setGetCurrentAssetGroup(response)
@@ -408,6 +445,7 @@ export default function ChecklistView() {
         if (checklistGroupHistoryAdd && checklistGroupHistoryAdd !== null) {
             dispatch(resetChecklistGroupHistoryAddResponse())
             if (checklistGroupHistoryAdd?.result === true) {
+                setFormMode('view')
                 setLoadingSubmit(false)
                 methods.reset()
                 showSnackbar({ message: checklistGroupHistoryAdd.message, severity: "success" })
@@ -1088,11 +1126,9 @@ export default function ChecklistView() {
      * @param {*} params, value
      * @returns 
      */
-    const FieldRenderer = ({ params, value }) => {
-        const { control, formState: { errors } } = useFormContext();
+    const FieldRenderer = React.memo(({ params }) => {
 
-        const fieldName = `${params.name} `;
-
+        const fieldName = params.name
         const validationRules = {
             required: params?.is_mandatory ? `${params?.name} is required` : false,
             min: params?.min
@@ -1107,9 +1143,9 @@ export default function ChecklistView() {
             <Controller
                 name={fieldName}
                 control={control}
-                defaultValue={value ?? ""}
                 rules={validationRules}
                 render={({ field }) => {
+
                     switch (params?.input_type) {
 
                         // ---------------- TEXT INPUT ----------------
@@ -1153,6 +1189,7 @@ export default function ChecklistView() {
                                     select
                                     fullWidth
                                     {...field}
+                                    value={field.value ?? ""}
                                     error={!!errors[fieldName]}
                                     helperText={errors[fieldName]?.message}
                                 >
@@ -1160,9 +1197,9 @@ export default function ChecklistView() {
                                         <em>Select Option</em>
                                     </MenuItem>
 
-                                    {params.options?.map((opt, index) => (
-                                        <MenuItem key={index} value={opt.name}>
-                                            {opt.name}
+                                    {params?.options && params?.options !== null && params?.options.length > 0 && params?.options?.map((opt, index) => (
+                                        <MenuItem key={index} value={opt?.name}>
+                                            {opt?.name}
                                         </MenuItem>
                                     ))}
                                 </CustomTextField>
@@ -1174,7 +1211,7 @@ export default function ChecklistView() {
                 }}
             />
         );
-    };
+    });
 
     /**
      * OnSubmit the Asset
@@ -1193,8 +1230,7 @@ export default function ChecklistView() {
         let currentValues = Object.assign([], getCurrentAsset?.values)
 
         const updatedValues = currentValues.map(param => {
-            // Construct the dynamic fieldName
-            const fieldName = `${param.name} `;
+            const fieldName = param.name;
 
             return {
                 ...param,
@@ -1202,7 +1238,6 @@ export default function ChecklistView() {
                 value: formData[fieldName] ?? param.value
             };
         });
-
         let objData = {
             "asset_type_id": Number(assetId),
             "asset_id": getCurrentAsset?.asset_id,
@@ -1684,6 +1719,7 @@ export default function ChecklistView() {
                                                                 details.times = updatedTimes;
                                                                 setGetChecklistDetails(details);
                                                                 methods.reset()
+                                                                setFormMode('view')
                                                             }
 
                                                         }}
@@ -1716,7 +1752,7 @@ export default function ChecklistView() {
                         {
                             getChecklistDetails && getChecklistDetails !== null && getChecklistDetails?.times && getChecklistDetails?.times !== null && getChecklistDetails?.times?.length > 0 ?
                                 <FormProvider {...methods}>
-                                    <form onSubmit={methods.handleSubmit(onSubmit)}>
+                                    <form onSubmit={handleSubmit(onSubmit)}>
                                         <TableContainer
                                             sx={{
                                                 maxHeight: '600px',
@@ -1949,6 +1985,8 @@ export default function ChecklistView() {
                                                                                                                 arrTimes[currentTimeIndex] = currentTime
                                                                                                                 details.times = arrTimes
                                                                                                                 setGetChecklistDetails(details)
+
+                                                                                                                setFormMode('edit')
                                                                                                             }}>
                                                                                                             <EditCircleIcon stroke={getEditModeCount() ? theme.palette.grey[600] : theme.palette.primary[600]} size={18} /> Edit
                                                                                                         </Button>
@@ -1979,7 +2017,8 @@ export default function ChecklistView() {
                                                                                                         details.times = arrTimes
                                                                                                         setGetChecklistDetails(details)
 
-                                                                                                        methods.reset()
+                                                                                                        reset()
+                                                                                                        setFormMode('view')
                                                                                                     }}
                                                                                                 >
                                                                                                     <CloseIcon stroke={theme.palette.primary[600]} size={10} />
