@@ -171,8 +171,8 @@ export default function ChecklistGroups() {
                                         border: `1px solid ${theme.palette.grey[100]}`,
                                     }}
                                     onClick={() => {
-                                        // navigate(`select-assets/${objAsset?.group_uuid}`)
-                                        navigate(`view/${objAsset?.group_uuid}`)
+                                        navigate(`select-assets/${objAsset?.group_uuid}`)
+                                        // navigate(`view/${objAsset?.group_uuid}`)
                                     }}
                                 >
                                     <Stack direction="row" justifyContent={'space-between'} alignItems="center" sx={{ width: '100%' }}>
