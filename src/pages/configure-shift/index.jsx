@@ -325,7 +325,7 @@ export default function ConfigureShiftList() {
                                                                         label={<FormLabel label={`Short Name`} required={true} />}
                                                                         error={!!errors.shift_configure?.[index]?.short_name}
                                                                         inputProps={{ maxLength: 255 }}
-                                                                        disabled={!watch(`shift_configure.${index}.is_active`)}
+                                                                        disabled={!watch(`shift_configure.${index}.is_active`) || watch(`shift_configure.${index}.short_name`)}
                                                                         helperText={errors.shift_configure?.[index]?.short_name?.message}
                                                                     />
                                                                 )}
