@@ -1832,7 +1832,7 @@ export default function ChecklistView() {
                                                                                 objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]} ` : `1px solid ${theme.palette.grey[300]} `// `1px solid ${ theme.palette.success[600] } `
                                                                                 : '',
                                                                             borderBottom: `1px solid ${theme.palette.grey[300]} `,
-                                                                            background: paramValue?.param_status == 'Abnormal' ? theme.palette.error[50] : objAsset?.status == 'Approved' ? theme.palette.success[50] : theme.palette.common.white,//theme.palette.success[50],
+                                                                            background: paramValue?.param_status == 'Abnormal' && objAsset?.is_view == 1 ? theme.palette.error[50] : objAsset?.status == 'Approved' ? theme.palette.success[50] : theme.palette.common.white,//theme.palette.success[50],
                                                                             borderLeft: objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]} ` : `1px solid ${theme.palette.grey[300]} `,// `1px solid ${ theme.palette.success[600] } `
                                                                             borderRight: objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]} ` : `1px solid ${theme.palette.grey[300]} `,// `1px solid ${ theme.palette.success[600] } `
                                                                             borderTopLeftRadius: i == 0 ? '8px' : 'none',
