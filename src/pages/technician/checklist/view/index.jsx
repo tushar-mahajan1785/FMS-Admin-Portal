@@ -652,10 +652,6 @@ export default function ChecklistView() {
                         justifyContent: "space-between",
                         boxShadow: 'none',
                         border: `1px solid ${theme.palette.grey[100]}`
-                        // boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-                    }}
-                    onClick={() => {
-                        // navigate(`select-assets/${getCurrentAssetDetailsData?.id}`)
                     }}
                 >
                     <Stack direction="row" justifyContent={'space-between'} alignItems="center" sx={{ width: '100%' }} onClick={() => {
