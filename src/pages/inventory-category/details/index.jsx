@@ -169,7 +169,9 @@ export default function InventoryCategoryDetails({ open, objData, handleClose })
                                 <Tooltip title="Edit" followCursor placement="top">
                                     <IconButton
                                         onClick={() => {
-                                            setViewInventoryCategoryData(inventoryCategoryDetailData)
+                                            let details = Object.assign({},inventoryCategoryDetailData)
+                                            details.formType='edit'
+                                            setViewInventoryCategoryData(details)
                                             setOpenViewEditInventoryCategoryPopup(true)
                                         }}
                                     >

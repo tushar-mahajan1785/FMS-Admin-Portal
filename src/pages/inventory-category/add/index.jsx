@@ -141,8 +141,8 @@ export default function AddInventoryCategory({ open, handleClose, objData }) {
                     color={theme.palette.primary[600]}
                     size={48}
                     icon={<ClientsIcon stroke={theme.palette.primary[600]} size={18} />}
-                    title="Add New Category"
-                    subtitle="Fill below form to add new category"
+                    title={`${objData && objData?.formType && objData?.formType === 'edit' ? 'Edit' : 'Add New'} Category`}
+                    subtitle={`Fill below form to ${objData && objData?.formType && objData?.formType === 'edit' ? 'update' : 'add new'} category`}
                     actions={[
                         <IconButton
                             onClick={handleClose}

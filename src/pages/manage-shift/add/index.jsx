@@ -918,8 +918,8 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                                 // If coming from Reset, clean up state
                                 if (activePage === "Preview") {
                                     // Reset only the clicked index
-                                    let updated = employeeShiftScheduleMasterOption.map((objShift)=>{
-                                        let shift = Object.assign({},objShift)
+                                    let updated = employeeShiftScheduleMasterOption.map((objShift) => {
+                                        let shift = Object.assign({}, objShift)
                                         shift.shift_selection = null
                                         return shift
                                     })
@@ -1015,12 +1015,17 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
                                                 weekdays[weekdays.length - 1]
                                             ).format("D MMM")}`;
 
+                                    const startDate = rosterData?.schedule_type === "MONTHLY" ? baseDate.clone().startOf("month").format("YYYY-MM-DD") : moment(weekdays[0]).format("YYYY-MM-DD")
+                                    const endDate = rosterData?.schedule_type === "MONTHLY" ? baseDate.clone().endOf("month").format("YYYY-MM-DD") : moment(weekdays[weekdays.length - 1]).format("YYYY-MM-DD");
+
                                     let input = {
                                         branch_uuid: branch?.currentBranch?.uuid,
                                         shift_schedule: employeeShiftScheduleMasterOption,
                                         roster_group_id: rosterData?.roster_group_id,
                                         schedule_type: rosterData?.schedule_type,
                                         schedule_date_range: dateRange,
+                                        start_date: startDate,
+                                        end_date: endDate
                                     };
 
                                     if (objData?.formType === "edit" && objData?.uuid) {
