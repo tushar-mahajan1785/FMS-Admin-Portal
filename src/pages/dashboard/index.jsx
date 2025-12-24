@@ -189,7 +189,7 @@ export default function Dashboard() {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box >
       {/* Header */}
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Box>

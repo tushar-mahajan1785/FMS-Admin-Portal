@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 // components/Sidebar.jsx
 import React, { useEffect, useState } from "react";
 import {
@@ -20,12 +21,14 @@ import Settings from "../../config/settings";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import { useAuth } from "../../hooks/useAuth";
 import { sideMenuItemsTechnician } from "../../layout/side-menu-technician";
+import { useLocation } from 'react-router-dom';
 
 export default function Sidebar({ open, onClose }) {
     const isDesktop = useMediaQuery("(min-width:900px)");
     const variant = isDesktop ? "persistent" : "temporary";
     const theme = useTheme()
     const { hasPermission, user } = useAuth()
+    const location = useLocation();
     const drawerWidth = Settings.drawerWidth ?? 240;
     const [getSideMenusArray, setGetSideMenusArray] = useState([])
 
@@ -46,6 +49,20 @@ export default function Sidebar({ open, onClose }) {
         }
 
     }, [user?.type])
+
+    useEffect(() => {
+        const matchedGroup = getSideMenusArray.find(menu =>
+            menu.group &&
+            menu.items?.some(item =>
+                location.pathname === item.path ||
+                location.pathname.startsWith(`${item.path}/`)
+            )
+        );
+
+        if (matchedGroup) {
+            setOpenGroup(matchedGroup.group);
+        }
+    }, [location.pathname]);
 
     return (
         <Drawer
@@ -71,7 +88,8 @@ export default function Sidebar({ open, onClose }) {
                 {getSideMenusArray?.map((menu, idx) => {
                     // --- Direct menu item ---
                     if (menu.path) {
-                        const selected = location.pathname === menu.path;
+                        const isRouteActive = (basePath, currentPath) => currentPath === basePath || currentPath.startsWith(`${basePath}/`);
+                        const selected = isRouteActive(menu.path, location.pathname);
                         if (menu?.permission && hasPermission(menu.permission)) {
                             return (
                                 <ListItem key={idx} disablePadding>
@@ -161,8 +179,8 @@ export default function Sidebar({ open, onClose }) {
                                     <List component="div" disablePadding>
                                         {menu.items.map(data => {
                                             if (!hasPermission(data.permission)) return null;
-
-                                            const selected = location.pathname === data.path;
+                                            const isRouteActive = (basePath, currentPath) => currentPath === basePath || currentPath.startsWith(`${basePath}/`);
+                                            const selected = isRouteActive(data.path, location.pathname);
 
                                             return (
                                                 <ListItem key={data.title} disablePadding>
