@@ -102,7 +102,7 @@ export default function CategoriesDetails() {
                     document_group_uuid: uuid,
                     branch_uuid: branch?.currentBranch?.uuid
                 }))
-                if (currentUploadDocumentData?.uuid || currentUploadDocumentData?.uuid === '' || currentUploadDocumentData?.uuid === null) {
+                if (currentUploadDocumentData?.uuid && currentUploadDocumentData?.uuid === '' && currentUploadDocumentData?.uuid === null) {
                     navigate(`/documents/view/${uuid}`)
                 }
             } else {
