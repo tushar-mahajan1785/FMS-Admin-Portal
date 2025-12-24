@@ -29,10 +29,10 @@ export default function Sidebar({ open, onClose }) {
     const drawerWidth = Settings.drawerWidth ?? 240;
     const [getSideMenusArray, setGetSideMenusArray] = useState([])
 
-    const [openGroups, setOpenGroups] = useState({});
+    const [openGroup, setOpenGroup] = useState(null);
 
-    const toggleGroup = (group) => {
-        setOpenGroups((prev) => ({ ...prev, [group]: !prev[group] }));
+    const toggleGroup = (groupName) => {
+        setOpenGroup(prev => (prev === groupName ? null : groupName));
     };
 
     /**
@@ -79,7 +79,10 @@ export default function Sidebar({ open, onClose }) {
                                         component={Link}
                                         to={menu.path}
                                         selected={selected}
-                                        onClick={() => !isDesktop && onClose()}
+                                        onClick={() => {
+                                            setOpenGroup(null);   // 👈 CLOSE any open group
+                                            !isDesktop && onClose();
+                                        }}
                                         sx={{
                                             backgroundColor: selected ? theme.palette.primary[600] : theme.palette.common.white,
                                             "&.Mui-selected": {
@@ -112,17 +115,18 @@ export default function Sidebar({ open, onClose }) {
                         }
                     }
 
-                    // --- Group menu item ---
                     if (menu.group && menu.items) {
-                        const visibleItems = menu.items.filter((item) =>
+
+                        const visibleItems = menu.items.filter(item =>
                             hasPermission(item.permission)
                         );
-                        if (visibleItems.length === 0) return null; // hide whole group if no visible child
+                        if (visibleItems.length === 0) return null;
 
-                        const isChildSelected = menu.items.some(
-                            (item) => location.pathname.startsWith(item.path) // ✅ covers nested routes too
+                        const isChildSelected = menu.items.some(item =>
+                            location.pathname.startsWith(item.path)
                         );
-                        const isOpen = openGroups[menu.group] ?? isChildSelected;
+
+                        const isOpen = openGroup === menu.group;
 
                         return (
                             <React.Fragment key={idx}>
@@ -137,64 +141,75 @@ export default function Sidebar({ open, onClose }) {
                                     <Stack mr={1.5}>
                                         {<menu.icon stroke={isChildSelected ? theme.palette.common.white : theme.palette.grey.primary} />}
                                     </Stack>
-                                    <ListItemText primary={menu.group} sx={{
-                                        fontWeight: 400,
-                                        fontSize: 14,
-                                        color: isChildSelected ? theme.palette.common.white : theme.palette.grey.primary,
-                                        "&:hover": {
-                                            color: isChildSelected ? theme.palette.common.white : theme.palette.grey.primary
-                                        }
-                                    }} />
-                                    {isChildSelected ? <ExpandLess sx={{ color: 'white' }} /> : <ExpandMore />}
+
+                                    <ListItemText
+                                        primary={menu.group}
+                                        sx={{
+                                            color: isChildSelected
+                                                ? theme.palette.common.white
+                                                : theme.palette.grey.primary,
+                                        }}
+                                    />
+
+                                    {isOpen ? (
+                                        <ExpandLess sx={{ color: isChildSelected ? 'white' : 'inherit' }} />
+                                    ) : (
+                                        <ExpandMore />
+                                    )}
                                 </ListItemButton>
                                 <Collapse in={isOpen} timeout="auto" unmountOnExit>
                                     <List component="div" disablePadding>
-                                        {menu.items.map((data) => {
+                                        {menu.items.map(data => {
+                                            if (!hasPermission(data.permission)) return null;
+
                                             const selected = location.pathname === data.path;
-                                            if (data?.permission && hasPermission(data.permission)) {
-                                                return (
-                                                    <ListItem key={data?.title} disablePadding sx={{}}>
-                                                        <ListItemButton
-                                                            component={Link}
-                                                            to={data?.path}
-                                                            selected={selected}
-                                                            onClick={() => !isDesktop && onClose()}
-                                                            sx={{
-                                                                pl: 6,
-                                                                backgroundColor: selected ? theme.palette.primary[600] : theme.palette.common.white,
-                                                                "&.Mui-selected": {
+
+                                            return (
+                                                <ListItem key={data.title} disablePadding>
+                                                    <ListItemButton
+                                                        component={Link}
+                                                        to={data.path}
+                                                        selected={selected}
+                                                        onClick={() => !isDesktop && onClose()}
+                                                        sx={{
+                                                            pl: 6,
+                                                            backgroundColor: selected
+                                                                ? theme.palette.primary[600]
+                                                                : theme.palette.common.white,
+                                                            "&.Mui-selected": {
+                                                                backgroundColor: theme.palette.primary[600],
+                                                                "&:hover": {
                                                                     backgroundColor: theme.palette.primary[600],
-                                                                    "&:hover": {
-                                                                        backgroundColor: theme.palette.primary[600],
-                                                                    }
-                                                                },
-                                                            }}
-                                                        >
-                                                            <Stack mr={1.5}>
-                                                                {<data.icon stroke={selected ? theme.palette.common.white : theme.palette.grey.primary} />}
-                                                            </Stack>
-                                                            <ListItemText primary={data?.title}
-                                                                sx={{
-                                                                    fontWeight: 400,
-                                                                    fontSize: 14,
-                                                                    color: selected ? theme.palette.common.white : theme.palette.grey.primary,
-                                                                    "&:hover": {
-                                                                        color: selected ? theme.palette.common.white : theme.palette.grey.primary
-                                                                    }
-                                                                }}
+                                                                }
+                                                            },
+                                                        }}
+                                                    >
+                                                        <Stack mr={1.5}>
+                                                            <data.icon
+                                                                stroke={
+                                                                    selected
+                                                                        ? theme.palette.common.white
+                                                                        : theme.palette.grey.primary
+                                                                }
                                                             />
-                                                        </ListItemButton>
-                                                    </ListItem>
-                                                )
-                                            } else {
-                                                return <></>
-                                            }
+                                                        </Stack>
+                                                        <ListItemText
+                                                            primary={data.title}
+                                                            sx={{
+
+                                                                color: selected
+                                                                    ? theme.palette.common.white
+                                                                    : theme.palette.grey.primary,
+                                                            }}
+                                                        />
+                                                    </ListItemButton>
+                                                </ListItem>
+                                            );
                                         })}
                                     </List>
                                 </Collapse>
                             </React.Fragment>
                         );
-
                     }
 
                     return null; // fallback
