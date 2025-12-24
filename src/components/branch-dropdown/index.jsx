@@ -58,10 +58,10 @@ export const BranchDropdown = () => {
     }, [branchContext?.currentBranch])
 
 
-    const handleDropdownOpen = event => {
-        setAnchorElBranch(event.currentTarget)
-        setSelectedBranch(branchContext?.currentBranch)
-    }
+    // const handleDropdownOpen = event => {
+    //     setAnchorElBranch(event.currentTarget)
+    //     setSelectedBranch(branchContext?.currentBranch)
+    // }
 
     const handleDropdownClose = () => {
         setAnchorElBranch(null)
@@ -75,7 +75,7 @@ export const BranchDropdown = () => {
                 disableRipple
                 color='inherit'
                 aria-haspopup='true'
-                onClick={handleDropdownOpen}
+                // onClick={handleDropdownOpen}
                 sx={{
                     '&:hover': {
                         backgroundColor: 'transparent' // Disable hover effect

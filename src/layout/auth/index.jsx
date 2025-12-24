@@ -30,7 +30,7 @@ import AlertPopup from "../../components/alert-confirm";
 import ChangePasswordIcon from "../../assets/icons/ChangePasswordIcon";
 import ChangePassword from "../../pages/change-password";
 import { useSnackbar } from "../../hooks/useSnackbar";
-import NotificationIcon from "../../assets/icons/NotificationIcon";
+// import NotificationIcon from "../../assets/icons/NotificationIcon";
 import { actionUserLogout, resetUserLogoutResponse } from "../../store/login";
 import { useDispatch, useSelector } from "react-redux";
 import { ERROR, SERVER_ERROR, UNAUTHORIZED } from "../../constants";
@@ -151,9 +151,9 @@ export default function ProtectedLayout() {
                     {/* Any other content required to add in AppBar will go here center part between menu button and left icons */}
                   </Box>
                   <Stack flexDirection={'row'} alignItems={'center'} justifyContent={'center'} columnGap={2}>
-                    <Stack>
+                    {/* <Stack>
                       <NotificationIcon />
-                    </Stack>
+                    </Stack> */}
                     <Stack>
                       <BranchDropdown />
                     </Stack>
