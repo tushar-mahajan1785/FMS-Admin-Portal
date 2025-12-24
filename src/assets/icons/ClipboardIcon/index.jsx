@@ -1,7 +1,7 @@
 import SvgIcon from '@mui/material/SvgIcon';
 
 const ClipboardIcon = (props) => {
-    const { stroke = "#99A1AF", size = 24, strokeWidth = 1.5, ...rest } = props;
+    const { stroke = "#99A1AF", size = 16, strokeWidth = 1.5, ...rest } = props;
 
     return (
         <SvgIcon

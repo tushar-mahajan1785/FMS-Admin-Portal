@@ -182,7 +182,7 @@ export default function Dashboard() {
     switch (type) {
       case 'PM_ACTIVITY': return <SuccessCircleCheckIcon color="success" />;
       case 'CHECKLIST': return <CircleExclamationMarkIcon color="warning" />;
-      case 'TICKET': return <CalendarTodayIcon color="warning" />;
+      case 'TICKET': return <CalendarTodayIcon color="warning" size={24} />;
       case 'DOCUMENT': return <DescriptionOutlinedIcon color="warning" />;
       default: return <></>;
     }
@@ -533,7 +533,7 @@ export default function Dashboard() {
       </Box>
 
       {/* Charts */}
-      <Grid container spacing={2} sx={{ mt: 2 }}>
+      <Grid container spacing={2} sx={{ mt: 3 }}>
         <Grid size={{ xs: 12, sm: 12, md: 9, lg: 9, xl: 9 }}>
           <Card sx={{ height: 350, borderRadius: 3 }}>
             <CardContent>
@@ -626,7 +626,7 @@ export default function Dashboard() {
           </Card>
         </Grid>
       </Grid>
-      <Grid container spacing={3} mt={2}>
+      <Grid container spacing={3} mt={3}>
         {/* Asset Health Overview */}
         <Grid size={{ xs: 12, sm: 12, md: 4, lg: 4, xl: 4 }}>
           <Stack direction={'row'} spacing={1} alignItems={'center'}>

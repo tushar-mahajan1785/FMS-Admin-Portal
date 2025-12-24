@@ -1,7 +1,7 @@
 import SvgIcon from '@mui/material/SvgIcon';
 
 const CalendarTodayIcon = (props) => {
-    const { stroke = "#155DFC", size = 24, ...rest } = props;
+    const { stroke = "#155DFC", size = 16, ...rest } = props;
 
     return (
         <SvgIcon

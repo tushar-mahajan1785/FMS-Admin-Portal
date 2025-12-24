@@ -7,6 +7,9 @@ import CalendarIcon from "../../assets/icons/CalendarIcon";
 import CircleIcon from "../../assets/icons/CircleIcon";
 import ReportsIcon from "../../assets/icons/ReportsIcon";
 import FileAlertIcon from "../../assets/icons/FileAlertIcon";
+import TechnicianTicketIcon from "../../assets/icons/TechnicianTicketIcon"
+import CalendarTodayIcon from "../../assets/icons/CalendarTodayIcon"
+import ClipboardIcon from "../../assets/icons/ClipboardIcon"
 
 export const sideMenuItems = [
   {
@@ -18,13 +21,13 @@ export const sideMenuItems = [
   {
     title: "Tickets",
     path: "/tickets",
-    icon: ClientsIcon,
+    icon: TechnicianTicketIcon,
     permission: "TICKET",
   },
   {
     title: "PM Activity",
     path: "/pm-activity",
-    icon: ClientsIcon,
+    icon: CalendarTodayIcon,
     permission: "PM_ACTIVITY",
   },
   {
@@ -104,7 +107,7 @@ export const sideMenuItems = [
   {
     title: "Checklist",
     path: "/checklist",
-    icon: ReportsIcon,
+    icon: ClipboardIcon,
     permission: "CHECKLIST",
   },
 ];
