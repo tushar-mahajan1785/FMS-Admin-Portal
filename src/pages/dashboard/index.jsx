@@ -203,7 +203,7 @@ export default function Dashboard() {
       </Stack>
 
       {/* Stats Row */}
-      <Grid container spacing={2} mt={2}>
+      <Grid container spacing={3} mt={2}>
         <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }}>
           <Card sx={{ borderRadius: '20px', paddingTop: '16px', paddingX: '12px', gap: '12px' }}>
             <CardContent>
@@ -533,7 +533,7 @@ export default function Dashboard() {
       </Box>
 
       {/* Charts */}
-      <Grid container spacing={2} sx={{ mt: 3 }}>
+      <Grid container spacing={3} sx={{ mt: 3 }}>
         <Grid size={{ xs: 12, sm: 12, md: 9, lg: 9, xl: 9 }}>
           <Card sx={{ height: 350, borderRadius: 3 }}>
             <CardContent>
