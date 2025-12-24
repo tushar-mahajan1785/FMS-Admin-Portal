@@ -68,7 +68,7 @@ export default function UploadFilePopup({ open, objData, handleClose }) {
 
     const handleTabChange = (_, newValue) => setSelectedTab(newValue);
     //Extensions and File Size
-    const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'xlsx', 'csv', 'pdf', 'docx'];
+    const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'xlsx', 'xlsm', 'xls', 'xlsb', 'xlst', 'xltm', 'csv', 'pdf', 'docx', 'doc', 'docm', 'dotx', 'pptx', 'ppt', 'pptm', 'ppsx'];
     const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
     // Trigger file dialog

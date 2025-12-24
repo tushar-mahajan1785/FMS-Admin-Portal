@@ -228,6 +228,12 @@ export default function TechnicianAssetView() {
 
                                         if (ext === "jpg" || ext === "jpeg" || ext === "png") {
                                             iconPath = "/assets/jpg-file.png";
+                                        } else if (ext === "xlsx" || ext === 'xlsm' || ext === 'xls' || ext === 'xlsb' || ext === 'xltx' || ext === 'xltm' || ext === 'csv') {
+                                            iconPath = "/assets/excel-icon.jpg";
+                                        } else if (ext === "docx" || ext === 'doc' || ext === 'docm' || ext === 'dotx') {
+                                            iconPath = "/assets/word-icon.png";
+                                        } else if (ext === "pptx" || ext === 'ppt' || ext === 'pptm' || ext === 'ppsx') {
+                                            iconPath = "/assets/powerpoint-icon.png";
                                         } else if (ext === "pdf") {
                                             iconPath = "/assets/pdf-file.png";
                                         }
