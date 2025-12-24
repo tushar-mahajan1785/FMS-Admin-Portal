@@ -57,12 +57,6 @@ export const sideMenuItems = [
   { title: "Vendor", path: "/vendors", icon: VendorIcon, permission: "VENDOR" },
   { title: "Asset", path: "/assets", icon: AssetIcon, permission: "ASSET" },
   {
-    title: "Settings",
-    path: "/admin-setting",
-    icon: SettingsIcon,
-    permission: "SETTING",
-  },
-  {
     group: "Roster",
     icon: CalendarIcon,
     items: [
@@ -87,6 +81,12 @@ export const sideMenuItems = [
     ],
   },
   {
+    title: "Checklist",
+    path: "/checklist",
+    icon: ClipboardIcon,
+    permission: "CHECKLIST",
+  },
+  {
     group: "Document Management",
     icon: ReportsIcon,
     items: [
@@ -105,9 +105,9 @@ export const sideMenuItems = [
     ],
   },
   {
-    title: "Checklist",
-    path: "/checklist",
-    icon: ClipboardIcon,
-    permission: "CHECKLIST",
+    title: "Settings",
+    path: "/admin-setting",
+    icon: SettingsIcon,
+    permission: "SETTING",
   },
 ];
