@@ -281,7 +281,7 @@ export default function TechnicianAssetView() {
                                                         {/* Version + date */}
                                                         <Stack alignItems="flex-end" gap={0.5}>
                                                             <TypographyComponent fontSize={14} sx={{ color: theme.palette.grey[500], textWrap: 'nowrap' }}>
-                                                                {doc?.updated_at && doc?.updated_at !== null ? moment(doc?.updated_at).format("D MMM YYYY") : ''}
+                                                                {doc?.upload_date && doc?.upload_date !== null ? moment(doc?.upload_date).format("D MMM YYYY") : ''}
                                                             </TypographyComponent>
                                                         </Stack>
                                                     </Stack>
