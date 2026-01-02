@@ -289,14 +289,6 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
         setSearchQuery(value)
     }
 
-    useEffect(() => {
-        const startDate = parseScheduleStartDate(objData?.schedule);
-
-        if (startDate) {
-            setCurrentWeekStart(startDate.clone().startOf("week"));
-        }
-    }, [objData?.schedule]);
-
     const handlePreviousWeek = () => {
         setCurrentWeekStart((prev) => moment(prev).subtract(1, "week"));
     };
@@ -330,7 +322,6 @@ export default function CreateShiftDrawer({ open, objData, handleClose }) {
         .clone()
         .endOf("week")
         .format("D MMM")}`;
-
 
     // Define light/dark variants for supported colors
     const colorMap = {

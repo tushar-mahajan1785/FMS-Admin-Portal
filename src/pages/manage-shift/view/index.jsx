@@ -139,14 +139,6 @@ export default function ManageShiftDetails({ open, objData, page, handleClose })
         setSearchQuery(value)
     }
 
-    useEffect(() => {
-        const startDate = parseScheduleStartDate(objData?.schedule);
-
-        if (startDate) {
-            setCurrentWeekStart(startDate.clone().startOf("week"));
-        }
-    }, [objData?.schedule]);
-
     const handlePreviousWeek = () => {
         setCurrentWeekStart((prev) => moment(prev).subtract(1, "week"));
     };
