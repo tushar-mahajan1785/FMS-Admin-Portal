@@ -6,8 +6,9 @@ import { Box, Button, Divider, Stack } from '@mui/material'
 import TypographyComponent from '../../../../components/custom-typography'
 import ChevronLeftIcon from '../../../../assets/icons/ChevronLeft'
 import QRScanner from '../../../../components/qr-scanner'
+import QRScannerComponent from '../../../../components/qr-scanner-component'
 
-export const ChecklistSelectAsset = () => {
+export default function ChecklistSelectAsset() {
     const theme = useTheme()
     const navigate = useNavigate()
     const { assetTypeId } = useParams()
@@ -19,19 +20,48 @@ export const ChecklistSelectAsset = () => {
         setScreenType('qr-scan')
         setAssetsList([
             {
-                id: 1,
-                title: "Battery Monitoring system"
+                "id": 3,
+                "asset_name": "Solar energy equipment",
+                "interval": "Every 1 hour",
+                "completed": 0,
+                "pending": 0,
+                "abnormal": 1,
+                "notApproved": 0,
+                "overdue": 0,
+                "checklist_count": 1
             },
             {
-                id: 4,
-                title: " MBC (Miniature Circuit Breaker)"
+                "id": 4,
+                "asset_name": " MBC (Miniature Circuit Breaker)",
+                "interval": "Every 1 hour",
+                "completed": 0,
+                "pending": 0,
+                "abnormal": 1,
+                "notApproved": 0,
+                "overdue": 0,
+                "checklist_count": 1
             },
             {
-                id: 9,
-                title: "Electric vehicles (EVs)"
-            }
+                "id": 9,
+                "asset_name": "Electric vehicles (EVs)",
+                "interval": "Every 1 hour",
+                "completed": 0,
+                "pending": 0,
+                "abnormal": 1,
+                "notApproved": 0,
+                "overdue": 0,
+                "checklist_count": 1
+            },
         ])
     }, [])
+
+    // const handleScanResult = (data) => {
+    //     console.log("QR Result:", data);
+
+    //     // Example: Navigate or update state
+    //     // navigate(`/details/${data}`);
+    //     // setScannedData(data);
+    // };
 
     return (
         <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -86,7 +116,7 @@ export const ChecklistSelectAsset = () => {
                                 Scan QR code and select asset to fill checklist
                             </TypographyComponent>
                         </Stack>
-
+                        {/* <QRScannerComponent onScan={handleScanResult} /> */}
                         <QRScanner />
                     </>
                 ) : (
@@ -112,7 +142,7 @@ export const ChecklistSelectAsset = () => {
                                 }}
                             >
                                 <TypographyComponent fontSize={18} fontWeight={500}>
-                                    {item?.title}
+                                    {item?.asset_name}
                                 </TypographyComponent>
                             </Stack>
                         ))}
