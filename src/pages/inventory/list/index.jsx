@@ -58,6 +58,7 @@ export default function InventoryList() {
     const [inventoryData, setInventoryData] = useState(null);
     const [arrRecentlyAddedItems, setArrRecentlyAddedItems] = useState([]);
     const [arrRecentlyUsedItems, setArrRecentlyUsedItems] = useState([]);
+    const [isDownload, setIsDownload] = useState(false)
 
     //Default Inventory Counts Array
     const [getArrInventoryCounts, setGetArrInventoryCounts] = useState([
@@ -231,6 +232,9 @@ export default function InventoryList() {
                 setTotal(inventoryList?.response?.counts?.total_items)
                 setArrRecentlyAddedItems(inventoryList?.response?.recently_added_items)
                 setArrRecentlyUsedItems(inventoryList?.response?.recently_used_items)
+                if (isDownload === true) {
+                    exportToExcel(inventoryList?.response?.data);
+                }
             } else {
                 setLoadingList(false)
                 setInventoryListData([])
@@ -313,6 +317,34 @@ export default function InventoryList() {
             setInventoryListData(originalInventoryListData)
         }
     }, [searchQuery])
+
+    const exportToExcel = (data) => {
+        // ?? Prepare simplified data for export
+        const exportData = data.map(inventory => ({
+            "Item ID": inventory.item_id,
+            "Item Name": inventory.item_name,
+            "Category": inventory.category,
+            "Storage Location": inventory.storage_location,
+            "Initial Quantity": inventory.initial_quantity,
+            "Current Stock": inventory.current_stock,
+            "Minimum Quantity": inventory.minimum_quantity,
+            "Supplier Name": inventory.supplier_name,
+            "Critical Quantity": inventory.critical_quantity,
+            "Unit": inventory.unit,
+            "Stock Status": inventory.stock_status,
+            "Updated On": inventory?.updated_on && inventory?.updated_on !== null ? moment(inventory?.updated_on, 'YYYY-MM-DD').format('DD MMM YYYY') : '',
+            "Image url": inventory.image_url,
+        }));
+
+        // ?? Create worksheet and workbook
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory");
+
+        // ?? Trigger download
+        XLSX.writeFile(workbook, "Inventory.xlsx");
+        setIsDownload(false)
+    }
 
     return (
         <React.Fragment>
@@ -504,30 +536,12 @@ export default function InventoryList() {
                                                 }}
                                                 startIcon={<DownloadIcon />}
                                                 onClick={() => {
-                                                    // ?? Prepare simplified data for export
-                                                    const exportData = inventoryListData.map(inventory => ({
-                                                        "Item ID": inventory.item_id,
-                                                        "Item Name": inventory.item_name,
-                                                        "Category": inventory.category,
-                                                        "Storage Location": inventory.storage_location,
-                                                        "Initial Quantity": inventory.initial_quantity,
-                                                        "Current Stock": inventory.current_stock,
-                                                        "Minimum Quantity": inventory.minimum_quantity,
-                                                        "Supplier Name": inventory.supplier_name,
-                                                        "Critical Quantity": inventory.critical_quantity,
-                                                        "Unit": inventory.unit,
-                                                        "Stock Status": inventory.stock_status,
-                                                        "Updated On": inventory?.updated_on && inventory?.updated_on !== null ? moment(inventory?.updated_on, 'YYYY-MM-DD').format('DD MMM YYYY') : '',
-                                                        "Image url": inventory.image_url,
-                                                    }));
-
-                                                    // ?? Create worksheet and workbook
-                                                    const worksheet = XLSX.utils.json_to_sheet(exportData);
-                                                    const workbook = XLSX.utils.book_new();
-                                                    XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory");
-
-                                                    // ?? Trigger download
-                                                    XLSX.writeFile(workbook, "Inventory.xlsx");
+                                                    setIsDownload(true)
+                                                    dispatch(actionInventoryList({
+                                                        stock_status: selectedStatus,
+                                                        branch_uuid: branch?.currentBranch?.uuid,
+                                                        key: 'All'
+                                                    }))
                                                 }}
                                             >
                                                 Export

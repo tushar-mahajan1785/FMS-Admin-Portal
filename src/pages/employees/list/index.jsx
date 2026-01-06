@@ -54,6 +54,7 @@ export default function EmployeeList() {
     const [openEmployeeAdditionalFieldsPopup, setOpenEmployeeAdditionalFieldsPopup] = useState(false)
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
+    const [isDownload, setIsDownload] = useState(false)
 
     const columns = [
         { field: "name", headerName: "Employee Name", flex: 0.1 },
@@ -227,6 +228,9 @@ export default function EmployeeList() {
                 setEmployeeOriginalData(employeeList?.response?.employees)
                 setLoadingList(false)
                 setTotal(employeeList?.response?.total)
+                if (isDownload === true) {
+                    exportToExcel(employeeList?.response?.employees);
+                }
             } else {
                 setLoadingList(false)
                 setEmployeeOptions([])
@@ -248,6 +252,34 @@ export default function EmployeeList() {
             }
         }
     }, [employeeList])
+
+    const exportToExcel = (data) => {
+        // ?? Prepare simplified data for export
+        const exportData = data.map(employee => ({
+            "Employee ID": employee?.employee_id,
+            "Employee Name": employee?.name,
+            "Email": employee?.email && employee?.email !== null ? decrypt(employee?.email) : '',
+            "Contact": employee?.contact && employee?.contact !== null && employee?.contact_country_code && employee?.contact_country_code !== null ? `${employee?.contact_country_code}${decrypt(employee?.contact)}` : '',
+            "Alternate Contact": employee?.alternate_contact && employee?.alternate_contact !== null && employee?.alternate_contact_country_code && employee?.alternate_contact_country_code !== null ? `${employee?.alternate_contact_country_code}${decrypt(employee?.alternate_contact)}` : '',
+            "Employee Type": employee?.type,
+            "Role": employee?.role,
+            "Age": employee?.age,
+            "Address": employee?.address,
+            "Company Name": employee?.company_name,
+            "Client Name": employee?.client_name,
+            "Branch Name": employee?.branch_name,
+            "Status": employee?.asset_status,
+        }));
+
+        // ?? Create worksheet and workbook
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Employee");
+
+        // ?? Trigger download
+        XLSX.writeFile(workbook, "Employee.xlsx");
+        setIsDownload(false)
+    }
 
     return <React.Fragment>
         <Stack
@@ -306,30 +338,11 @@ export default function EmployeeList() {
                                 }}
                                 startIcon={<DownloadIcon />}
                                 onClick={() => {
-                                    // ?? Prepare simplified data for export
-                                    const exportData = employeeOptions.map(employee => ({
-                                        "Employee ID": employee?.employee_id,
-                                        "Employee Name": employee?.name,
-                                        "Email": employee?.email && employee?.email !== null ? decrypt(employee?.email) : '',
-                                        "Contact": employee?.contact && employee?.contact !== null && employee?.contact_country_code && employee?.contact_country_code !== null ? `${employee?.contact_country_code}${decrypt(employee?.contact)}` : '',
-                                        "Alternate Contact": employee?.alternate_contact && employee?.alternate_contact !== null && employee?.alternate_contact_country_code && employee?.alternate_contact_country_code !== null ? `${employee?.alternate_contact_country_code}${decrypt(employee?.alternate_contact)}` : '',
-                                        "Employee Type": employee?.type,
-                                        "Role": employee?.role,
-                                        "Age": employee?.age,
-                                        "Address": employee?.address,
-                                        "Company Name": employee?.company_name,
-                                        "Client Name": employee?.client_name,
-                                        "Branch Name": employee?.branch_name,
-                                        "Status": employee?.asset_status,
-                                    }));
-
-                                    // ?? Create worksheet and workbook
-                                    const worksheet = XLSX.utils.json_to_sheet(exportData);
-                                    const workbook = XLSX.utils.book_new();
-                                    XLSX.utils.book_append_sheet(workbook, worksheet, "Employee");
-
-                                    // ?? Trigger download
-                                    XLSX.writeFile(workbook, "Employee.xlsx");
+                                    setIsDownload(true)
+                                    dispatch(actionEmployeeList({
+                                        branch_uuid: branch?.currentBranch?.uuid,
+                                        key: 'All'
+                                    }))
                                 }}
                             >
                                 Export

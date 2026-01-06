@@ -81,14 +81,7 @@ export default function PmActivity() {
   /** States **/
   const [searchQuery, setSearchQuery] = useState("");
   const [pmScheduleActivityData, setPmScheduleActivityData] = useState([]);
-  const [originalPmActivityScheduleData, setOriginalPmActivityScheduleData] =
-    useState([]);
-
-  /**
-   * upcomingSchedules
-   * @type {Array}
-   * @description : State to store upcoming PM Schedules
-   */
+  const [originalPmActivityScheduleData, setOriginalPmActivityScheduleData] = useState([]);
   const [upcomingSchedules, setUpcomingSchedules] = useState([]);
   const [loadingList, setLoadingList] = useState(false);
   const [page, setPage] = useState(1);
@@ -97,14 +90,13 @@ export default function PmActivity() {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedAssetTypes, setSelectedAssetTypes] = useState("");
   const [masterAssetTypeOptions, setMasterAssetTypeOptions] = useState([]);
-  const [selectedUpcomingPmSchedule, setSelectedUpcomingPmSchedule] =
-    useState("");
+  const [selectedUpcomingPmSchedule, setSelectedUpcomingPmSchedule] = useState("");
   const [openAddPmSchedule, setOpenAddPmSchedule] = useState(false);
-  const [openDeletePmActivityPopup, setOpenDeletePmActivityPopup] =
-    useState(false);
+  const [openDeletePmActivityPopup, setOpenDeletePmActivityPopup] = useState(false);
   const [selectedPmActivityData, setSelectedPmActivityData] = useState(null);
   const [loadingDeletePmActivity, setLoadingDeletePmActivity] = useState(false);
   const [openPmActivityDetails, setOpenPmActivityDetails] = useState(false);
+  const [isDownload, setIsDownload] = useState(false)
 
   /**
    * masterAssetType
@@ -341,6 +333,9 @@ export default function PmActivity() {
         );
         setTotal(pmScheduleList?.response?.total_pm_schedules);
         setLoadingList(false);
+        if (isDownload === true) {
+          exportToExcel(pmScheduleList?.response?.pm_schedule_list);
+        }
       } else {
         setLoadingList(false);
         setTotal(null);
@@ -550,6 +545,27 @@ export default function PmActivity() {
     const value = event.target.value;
     setSearchQuery(value);
   };
+
+  const exportToExcel = (data) => {
+    // ?? Prepare simplified data for export
+    const exportData = data.map(pmSchedule => ({
+      "Title": pmSchedule?.title,
+      "Assets": pmSchedule?.assets,
+      "Asset Count": pmSchedule?.asset_count,
+      "Start Date": pmSchedule?.start_date,
+      "Frequency": pmSchedule?.frequency,
+      "Status": pmSchedule?.status,
+    }));
+
+    // ?? Create worksheet and workbook
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "PM Schedule");
+
+    // ?? Trigger download
+    XLSX.writeFile(workbook, "PM Schedule.xlsx");
+    setIsDownload(false)
+  }
 
   return (
     <React.Fragment>
@@ -853,23 +869,15 @@ export default function PmActivity() {
                         }}
                         startIcon={<DownloadIcon />}
                         onClick={() => {
-                          // ?? Prepare simplified data for export
-                          const exportData = pmScheduleActivityData.map(pmSchedule => ({
-                            "Title": pmSchedule?.title,
-                            "Assets": pmSchedule?.assets,
-                            "Asset Count": pmSchedule?.asset_count,
-                            "Start Date": pmSchedule?.start_date,
-                            "Frequency": pmSchedule?.frequency,
-                            "Status": pmSchedule?.status,
+                          setIsDownload(true)
+                          dispatch(actionPMScheduleList({
+                            status: selectedStatus,
+                            asset_type: selectedAssetTypes,
+                            branch_uuid: branch?.currentBranch?.uuid,
+                            frequency: selectedFrequency,
+                            upcoming_filter: selectedUpcomingPmSchedule,
+                            key: 'All'
                           }));
-
-                          // ?? Create worksheet and workbook
-                          const worksheet = XLSX.utils.json_to_sheet(exportData);
-                          const workbook = XLSX.utils.book_new();
-                          XLSX.utils.book_append_sheet(workbook, worksheet, "PM Schedule");
-
-                          // ?? Trigger download
-                          XLSX.writeFile(workbook, "PM Schedule.xlsx");
                         }}
                       >
                         Export

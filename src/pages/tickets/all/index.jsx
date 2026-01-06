@@ -61,6 +61,7 @@ export default function TicketList() {
     const [masterAssetTypeOptions, setMasterAssetTypeOptions] = useState([])
     const [masterTicketStatusOptions] = useState(getMasterTicketStatus)
     const [currentTicketDetails, setCurrentTicketDetails] = useState(null)
+    const [isDownload, setIsDownload] = useState(false)
 
     const columns = [
         {
@@ -290,6 +291,9 @@ export default function TicketList() {
                 );
                 setTotal(ticketsList?.response?.counts?.total_tickets)
                 setLoadingList(false)
+                if (isDownload === true) {
+                    exportToExcel(ticketsList?.response?.data);
+                }
             } else {
                 setLoadingList(false)
                 setRecentTicketsData([])
@@ -384,6 +388,31 @@ export default function TicketList() {
             setRecentTicketsData(originalRecentTicketsData)
         }
     }, [searchQuery])
+
+    const exportToExcel = (data) => {
+        // ?? Prepare simplified data for export
+        const exportData = data.map(ticket => ({
+            "Ticket No.": ticket?.ticket_no,
+            "Asset Name": ticket?.asset_name,
+            "Location": ticket?.location,
+            "Problem": ticket?.problem,
+            "Priority": ticket?.priority,
+            "Created On": ticket?.created_on && ticket?.created_on !== null ? moment(ticket?.created_on, 'YYYY-MM-DD').format('DD MMM YYYY') : '',
+            "Total Time": ticket?.total_time,
+            "Status": ticket?.status,
+            "First Created At": ticket?.first_created_at && ticket?.first_created_at !== null ? moment(ticket?.first_created_at, 'YYYY-MM-DD').format('DD MMM YYYY') : '',
+            "Last Updated At": ticket?.last_updated_at && ticket?.last_updated_at !== null ? moment(ticket?.last_updated_at, 'YYYY-MM-DD').format('DD MMM YYYY') : '',
+        }));
+
+        // ?? Create worksheet and workbook
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Tickets");
+
+        // ?? Trigger download
+        XLSX.writeFile(workbook, "Tickets.xlsx");
+        setIsDownload(false)
+    }
 
     return (
         <React.Fragment>
@@ -677,27 +706,14 @@ export default function TicketList() {
                                             }}
                                             startIcon={<DownloadIcon />}
                                             onClick={() => {
-                                                // ?? Prepare simplified data for export
-                                                const exportData = recentTicketsData.map(ticket => ({
-                                                    "Ticket No.": ticket?.ticket_no,
-                                                    "Asset Name": ticket?.asset_name,
-                                                    "Location": ticket?.location,
-                                                    "Problem": ticket?.problem,
-                                                    "Priority": ticket?.priority,
-                                                    "Created On": ticket?.created_on && ticket?.created_on !== null ? moment(ticket?.created_on, 'YYYY-MM-DD').format('DD MMM YYYY') : '',
-                                                    "Total Time": ticket?.total_time,
-                                                    "Status": ticket?.status,
-                                                    "First Created At": ticket?.first_created_at && ticket?.first_created_at !== null ? moment(ticket?.first_created_at, 'YYYY-MM-DD').format('DD MMM YYYY') : '',
-                                                    "Last Updated At": ticket?.last_updated_at && ticket?.last_updated_at !== null ? moment(ticket?.last_updated_at, 'YYYY-MM-DD').format('DD MMM YYYY') : '',
-                                                }));
-
-                                                // ?? Create worksheet and workbook
-                                                const worksheet = XLSX.utils.json_to_sheet(exportData);
-                                                const workbook = XLSX.utils.book_new();
-                                                XLSX.utils.book_append_sheet(workbook, worksheet, "Tickets");
-
-                                                // ?? Trigger download
-                                                XLSX.writeFile(workbook, "Tickets.xlsx");
+                                                setIsDownload(true)
+                                                dispatch(actionTicketsList({
+                                                    branch_uuid: branch?.currentBranch?.uuid,
+                                                    priority: selectedPriority,
+                                                    status: selectedStatus,
+                                                    asset_type: selectedAssetTypes,
+                                                    key: 'All'
+                                                }))
                                             }}
                                         >
                                             Export

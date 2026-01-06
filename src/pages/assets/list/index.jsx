@@ -54,6 +54,7 @@ export default function AssetList() {
     const [openAssetAdditionalFieldsPopup, setOpenAssetAdditionalFieldsPopup] = useState(false)
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
+    const [isDownload, setIsDownload] = useState(false)
     const [filterConfig, setFilterConfig] = useState([
         {
             "name": "asset_id",
@@ -222,6 +223,9 @@ export default function AssetList() {
                 setAssetOriginalData(assetList?.response?.assets)
                 setLoadingList(false)
                 setTotal(assetList?.response?.total)
+                if (isDownload === true) {
+                    exportToExcel(assetList?.response?.assets);
+                }
             } else {
                 setLoadingList(false)
                 setAssetOptions([])
@@ -283,6 +287,45 @@ export default function AssetList() {
             }
         }
     }, [vendorMasterList])
+
+    const exportToExcel = (data) => {
+        // ?? Prepare simplified data for export
+        const exportData = data.map(asset => ({
+            "Asset ID": asset?.asset_id,
+            "Asset Description": asset?.asset_description,
+            "Type": asset?.type,
+            "Sub Type": asset?.sub_type,
+            "Client Name": asset?.client_name,
+            "Branch Name": asset?.branch_name,
+            "Make": asset?.make,
+            "Model": asset?.model,
+            "Rating Capacity": asset?.rating_capacity,
+            "Serial No": asset?.serial_no,
+            "Vendor": asset?.vendor,
+            "Manufacturing Date": asset?.manufacturing_date && asset?.manufacturing_date !== null ? moment(asset?.manufacturing_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
+            "Installation Date": asset?.installation_date && asset?.installation_date !== null ? moment(asset?.installation_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
+            "Commissioning Date": asset?.commissioning_date && asset?.commissioning_date !== null ? moment(asset?.commissioning_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
+            "Warranty Start Date": asset?.warranty_start_date && asset?.warranty_start_date !== null ? moment(asset?.warranty_start_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
+            "Warranty Expiry Date": asset?.warranty_expiry_date && asset?.warranty_expiry_date !== null ? moment(asset?.warranty_expiry_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
+            "Amc Start Date": asset?.amc_start_date && asset?.amc_start_date !== null ? moment(asset?.amc_start_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
+            "Amc Expiry Date": asset?.amc_expiry_date && asset?.amc_expiry_date !== null ? moment(asset?.amc_expiry_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
+            "Asset Owner": asset?.asset_owner,
+            "Asset Custodian": asset?.asset_custodian,
+            "Asset End Life Selection": asset?.asset_end_life_selection && asset?.asset_end_life_selection !== null ? moment(asset?.asset_end_life_selection, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
+            "Asset End Life Period": asset?.asset_end_life_period && asset?.asset_end_life_period !== null ? moment(asset?.asset_end_life_period, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
+            "Location": asset?.location,
+            "Status": asset?.status,
+        }));
+
+        // ?? Create worksheet and workbook
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Asset");
+
+        // ?? Trigger download
+        XLSX.writeFile(workbook, "Asset.xlsx");
+        setIsDownload(false)
+    }
 
     return <React.Fragment>
         <Stack
@@ -386,41 +429,11 @@ export default function AssetList() {
                                 }}
                                 startIcon={<DownloadIcon />}
                                 onClick={() => {
-                                    // ?? Prepare simplified data for export
-                                    const exportData = assetOptions.map(asset => ({
-                                        "Asset ID": asset?.asset_id,
-                                        "Asset Description": asset?.asset_description,
-                                        "Type": asset?.type,
-                                        "Sub Type": asset?.sub_type,
-                                        "Client Name": asset?.client_name,
-                                        "Branch Name": asset?.branch_name,
-                                        "Make": asset?.make,
-                                        "Model": asset?.model,
-                                        "Rating Capacity": asset?.rating_capacity,
-                                        "Serial No": asset?.serial_no,
-                                        "Vendor": asset?.vendor,
-                                        "Manufacturing Date": asset?.manufacturing_date && asset?.manufacturing_date !== null ? moment(asset?.manufacturing_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
-                                        "Installation Date": asset?.installation_date && asset?.installation_date !== null ? moment(asset?.installation_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
-                                        "Commissioning Date": asset?.commissioning_date && asset?.commissioning_date !== null ? moment(asset?.commissioning_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
-                                        "Warranty Start Date": asset?.warranty_start_date && asset?.warranty_start_date !== null ? moment(asset?.warranty_start_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
-                                        "Warranty Expiry Date": asset?.warranty_expiry_date && asset?.warranty_expiry_date !== null ? moment(asset?.warranty_expiry_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
-                                        "Amc Start Date": asset?.amc_start_date && asset?.amc_start_date !== null ? moment(asset?.amc_start_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
-                                        "Amc Expiry Date": asset?.amc_expiry_date && asset?.amc_expiry_date !== null ? moment(asset?.amc_expiry_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
-                                        "Asset Owner": asset?.asset_owner,
-                                        "Asset Custodian": asset?.asset_custodian,
-                                        "Asset End Life Selection": asset?.asset_end_life_selection && asset?.asset_end_life_selection !== null ? moment(asset?.asset_end_life_selection, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
-                                        "Asset End Life Period": asset?.asset_end_life_period && asset?.asset_end_life_period !== null ? moment(asset?.asset_end_life_period, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
-                                        "Location": asset?.location,
-                                        "Status": asset?.status,
-                                    }));
-
-                                    // ?? Create worksheet and workbook
-                                    const worksheet = XLSX.utils.json_to_sheet(exportData);
-                                    const workbook = XLSX.utils.book_new();
-                                    XLSX.utils.book_append_sheet(workbook, worksheet, "Asset");
-
-                                    // ?? Trigger download
-                                    XLSX.writeFile(workbook, "Asset.xlsx");
+                                    setIsDownload(true)
+                                    dispatch(actionAssetList({
+                                        branch_uuid: branch?.currentBranch?.uuid,
+                                        key: 'All'
+                                    }))
                                 }}
                             >
                                 Export

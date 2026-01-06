@@ -53,6 +53,7 @@ export default function VendorList() {
     const [openVendorAdditionalFieldsPopup, setOpenVendorAdditionalFieldsPopup] = useState(false)
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
+    const [isDownload, setIsDownload] = useState(false)
     const [filterConfig] = useState([
         {
             "name": "vendor_id",
@@ -245,6 +246,9 @@ export default function VendorList() {
                 setVendorOriginalData(vendorList?.response?.vendors)
                 setLoadingList(false)
                 setTotal(vendorList?.response?.total)
+                if (isDownload === true) {
+                    exportToExcel(vendorList?.response?.vendors);
+                }
             } else {
                 setLoadingList(false)
                 setVendorOptions([])
@@ -266,6 +270,71 @@ export default function VendorList() {
             }
         }
     }, [vendorList])
+
+    const exportToExcel = (data) => {
+        // ?? Prepare simplified data for export
+        const exportData = data.map(vendor => {
+            const l1 = getEscalationByLevel(vendor.vendor_escalation, 1)
+            const l2 = getEscalationByLevel(vendor.vendor_escalation, 2)
+            const l3 = getEscalationByLevel(vendor.vendor_escalation, 3)
+            const l4 = getEscalationByLevel(vendor.vendor_escalation, 4)
+            const l5 = getEscalationByLevel(vendor.vendor_escalation, 5)
+            // One row per escalation
+            return {
+                "Vendor ID": vendor?.vendor_id,
+                "Vendor Name": vendor?.name,
+                "Contact": vendor?.contact && vendor?.contact !== null && vendor?.contact_country_code && vendor?.contact_country_code !== null ? `${vendor?.contact_country_code}${decrypt(vendor?.contact)}` : '',
+                "address": vendor?.address,
+                "website": vendor?.website,
+                "Client Name": vendor?.client_name,
+                "Branch Name": vendor?.branch_name,
+                "Primary Contact Name": vendor?.primary_contact_name,
+                "Primary Contact Designation": vendor?.primary_contact_designation,
+                "Primary Contact No": vendor?.primary_contact_no && vendor?.primary_contact_no !== null ? `${vendor?.primary_contact_country_code}${decrypt(vendor?.primary_contact_no)}` : '',
+                "Primary Contact Email": vendor?.primary_contact_email && vendor?.primary_contact_email !== null ? decrypt(vendor?.primary_contact_email) : '',
+                // Level 1
+                "Escalation Level 1 Level ID": l1.level_id || '',
+                "Escalation Level 1 Name": l1.name || '',
+                "Escalation Level 1 Designation": l1.designation || '',
+                "Escalation Level 1 Contact": l1.contact_no ? `${l1.country_code}${decrypt(l1.contact_no)}` : '',
+                "Escalation Level 1 Email": l1.email ? decrypt(l1.email) : '',
+                // Level 2
+                "Escalation Level 2 Level ID": l2.level_id || '',
+                "Escalation Level 2 Name": l2.name || '',
+                "Escalation Level 2 Designation": l2.designation || '',
+                "Escalation Level 2 Contact": l2.contact_no ? `${l2.country_code}${decrypt(l2.contact_no)}` : '',
+                "Escalation Level 2 Email": l2.email ? decrypt(l2.email) : '',
+                // Level 3
+                "Escalation Level 3 Level ID": l3.level_id || '',
+                "Escalation Level 3 Name": l3.name || '',
+                "Escalation Level 3 Designation": l3.designation || '',
+                "Escalation Level 3 Contact": l3.contact_no ? `${l3.country_code}${decrypt(l3.contact_no)}` : '',
+                "Escalation Level 3 Email": l3.email ? decrypt(l3.email) : '',
+                // Level 4
+                "Escalation Level 4 Level ID": l4.level_id || '',
+                "Escalation Level 4 Name": l4.name || '',
+                "Escalation Level 4 Designation": l4.designation || '',
+                "Escalation Level 4 Contact": l4.contact_no ? `${l4.country_code}${decrypt(l4.contact_no)}` : '',
+                "Escalation Level 4 Email": l4.email ? decrypt(l4.email) : '',
+                // Level 5
+                "Escalation Level 5 Level ID": l5.level_id || '',
+                "Escalation Level 5 Name": l5.name || '',
+                "Escalation Level 5 Designation": l5.designation || '',
+                "Escalation Level 5 Contact": l5.contact_no ? `${l5.country_code}${decrypt(l5.contact_no)}` : '',
+                "Escalation Level 5 Email": l5.email ? decrypt(l5.email) : '',
+                "Status": vendor.asset_status
+            }
+        })
+
+        // ?? Create worksheet and workbook
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Vendor");
+
+        // ?? Trigger download
+        XLSX.writeFile(workbook, "Vendor.xlsx");
+        setIsDownload(false)
+    }
 
     return <React.Fragment>
         <Stack
@@ -367,67 +436,11 @@ export default function VendorList() {
                                 }}
                                 startIcon={<DownloadIcon />}
                                 onClick={() => {
-                                    // ?? Prepare simplified data for export
-                                    const exportData = vendorOptions.map(vendor => {
-                                        const l1 = getEscalationByLevel(vendor.vendor_escalation, 1)
-                                        const l2 = getEscalationByLevel(vendor.vendor_escalation, 2)
-                                        const l3 = getEscalationByLevel(vendor.vendor_escalation, 3)
-                                        const l4 = getEscalationByLevel(vendor.vendor_escalation, 4)
-                                        const l5 = getEscalationByLevel(vendor.vendor_escalation, 5)
-                                        // One row per escalation
-                                        return {
-                                            "Vendor ID": vendor?.vendor_id,
-                                            "Vendor Name": vendor?.name,
-                                            "Contact": vendor?.contact && vendor?.contact !== null && vendor?.contact_country_code && vendor?.contact_country_code !== null ? `${vendor?.contact_country_code}${decrypt(vendor?.contact)}` : '',
-                                            "address": vendor?.address,
-                                            "website": vendor?.website,
-                                            "Client Name": vendor?.client_name,
-                                            "Branch Name": vendor?.branch_name,
-                                            "Primary Contact Name": vendor?.primary_contact_name,
-                                            "Primary Contact Designation": vendor?.primary_contact_designation,
-                                            "Primary Contact No": vendor?.primary_contact_no && vendor?.primary_contact_no !== null ? `${vendor?.primary_contact_country_code}${decrypt(vendor?.primary_contact_no)}` : '',
-                                            "Primary Contact Email": vendor?.primary_contact_email && vendor?.primary_contact_email !== null ? decrypt(vendor?.primary_contact_email) : '',
-                                            // Level 1
-                                            "Escalation Level 1 Level ID": l1.level_id || '',
-                                            "Escalation Level 1 Name": l1.name || '',
-                                            "Escalation Level 1 Designation": l1.designation || '',
-                                            "Escalation Level 1 Contact": l1.contact_no ? `${l1.country_code}${decrypt(l1.contact_no)}` : '',
-                                            "Escalation Level 1 Email": l1.email ? decrypt(l1.email) : '',
-                                            // Level 2
-                                            "Escalation Level 2 Level ID": l2.level_id || '',
-                                            "Escalation Level 2 Name": l2.name || '',
-                                            "Escalation Level 2 Designation": l2.designation || '',
-                                            "Escalation Level 2 Contact": l2.contact_no ? `${l2.country_code}${decrypt(l2.contact_no)}` : '',
-                                            "Escalation Level 2 Email": l2.email ? decrypt(l2.email) : '',
-                                            // Level 3
-                                            "Escalation Level 3 Level ID": l3.level_id || '',
-                                            "Escalation Level 3 Name": l3.name || '',
-                                            "Escalation Level 3 Designation": l3.designation || '',
-                                            "Escalation Level 3 Contact": l3.contact_no ? `${l3.country_code}${decrypt(l3.contact_no)}` : '',
-                                            "Escalation Level 3 Email": l3.email ? decrypt(l3.email) : '',
-                                            // Level 4
-                                            "Escalation Level 4 Level ID": l4.level_id || '',
-                                            "Escalation Level 4 Name": l4.name || '',
-                                            "Escalation Level 4 Designation": l4.designation || '',
-                                            "Escalation Level 4 Contact": l4.contact_no ? `${l4.country_code}${decrypt(l4.contact_no)}` : '',
-                                            "Escalation Level 4 Email": l4.email ? decrypt(l4.email) : '',
-                                            // Level 5
-                                            "Escalation Level 5 Level ID": l5.level_id || '',
-                                            "Escalation Level 5 Name": l5.name || '',
-                                            "Escalation Level 5 Designation": l5.designation || '',
-                                            "Escalation Level 5 Contact": l5.contact_no ? `${l5.country_code}${decrypt(l5.contact_no)}` : '',
-                                            "Escalation Level 5 Email": l5.email ? decrypt(l5.email) : '',
-                                            "Status": vendor.asset_status
-                                        }
-                                    })
-
-                                    // ?? Create worksheet and workbook
-                                    const worksheet = XLSX.utils.json_to_sheet(exportData);
-                                    const workbook = XLSX.utils.book_new();
-                                    XLSX.utils.book_append_sheet(workbook, worksheet, "Vendor");
-
-                                    // ?? Trigger download
-                                    XLSX.writeFile(workbook, "Vendor.xlsx");
+                                    setIsDownload(true)
+                                    dispatch(actionVendorList({
+                                        branch_uuid: branch?.currentBranch?.uuid,
+                                        key: 'All'
+                                    }))
                                 }}
                             >
                                 Export
