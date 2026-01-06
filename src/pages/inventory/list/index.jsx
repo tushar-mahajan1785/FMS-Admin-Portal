@@ -28,6 +28,8 @@ import AddInventory from '../add';
 import { InventoryDetails } from '../details';
 import { RestockInventory } from '../restock';
 import { InventoryConsumption } from '../consumption';
+import DownloadIcon from '../../../assets/icons/DownloadIcon';
+import * as XLSX from "xlsx";
 
 export default function InventoryList() {
     const theme = useTheme()
@@ -489,6 +491,50 @@ export default function InventoryList() {
                                             </MenuItem>
                                         ))}
                                 </CustomTextField>
+                                {
+                                    inventoryListData && inventoryListData !== null && inventoryListData.length > 0 && (
+                                        <Stack sx={{ width: 150 }}>
+                                            <Button
+                                                variant="outlined"
+                                                color={theme.palette.common.white} // text color
+                                                sx={{
+                                                    border: `1px solid ${theme.palette.grey[300]}`,
+                                                    textTransform: 'capitalize',
+                                                    px: 4,
+                                                }}
+                                                startIcon={<DownloadIcon />}
+                                                onClick={() => {
+                                                    // ?? Prepare simplified data for export
+                                                    const exportData = inventoryListData.map(inventory => ({
+                                                        "Item ID": inventory.item_id,
+                                                        "Item Name": inventory.item_name,
+                                                        "Category": inventory.category,
+                                                        "Storage Location": inventory.storage_location,
+                                                        "Initial Quantity": inventory.initial_quantity,
+                                                        "Current Stock": inventory.current_stock,
+                                                        "Minimum Quantity": inventory.minimum_quantity,
+                                                        "Supplier Name": inventory.supplier_name,
+                                                        "Critical Quantity": inventory.critical_quantity,
+                                                        "Unit": inventory.unit,
+                                                        "Stock Status": inventory.stock_status,
+                                                        "Updated On": inventory?.updated_on && inventory?.updated_on !== null ? moment(inventory?.updated_on, 'YYYY-MM-DD').format('DD MMM YYYY') : '',
+                                                        "Image url": inventory.image_url,
+                                                    }));
+
+                                                    // ?? Create worksheet and workbook
+                                                    const worksheet = XLSX.utils.json_to_sheet(exportData);
+                                                    const workbook = XLSX.utils.book_new();
+                                                    XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory");
+
+                                                    // ?? Trigger download
+                                                    XLSX.writeFile(workbook, "Inventory.xlsx");
+                                                }}
+                                            >
+                                                Export
+                                            </Button>
+                                        </Stack>
+                                    )
+                                }
                             </Stack>
                         </Stack>
                         {loadingList ? (

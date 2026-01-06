@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Stack, Box, Tooltip, IconButton, useTheme, InputAdornment } from "@mui/material";
+import { Stack, Box, Tooltip, IconButton, useTheme, InputAdornment, Button } from "@mui/material";
 import FilterListIcon from '@mui/icons-material/FilterList';
 import SearchIcon from "../../../assets/icons/SearchIcon";
 import React, { useEffect, useState } from "react";
@@ -25,6 +25,9 @@ import ServerSideListComponents from "../../../components/server-side-list-compo
 import MyBreadcrumbs from "../../../components/breadcrumb";
 import { useNavigate } from "react-router-dom";
 import { useBranch } from "../../../hooks/useBranch";
+import * as XLSX from "xlsx";
+import DownloadIcon from "../../../assets/icons/DownloadIcon";
+import moment from "moment";
 
 export default function AssetList() {
     const { showSnackbar } = useSnackbar()
@@ -370,7 +373,60 @@ export default function AssetList() {
                             :
                             <></>
                     }
+                    {
+                        assetOptions && assetOptions !== null && assetOptions.length > 0 && (
+                            <Button
+                                variant="outlined"
+                                color={theme.palette.common.white} // text color
+                                sx={{
+                                    border: `1px solid ${theme.palette.grey[300]}`,
+                                    textTransform: 'capitalize',
+                                    px: 4,
+                                    width: 150
+                                }}
+                                startIcon={<DownloadIcon />}
+                                onClick={() => {
+                                    // ?? Prepare simplified data for export
+                                    const exportData = assetOptions.map(asset => ({
+                                        "Asset ID": asset?.asset_id,
+                                        "Asset Description": asset?.asset_description,
+                                        "Type": asset?.type,
+                                        "Sub Type": asset?.sub_type,
+                                        "Client Name": asset?.client_name,
+                                        "Branch Name": asset?.branch_name,
+                                        "Make": asset?.make,
+                                        "Model": asset?.model,
+                                        "Rating Capacity": asset?.rating_capacity,
+                                        "Serial No": asset?.serial_no,
+                                        "Vendor": asset?.vendor,
+                                        "Manufacturing Date": asset?.manufacturing_date && asset?.manufacturing_date !== null ? moment(asset?.manufacturing_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
+                                        "Installation Date": asset?.installation_date && asset?.installation_date !== null ? moment(asset?.installation_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
+                                        "Commissioning Date": asset?.commissioning_date && asset?.commissioning_date !== null ? moment(asset?.commissioning_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
+                                        "Warranty Start Date": asset?.warranty_start_date && asset?.warranty_start_date !== null ? moment(asset?.warranty_start_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
+                                        "Warranty Expiry Date": asset?.warranty_expiry_date && asset?.warranty_expiry_date !== null ? moment(asset?.warranty_expiry_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
+                                        "Amc Start Date": asset?.amc_start_date && asset?.amc_start_date !== null ? moment(asset?.amc_start_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
+                                        "Amc Expiry Date": asset?.amc_expiry_date && asset?.amc_expiry_date !== null ? moment(asset?.amc_expiry_date, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
+                                        "Asset Owner": asset?.asset_owner,
+                                        "Asset Custodian": asset?.asset_custodian,
+                                        "Asset End Life Selection": asset?.asset_end_life_selection && asset?.asset_end_life_selection !== null ? moment(asset?.asset_end_life_selection, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
+                                        "Asset End Life Period": asset?.asset_end_life_period && asset?.asset_end_life_period !== null ? moment(asset?.asset_end_life_period, "YYYY-MM-DD").format("DD/MM/YYYY") : '',
+                                        "Location": asset?.location,
+                                        "Status": asset?.status,
+                                    }));
 
+                                    // ?? Create worksheet and workbook
+                                    const worksheet = XLSX.utils.json_to_sheet(exportData);
+                                    const workbook = XLSX.utils.book_new();
+                                    XLSX.utils.book_append_sheet(workbook, worksheet, "Asset");
+
+                                    // ?? Trigger download
+                                    XLSX.writeFile(workbook, "Asset.xlsx");
+                                }}
+                            >
+                                Export
+                            </Button>
+                        )
+                    }
                 </ListHeaderRightSection>
             </ListHeaderContainer>
             {loadingList ? (

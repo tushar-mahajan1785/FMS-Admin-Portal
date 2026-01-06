@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Stack, Box, Tooltip, IconButton, useTheme, InputAdornment } from "@mui/material";
+import { Stack, Box, Tooltip, IconButton, useTheme, InputAdornment, Button } from "@mui/material";
 import FilterListIcon from '@mui/icons-material/FilterList';
 import SearchIcon from "../../../assets/icons/SearchIcon";
 import AddVendor from "../add";
@@ -16,18 +16,18 @@ import VendorDetails from "../view";
 import { actionMasterCountryCodeList, actionVendorList, resetVendorListResponse } from "../../../store/vendor";
 import { FilterButton, ListHeaderContainer, ListHeaderRightSection, SearchInput } from "../../../components/common";
 import GetCountComponent from "../../../components/get-count-component";
-import { decrypt } from "../../../utils";
+import { decrypt, getEscalationByLevel } from "../../../utils";
 import FilterModal from "../../../components/filters";
 import CloseIcon from "../../../assets/icons/CloseIcon";
-import FormHeader from "../../../components/form-header";
 import AdditionalFieldsPopup from "../../../components/additional-fields";
 import { actionAdditionalFieldsDetails, resetAdditionalFieldsDetailsResponse } from "../../../store/common";
 import TypographyComponent from "../../../components/custom-typography";
-import VendorIcon from "../../../assets/icons/VendorIcon";
 import ServerSideListComponents from "../../../components/server-side-list-component"
 import MyBreadcrumbs from "../../../components/breadcrumb";
 import { useNavigate } from "react-router-dom";
 import { useBranch } from "../../../hooks/useBranch";
+import DownloadIcon from "../../../assets/icons/DownloadIcon";
+import * as XLSX from "xlsx";
 
 export default function VendorList() {
     const { showSnackbar } = useSnackbar()
@@ -353,6 +353,86 @@ export default function VendorList() {
                             </Tooltip>
                             :
                             <></>
+                    }
+                    {
+                        vendorOptions && vendorOptions !== null && vendorOptions.length > 0 && (
+                            <Button
+                                variant="outlined"
+                                color={theme.palette.common.white} // text color
+                                sx={{
+                                    border: `1px solid ${theme.palette.grey[300]}`,
+                                    textTransform: 'capitalize',
+                                    px: 4,
+                                    width: 150
+                                }}
+                                startIcon={<DownloadIcon />}
+                                onClick={() => {
+                                    // ?? Prepare simplified data for export
+                                    const exportData = vendorOptions.map(vendor => {
+                                        const l1 = getEscalationByLevel(vendor.vendor_escalation, 1)
+                                        const l2 = getEscalationByLevel(vendor.vendor_escalation, 2)
+                                        const l3 = getEscalationByLevel(vendor.vendor_escalation, 3)
+                                        const l4 = getEscalationByLevel(vendor.vendor_escalation, 4)
+                                        const l5 = getEscalationByLevel(vendor.vendor_escalation, 5)
+                                        // One row per escalation
+                                        return {
+                                            "Vendor ID": vendor?.vendor_id,
+                                            "Vendor Name": vendor?.name,
+                                            "Contact": vendor?.contact && vendor?.contact !== null && vendor?.contact_country_code && vendor?.contact_country_code !== null ? `${vendor?.contact_country_code}${decrypt(vendor?.contact)}` : '',
+                                            "address": vendor?.address,
+                                            "website": vendor?.website,
+                                            "Client Name": vendor?.client_name,
+                                            "Branch Name": vendor?.branch_name,
+                                            "Primary Contact Name": vendor?.primary_contact_name,
+                                            "Primary Contact Designation": vendor?.primary_contact_designation,
+                                            "Primary Contact No": vendor?.primary_contact_no && vendor?.primary_contact_no !== null ? `${vendor?.primary_contact_country_code}${decrypt(vendor?.primary_contact_no)}` : '',
+                                            "Primary Contact Email": vendor?.primary_contact_email && vendor?.primary_contact_email !== null ? decrypt(vendor?.primary_contact_email) : '',
+                                            // Level 1
+                                            "Escalation Level 1 Level ID": l1.level_id || '',
+                                            "Escalation Level 1 Name": l1.name || '',
+                                            "Escalation Level 1 Designation": l1.designation || '',
+                                            "Escalation Level 1 Contact": l1.contact_no ? `${l1.country_code}${decrypt(l1.contact_no)}` : '',
+                                            "Escalation Level 1 Email": l1.email ? decrypt(l1.email) : '',
+                                            // Level 2
+                                            "Escalation Level 2 Level ID": l2.level_id || '',
+                                            "Escalation Level 2 Name": l2.name || '',
+                                            "Escalation Level 2 Designation": l2.designation || '',
+                                            "Escalation Level 2 Contact": l2.contact_no ? `${l2.country_code}${decrypt(l2.contact_no)}` : '',
+                                            "Escalation Level 2 Email": l2.email ? decrypt(l2.email) : '',
+                                            // Level 3
+                                            "Escalation Level 3 Level ID": l3.level_id || '',
+                                            "Escalation Level 3 Name": l3.name || '',
+                                            "Escalation Level 3 Designation": l3.designation || '',
+                                            "Escalation Level 3 Contact": l3.contact_no ? `${l3.country_code}${decrypt(l3.contact_no)}` : '',
+                                            "Escalation Level 3 Email": l3.email ? decrypt(l3.email) : '',
+                                            // Level 4
+                                            "Escalation Level 4 Level ID": l4.level_id || '',
+                                            "Escalation Level 4 Name": l4.name || '',
+                                            "Escalation Level 4 Designation": l4.designation || '',
+                                            "Escalation Level 4 Contact": l4.contact_no ? `${l4.country_code}${decrypt(l4.contact_no)}` : '',
+                                            "Escalation Level 4 Email": l4.email ? decrypt(l4.email) : '',
+                                            // Level 5
+                                            "Escalation Level 5 Level ID": l5.level_id || '',
+                                            "Escalation Level 5 Name": l5.name || '',
+                                            "Escalation Level 5 Designation": l5.designation || '',
+                                            "Escalation Level 5 Contact": l5.contact_no ? `${l5.country_code}${decrypt(l5.contact_no)}` : '',
+                                            "Escalation Level 5 Email": l5.email ? decrypt(l5.email) : '',
+                                            "Status": vendor.asset_status
+                                        }
+                                    })
+
+                                    // ?? Create worksheet and workbook
+                                    const worksheet = XLSX.utils.json_to_sheet(exportData);
+                                    const workbook = XLSX.utils.book_new();
+                                    XLSX.utils.book_append_sheet(workbook, worksheet, "Vendor");
+
+                                    // ?? Trigger download
+                                    XLSX.writeFile(workbook, "Vendor.xlsx");
+                                }}
+                            >
+                                Export
+                            </Button>
+                        )
                     }
                 </ListHeaderRightSection>
             </ListHeaderContainer>

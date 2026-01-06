@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Stack, Box, Tooltip, IconButton, useTheme, InputAdornment } from "@mui/material";
+import { Stack, Box, Tooltip, IconButton, useTheme, InputAdornment, Button } from "@mui/material";
 import SearchIcon from "../../../assets/icons/SearchIcon";
 import AddEmployee from "../add";
 import React, { useEffect, useState } from "react";
@@ -26,6 +26,8 @@ import ServerSideListComponents from "../../../components/server-side-list-compo
 import MyBreadcrumbs from "../../../components/breadcrumb";
 import { useNavigate } from "react-router-dom";
 import { useBranch } from "../../../hooks/useBranch";
+import DownloadIcon from "../../../assets/icons/DownloadIcon";
+import * as XLSX from "xlsx";
 
 export default function EmployeeList() {
     const { showSnackbar } = useSnackbar()
@@ -291,6 +293,49 @@ export default function EmployeeList() {
                             ),
                         }}
                     />
+                    {
+                        employeeOptions && employeeOptions !== null && employeeOptions.length > 0 && (
+                            <Button
+                                variant="outlined"
+                                color={theme.palette.common.white} // text color
+                                sx={{
+                                    border: `1px solid ${theme.palette.grey[300]}`,
+                                    textTransform: 'capitalize',
+                                    px: 4,
+                                    width: 150
+                                }}
+                                startIcon={<DownloadIcon />}
+                                onClick={() => {
+                                    // ?? Prepare simplified data for export
+                                    const exportData = employeeOptions.map(employee => ({
+                                        "Employee ID": employee?.employee_id,
+                                        "Employee Name": employee?.name,
+                                        "Email": employee?.email && employee?.email !== null ? decrypt(employee?.email) : '',
+                                        "Contact": employee?.contact && employee?.contact !== null && employee?.contact_country_code && employee?.contact_country_code !== null ? `${employee?.contact_country_code}${decrypt(employee?.contact)}` : '',
+                                        "Alternate Contact": employee?.alternate_contact && employee?.alternate_contact !== null && employee?.alternate_contact_country_code && employee?.alternate_contact_country_code !== null ? `${employee?.alternate_contact_country_code}${decrypt(employee?.alternate_contact)}` : '',
+                                        "Employee Type": employee?.type,
+                                        "Role": employee?.role,
+                                        "Age": employee?.age,
+                                        "Address": employee?.address,
+                                        "Company Name": employee?.company_name,
+                                        "Client Name": employee?.client_name,
+                                        "Branch Name": employee?.branch_name,
+                                        "Status": employee?.asset_status,
+                                    }));
+
+                                    // ?? Create worksheet and workbook
+                                    const worksheet = XLSX.utils.json_to_sheet(exportData);
+                                    const workbook = XLSX.utils.book_new();
+                                    XLSX.utils.book_append_sheet(workbook, worksheet, "Employee");
+
+                                    // ?? Trigger download
+                                    XLSX.writeFile(workbook, "Employee.xlsx");
+                                }}
+                            >
+                                Export
+                            </Button>
+                        )
+                    }
                 </ListHeaderRightSection>
             </ListHeaderContainer>
             {loadingList ? (

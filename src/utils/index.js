@@ -433,3 +433,6 @@ export const usePagination = (data = [], itemsPerPage = 5) => {
 
   return { page, setPage, totalPages, paginatedData };
 };
+
+// vendor escalation level
+export const getEscalationByLevel = (escalations = [], level) => escalations.find(e => e.level_id === level) || {}

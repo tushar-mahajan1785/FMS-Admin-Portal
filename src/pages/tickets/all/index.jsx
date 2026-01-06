@@ -29,6 +29,8 @@ import { useBranch } from '../../../hooks/useBranch';
 import { ViewTicket } from '../view';
 import moment from 'moment';
 import { getFormattedDuration } from '../../../utils';
+import * as XLSX from "xlsx";
+import DownloadIcon from "../../../assets/icons/DownloadIcon"
 
 export default function TicketList() {
     const theme = useTheme()
@@ -662,6 +664,47 @@ export default function TicketList() {
                                         </MenuItem>
                                     ))}
                             </CustomTextField>
+                            {
+                                recentTicketsData && recentTicketsData !== null && recentTicketsData.length > 0 && (
+                                    <Stack sx={{ width: 150 }}>
+                                        <Button
+                                            variant="outlined"
+                                            color={theme.palette.common.white} // text color
+                                            sx={{
+                                                border: `1px solid ${theme.palette.grey[300]}`,
+                                                textTransform: 'capitalize',
+                                                px: 4,
+                                            }}
+                                            startIcon={<DownloadIcon />}
+                                            onClick={() => {
+                                                // ?? Prepare simplified data for export
+                                                const exportData = recentTicketsData.map(ticket => ({
+                                                    "Ticket No.": ticket?.ticket_no,
+                                                    "Asset Name": ticket?.asset_name,
+                                                    "Location": ticket?.location,
+                                                    "Problem": ticket?.problem,
+                                                    "Priority": ticket?.priority,
+                                                    "Created On": ticket?.created_on && ticket?.created_on !== null ? moment(ticket?.created_on, 'YYYY-MM-DD').format('DD MMM YYYY') : '',
+                                                    "Total Time": ticket?.total_time,
+                                                    "Status": ticket?.status,
+                                                    "First Created At": ticket?.first_created_at && ticket?.first_created_at !== null ? moment(ticket?.first_created_at, 'YYYY-MM-DD').format('DD MMM YYYY') : '',
+                                                    "Last Updated At": ticket?.last_updated_at && ticket?.last_updated_at !== null ? moment(ticket?.last_updated_at, 'YYYY-MM-DD').format('DD MMM YYYY') : '',
+                                                }));
+
+                                                // ?? Create worksheet and workbook
+                                                const worksheet = XLSX.utils.json_to_sheet(exportData);
+                                                const workbook = XLSX.utils.book_new();
+                                                XLSX.utils.book_append_sheet(workbook, worksheet, "Tickets");
+
+                                                // ?? Trigger download
+                                                XLSX.writeFile(workbook, "Tickets.xlsx");
+                                            }}
+                                        >
+                                            Export
+                                        </Button>
+                                    </Stack>
+                                )
+                            }
                         </Stack>
                     </Stack>
                     {loadingList ? (

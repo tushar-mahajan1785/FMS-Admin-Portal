@@ -34,7 +34,6 @@ import FullScreenLoader from "../../components/fullscreen-loader";
 import { useAuth } from "../../hooks/useAuth";
 import { useDispatch, useSelector } from "react-redux";
 import { useSnackbar } from "../../hooks/useSnackbar";
-
 import ServerSideListComponents from "../../components/server-side-list-component";
 import { SearchInput } from "../../components/common";
 import SearchIcon from "../../assets/icons/SearchIcon";
@@ -63,6 +62,8 @@ import AlertPopup from "../../components/alert-confirm";
 import AlertCircleIcon from "../../assets/icons/AlertCircleIcon";
 import PMActivityDetails from "./view";
 import TypographyComponent from "../../components/custom-typography";
+import * as XLSX from "xlsx";
+import DownloadIcon from "../../assets/icons/DownloadIcon";
 
 export default function PmActivity() {
   /** Hooks **/
@@ -317,7 +318,7 @@ export default function PmActivity() {
    * useEffect
    * @dependency : pmScheduleList
    * @type : HANDLE API RESULT;
-   * @description : Handle the result of ticket List API
+   * @description : Handle the result of pmSchedule List API
    */
   useEffect(() => {
     if (pmScheduleList && pmScheduleList !== null) {
@@ -839,6 +840,43 @@ export default function PmActivity() {
                       </MenuItem>
                     ))}
                 </CustomTextField>
+                {
+                  pmScheduleActivityData && pmScheduleActivityData !== null && pmScheduleActivityData.length > 0 && (
+                    <Stack sx={{ width: 90 }}>
+                      <Button
+                        variant="outlined"
+                        color={theme.palette.common.white} // text color
+                        sx={{
+                          border: `1px solid ${theme.palette.grey[300]}`,
+                          textTransform: 'capitalize',
+                          px: 4,
+                        }}
+                        startIcon={<DownloadIcon />}
+                        onClick={() => {
+                          // ?? Prepare simplified data for export
+                          const exportData = pmScheduleActivityData.map(pmSchedule => ({
+                            "Title": pmSchedule?.title,
+                            "Assets": pmSchedule?.assets,
+                            "Asset Count": pmSchedule?.asset_count,
+                            "Start Date": pmSchedule?.start_date,
+                            "Frequency": pmSchedule?.frequency,
+                            "Status": pmSchedule?.status,
+                          }));
+
+                          // ?? Create worksheet and workbook
+                          const worksheet = XLSX.utils.json_to_sheet(exportData);
+                          const workbook = XLSX.utils.book_new();
+                          XLSX.utils.book_append_sheet(workbook, worksheet, "PM Schedule");
+
+                          // ?? Trigger download
+                          XLSX.writeFile(workbook, "PM Schedule.xlsx");
+                        }}
+                      >
+                        Export
+                      </Button>
+                    </Stack>
+                  )
+                }
               </Stack>
             </Stack>
             {loadingList ? (
