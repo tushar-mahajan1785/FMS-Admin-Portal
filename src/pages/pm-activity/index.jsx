@@ -64,6 +64,8 @@ import PMActivityDetails from "./view";
 import TypographyComponent from "../../components/custom-typography";
 import * as XLSX from "xlsx";
 import DownloadIcon from "../../assets/icons/DownloadIcon";
+import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
+import PMActivityGuidelinePopup from "./guideline-popup";
 
 export default function PmActivity() {
   /** Hooks **/
@@ -97,6 +99,7 @@ export default function PmActivity() {
   const [loadingDeletePmActivity, setLoadingDeletePmActivity] = useState(false);
   const [openPmActivityDetails, setOpenPmActivityDetails] = useState(false);
   const [isDownload, setIsDownload] = useState(false)
+  const [openPmActivityGuidelinePopup, setOpenPmActivityGuidelinePopup] = useState(false)
 
   /**
    * masterAssetType
@@ -571,7 +574,7 @@ export default function PmActivity() {
     <React.Fragment>
       <Stack>
         <Stack sx={{ flexDirection: { xs: "column", sm: 'row', md: 'row', lg: 'row', xl: 'row' }, justifyContent: "space-between", gap: 1 }}>
-          <Stack>
+          <Stack flexDirection={'row'} alignItems={'center'}>
             <TypographyComponent
               color={theme.palette.grey.primary}
               fontSize={24}
@@ -579,6 +582,15 @@ export default function PmActivity() {
             >
               Preventive Maintenance Activity
             </TypographyComponent>
+            <Tooltip title="Guideline" followCursor placement="top">
+              <IconButton
+                onClick={() => {
+                  setOpenPmActivityGuidelinePopup(true)
+                }}
+              >
+                <InfoOutlineIcon />
+              </IconButton>
+            </Tooltip>
           </Stack>
           {
             hasPermission('PM_ACTIVITY_ADD') ?
@@ -1143,6 +1155,12 @@ export default function PmActivity() {
               upcoming_filter: selectedUpcomingPmSchedule,
             })
           );
+        }}
+      />
+      <PMActivityGuidelinePopup
+        open={openPmActivityGuidelinePopup}
+        handleClose={() => {
+          setOpenPmActivityGuidelinePopup(false)
         }}
       />
     </React.Fragment>
