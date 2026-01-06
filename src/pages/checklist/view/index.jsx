@@ -1826,6 +1826,56 @@ export default function ChecklistView() {
                                                             <Stack sx={{ height: '8px' }}></Stack>
                                                         </TableCell>
                                                     </TableRow>
+                                                    <TableRow>
+                                                        <TableCell
+                                                            sx={{
+                                                                position: { xs: '', sm: 'sticky' },
+                                                                left: { xs: '', sm: 0 },
+                                                                zIndex: 1,
+                                                                background: theme.palette.grey[100],
+                                                                fontWeight: 'bold',
+                                                                width: 300,
+                                                                borderTop: `1px solid ${theme.palette.grey[300]} `,
+                                                                borderLeft: `1px solid ${theme.palette.grey[300]} `,
+                                                                borderRight: `1px solid ${theme.palette.grey[300]} `,
+                                                                borderTopLeftRadius: '8px',
+                                                                borderTopRightRadius: '8px',
+                                                            }}
+                                                        >
+                                                            Created By
+                                                        </TableCell>
+                                                        {getChecklistDetails && getChecklistDetails !== null && getChecklistDetails?.times && getChecklistDetails?.times !== null && getChecklistDetails?.times.length > 0 && getChecklistDetails?.times.find(t => t.is_selected == true)?.schedules.map((asset, assetIndex) => {
+                                                            return (
+                                                                <React.Fragment>
+                                                                    <TableCell
+                                                                        key={`${assetIndex} -${asset?.asset_name} `}
+                                                                        align="center"
+                                                                        sx={{
+                                                                            background: theme.palette.grey[100],
+                                                                            fontWeight: 'bold',
+                                                                            minWidth: 255,
+                                                                            p: '15px 24px',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'center',
+                                                                            borderTop: asset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]} ` : `1px solid ${theme.palette.grey[300]} `,// `1px solid ${ theme.palette.success[600] } `
+                                                                            borderLeft: asset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]} ` : `1px solid ${theme.palette.grey[300]} `,// `1px solid ${ theme.palette.success[600] } `
+                                                                            borderRight: asset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]} ` : `1px solid ${theme.palette.grey[300]} `,// `1px solid ${ theme.palette.success[600] } `
+                                                                            borderTopLeftRadius: '8px',
+                                                                            borderTopRightRadius: '8px',
+
+                                                                        }}
+                                                                    >
+
+                                                                        <Stack sx={{ flexDirection: 'row', justifyContent: 'flex-start', gap: 1, width: '100%' }}>
+                                                                            <TypographyComponent fontSize={14} fontWeight={600}>{asset?.created_by && asset?.created_by !== null ? asset?.created_by : 'Rahul Mahajan'}</TypographyComponent>
+
+                                                                        </Stack>
+                                                                    </TableCell>
+                                                                </React.Fragment>
+                                                            )
+                                                        })}
+                                                    </TableRow>
+
                                                     {getChecklistDetails?.parameters?.filter(p => p?.parameter_type !== 'Grouping').map((row, i) => (
                                                         <TableRow key={i}>
                                                             <TableCell
@@ -1835,12 +1885,12 @@ export default function ChecklistView() {
                                                                     p: '15px 24px',
                                                                     background: theme.palette.common.white,
                                                                     zIndex: 1,
-                                                                    borderTop: i == 0 ? `1px solid ${theme.palette.divider} ` : '',
+                                                                    // borderTop: i == 0 ? `1px solid ${theme.palette.divider} ` : '',
                                                                     borderBottom: `1px solid ${theme.palette.divider} `,
                                                                     borderLeft: `1px solid ${theme.palette.divider} `,
                                                                     borderRight: `1px solid ${theme.palette.divider} `,
-                                                                    borderTopLeftRadius: i == 0 ? '8px' : 'none',
-                                                                    borderTopRightRadius: i == 0 ? '8px' : 'none',
+                                                                    // borderTopLeftRadius: i == 0 ? '8px' : 'none',
+                                                                    // borderTopRightRadius: i == 0 ? '8px' : 'none',
                                                                 }}
                                                             >
                                                                 <Stack sx={{ flexDirection: 'row' }}>
@@ -1864,15 +1914,15 @@ export default function ChecklistView() {
                                                                         sx={{
                                                                             alignItems: 'flex-start',
                                                                             p: '15px 24px',
-                                                                            borderTop: i == 0 ?
-                                                                                objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]} ` : `1px solid ${theme.palette.grey[300]} `// `1px solid ${ theme.palette.success[600] } `
-                                                                                : '',
+                                                                            // borderTop: i == 0 ?
+                                                                            //     objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]} ` : `1px solid ${theme.palette.grey[300]} `// `1px solid ${ theme.palette.success[600] } `
+                                                                            //     : '',
                                                                             borderBottom: `1px solid ${theme.palette.grey[300]} `,
                                                                             background: paramValue?.param_status == 'Abnormal' && objAsset?.is_view == 1 ? theme.palette.error[50] : objAsset?.status == 'Approved' ? theme.palette.success[50] : theme.palette.common.white,//theme.palette.success[50],
                                                                             borderLeft: objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]} ` : `1px solid ${theme.palette.grey[300]} `,// `1px solid ${ theme.palette.success[600] } `
                                                                             borderRight: objAsset?.status == 'Approved' ? `1px solid ${theme.palette.success[600]} ` : `1px solid ${theme.palette.grey[300]} `,// `1px solid ${ theme.palette.success[600] } `
-                                                                            borderTopLeftRadius: i == 0 ? '8px' : 'none',
-                                                                            borderTopRightRadius: i == 0 ? '8px' : 'none',
+                                                                            // borderTopLeftRadius: i == 0 ? '8px' : 'none',
+                                                                            // borderTopRightRadius: i == 0 ? '8px' : 'none',
                                                                         }}>
                                                                         {/* Placeholder for the Input Field (like a TextField) */}
                                                                         {
@@ -1891,6 +1941,7 @@ export default function ChecklistView() {
                                                             })}
                                                         </TableRow>
                                                     ))}
+
                                                     {
                                                         isToday() == true ?
                                                             <TableRow>
