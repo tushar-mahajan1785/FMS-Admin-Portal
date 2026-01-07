@@ -225,7 +225,8 @@ export default function RecentTicket() {
         );
 
         setLoadingList(false)
-        setTotal(ticketsList?.response?.counts?.total_tickets)
+        let total = ticketsList?.response?.data && ticketsList?.response?.data !== null && ticketsList?.response?.data?.length > 0 ? ticketsList?.response?.data?.length : 0
+        setTotal(total)
 
       } else {
         setLoadingList(false)

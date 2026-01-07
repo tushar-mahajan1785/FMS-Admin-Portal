@@ -289,7 +289,7 @@ export default function TicketList() {
                         value: objData[item.key] !== undefined ? objData[item.key] : 0
                     }))
                 );
-                setTotal(ticketsList?.response?.counts?.total_tickets)
+                setTotal(ticketsList?.response?.pagination?.total_tickets)
                 setLoadingList(false)
                 if (isDownload === true) {
                     exportToExcel(ticketsList?.response?.data);
@@ -544,7 +544,7 @@ export default function TicketList() {
                                 <TypographyComponent fontSize={18} fontWeight={500} sx={{ color: theme.palette.grey[700] }}>Tickets List</TypographyComponent>
                             </Stack>
                             <Chip
-                                label={`${recentTicketsData?.length.toString().padStart(2, "0")} Tickets`}
+                                label={total && total !== null ? `${total.toString().padStart(2, "0")} Tickets` : '0 Tickets'}
                                 size="small"
                                 sx={{ bgcolor: theme.palette.primary[50], color: theme.palette.primary[600], fontSize: 14, fontWeight: 500 }}
                             />
