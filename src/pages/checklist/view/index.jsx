@@ -42,7 +42,7 @@ export default function ChecklistView() {
     const navigate = useNavigate()
     const dispatch = useDispatch()
     const branch = useBranch()
-    const { logout, hasPermission } = useAuth()
+    const { logout, hasPermission, user } = useAuth()
     const { showSnackbar } = useSnackbar()
     const { assetId, groupUuid } = useParams()
     const scrollRef = useRef(null);
@@ -257,6 +257,7 @@ export default function ChecklistView() {
                 asset_id: asset?.asset_id,
                 asset_name: asset?.asset_name,
                 status: getAssetTimeStatus(asset_checklist_json, asset?.asset_id, timeObj?.uuid, 'status'),
+                created_by: getAssetTimeStatus(asset_checklist_json, asset?.asset_id, timeObj?.uuid, 'created_by'),
                 is_abnormal_approved: getAssetTimeStatus(asset_checklist_json, asset?.asset_id, timeObj?.uuid, 'is_abnormal_approved') == 1 ? 1 : 0,
                 is_view: 1,
                 values:
@@ -1254,7 +1255,8 @@ export default function ChecklistView() {
                         "from": currentTimes?.from,
                         "uuid": currentTimes?.uuid,
                         "is_selected": true,
-                        "values": updatedValues || []
+                        "values": updatedValues || [],
+                        "created_by": user?.name
                     }
                 ]
             }
@@ -1864,10 +1866,9 @@ export default function ChecklistView() {
                                                                             borderTopRightRadius: '8px',
 
                                                                         }}
-                                                                    >
-
+                                                                    >  
                                                                         <Stack sx={{ flexDirection: 'row', justifyContent: 'flex-start', gap: 1, width: '100%' }}>
-                                                                            <TypographyComponent fontSize={14} fontWeight={600}>{asset?.created_by && asset?.created_by !== null ? asset?.created_by : 'Rahul Mahajan'}</TypographyComponent>
+                                                                            <TypographyComponent fontSize={14} fontWeight={600}>{asset?.created_by && asset?.created_by !== null ? asset?.created_by : ''}</TypographyComponent>
 
                                                                         </Stack>
                                                                     </TableCell>

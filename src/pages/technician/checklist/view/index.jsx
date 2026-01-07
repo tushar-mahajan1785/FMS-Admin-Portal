@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Box, Button, Card, Chip, CircularProgress, Divider, IconButton, InputAdornment, MenuItem, Stack, SwipeableDrawer, useMediaQuery, useTheme } from '@mui/material'
 import React, { useEffect, useRef, useState } from 'react'
 import { TechnicianNavbarHeader } from '../../../../components/technician/navbar-header'
@@ -25,7 +26,7 @@ export default function ChecklistView() {
     const navigate = useNavigate()
     const dispatch = useDispatch()
     const branch = useBranch()
-    const { logout } = useAuth()
+    const { logout,user  } = useAuth()
     const scrollRef = useRef(null);
     const { showSnackbar } = useSnackbar()
     const { groupUuid, assetTypeId, assetId } = useParams()
@@ -568,7 +569,8 @@ export default function ChecklistView() {
                         "from": selectedTimeUuid?.from,
                         "uuid": selectedTimeUuid?.uuid,
                         "is_selected": true,
-                        "values": updatedValues || []
+                        "values": updatedValues || [],
+                        "created_by": user?.name
                     }
                 ]
             }
