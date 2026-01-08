@@ -24,6 +24,8 @@ import AddManageShift from '../add';
 import ManageShiftDetails from '../view';
 import ServerSideListComponents from '../../../components/server-side-list-component';
 import EyeIcon from '../../../assets/icons/EyeIcon';
+import ManageShiftGuidelinePopup from '../guideline-popup';
+import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
 
 export default function ManageShiftList() {
     const theme = useTheme()
@@ -44,6 +46,7 @@ export default function ManageShiftList() {
     const [openAddManageShiftPopup, setOpenAddManageShiftPopup] = useState(false)
     const [openManageShiftDetailsPopup, setOpenManageShiftDetailsPopup] = useState(false)
     const [manageShiftData, setManageShiftData] = useState(null)
+    const [openManageShiftGuidelinePopup, setOpenManageShiftGuidelinePopup] = useState(false)
 
     const columns = [
         { field: "roster_name", headerName: "Roster Name", flex: 0.1 },
@@ -216,7 +219,18 @@ export default function ManageShiftList() {
                 alignItems={{ xs: 'flex-start', sm: 'flex-start', md: 'center' }}
                 justifyContent="space-between"
                 mb={3}>
-                <MyBreadcrumbs />
+                <Stack direction={'row'} alignItems={'center'}>
+                    <MyBreadcrumbs />
+                    <Tooltip title="Guideline" followCursor placement="top">
+                        <IconButton
+                            onClick={() => {
+                                setOpenManageShiftGuidelinePopup(true)
+                            }}
+                        >
+                            <InfoOutlineIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Stack>
                 {
                     hasPermission('MANAGE_SHIFT_ADD') &&
                     <Button
@@ -434,6 +448,15 @@ export default function ManageShiftList() {
                     setOpenManageShiftDetailsPopup(false)
                 }}
             />
+            {
+                openManageShiftGuidelinePopup &&
+                <ManageShiftGuidelinePopup
+                    open={openManageShiftGuidelinePopup}
+                    handleClose={() => {
+                        setOpenManageShiftGuidelinePopup(false)
+                    }}
+                />
+            }
         </React.Fragment>
     )
 }

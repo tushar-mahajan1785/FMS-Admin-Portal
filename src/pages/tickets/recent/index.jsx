@@ -28,6 +28,8 @@ import { useBranch } from '../../../hooks/useBranch';
 import { ViewTicket } from '../view';
 import moment from 'moment';
 import { getFormattedDuration } from '../../../utils';
+import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
+import TicketGuidelinePopup from './components/guideline-popup';
 
 export default function RecentTicket() {
   const theme = useTheme()
@@ -48,6 +50,7 @@ export default function RecentTicket() {
   const [currentTicketDetails, setCurrentTicketDetails] = useState(null)
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [openTicketGuidelinePopup, setOpenTicketGuidelinePopup] = useState(false)
 
   const columns = [
     {
@@ -282,7 +285,22 @@ export default function RecentTicket() {
     <React.Fragment>
       <Stack>
         <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <MyBreadcrumbs />
+          <Stack flexDirection={'row'} alignItems={'center'}>
+            <Stack>
+              <TypographyComponent color={theme.palette.grey.primary} fontSize={24} fontWeight={500}>
+                Tickets
+              </TypographyComponent>
+            </Stack>
+            <Tooltip title="Guideline" followCursor placement="top">
+              <IconButton
+                onClick={() => {
+                  setOpenTicketGuidelinePopup(true)
+                }}
+              >
+                <InfoOutlineIcon />
+              </IconButton>
+            </Tooltip>
+          </Stack>
           {
             hasPermission('TICKET_ADD') ?
               <Stack>
@@ -472,6 +490,12 @@ export default function RecentTicket() {
           }
 
 
+        }}
+      />
+      <TicketGuidelinePopup
+        open={openTicketGuidelinePopup}
+        handleClose={() => {
+          setOpenTicketGuidelinePopup(false)
         }}
       />
     </React.Fragment>

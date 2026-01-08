@@ -30,6 +30,8 @@ import { RestockInventory } from '../restock';
 import { InventoryConsumption } from '../consumption';
 import DownloadIcon from '../../../assets/icons/DownloadIcon';
 import * as XLSX from "xlsx";
+import InventoryGuidelinePopup from '../guideline-popup';
+import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
 
 export default function InventoryList() {
     const theme = useTheme()
@@ -59,6 +61,7 @@ export default function InventoryList() {
     const [arrRecentlyAddedItems, setArrRecentlyAddedItems] = useState([]);
     const [arrRecentlyUsedItems, setArrRecentlyUsedItems] = useState([]);
     const [isDownload, setIsDownload] = useState(false)
+    const [openInventoryGuidelinePopup, setOpenInventoryGuidelinePopup] = useState(false)
 
     //Default Inventory Counts Array
     const [getArrInventoryCounts, setGetArrInventoryCounts] = useState([
@@ -349,7 +352,19 @@ export default function InventoryList() {
     return (
         <React.Fragment>
             <Stack sx={{ flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between' }}>
-                <MyBreadcrumbs />
+                <Stack direction={'row'} alignItems={'center'}>
+                    <MyBreadcrumbs />
+                    <Tooltip title="Guideline" followCursor placement="top">
+                        <IconButton
+                            onClick={() => {
+                                setOpenInventoryGuidelinePopup(true)
+                            }}
+                        >
+                            <InfoOutlineIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Stack>
+
                 {
                     hasPermission('INVENTORY_ADD') ?
                         <Stack>
@@ -762,6 +777,12 @@ export default function InventoryList() {
                             limit: LIST_LIMIT
                         }))
                     }
+                }}
+            />
+            <InventoryGuidelinePopup
+                open={openInventoryGuidelinePopup}
+                handleClose={() => {
+                    setOpenInventoryGuidelinePopup(false)
                 }}
             />
         </React.Fragment>
