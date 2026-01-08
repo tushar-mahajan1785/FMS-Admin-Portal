@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Box, Card, Divider, Grid, IconButton, InputAdornment, Stack, useTheme } from "@mui/material";
+import { Box, Card, Divider, Grid, IconButton, InputAdornment, Stack, Tooltip, useTheme } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import TypographyComponent from "../../../components/custom-typography";
 import BoxIcon from "../../../assets/icons/BoxIcon";
@@ -22,6 +22,8 @@ import { useAuth } from "../../../hooks/useAuth";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import FullScreenLoader from "../../../components/fullscreen-loader";
 import EmptyContent from "../../../components/empty_content";
+import ChecklistGuidelinePopup from "../guideline-popup";
+import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
 
 export default function ChecklistAssetTypes() {
     const theme = useTheme()
@@ -48,6 +50,7 @@ export default function ChecklistAssetTypes() {
     const [arrAssetTypesData, setArrAssetTypesData] = useState([])
     const [arrAssetTypesOriginalData, setArrAssetTypesOriginalData] = useState([])
     const [loadingList, setLoadingList] = useState(false)
+    const [openChecklistGuidelinePopup, setOpenChecklistGuidelinePopup] = useState(false)
 
     const getColorAndBackgroundForAssetType = (index) => {
         let color = {
@@ -209,6 +212,15 @@ export default function ChecklistAssetTypes() {
         <React.Fragment>
             <Stack sx={{ flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'row' } }}>
                 <TypographyComponent color={theme.palette.text.primary} fontSize={24} fontWeight={500}>Checklist Management</TypographyComponent>
+                <Tooltip title="Guideline" followCursor placement="top">
+                    <IconButton
+                        onClick={() => {
+                            setOpenChecklistGuidelinePopup(true)
+                        }}
+                    >
+                        <InfoOutlineIcon />
+                    </IconButton>
+                </Tooltip>
             </Stack>
             <Box
                 display="grid"
@@ -427,6 +439,15 @@ export default function ChecklistAssetTypes() {
                     </Stack>
                 }
             </Grid>
+            {
+                openChecklistGuidelinePopup &&
+                <ChecklistGuidelinePopup
+                    open={openChecklistGuidelinePopup}
+                    handleClose={() => {
+                        setOpenChecklistGuidelinePopup(false)
+                    }}
+                />
+            }
         </React.Fragment>
     </>)
 

@@ -48,6 +48,7 @@ export default function PMActivityGuidelinePopup({ open, handleClose }) {
                 <Typography>• View Total PM Schedules count, Active PM Schedules count, Completed PM Schedules count, Overdue PM Schedules count, Upcoming PM Schedules count</Typography>
                 <Typography>• PM Schedule List filter as per status, frequency and asset type</Typography>
                 <Typography>• PM Schedule List export excel</Typography>
+                <Typography>• PM Schedule List PM Activity delete schedule Activity</Typography>
                 <Typography>• Upcoming PM Schedules filter as per This Week, Next Week and This Month</Typography>
             </Stack>
 
@@ -58,6 +59,11 @@ export default function PMActivityGuidelinePopup({ open, handleClose }) {
 
             <Stack spacing={1} sx={{ mb: 2 }}>
                 <Typography>• Go to the Title view PM Schedule Details</Typography>
+                <Typography>• Asset wise PM Activity Schedule list update</Typography>
+                <Typography>• In PM Activity Schedule list user reschedule date, go to reschedule button and in popup update new date and reason</Typography>
+                <Typography>• In PM Activity Schedule list user mark as done, go to mark as done button and in popup update completion date, select supervisor, select duration, completion note and upload file</Typography>
+                <Typography>• In PM Activity Schedule list user view report after mark as done and download report</Typography>
+                <Typography>• user edit PM Schedule before Schedule Start Date and before mark as done</Typography>
             </Stack>
         </Drawer>
     )

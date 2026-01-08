@@ -23,11 +23,12 @@ import { actionAdditionalFieldsDetails, resetAdditionalFieldsDetailsResponse } f
 import { actionMasterCountryCodeList } from "../../../store/vendor";
 import TypographyComponent from "../../../components/custom-typography";
 import ServerSideListComponents from "../../../components/server-side-list-component";
-import MyBreadcrumbs from "../../../components/breadcrumb";
 import { useNavigate } from "react-router-dom";
 import { useBranch } from "../../../hooks/useBranch";
 import DownloadIcon from "../../../assets/icons/DownloadIcon";
 import * as XLSX from "xlsx";
+import EmployeeGuidelinePopup from "../guideline-popup";
+import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
 
 export default function EmployeeList() {
     const { showSnackbar } = useSnackbar()
@@ -55,6 +56,7 @@ export default function EmployeeList() {
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
     const [isDownload, setIsDownload] = useState(false)
+    const [openEmployeeGuidelinePopup, setOpenEmployeeGuidelinePopup] = useState(false)
 
     const columns = [
         { field: "name", headerName: "Employee Name", flex: 0.1 },
@@ -287,7 +289,24 @@ export default function EmployeeList() {
             alignItems={{ xs: 'flex-start', sm: 'flex-start', md: 'center' }}
             justifyContent="space-between"
             mb={3}>
-            <MyBreadcrumbs />
+            <Stack direction={'row'} alignItems={'center'}>
+                <TypographyComponent
+                    color={theme.palette.grey.primary}
+                    fontSize={24}
+                    fontWeight={500}
+                >
+                    Employee
+                </TypographyComponent>
+                <Tooltip title="Guideline" followCursor placement="top">
+                    <IconButton
+                        onClick={() => {
+                            setOpenEmployeeGuidelinePopup(true)
+                        }}
+                    >
+                        <InfoOutlineIcon />
+                    </IconButton>
+                </Tooltip>
+            </Stack>
             <GetCountComponent
                 countData={{ title1: "Total", title2: "Employee", value: total && total !== null ? String(total).padStart(2, '0') : 0 }}
                 actionData={{
@@ -418,5 +437,14 @@ export default function EmployeeList() {
                 setOpenEmployeeAdditionalFieldsPopup(false)
             }}
         />
+        {
+            openEmployeeGuidelinePopup &&
+            <EmployeeGuidelinePopup
+                open={openEmployeeGuidelinePopup}
+                handleClose={() => {
+                    setOpenEmployeeGuidelinePopup(false)
+                }}
+            />
+        }
     </React.Fragment>
 }

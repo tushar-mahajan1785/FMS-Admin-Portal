@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Box, Button, CircularProgress, Divider, FormControlLabel, Grid, IconButton, InputAdornment, Stack, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Button, CircularProgress, Divider, FormControlLabel, Grid, IconButton, InputAdornment, Stack, Tooltip, useMediaQuery, useTheme } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import MyBreadcrumbs from "../../components/breadcrumb";
 import TypographyComponent from "../../components/custom-typography";
@@ -21,6 +21,8 @@ import { useAuth } from "../../hooks/useAuth";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useBranch } from "../../hooks/useBranch";
 import FullScreenLoader from "../../components/fullscreen-loader";
+import ConfigurationShiftGuidelinePopup from "./guideline-popup";
+import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
 
 export default function ConfigureShiftList() {
     const theme = useTheme()
@@ -56,6 +58,7 @@ export default function ConfigureShiftList() {
 
     const [loading, setLoading] = useState(false)
     const [loadingList, setLoadingList] = useState(false)
+    const [openConfigurationShiftGuidelinePopup, setOpenConfigurationShiftGuidelinePopup] = useState(false)
 
     // initial render
     useEffect(() => {
@@ -191,7 +194,18 @@ export default function ConfigureShiftList() {
                 alignItems={{ xs: 'flex-start', sm: 'flex-start', md: 'center' }}
                 justifyContent="space-between"
                 mb={3}>
-                <MyBreadcrumbs />
+                <Stack direction={'row'} alignItems={'center'}>
+                    <MyBreadcrumbs />
+                    <Tooltip title="Guideline" followCursor placement="top">
+                        <IconButton
+                            onClick={() => {
+                                setOpenConfigurationShiftGuidelinePopup(true)
+                            }}
+                        >
+                            <InfoOutlineIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Stack>
                 <Button
                     size="small" sx={{
                         textTransform: 'capitalize',
@@ -511,6 +525,15 @@ export default function ConfigureShiftList() {
                     {loading ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'Save'}
                 </Button>
             </Stack>
+            {
+                openConfigurationShiftGuidelinePopup &&
+                <ConfigurationShiftGuidelinePopup
+                    open={openConfigurationShiftGuidelinePopup}
+                    handleClose={() => {
+                        setOpenConfigurationShiftGuidelinePopup(false)
+                    }}
+                />
+            }
         </React.Fragment>
     )
 }

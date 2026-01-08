@@ -8,9 +8,11 @@ import {
     Divider,
     FormLabel,
     Grid,
+    IconButton,
     InputAdornment,
     MenuItem,
     Stack,
+    Tooltip,
     useTheme,
 } from '@mui/material';
 import React, { useEffect, useState } from 'react'
@@ -37,6 +39,8 @@ import { useBranch } from '../../../hooks/useBranch';
 import * as XLSX from "xlsx";
 import AddManageGroups from '../add';
 import ManageGroupsDetails from '../view';
+import ManageGroupGuidelinePopup from '../guideline-popup';
+import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
 
 export default function ManageGroupsList() {
     const theme = useTheme()
@@ -57,6 +61,7 @@ export default function ManageGroupsList() {
     const [openAddManageGroupsPopup, setOpenAddManageGroupsPopup] = useState(false)
     const [openManageGroupsDetailsPopup, setOpenManageGroupsDetailsPopup] = useState(false)
     const [manageGroupData, setManageGroupData] = useState(null)
+    const [openManageGroupGuidelinePopup, setOpenManageGroupGuidelinePopup] = useState(false)
 
     // store
     const { manageGroupsList } = useSelector(state => state.rosterStore)
@@ -213,7 +218,18 @@ export default function ManageGroupsList() {
                 alignItems={{ xs: 'flex-start', sm: 'flex-start', md: 'center' }}
                 justifyContent="space-between"
                 mb={3}>
-                <MyBreadcrumbs />
+                <Stack direction={'row'} alignItems={'center'}>
+                    <MyBreadcrumbs />
+                    <Tooltip title="Guideline" followCursor placement="top">
+                        <IconButton
+                            onClick={() => {
+                                setOpenManageGroupGuidelinePopup(true)
+                            }}
+                        >
+                            <InfoOutlineIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Stack>
                 {
                     hasPermission('MANAGE_GROUPS_ADD') &&
                     <Button
@@ -527,6 +543,15 @@ export default function ManageGroupsList() {
                     setOpenManageGroupsDetailsPopup(false)
                 }}
             />
+            {
+                openManageGroupGuidelinePopup &&
+                <ManageGroupGuidelinePopup
+                    open={openManageGroupGuidelinePopup}
+                    handleClose={() => {
+                        setOpenManageGroupGuidelinePopup(false)
+                    }}
+                />
+            }
         </React.Fragment>
     )
 }

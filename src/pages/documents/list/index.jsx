@@ -26,6 +26,8 @@ import DeleteIcon from "../../../assets/icons/DeleteIcon";
 import { resetRosterDataResponse } from "../../../store/roster";
 import AlertPopup from "../../../components/alert-confirm";
 import AlertCircleIcon from "../../../assets/icons/AlertCircleIcon";
+import DocumentsGuidelinePopup from "../guideline-popup";
+import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
 
 export default function DocumentsList() {
     const theme = useTheme()
@@ -49,6 +51,7 @@ export default function DocumentsList() {
     const [currentGroupData, setCurrentGroupData] = useState(null)
     const [openDeleteDocumentGroupPopup, setOpenDeleteDocumentGroupPopup] = useState(false)
     const [loadingDelete, setLoadingDelete] = useState(false)
+    const [openDocumentsGuidelinePopup, setOpenDocumentsGuidelinePopup] = useState(false)
 
     const columns = [
         {
@@ -321,8 +324,18 @@ export default function DocumentsList() {
     return (
         <React.Fragment>
             <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <MyBreadcrumbs />
-
+                <Stack direction={'row'} alignItems={'center'}>
+                    <MyBreadcrumbs />
+                    <Tooltip title="Guideline" followCursor placement="top">
+                        <IconButton
+                            onClick={() => {
+                                setOpenDocumentsGuidelinePopup(true)
+                            }}
+                        >
+                            <InfoOutlineIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Stack>
                 {
                     hasPermission('ADD_DOCUMENT_GROUP') ?
                         <Stack>
@@ -463,6 +476,15 @@ export default function DocumentsList() {
                         </Button>
                     ]
                     }
+                />
+            }
+            {
+                openDocumentsGuidelinePopup &&
+                <DocumentsGuidelinePopup
+                    open={openDocumentsGuidelinePopup}
+                    handleClose={() => {
+                        setOpenDocumentsGuidelinePopup(false)
+                    }}
                 />
             }
         </React.Fragment>

@@ -28,6 +28,9 @@ import { useBranch } from "../../../hooks/useBranch";
 import * as XLSX from "xlsx";
 import DownloadIcon from "../../../assets/icons/DownloadIcon";
 import moment from "moment";
+import AssetGuidelinePopup from "../guideline-popup";
+import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
+import TypographyComponent from "../../../components/custom-typography";
 
 export default function AssetList() {
     const { showSnackbar } = useSnackbar()
@@ -55,6 +58,7 @@ export default function AssetList() {
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
     const [isDownload, setIsDownload] = useState(false)
+    const [openAssetGuidelinePopup, setOpenAssetGuidelinePopup] = useState(false)
     const [filterConfig, setFilterConfig] = useState([
         {
             "name": "asset_id",
@@ -333,7 +337,24 @@ export default function AssetList() {
             alignItems={{ xs: 'flex-start', sm: 'flex-start', md: 'center' }}
             justifyContent="space-between"
             mb={3}>
-            <MyBreadcrumbs />
+            <Stack direction={'row'} alignItems={'center'}>
+                <TypographyComponent
+                    color={theme.palette.grey.primary}
+                    fontSize={24}
+                    fontWeight={500}
+                >
+                    Asset
+                </TypographyComponent>
+                <Tooltip title="Guideline" followCursor placement="top">
+                    <IconButton
+                        onClick={() => {
+                            setOpenAssetGuidelinePopup(true)
+                        }}
+                    >
+                        <InfoOutlineIcon />
+                    </IconButton>
+                </Tooltip>
+            </Stack>
             <GetCountComponent
                 countData={{ title1: "Total", title2: "Asset", value: total && total !== null ? String(total).padStart(2, '0') : 0 }}
                 actionData={{
@@ -528,5 +549,14 @@ export default function AssetList() {
                 setOpenAssetAdditionalFieldsPopup(false)
             }}
         />
+        {
+            openAssetGuidelinePopup &&
+            <AssetGuidelinePopup
+                open={openAssetGuidelinePopup}
+                handleClose={() => {
+                    setOpenAssetGuidelinePopup(false)
+                }}
+            />
+        }
     </React.Fragment>
 }
