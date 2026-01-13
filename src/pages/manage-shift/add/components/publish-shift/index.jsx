@@ -55,7 +55,8 @@ export default function PublishShiftTable({
                                                 size="small"
                                                 variant="outlined"
                                                 sx={{
-                                                    minWidth: rosterData?.schedule_type === "WEEKLY" ? 168 : 32,
+                                                    minWidth: rosterData?.schedule_type === "WEEKLY" ? 168 : "clamp(24px, 2vw, 32px)",
+                                                    px: 1.5,
                                                     height: 32,
                                                     borderRadius: 1,
                                                     fontSize: 12,
