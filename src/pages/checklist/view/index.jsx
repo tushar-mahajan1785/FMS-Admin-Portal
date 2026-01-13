@@ -1866,7 +1866,7 @@ export default function ChecklistView() {
                                                                             borderTopRightRadius: '8px',
 
                                                                         }}
-                                                                    >  
+                                                                    >
                                                                         <Stack sx={{ flexDirection: 'row', justifyContent: 'flex-start', gap: 1, width: '100%' }}>
                                                                             <TypographyComponent fontSize={14} fontWeight={600}>{asset?.created_by && asset?.created_by !== null ? asset?.created_by : ''}</TypographyComponent>
 
@@ -2040,7 +2040,7 @@ export default function ChecklistView() {
 
                                                                                                                 setFormMode('edit')
                                                                                                             }}>
-                                                                                                            <EditCircleIcon stroke={getEditModeCount() ? theme.palette.grey[600] : theme.palette.primary[600]} size={18} /> Edit
+                                                                                                            <EditCircleIcon stroke={getEditModeCount() ? theme.palette.grey[600] : theme.palette.primary[600]} size={18} /> {asset?.status == 'Approved' || asset?.status == '' ? 'Add' : 'Edit'}
                                                                                                         </Button>
                                                                                                         :
                                                                                                         <></>
