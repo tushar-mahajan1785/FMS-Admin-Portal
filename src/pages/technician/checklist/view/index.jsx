@@ -26,7 +26,7 @@ export default function ChecklistView() {
     const navigate = useNavigate()
     const dispatch = useDispatch()
     const branch = useBranch()
-    const { logout,user  } = useAuth()
+    const { logout, user } = useAuth()
     const scrollRef = useRef(null);
     const { showSnackbar } = useSnackbar()
     const { groupUuid, assetTypeId, assetId } = useParams()
@@ -430,6 +430,36 @@ export default function ChecklistView() {
     const getValue = (paramId) => {
         return currentData?.find(v => v.parameter_id === paramId) || {};
     };
+
+    /**
+     * 
+     * @param {Array} parameters
+     * @returns true if any values are filled
+     */
+    const isAnyParameterFilled = (parameters = []) => {
+        return parameters?.some(param => {
+            // Skip hidden parameters
+            if (param.is_view !== 1) return false;
+
+            const value = param.value;
+
+            // Common check for all input types
+            if (value === null || value === undefined) return false;
+
+            // String values
+            if (typeof value === 'string') {
+                return value.trim() !== '';
+            }
+
+            // Number values
+            if (typeof value === 'number') {
+                return true;
+            }
+
+            return false;
+        });
+    };
+
 
     /**
         * Function to return fields with validations
@@ -944,7 +974,7 @@ export default function ChecklistView() {
                                         setGetCurrentAssetDetailsData(objDetails)
                                     }}
                                 >
-                                    Edit Checklist
+                                    {isAnyParameterFilled(currentData) == true ? 'Edit' : 'Add'} Checklist
                                 </Button>
                         }
                     </Box>
