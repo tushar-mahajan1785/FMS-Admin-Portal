@@ -388,6 +388,8 @@ export const API_TECHNICIAN_ASSET_CHECKLIST_UPDATE = `${BASE_APP}/checklist-grou
 
 export const API_TECHNICIAN_ASSET_VALIDATE_QR_CODE = `${BASE_APP}/checklist-group/validate-qrcode`
 
+export const API_TECHNICIAN_GET_CURRENT_FILLED_ASSETS = `${BASE_APP}/checklist-group-history/active-asset-list`
+
 //assets
 export const API_TECHNICIAN_ASSET_LIST = `${BASE_APP}/asset/list`
 

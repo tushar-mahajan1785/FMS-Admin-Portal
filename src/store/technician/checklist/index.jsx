@@ -7,6 +7,7 @@ import {
     API_TECHNICIAN_CHECKLIST_ASSET_TIMES, API_TECHNICIAN_ASSET_CHECKLIST_DETAILS,
     API_TECHNICIAN_ASSET_CHECKLIST_UPDATE,
     API_TECHNICIAN_ASSET_VALIDATE_QR_CODE,
+    API_TECHNICIAN_GET_CURRENT_FILLED_ASSETS
 } from "../../../common/api/constants";
 import { axiosApi } from "../../../common/api";
 
@@ -78,6 +79,15 @@ export const actionTechnicianAssetValidateQRCode = createAsyncThunk('technicianC
         return error
     }
 })
+export const actionTechnicianGetCurrentFilledAssets = createAsyncThunk('technicianChecklist/actionTechnicianGetCurrentFilledAssets', async (params) => {
+    try {
+        const response = await axiosApi.post(API_TECHNICIAN_GET_CURRENT_FILLED_ASSETS, params)
+
+        return response.status !== 200 ? getErrorResponse() : response.data
+    } catch (error) {
+        return error
+    }
+})
 
 
 export const technicianChecklistStore = createSlice({
@@ -89,7 +99,8 @@ export const technicianChecklistStore = createSlice({
         technicianGetChecklistAssetTimes: null,
         technicianAssetChecklistDetails: null,
         technicianAssetChecklistUpdate: null,
-        technicianAssetValidateQRCode: null
+        technicianAssetValidateQRCode: null,
+        technicianGetCurrentFilledAssets: null
     },
 
     reducers: {
@@ -113,6 +124,9 @@ export const technicianChecklistStore = createSlice({
         },
         resetTechnicianAssetValidateQRCodeResponse: (state) => {
             state.technicianAssetValidateQRCode = null
+        },
+        resetTechnicianGetCurrentFilledAssetsResponse: (state) => {
+            state.technicianGetCurrentFilledAssets = null
         },
     },
     extraReducers: builder => {
@@ -138,6 +152,9 @@ export const technicianChecklistStore = createSlice({
             .addCase(actionTechnicianAssetValidateQRCode.fulfilled, (state, action) => {
                 state.technicianAssetValidateQRCode = action.payload
             })
+            .addCase(actionTechnicianGetCurrentFilledAssets.fulfilled, (state, action) => {
+                state.technicianGetCurrentFilledAssets = action.payload
+            })
 
     }
 })
@@ -151,7 +168,8 @@ export const {
     resetTechnicianAssetChecklistUpdateResponse,
     resetTechnicianChecklistGroupAssetApproveResponse,
     resetTechnicianChecklistGroupAllGroupDetailsResponse,
-    resetTechnicianAssetValidateQRCodeResponse
+    resetTechnicianAssetValidateQRCodeResponse,
+    resetTechnicianGetCurrentFilledAssetsResponse
 } =
     technicianChecklistStore.actions
 
