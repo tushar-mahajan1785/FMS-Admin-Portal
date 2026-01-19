@@ -134,7 +134,7 @@ export default function FilledAssetsList({ open, label, details, handleClose }) 
     }
 
     return (
-        <BootstrapDialog open={open} onClose={() => handleClose()} fullWidth maxWidth="sm">
+        <BootstrapDialog open={open} onClose={() => handleClose()} fullWidth maxWidth="md">
             <DialogContent>
                 <TypographyComponent fontSize={18}>{label}</TypographyComponent>
                 <Stack sx={{ my: 1.5 }}>
@@ -196,7 +196,7 @@ export default function FilledAssetsList({ open, label, details, handleClose }) 
                                             <TypographyComponent fontSize={14} fontWeight={400}>
                                                 {asset?.asset_name}
                                             </TypographyComponent>
-                                            <Stack direction="row" spacing={1.2}>
+                                            <Stack direction="row" spacing={0.3} sx={{ minWidth: { xs: '117px', sm: '120px', md: 'auto' } }}>
                                                 <TypographyComponent
                                                     fontSize={14}
                                                     fontWeight={400}
