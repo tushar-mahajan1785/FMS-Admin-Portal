@@ -208,14 +208,14 @@ export default function ChecklistGroups() {
                                                     <StyledLinearProgress variant="determinate" value={getPercentage(objAsset?.total_completed, objAsset?.total_checklists) ? getPercentage(objAsset?.total_completed, objAsset?.total_checklists) : 0} bgColor={theme.palette.success[700]} />
                                                 </Box>
                                             </Stack>
-                                            <Stack flexDirection={'row'} sx={{ gap: '12px', marginTop: 1.5 }}>
+                                            <Stack flexDirection={'row'} sx={{ gap: '12px', marginTop: 1.5, alignItems: 'center' }}>
                                                 <TypographyComponent
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setOpenFilledAssetsPopup(true)
                                                         setGroupDetail(objAsset)
                                                     }}
-                                                    fontSize={14} fontWeight={400} sx={{ color: theme.palette.grey[600] }}>{objAsset?.total_assets && objAsset?.total_assets !== null ? objAsset?.total_assets.toString().padStart(2, "0") : 0} Assets</TypographyComponent>
+                                                    fontSize={14} fontWeight={400} sx={{ color: theme.palette.common.white, border: `1px solid ${theme.palette.primary[600]}`, borderRadius: 5, paddingX: 1, background: theme.palette.primary[600], cursor: 'pointer' }}>{objAsset?.total_assets && objAsset?.total_assets !== null ? objAsset?.total_assets.toString().padStart(2, "0") : 0} Assets</TypographyComponent>
                                                 <Stack sx={{ alignItems: 'center', justifyContent: 'center' }}>
                                                     <Stack sx={{ background: theme.palette.common.black, height: '4px', width: '4px', borderRadius: '5px', alignItems: 'center' }}></Stack>
                                                 </Stack>

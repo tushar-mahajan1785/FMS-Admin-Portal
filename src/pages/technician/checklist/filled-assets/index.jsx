@@ -1,12 +1,12 @@
 import { useTheme } from '@emotion/react'
 import React, { useEffect, useState } from 'react'
-import { Box, Button, Chip, CircularProgress, DialogActions, DialogContent, Divider, InputAdornment, Stack } from '@mui/material'
+import { Avatar, Box, Button, Chip, CircularProgress, DialogActions, DialogContent, Divider, InputAdornment, Stack } from '@mui/material'
 
 import { BootstrapDialog, SearchInput } from '../../../../components/common';
 import TypographyComponent from '../../../../components/custom-typography';
 import { useDispatch, useSelector } from 'react-redux';
 import { actionTechnicianGetCurrentFilledAssets, resetTechnicianGetCurrentFilledAssetsResponse } from '../../../../store/technician/checklist';
-import { ERROR, SERVER_ERROR, UNAUTHORIZED } from '../../../../constants';
+import { ERROR, IMAGES_SCREEN_NO_DATA, SERVER_ERROR, UNAUTHORIZED } from '../../../../constants';
 import { useSnackbar } from '../../../../hooks/useSnackbar';
 import { useAuth } from '../../../../hooks/useAuth';
 import SearchIcon from '../../../../assets/icons/SearchIcon';
@@ -222,11 +222,15 @@ export default function FilledAssetsList({ open, label, details, handleClose }) 
                                 </React.Fragment>
                             ))
                         ) : (
-                            <Stack sx={{ width: '100%', alignItems: 'center', mt: 10, height: '100%', justifyContent: 'center' }}>
-                                <TypographyComponent fontSize={16} color={theme.palette.grey[900]}>
-                                    No Assets Found
-                                </TypographyComponent>
+                            <Stack sx={{ background: theme.palette.common.white, py: 5, mt: 0, alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                                <Avatar alt={""} src={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} sx={{ overFlow: 'hidden', borderRadius: 0, height: 120, width: 120 }} />
+                                <TypographyComponent fontSize={16} fontWeight={400}>No Asset Found</TypographyComponent>
                             </Stack>
+                            // <Stack sx={{ width: '100%', alignItems: 'center', mt: 10, height: '100%', justifyContent: 'center' }}>
+                            //     <TypographyComponent fontSize={16} color={theme.palette.grey[900]}>
+                            //         No Assets Found
+                            //     </TypographyComponent>
+                            // </Stack>
                         )}
                 </Stack>
             </DialogContent>
