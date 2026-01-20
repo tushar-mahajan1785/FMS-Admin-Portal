@@ -226,11 +226,6 @@ export default function FilledAssetsList({ open, label, details, handleClose }) 
                                 <Avatar alt={""} src={IMAGES_SCREEN_NO_DATA.NO_DATA_FOUND} sx={{ overFlow: 'hidden', borderRadius: 0, height: 120, width: 120 }} />
                                 <TypographyComponent fontSize={16} fontWeight={400}>No Asset Found</TypographyComponent>
                             </Stack>
-                            // <Stack sx={{ width: '100%', alignItems: 'center', mt: 10, height: '100%', justifyContent: 'center' }}>
-                            //     <TypographyComponent fontSize={16} color={theme.palette.grey[900]}>
-                            //         No Assets Found
-                            //     </TypographyComponent>
-                            // </Stack>
                         )}
                 </Stack>
             </DialogContent>
