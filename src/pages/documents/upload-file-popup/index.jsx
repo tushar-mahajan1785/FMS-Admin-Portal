@@ -364,7 +364,7 @@ export default function UploadFilePopup({ open, objData, handleClose }) {
                                             sx={{ cursor: 'pointer', border: `1px dashed ${theme.palette.primary[600]}`, borderRadius: '8px', background: theme.palette.primary[100], p: '16px', flexDirection: 'row', justifyContent: 'center' }}>
                                             <input
                                                 hidden
-                                                accept=".jpg,.jpeg,.png,.xlsx,.csv,.pdf,.docx"
+                                                accept=".jpg, .jpeg, .png, .xlsx, .xlsm, .xls, .xlsb, .xlst, .xltm, .csv, .pdf, .docx, .doc, .docm, .dotx, .pptx, .ppt, .pptm, .ppsx"
                                                 type="file"
                                                 multiple
                                                 ref={inputRef}
